@@ -3,7 +3,7 @@
 set -e
 
 #VERSION=0.1.0
-VERSION=`cat src/version.h | grep "IREACTOR_VERSION" |  awk '{print $3}'`
+VERSION=`cat src/version.h | grep "BEAN_VERSION" |  awk '{print $3}'`
 VERSION=${VERSION//\"/}
 
 #TIME=`date "+%Y%m%d-%H%M%S"`

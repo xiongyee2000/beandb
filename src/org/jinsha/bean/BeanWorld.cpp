@@ -20,6 +20,15 @@ void BeanWorld::clear()
         delete item;
     }
     m_beans_.clear();
+
+    for (auto item : m_properties_) 
+    {
+        delete item;
+    }
+    m_properties_.clear();
+    
+    m_propertyMap.clear();
+    m_propertiesRefCounts_.clear();
 }
 
 Bean* BeanWorld::createBean()
@@ -31,38 +40,66 @@ Bean* BeanWorld::createBean()
     return bean;
 };
 
-bool BeanWorld::hasProperty(const char* name)
+int BeanWorld::getPropertyIndex(const char* name) const
 {
-    if (name == nullptr) return false;
-    for (const auto& property : m_properties_)
+    if (name == nullptr) return -1;
+    if (name[0] == 0) return -1;
+    auto iter = m_propertyMap.find(name);
+    if (iter == m_propertyMap.end()) return -1; //no such property
+    return (int)(iter->second);
+}
+
+const  Property* BeanWorld::getProperty(const char* name) const
+{
+    int index = getPropertyIndex(name);
+    if (index < 0) 
     {
-        if (property->getName().compare(name) == 0) 
-        {
-            return true;
-        } 
+        return nullptr;
     }
-    return false;
+    else
+    {
+        return m_properties_[index];
+    }
 }
 
 void BeanWorld::addProperty(const char* name)
 {
-    if (!hasProperty(name))
-    {
+    int index = getPropertyIndex(name);
+    if (index < 0) 
+    {//no such property
         auto property = new Property(name);
         m_properties_.push_back(property);
+        m_propertiesRefCounts_.push_back(1);
+        m_propertyMap[name] = m_properties_.size() - 1;
+    }
+    else
+    {
+        m_propertiesRefCounts_[index]++;
     }
 }
 
 void BeanWorld::removeProperty(const char* name)
 {
-    for (auto iter = m_properties_.begin();  iter != m_properties_.end(); iter++)
+    if (name == nullptr) return;
+    if (name[0] == 0) return;
+    auto iter = m_propertyMap.find(name);
+    if (iter == m_propertyMap.end()) return; //no such property
+    
+    auto index = iter->second;
+    if (m_propertiesRefCounts_[index] < 1)
     {
-        if ((*iter)->getName().compare(name) == 0) 
-        {
-            delete (*iter);
-            m_properties_.erase(iter);
-            return;
-        } 
+        //do nothing
+    }
+    else if (m_propertiesRefCounts_[index] == 1)
+    { //need to remove this property
+        delete m_properties_[index];
+        m_properties_[index] = nullptr;
+        m_propertiesRefCounts_[index] = 0;
+        m_propertyMap.erase(iter);
+    }
+    else
+    {
+        m_propertiesRefCounts_[index]--;
     }
 }
 

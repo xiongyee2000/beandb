@@ -1,7 +1,9 @@
 #pragma once
 
 // #include <memory>
+#include <vector>
 #include <list>
+#include <unordered_map>
 
 #include "./common.h"
 #include "./Property.h"
@@ -18,8 +20,11 @@ public:
     virtual ~BeanWorld();
 
     void clear();
-    const std::list<Property*> & getProperties() const {return m_properties_;};
-    bool hasProperty(const char* name);
+
+    const std::vector<Property*> & getProperties() const {return m_properties_;};
+
+    const Property* getProperty(const char* name) const;
+    int getPropertyIndex(const char* name) const;
 
     Bean *createBean();
 
@@ -30,7 +35,10 @@ private:
     otype generateObjectId();
 
     std::list<Bean*> m_beans_;
-    std::list<Property*> m_properties_;
+    std::vector<Property*> m_properties_;
+    //map from property name to index
+    std::unordered_map<std::string, size_t> m_propertyMap; 
+    std::vector<unsigned int> m_propertiesRefCounts_;
 
 friend class Bean;
 };

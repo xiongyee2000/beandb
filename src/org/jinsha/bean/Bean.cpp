@@ -22,14 +22,14 @@ int Bean::setProperty(const char* name,  Json::Value::Int64 value)
     //set value for json object first
      (*this)[name] = Json::Value(value);
 
-    if (m_world_->hasProperty(name)) //bean world has such property
-    {
-        //todo: determine type
-    }
-    else
+    if (m_world_->getProperty(name) == nullptr) //bean world has no such property
     {
         //add this property to the bean world
         m_world_->addProperty(name);
+    }
+    else
+    {
+        //todo: determine type
     }
 
     return 0;

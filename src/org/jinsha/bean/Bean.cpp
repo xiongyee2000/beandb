@@ -8,48 +8,24 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
-// int Bean::setProperty(const std::string& name, Json::ValueType type)
-// {
-//     if (name.empty()) return -1;
-//     return setProperty(name.c_str(), type);
-// }
-
-int Bean::setProperty(const char* name,  Json::Value::Int64 value)
+Bean::Bean(BeanWorld* world) : Value(Json::ValueType::objectValue), m_world_(world)
 {
-    if (name == nullptr) return -1;
-    if (*name == 0) return -1;
 
-    //set value for json object first
-     (*this)[name] = Json::Value(value);
-
-    if (m_world_->getProperty(name) == nullptr) //bean world has no such property
-    {
-        //add this property to the bean world
-        m_world_->addProperty(name);
-    }
-    else
-    {
-        //todo: determine type
-    }
-
-    return 0;
 }
 
-// void Bean::removeProperty(const std::string& name)
-// {
-//     if (name.empty()) return;
-//     removeProperty(name.c_str());
-// }
+Bean::~Bean()
+{
+
+}
+
+int Bean::setProperty(const char* name,  const Json::Value& value)
+{
+    return m_world_->setProperty(this, name, value);
+}
 
 void Bean::removeProperty(const char* name)
 {
-    if (name == nullptr) return;
-    if (*name == 0) return;
-
-    //remove member of json object first
-    (*this).removeMember(name);
-
-    //todo: remove property from bean world
+    return m_world_->removeProperty(this, name);
 }
 
 }

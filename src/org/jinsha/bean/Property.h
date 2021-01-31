@@ -11,7 +11,7 @@ class Property
 public:
     Property(const std::string& name) : name_(name) {};
     Property(const char* name) : name_(name) {};
-    virtual ~Property();
+    virtual ~Property() {};
 
     const std::string& getName() const {return name_;};
 

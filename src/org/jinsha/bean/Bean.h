@@ -17,39 +17,20 @@ class BeanWorld;
 class Bean : public Json::Value
 {
 public:
-    enum PTYPE
-    {
-        INVALID = 0,
-        BOOL = 10,
-        CHAR,
-        UCHAR,
-        INT,
-        UINT,
-        LONG,
-        ULONG,
-        STR,
-        FLOAT,
-        DOUBLE,
-        LIST = 100,
-        BEAN = 200
-    };
-
-    // Bean() {};
-
     // otype getClassId() {return classId_;};
     // std::string getClassName() {return className_;};
     // std::string getClassUri() {return classUri_;};
 
     otype getId() {return m_id_;};
-    std::string &getName() {return m_name_;};
+    // std::string &getName() {return m_name_;};
     // std::string &getUri() {return uri_;};
 
     // void setClassId(otype id) {classId_ = id;};
     // void setClassName(const std::string& name) {className_ = name;};
     // void setClassUri(const std::string& uri) {classUri_ = uri;};
 
-    void setId(otype id) {m_id_ = id;};
-    void setName(const std::string& name) {m_name_ = name;};
+    // void setId(otype id) {m_id_ = id;};
+    // void setName(const std::string& name) {m_name_ = name;};
     // void setUri(const std::string& uri) {uri_ = uri;};
 
     /**
@@ -61,16 +42,20 @@ public:
      * error code:
      *      -1 if name is nullptr or empty
      */
-    int setProperty(const char* name, char value);
-    int setProperty(const char* name, unsigned char value);
-    int setProperty(const char* name, int value);
-    int setProperty(const char* name, unsigned int value);
-    int setProperty(const char* name, Json::Value::Int64 value);
-    int setProperty(const char* name, const char* value);
-    int setProperty(const char* name, bool value);
+    int setProperty(const char* name, const Json::Value& value);
+    // int setProperty(const char* name, Json::Value::Int value);
+    // int setProperty(const char* name, Json::Value::UInt value);
+    // int setProperty(const char* name, Json::Value::Int64 value);
+    // int setProperty(const char* name, Json::Value::UInt64 value);
+    // int setProperty(const char* name, double value);
+    // int setProperty(const char* name, const char* value);
+    // int setProperty(const char* name, const char *beginValue, const char *endValue);
+    // int setProperty(const char* name, Json::StaticString& value);
+    // int setProperty(const char* name, bool value);
+    // int setProperty(const char* name, std::string& value);
 
     /**
-     * Undefine a property for this bean. 
+     * Remove a property from this bean. 
      * 
      * Note the property value will be removed once the property is 
      * undefined.
@@ -81,9 +66,20 @@ public:
     void removeProperty(const char* name); 
 
 private:
-    Bean(BeanWorld* world) : m_world_(world) {};
+    Bean(BeanWorld* world);
     Bean(const Bean& bean) = delete;
     Bean& operator =(const Bean& bean) = delete;
+    virtual ~Bean();
+
+
+    // template<typename T>
+    // int setProperty(const char* name,  const T& value)
+    // {
+    //     Json::Value v(v);
+    //     return doSetProperty(name, v);
+    // }
+
+    // int doSetProperty(const char* name, const Json::Value& value);
 
     BeanWorld* m_world_;
 
@@ -92,10 +88,8 @@ private:
     // std::string classUri_;
 
     otype m_id_ = 0;
-    std::string m_name_;
+    // std::string m_name_;
     // std::string uri_;
-
-    std::unordered_map<int, otype> longPropertyMap_;
 
 friend class BeanWorld;
 };

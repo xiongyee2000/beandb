@@ -15,8 +15,8 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
-typedef long otype;
-typedef int ptype;
+typedef long oidType;
+typedef int pidType;
 // typedef int64_t ctype;
 
 }

@@ -1,6 +1,6 @@
 
 #include <assert.h>
-
+#include <cstring>
 #include "./BeanWorld.h"
 
 using namespace std;
@@ -19,11 +19,6 @@ BeanWorld::~BeanWorld()
     clear();
 };
 
-int BeanWorld::getNumOfBeans()
-{
-    return m_beans_.size();
-}
-
 Bean* BeanWorld::createBean()
 {
     Bean* bean = new Bean(this);
@@ -33,7 +28,17 @@ Bean* BeanWorld::createBean()
     return bean;
 };
 
-Bean* BeanWorld::findBean(otype id)
+int BeanWorld::getNumOfBeans()
+{
+    return m_beans_.size();
+}
+
+const unordered_map<oidType, Bean*>& BeanWorld::getBeans()
+{
+    return m_beans_;
+}
+
+Bean* BeanWorld::findBean(oidType id)
 {
     auto iter = m_beans_.find(id);
     if (iter == m_beans_.end())
@@ -45,7 +50,18 @@ Bean* BeanWorld::findBean(otype id)
         return iter->second;
     }
 }
-void BeanWorld::removeBean(otype id)
+
+Bean* BeanWorld::findBean(pidType pid,  const Json::Value& value)
+{
+    if (pid <0 || pid >= m_properties_.size()) return nullptr;
+
+    // auto& valueMap = m_pvalues_[pid];
+    // auto iter = valueMap.find(value);
+    
+    return nullptr;
+}
+
+void BeanWorld::removeBean(oidType id)
 {
     auto iter = m_beans_.find(id);
     if (iter != m_beans_.end())
@@ -70,19 +86,6 @@ int BeanWorld::getPropertyIndex(const char* name) const
     return (int)(iter->second);
 }
 
-// const  Property* BeanWorld::getProperty(const char* name) const
-// {
-//     int index = getPropertyIndex(name);
-//     if (index < 0) 
-//     {
-//         return nullptr;
-//     }
-//     else
-//     {
-//         return m_properties_[index];
-//     }
-// }
-
 void BeanWorld::clear()
 {
     for (auto item : m_beans_) 
@@ -99,18 +102,83 @@ void BeanWorld::clear()
 
     m_propertyMap.clear();
     m_propertiesRefCounts_.clear();
+    // m_pvalues_.clear();
 }
 
-int BeanWorld::setProperty(Bean* bean, const char* name, const Json::Value& value)
+bool BeanWorld::isPropertyIndexed(pidType pid)
 {
-    if (name == nullptr) return -1;
+    //todo
+    return false;
+}
+
+template<typename T>
+static int setPropertyBase(BeanWorld* world, Bean* bean, const char* name, T value)
+{
+   if (name == nullptr) return -1;
     if (name[0] == 0) return -1;
 
-    //set value for json object first
-     (*bean)[name] = value;
-     addProperty(name);
+    //set value for json object
+    auto& v = (*bean)[name];
+    v = value;
+    pidType  pid = world->addProperty(name);
 
-    return 0;
+    if (world->isPropertyIndexed(pid))
+    {
+        world->m_propertyIndexTypes_[pid] = v.type();
+        if (typeid(value) == typeid((const char*)nullptr))
+        {
+            world->m_propertyIndices_[pid].insert (std::pair<uint64_t, Bean*>((uint64_t)v.asCString(), bean));
+        }
+        else if (typeid(value) == typeid(true))
+        {
+            world->m_propertyIndices_[pid].insert (std::pair<uint64_t, Bean*>((uint64_t)(v.asBool() ? 1 : 0), bean));
+        }
+        else if ((typeid(value) == typeid(0.1d)))
+        {
+            world->m_propertyIndices_[pid].insert (std::pair<uint64_t, Bean*>((uint64_t)value, bean));
+        }
+        else
+        {
+           world-> m_propertyIndices_[pid].insert (std::pair<uint64_t, Bean*>((uint64_t)value, bean));
+        }
+    }
+
+    return pid;
+}
+
+int BeanWorld::setProperty(Bean* bean, const char* name, Json::Int value)
+{
+    return setPropertyBase<Json::Int>(this, bean, name, value);
+}
+
+int BeanWorld::setProperty(Bean* bean, const char* name, Json::UInt value)
+{
+    return setPropertyBase<Json::UInt>(this, bean, name, value);
+}
+
+int BeanWorld::setProperty(Bean* bean, const char* name, Json::Int64 value)
+{
+    return setPropertyBase<Json::Int64>(this, bean, name, value);
+}
+
+int BeanWorld::setProperty(Bean* bean, const char* name, Json::UInt64 value)
+{
+    return setPropertyBase<Json::UInt64>(this, bean, name, value);
+}
+
+int BeanWorld::setProperty(Bean* bean, const char* name, bool value)
+{
+    return setPropertyBase<bool>(this, bean, name, value);
+}
+
+int BeanWorld::setProperty(Bean* bean, const char* name, double value)
+{
+    return setPropertyBase<double>(this, bean, name, value);
+}
+
+int BeanWorld::setProperty(Bean* bean, const char* name, const char* value)
+{
+    return setPropertyBase<const char*>(this, bean, name, value);
 }
 
 void BeanWorld::removeProperty(Bean* bean, const char* name)
@@ -123,19 +191,21 @@ void BeanWorld::removeProperty(Bean* bean, const char* name)
     removeProperty(name);
 }
 
-void BeanWorld::addProperty(const char* name)
+pidType BeanWorld::addProperty(const char* name)
 {
     int index = getPropertyIndex(name);
-    if (index < 0) 
+    if (index < 0)
     {//no such property
         Property* property = new Property(name);
         m_properties_.push_back(property);
         m_propertiesRefCounts_.push_back(1);
         m_propertyMap[name] = m_properties_.size() - 1;
+        return m_properties_.size() - 1;
     }
     else
     {
         m_propertiesRefCounts_[index]++;
+        return index;
     }
 }
 
@@ -164,7 +234,7 @@ void BeanWorld::removeProperty(const char* name)
     }
 }
 
-otype BeanWorld::generateBeanId()
+oidType BeanWorld::generateBeanId()
 {
     //todo: currently just return m_maxBeanId_++ assuming it is enough.
     return m_maxBeanId_++;

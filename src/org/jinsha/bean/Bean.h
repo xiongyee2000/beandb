@@ -21,7 +21,7 @@ public:
     // std::string getClassName() {return className_;};
     // std::string getClassUri() {return classUri_;};
 
-    otype getId() {return m_id_;};
+    oidType getId() {return m_id_;};
     // std::string &getName() {return m_name_;};
     // std::string &getUri() {return uri_;};
 
@@ -34,7 +34,13 @@ public:
     // void setUri(const std::string& uri) {uri_ = uri;};
 
     /**
-     * Define a property for this bean. 
+     * Set the value of a property of this bean. 
+     * 
+     * Notes:
+     * 1. each property is bound to a fixed type, which will be determined
+     *     by the value argment given in the first invocation of this  method;
+     * 3. Invocation of this method with a different value type will cause
+     *     this method return an error code.
      * 
      * @param name name of the property
      * @param value value of the property
@@ -42,17 +48,14 @@ public:
      * error code:
      *      -1 if name is nullptr or empty
      */
-    int setProperty(const char* name, const Json::Value& value);
-    // int setProperty(const char* name, Json::Value::Int value);
-    // int setProperty(const char* name, Json::Value::UInt value);
-    // int setProperty(const char* name, Json::Value::Int64 value);
-    // int setProperty(const char* name, Json::Value::UInt64 value);
-    // int setProperty(const char* name, double value);
-    // int setProperty(const char* name, const char* value);
-    // int setProperty(const char* name, const char *beginValue, const char *endValue);
-    // int setProperty(const char* name, Json::StaticString& value);
-    // int setProperty(const char* name, bool value);
-    // int setProperty(const char* name, std::string& value);
+    // int setProperty(const char* name, const Json::Value& value);
+    int setProperty( const char* name, bool value);
+    int setProperty( const char* name, Json::Int value);
+    int setProperty( const char* name, Json::UInt value);
+    int setProperty( const char* name, Json::Int64 value);
+    int setProperty( const char* name, Json::UInt64 value);
+    int setProperty( const char* name, double value);
+    int setProperty( const char* name, const char* value);
 
     /**
      * Remove a property from this bean. 
@@ -87,7 +90,7 @@ private:
     // std::string className_;
     // std::string classUri_;
 
-    otype m_id_ = 0;
+    oidType m_id_ = 0;
     // std::string m_name_;
     // std::string uri_;
 

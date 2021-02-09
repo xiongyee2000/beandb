@@ -63,6 +63,20 @@ TEST(BeanWorld, getNumOfBeans)
     basic();
 }
 
+TEST(BeanWorld, getBeans)
+{
+    BeanWorld *world = new BeanWorld();
+    Bean* bean_ = nullptr;
+
+    Bean *bean1 = world->createBean();
+    Bean *bean2 = world->createBean();
+    Bean *bean3 = world->createBean();
+    auto& beans  = world->getBeans();
+    EXPECT_TRUE(beans.size() == 3);
+
+    delete world;
+}
+
 TEST(BeanWorld, findBean)
 {
     BeanWorld *world = new BeanWorld();

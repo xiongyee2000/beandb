@@ -51,7 +51,7 @@ TEST(Bean, setProperty_removeProperty)
     bean->setProperty("p1", 8);
     EXPECT_TRUE(bean->getMemberNames().size() == 1);
     EXPECT_TRUE(bean->get("p1", value) == 8);
-    bean->removeProperty("p1");
+    bean->removeMember("p1");
     EXPECT_TRUE(bean->getMemberNames().size() == 0);
     EXPECT_TRUE(bean->get("p1", value).isNull());
 
@@ -78,10 +78,10 @@ TEST(Bean, setProperty_removeProperty)
     bean->setProperty("p2", "v2");
     EXPECT_TRUE(bean->getMemberNames().size() == 2);
     EXPECT_TRUE(bean->get("p2", value) == "v2");
-    bean->removeProperty("p1");
+    bean->removeMember("p1");
     EXPECT_TRUE(bean->getMemberNames().size() == 1);
     EXPECT_TRUE(bean->get("p1", value).isNull());
-    bean->removeProperty("p2");
+    bean->removeMember("p2");
     EXPECT_TRUE(bean->getMemberNames().size() == 0);
     EXPECT_TRUE(bean->get("p2", value).isNull());
 }

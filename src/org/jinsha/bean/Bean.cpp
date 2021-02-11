@@ -8,14 +8,35 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
-Bean::Bean(BeanWorld* world) : Value(Json::ValueType::objectValue), m_world_(world)
+Bean::Bean(BeanWorld* world) : 
+jsonValue_(Json::ValueType::objectValue), 
+m_world_(world)
 {
 
 }
 
+
 Bean::~Bean()
 {
+    clear();
+}
 
+
+Json::Value Bean::removeMember (const char *key)
+{
+    return m_world_->removeProperty(this, key);
+}
+
+
+Json::Value Bean::removeMember (const std::string &key)
+{
+    return removeMember(key.c_str());
+}
+
+
+void Bean::clear()
+{
+    m_world_->removeBean(this);
 }
 
 // int Bean::setProperty(const char* name,  const Json::Value& value)
@@ -57,11 +78,6 @@ int Bean::setProperty(const char* name, double value)
 int Bean::setProperty(const char* name, const char* value)
 {
     return m_world_->setProperty(this, name, value);
-}
-
-void Bean::removeProperty(const char* name)
-{
-    return m_world_->removeProperty(this, name);
 }
 
 }

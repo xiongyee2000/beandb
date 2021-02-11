@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 
+#include "jsoncpp/json/value.h"
+
 #define blog_d(format, ...) blog_("dbg", format, __VA_ARGS__)
 #define blog_i(format, ...) blog_("info", format, __VA_ARGS__)
 #define blog_w(format, ...) blog_("warn", format, __VA_ARGS__)
@@ -15,8 +17,8 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
-typedef long oidType;
-typedef int pidType;
+typedef Json::UInt64 oidType;
+typedef Json::Int pidType;
 // typedef int64_t ctype;
 
 }

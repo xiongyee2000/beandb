@@ -14,9 +14,10 @@ namespace bean {
 
 class BeanWorld;
 
-class Bean : public Json::Value
+class Bean
 {
 public:
+
     // otype getClassId() {return classId_;};
     // std::string getClassName() {return className_;};
     // std::string getClassUri() {return classUri_;};
@@ -32,6 +33,26 @@ public:
     // void setId(otype id) {m_id_ = id;};
     // void setName(const std::string& name) {m_name_ = name;};
     // void setUri(const std::string& uri) {uri_ = uri;};
+
+    ////////////////////////////////////////////////////////////////
+    //Below  are corresponding Json::Value methods
+    ////////////////////////////////////////////////////////////////
+    bool 	empty () const {return jsonValue_.empty();};
+    Json::Value get (const char *key, const Json::Value &defaultValue) const {return jsonValue_.get(key, defaultValue);};
+    Json::Value get (const std::string &key, const Json::Value &defaultValue) const {return jsonValue_.get(key, defaultValue);};
+    bool isMember (const std::string &key) const {return jsonValue_.isMember(key);};
+    Json::Value::Members getMemberNames () const {return jsonValue_.getMemberNames();};
+    Json::Value & operator[] (const char *key) {return jsonValue_[key];};
+    const Json::Value & operator[] (const char *key) const {return jsonValue_[key];};
+    Json::Value & operator[] (const std::string &key) {return jsonValue_[key];};
+    const Json::Value & operator[] (const std::string &key) const {return jsonValue_[key];};
+    Json::Value & operator[] (const Json::StaticString &key) {return jsonValue_[key];};
+    Json::Value removeMember (const char *key);
+    Json::Value removeMember (const std::string &key);
+    void clear();
+    ////////////////////////////////////////////////////////////////
+    //Abov  are corresponding Json::Value methods
+    ////////////////////////////////////////////////////////////////
 
     /**
      * Set the value of a property of this bean. 
@@ -57,22 +78,15 @@ public:
     int setProperty( const char* name, double value);
     int setProperty( const char* name, const char* value);
 
-    /**
-     * Remove a property from this bean. 
-     * 
-     * Note the property value will be removed once the property is 
-     * undefined.
-     * 
-     * @param name name of the property 
-     */
-    // void removeProperty(const std::string& name); 
-    void removeProperty(const char* name); 
-
 private:
     Bean(BeanWorld* world);
     Bean(const Bean& bean) = delete;
     Bean& operator =(const Bean& bean) = delete;
     virtual ~Bean();
+
+    // void swap(Json::Value &other);
+
+    Json::Value jsonValue_;
 
 
     // template<typename T>

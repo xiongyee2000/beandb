@@ -142,16 +142,16 @@ TEST(BeanWorld, getProperties)
     bean2->setProperty("p2", "v2");
     EXPECT_TRUE(world->getProperties().size() == 2);
 
-    bean1->removeProperty("p1");
+    bean1->removeMember("p1");
     EXPECT_TRUE(world->getProperties().size() == 2);
 
-    bean2->removeProperty("p1");
+    bean2->removeMember("p1");
     EXPECT_TRUE(world->getProperties().size() == 1);
 
-    bean1->removeProperty("p2");
+    bean1->removeMember("p2");
     EXPECT_TRUE(world->getProperties().size() == 1);
 
-    bean2->removeProperty("p2");
+    bean2->removeMember("p2");
     EXPECT_TRUE(world->getProperties().size() == 0);
 
     delete world;
@@ -177,16 +177,16 @@ TEST(BeanWorld, getPropertyIndex)
     bean2->setProperty("p2", "v2");
     EXPECT_TRUE(world->getPropertyIndex("p2") == 1);
 
-    bean1->removeProperty("p1");
+    bean1->removeMember("p1");
     EXPECT_TRUE(world->getPropertyIndex("p1") == 0);
 
-    bean2->removeProperty("p1");
+    bean2->removeMember("p1");
     EXPECT_TRUE(world->getPropertyIndex("p1") == -1);
 
-    bean1->removeProperty("p2");
+    bean1->removeMember("p2");
     EXPECT_TRUE(world->getPropertyIndex("p2") == 1);
 
-    bean2->removeProperty("p2");
+    bean2->removeMember("p2");
     EXPECT_TRUE(world->getPropertyIndex("p2") == -1);
 
     delete world;

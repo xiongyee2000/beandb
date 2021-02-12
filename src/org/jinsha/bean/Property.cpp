@@ -9,6 +9,22 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
+Property::~Property()
+{
+    clear();
+}
+
+
+void Property::clear()
+{
+    refCount_ = 0;
+    trueValueMap_.clear();
+    falseValueMap_.clear();
+    intValueMap_.clear();
+    uintValueMap_.clear();
+    doubleValueMap_.clear();
+}
+
 template<typename ValueT, typename MapT>
 static void doRemoveIndex(Bean* bean, ValueT value, MapT map);
 

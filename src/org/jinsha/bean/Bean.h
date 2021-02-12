@@ -17,12 +17,11 @@ class BeanWorld;
 class Bean
 {
 public:
-
     // otype getClassId() {return classId_;};
     // std::string getClassName() {return className_;};
     // std::string getClassUri() {return classUri_;};
 
-    oidType getId() {return m_id_;};
+    inline oidType getId() {return m_id_;};
     // std::string &getName() {return m_name_;};
     // std::string &getUri() {return uri_;};
 
@@ -37,18 +36,24 @@ public:
     ////////////////////////////////////////////////////////////////
     //Below  are corresponding Json::Value methods
     ////////////////////////////////////////////////////////////////
-    bool 	empty () const {return jsonValue_.empty();};
-    Json::Value get (const char *key, const Json::Value &defaultValue) const {return jsonValue_.get(key, defaultValue);};
-    Json::Value get (const std::string &key, const Json::Value &defaultValue) const {return jsonValue_.get(key, defaultValue);};
-    bool isMember (const std::string &key) const {return jsonValue_.isMember(key);};
-    Json::Value::Members getMemberNames () const {return jsonValue_.getMemberNames();};
-    Json::Value & operator[] (const char *key) {return jsonValue_[key];};
-    const Json::Value & operator[] (const char *key) const {return jsonValue_[key];};
-    Json::Value & operator[] (const std::string &key) {return jsonValue_[key];};
-    const Json::Value & operator[] (const std::string &key) const {return jsonValue_[key];};
-    Json::Value & operator[] (const Json::StaticString &key) {return jsonValue_[key];};
+    bool 	empty () const {return m_jsonValue_.empty();};
+    Json::Value get (const char *key, const Json::Value &defaultValue) const {return m_jsonValue_.get(key, defaultValue);};
+    Json::Value get (const std::string &key, const Json::Value &defaultValue) const {return m_jsonValue_.get(key, defaultValue);};
+    bool isMember (const std::string &key) const {return m_jsonValue_.isMember(key);};
+    Json::Value::Members getMemberNames () const {return m_jsonValue_.getMemberNames();};
+    Json::Value & operator[] (const char *key) {return m_jsonValue_[key];};
+    const Json::Value & operator[] (const char *key) const {return m_jsonValue_[key];};
+    Json::Value & operator[] (const std::string &key) {return m_jsonValue_[key];};
+    const Json::Value & operator[] (const std::string &key) const {return m_jsonValue_[key];};
+    Json::Value & operator[] (const Json::StaticString &key) {return m_jsonValue_[key];};
+
+    /**
+     * same as removeProperty()
+     */
     Json::Value removeMember (const char *key);
     Json::Value removeMember (const std::string &key);
+
+
     void clear();
     ////////////////////////////////////////////////////////////////
     //Abov  are corresponding Json::Value methods
@@ -65,18 +70,25 @@ public:
      * 
      * @param name name of the property
      * @param value value of the property
-     * @return 0 if success, or an error code
+     * @return the pid of the property if success, or an error code
      * error code:
-     *      -1 if name is nullptr or empty
+     *      -1 if name is nullptr or empty, or the value is nullptr
      */
     // int setProperty(const char* name, const Json::Value& value);
-    int setProperty( const char* name, bool value);
-    int setProperty( const char* name, Json::Int value);
-    int setProperty( const char* name, Json::UInt value);
-    int setProperty( const char* name, Json::Int64 value);
-    int setProperty( const char* name, Json::UInt64 value);
-    int setProperty( const char* name, double value);
-    int setProperty( const char* name, const char* value);
+    pidType setProperty( const char* name, bool value);
+    pidType setProperty( const char* name, Json::Int value);
+    pidType setProperty( const char* name, Json::UInt value);
+    pidType setProperty( const char* name, Json::Int64 value);
+    pidType setProperty( const char* name, Json::UInt64 value);
+    pidType setProperty( const char* name, double value);
+    pidType setProperty( const char* name, const char* value);
+
+    /**
+     * Remove property from this bean
+     * @param name the property name
+     * @return the removed item as json value
+     */
+    Json::Value removeProperty( const char* name);
 
 private:
     Bean(BeanWorld* world);
@@ -86,7 +98,7 @@ private:
 
     // void swap(Json::Value &other);
 
-    Json::Value jsonValue_;
+    Json::Value m_jsonValue_;
 
 
     // template<typename T>

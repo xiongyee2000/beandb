@@ -77,22 +77,24 @@ TEST(BeanWorld, getBeans)
     delete world;
 }
 
-TEST(BeanWorld, findBean)
+TEST(BeanWorld, getBean)
 {
     BeanWorld *world = new BeanWorld();
     Bean* bean_ = nullptr;
 
+    std::vector<int>::const_iterator it;
+
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
     Bean *bean3 = world->createBean();
-    bean_ = world->findBean(bean1->getId());
+    bean_ = world->getBean(bean1->getId());
     EXPECT_TRUE(bean_ == bean1);
-    bean_ = world->findBean(bean2->getId());
+    bean_ = world->getBean(bean2->getId());
     EXPECT_TRUE(bean_ == bean2);
-    bean_ = world->findBean(bean3->getId());
+    bean_ = world->getBean(bean3->getId());
     EXPECT_TRUE(bean_ == bean3);
 
-    bean_ = world->findBean(555);
+    bean_ = world->getBean(555);
     EXPECT_TRUE(bean_ == nullptr);
 
     delete world;
@@ -117,29 +119,45 @@ TEST(BeanWorld, getProperties)
 {
     BeanWorld *world = new BeanWorld();
     Value value;
+    int pid = 0;
 
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
 
-    bean1->setProperty(nullptr, 1);
+    pid = bean1->setProperty(nullptr, 1);
+    EXPECT_TRUE(pid == -1);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    bean1->setProperty("", 1);
+    pid = bean1->setProperty("", 1);
+    EXPECT_TRUE(pid == -1);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    bean1->setProperty(string("").c_str(), 1);
+    pid = bean1->setProperty(string("").c_str(), 1);
+    EXPECT_TRUE(pid == -1);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    bean1->setProperty("p1", 8);
+    pid = bean1->setProperty("p1", nullptr);
+    EXPECT_TRUE(pid == -1);
+    EXPECT_TRUE(world->getProperties().size() == 0);
+
+    pid = bean1->setProperty("p1", 8);
+    EXPECT_TRUE(pid == world->getPropertyId("p1"));
     EXPECT_TRUE(world->getProperties().size() == 1);
 
-    bean1->setProperty("p2", 8);
+    pid = bean1->setProperty("p2", 8);
+    EXPECT_TRUE(pid == world->getPropertyId("p2"));
     EXPECT_TRUE(world->getProperties().size() == 2);
 
-    bean2->setProperty("p1", "v1");
+    pid = bean2->setProperty("p1", "v1");
+    EXPECT_TRUE(pid == world->getPropertyId("p1"));
     EXPECT_TRUE(world->getProperties().size() == 2);
 
-    bean2->setProperty("p2", "v2");
+    pid = bean2->setProperty("p2", "v2");
+    EXPECT_TRUE(pid == world->getPropertyId("p2"));
+    EXPECT_TRUE(world->getProperties().size() == 2);
+
+    pid = bean2->setProperty("p2",  2);
+    EXPECT_TRUE(pid == world->getPropertyId("p2"));
     EXPECT_TRUE(world->getProperties().size() == 2);
 
     bean1->removeMember("p1");
@@ -157,7 +175,7 @@ TEST(BeanWorld, getProperties)
     delete world;
 }
 
-TEST(BeanWorld, getPropertyIndex)
+TEST(BeanWorld, getPropertyId)
 {
     BeanWorld *world = new BeanWorld();
     Value value;
@@ -166,28 +184,41 @@ TEST(BeanWorld, getPropertyIndex)
     Bean *bean2 = world->createBean();
 
     bean1->setProperty("p1", 8);
-    EXPECT_TRUE(world->getPropertyIndex("p1") == 0);
+    EXPECT_TRUE(world->getPropertyId("p1") == 0);
 
     bean1->setProperty("p2", 8);
-    EXPECT_TRUE(world->getPropertyIndex("p2") == 1);
+    EXPECT_TRUE(world->getPropertyId("p2") == 1);
 
     bean2->setProperty("p1", "v1");
-    EXPECT_TRUE(world->getPropertyIndex("p1") == 0);
+    EXPECT_TRUE(world->getPropertyId("p1") == 0);
 
     bean2->setProperty("p2", "v2");
-    EXPECT_TRUE(world->getPropertyIndex("p2") == 1);
+    EXPECT_TRUE(world->getPropertyId("p2") == 1);
 
     bean1->removeMember("p1");
-    EXPECT_TRUE(world->getPropertyIndex("p1") == 0);
+    EXPECT_TRUE(world->getPropertyId("p1") == 0);
 
     bean2->removeMember("p1");
-    EXPECT_TRUE(world->getPropertyIndex("p1") == -1);
+    EXPECT_TRUE(world->getPropertyId("p1") == -1);
 
     bean1->removeMember("p2");
-    EXPECT_TRUE(world->getPropertyIndex("p2") == 1);
+    EXPECT_TRUE(world->getPropertyId("p2") == 1);
 
     bean2->removeMember("p2");
-    EXPECT_TRUE(world->getPropertyIndex("p2") == -1);
+    EXPECT_TRUE(world->getPropertyId("p2") == -1);
 
     delete world;
+}
+
+TEST(BeanWorld, removeBean)
+{
+    BeanWorld world;
+    Value value;
+    oidType oid = 0;
+    Bean* bean = world.createBean();
+    oid = bean->getId();
+    bean->setProperty("p1", 1);
+    (*bean)["p2"] = 2;
+    world.removeBean(bean->getId());
+    EXPECT_TRUE(world.getBean(oid) == nullptr);
 }

@@ -26,45 +26,43 @@ public:
     int getNumOfBeans();
     const std::unordered_map<oidType, Bean*>& getBeans();
 
-    Bean* findBean(oidType id);
-    Bean* findBean(pidType pid,  const Json::Value& value);
+    Bean* getBean(oidType id);
+    std::list<Bean*> findBean(pidType pid,  const Json::Value& value);
 
-    // const Property* getProperty(const char* name) const;
-    int getPropertyIndex(const char* name) const;
+    int getPropertyId(const char* name) const;
     const std::unordered_map<std::string, unsigned int>& getProperties() const 
-     {return m_propertyMap;};
-
-    void removeBean(Bean* bean);
+     {return m_propertyMap_;};
 
     void clear();
 
 private:
-    // int setProperty(Bean* bean,  const char* name, const Json::Value& value);
-    int setProperty(Bean* bean,  const char* name, bool value);
-    int setProperty(Bean* bean,  const char* name, Json::Int value);
-    int setProperty(Bean* bean,  const char* name, Json::UInt value);
-    int setProperty(Bean* bean,  const char* name, Json::Int64 value);
-    int setProperty(Bean* bean,  const char* name, Json::UInt64 value);
-    int setProperty(Bean* bean,  const char* name, double value);
-    int setProperty(Bean* bean,  const char* name, const char* value);
-    Json::Value removeProperty(Bean* bean, const char* name);
+    // Property* getProperty(const char* name);
+    pidType setProperty(Bean* bean,  const char* name, bool value);
+    pidType setProperty(Bean* bean,  const char* name, Json::Int value);
+    pidType setProperty(Bean* bean,  const char* name, Json::UInt value);
+    pidType setProperty(Bean* bean,  const char* name, Json::Int64 value);
+    pidType setProperty(Bean* bean,  const char* name, Json::UInt64 value);
+    pidType setProperty(Bean* bean,  const char* name, double value);
+    pidType setProperty(Bean* bean,  const char* name, const char* value);
     template<typename T>
-    int setPropertyBase( Bean* bean, const char* name, T value);
+    pidType doSetProperty( Bean* bean, const char* name, T value);
 
     pidType addProperty(const char* name);
-    void removeProperty(const char* name);
+    Json::Value removeProperty(Bean* bean, const char* name);
+    void removeProperty(pidType pid);
 
     int addRelation(Bean* from, Bean* to, const char* propertyName);
     int removeRelation(Bean* from, Bean* to, const char* propertyName);
 
     oidType generateBeanId();
 
+private:
     std::unordered_map<oidType, Bean*> m_beans_;
     oidType m_maxBeanId_ = 0;
 
     std::vector<Property*> m_properties_;
     //map from property name to index
-    std::unordered_map<std::string, unsigned int> m_propertyMap; 
+    std::unordered_map<std::string, unsigned int> m_propertyMap_; 
 
 friend class Bean;
 

@@ -27,16 +27,30 @@ public:
     const std::unordered_map<oidType, Bean*>& getBeans();
 
     Bean* getBean(oidType id);
-    std::list<Bean*> findBean(pidType pid,  const Json::Value& value);
+
+    void findEqual(const char* propertyName,  Json::Int value, std::list<Bean*>& beans);
+    void findEqual(const char* propertyName,  Json::UInt value, std::list<Bean*>& beans);
+    void findEqual(const char* propertyName,  Json::Int64 value, std::list<Bean*>& beans);
+    void findEqual(const char* propertyName,  Json::UInt64 value, std::list<Bean*>& beans);
+    void findEqual(const char* propertyName,  bool value, std::list<Bean*>& beans);
+    void findEqual(const char* propertyName,  double value, std::list<Bean*>& beans);
+    void findEqual(const char* propertyName,  const char* value, std::list<Bean*>& beans);
+    template<typename T>
+    static void findEqualCommon(const BeanWorld *world, 
+        const char* propertyName,  
+        const T& value, 
+        std::list<Bean*>& beans);
+
 
     int getPropertyId(const char* name) const;
+    const Property* getProperty(const char* name) const;
     const std::unordered_map<std::string, unsigned int>& getProperties() const 
      {return m_propertyMap_;};
 
     void clear();
 
 private:
-    // Property* getProperty(const char* name);
+
     pidType setProperty(Bean* bean,  const char* name, bool value);
     pidType setProperty(Bean* bean,  const char* name, Json::Int value);
     pidType setProperty(Bean* bean,  const char* name, Json::UInt value);

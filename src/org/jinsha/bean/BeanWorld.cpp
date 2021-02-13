@@ -9,6 +9,7 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
+
 BeanWorld::BeanWorld()
 {
 
@@ -52,16 +53,59 @@ Bean* BeanWorld::getBean(oidType id)
     }
 }
 
-std::list<Bean*> BeanWorld::findBean(pidType pid,  const Json::Value& value)
-{
-    std::list<Bean*> beans;
-    // if (pid <0 || pid >= m_properties_.size()) return nullptr;
 
-    // auto& valueMap = m_pvalues_[pid];
-    // auto iter = valueMap.find(value);
-    
-    return beans;
+void BeanWorld::findEqual(const char* propertyName,  Json::Int value, std::list<Bean*>& beans)
+{
+    findEqualCommon<Json::Int>(this, propertyName, value, beans);
 }
+
+
+void BeanWorld::findEqual(const char* propertyName,  Json::UInt value, std::list<Bean*>& beans)
+{
+    findEqualCommon<Json::UInt>(this, propertyName, value, beans);
+}
+
+
+void BeanWorld::findEqual(const char* propertyName,  Json::Int64 value, std::list<Bean*>& beans)
+{
+    findEqualCommon<Json::Int64>(this, propertyName, value, beans);
+}
+
+
+void BeanWorld::findEqual(const char* propertyName,  Json::UInt64 value, std::list<Bean*>& beans)
+{
+    findEqualCommon<Json::UInt64>(this, propertyName, value, beans);
+}
+
+
+void BeanWorld::findEqual(const char* propertyName,  double value, std::list<Bean*>& beans)
+{
+    findEqualCommon<double>(this, propertyName, value, beans);
+}
+
+
+void BeanWorld::findEqual(const char* propertyName,  bool value, std::list<Bean*>& beans)
+{
+    findEqualCommon<bool>(this, propertyName, value, beans);
+}
+
+void BeanWorld::findEqual(const char* propertyName,  const char* value, std::list<Bean*>& beans)
+{
+    findEqualCommon<const char*>(this, propertyName, value, beans);
+}
+
+
+template<typename T>
+void BeanWorld::findEqualCommon(const BeanWorld *world, const char* propertyName,  const T& value, std::list<Bean*>& beans)
+{
+    const Property* property = world->getProperty(propertyName);
+    if (property != nullptr)
+    {
+        beans.clear();
+        property->findEqual(value, beans);
+    }
+}
+
 
 void BeanWorld::removeBean(oidType id)
 {
@@ -123,7 +167,7 @@ pidType BeanWorld::doSetProperty( Bean* bean, const char* name, T value)
         } 
         else
         {
-            property->refCount_++;
+            property->m_refCount_++;
         }
     }
     
@@ -136,18 +180,18 @@ pidType BeanWorld::doSetProperty( Bean* bean, const char* name, T value)
 }
 
 
-// Property* BeanWorld::getProperty(const char* name)
-// {
-//     pidType pid = getPropertyId(name);
-//     if (pid == -1)
-//     {
-//         return nullptr;
-//     }
-//     else
-//     {
-//         return m_properties_[pid];
-//     }
-// }
+const Property* BeanWorld::getProperty(const char* name) const
+{
+    pidType pid = getPropertyId(name);
+    if (pid == -1)
+    {
+        return nullptr;
+    }
+    else
+    {
+        return m_properties_[pid];
+    }
+}
 
 pidType BeanWorld::setProperty(Bean* bean, const char* name, Json::Int value)
 {
@@ -196,8 +240,8 @@ Json::Value BeanWorld::removeProperty(Bean* bean, const char* name)
     {
         auto& property = m_properties_[pid];
         property->removeIndex(bean, (*bean)[name]);
-        property->refCount_--;
-        if (property->refCount_ == 0)
+        property->m_refCount_--;
+        if (property->m_refCount_ == 0)
         {
             removeProperty(pid);
         }
@@ -213,7 +257,7 @@ pidType BeanWorld::addProperty(const char* name)
     if (pid == -1)
     {//no such property
         Property* property = new Property(name);
-        property->refCount_ = 1;
+        property->m_refCount_ = 1;
         m_properties_.push_back(property);
         m_propertyMap_[name] = m_properties_.size() - 1;
         pid = m_properties_.size() - 1;
@@ -256,6 +300,7 @@ oidType BeanWorld::generateBeanId()
     //todo: currently just return m_maxBeanId_++ assuming it is enough.
     return m_maxBeanId_++;
 };
+
 
 }
 }

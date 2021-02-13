@@ -115,6 +115,29 @@ TEST(BeanWorld, clear)
     delete world;
 }
 
+TEST(BeanWorld, getProperty)
+{
+    BeanWorld world;
+    Value value;
+    int pid = 0;
+    const Property* property = nullptr;
+
+    Bean *bean = world.createBean();
+    property = world.getProperty(nullptr);
+    EXPECT_TRUE(property == nullptr);
+    property = world.getProperty("");
+    EXPECT_TRUE(property == nullptr);
+    property = world.getProperty("a");
+    EXPECT_TRUE(property == nullptr);
+
+    bean->setProperty("p1", 1);
+    property = world.getProperty("p1");
+    EXPECT_TRUE(property->getName() == "p1");
+    (*bean)["p2"] = 2;
+    property = world.getProperty("p2");
+    EXPECT_TRUE(property == nullptr);
+}
+
 TEST(BeanWorld, getProperties)
 {
     BeanWorld *world = new BeanWorld();
@@ -221,4 +244,159 @@ TEST(BeanWorld, removeBean)
     (*bean)["p2"] = 2;
     world.removeBean(bean->getId());
     EXPECT_TRUE(world.getBean(oid) == nullptr);
+}
+
+
+TEST(BeanWorld, findEqual_basic)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean* bean1 = world.createBean();
+    bean1->setProperty("double_p", 1.0);
+    bean1->setProperty("str_p", "hello");
+    bean1->setProperty("bool_p0", false);
+    bean1->setProperty("bool_p1", true);
+    bean1->setProperty("int_p", 1);
+    bean1->setProperty("uint_p", 2U);
+    bean1->setProperty("int64_p", 3);
+    bean1->setProperty("uint64_p", 4U);
+
+
+    // world.findEqual("int_p", 1, beans);
+    // EXPECT_TRUE(beans.size() == 1);
+    // for (auto& bean : beans)
+    // {
+    //     EXPECT_TRUE((*bean)["int_p"] == 1);
+    // }
+
+    // world.findEqual("uint_p", 2U, beans);
+    // EXPECT_TRUE(beans.size() == 1);
+    // for (auto& bean : beans)
+    // {
+    //     EXPECT_TRUE((*bean)["uint_p"] == 2U);
+    // }
+
+    // world.findEqual("int64_p", 3, beans);
+    // EXPECT_TRUE(beans.size() == 1);
+    // for (auto& bean : beans)
+    // {
+    //     EXPECT_TRUE((*bean)["int64_p"] == 3);
+    // }
+
+    // world.findEqual("uint64_p", 4U, beans);
+    // EXPECT_TRUE(beans.size() == 1);
+    // for (auto& bean : beans)
+    // {
+    //     EXPECT_TRUE((*bean)["uint64_p"] == 4U);
+    // }
+
+    Bean* bean2 = world.createBean();
+    bean2->setProperty("double_p", 1.0);
+    bean2->setProperty("str_p", "hello");
+    bean2->setProperty("bool_p0", false);
+    bean2->setProperty("bool_p1", true);
+    bean2->setProperty("int_p", 1);
+    bean2->setProperty("uint_p", 2U);
+    bean2->setProperty("int64_p", 3);
+    bean2->setProperty("uint64_p", 4U);
+
+    world.findEqual("double_p", 1.0, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] == 1.0);
+    }
+
+    world.findEqual("bool_p0", false, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["bool_p0"] == false);
+    }
+
+    world.findEqual("bool_p1", true, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["bool_p1"] == true);
+    }
+
+
+    world.findEqual("str_p", "hello", beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"] == "hello");
+    }
+
+   world.findEqual("int_p", 1, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] == 1);
+    }
+
+    world.findEqual("uint_p", 2U, beans);
+    EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] == 2U);
+    }
+
+    world.findEqual("int64_p", (Json::Int64)3, beans);
+    EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int64_p"] == 3);
+    }
+
+    world.findEqual("uint64_p", (Json::UInt64)4, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint64_p"] == 4U);
+    }
+
+
+}
+
+
+TEST(BeanWorld, findEqual_type_diff)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+    Bean* bean1 = world.createBean();
+    Bean* bean2 = world.createBean();
+
+    bean1->setProperty("p1", 1);
+    bean1->setProperty("p2", 2);
+    bean1->setProperty("p3", 3);
+    bean1->setProperty("p4", 4);
+
+    bean2->setProperty("p1", 1U);
+    bean2->setProperty("p2", 2U);
+    bean2->setProperty("p3", 3U);
+     bean2->setProperty("p4", 4U);
+
+   world.findEqual("p1", 1, beans);
+   EXPECT_TRUE(beans.size() == 1);
+   world.findEqual("p1", 1U, beans);
+   EXPECT_TRUE(beans.size() == 1);
+
+    world.findEqual("p2", 2, beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findEqual("p2", 2U, beans);
+    EXPECT_TRUE(beans.size() == 1);
+
+    world.findEqual("p3", 3, beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findEqual("p3", 3U, beans);
+   EXPECT_TRUE(beans.size() == 1);
+
+    world.findEqual("p4", 4, beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findEqual("p4", 4U, beans);
+   EXPECT_TRUE(beans.size() == 1);
+
 }

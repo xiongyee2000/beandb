@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <list>
 #include <unordered_map>
 
 #include "jsoncpp/json/value.h"
@@ -17,11 +18,11 @@ class BeanWorld;
 class Property
 {
 public:
-    Property(const std::string& name) : name_(name) {};
-    Property(const char* name) : name_(name) {};
+    Property(const std::string& name) : m_name_(name) {};
+    Property(const char* name) : m_name_(name) {};
     virtual ~Property();
 
-    const std::string& getName() const {return name_;};
+    const std::string& getName() const {return m_name_;};
 
 private:
     void clear();
@@ -43,19 +44,28 @@ private:
     void removeIndex(Bean* bean, bool value);
     void removeIndex(Bean* bean, const Json::Value& value);
 
-    std::string name_;
-    unsigned int refCount_ = 0;
-    std::unordered_map<oidType, Bean*> trueValueMap_;
-    std::unordered_map<oidType, Bean*> falseValueMap_;
-    std::multimap<Json::Int64, Bean*> intValueMap_;
-    std::multimap<Json::Int64, Bean*> uintValueMap_;
-    std::multimap<double, Bean*> doubleValueMap_;
+    void findEqual(Json::Int value, std::list<Bean*>& beans) const;
+    void findEqual(Json::UInt value, std::list<Bean*>& beans) const;
+    void findEqual(Json::Int64 value, std::list<Bean*>& beans) const;
+    void findEqual(Json::UInt64 value, std::list<Bean*>& beans) const;
+    void findEqual(double value, std::list<Bean*>& beans) const;
+    void findEqual(bool value, std::list<Bean*>& beans) const;
+    void findEqual(const char* value, std::list<Bean*>& beans) const;
+
+private:
+    std::string m_name_;
+    unsigned int m_refCount_ = 0;
+    std::unordered_map<oidType, Bean*> m_trueValueMap_;
+    std::unordered_map<oidType, Bean*> m_falseValueMap_;
+    std::multimap<Json::Int64, Bean*> m_intValueMap_;
+    std::multimap<Json::Int64, Bean*> m_uintValueMap_;
+    std::multimap<double, Bean*> m_doubleValueMap_;
 
      struct StrComparator
     {
         bool operator()(const char* const & a, const char* const & b) const;
     };
-    std::multimap<const char*, Bean*, StrComparator> strValueMap_;
+    std::multimap<const char*, Bean*, StrComparator> m_strValueMap_;
 
 
 friend class BeanWorld;

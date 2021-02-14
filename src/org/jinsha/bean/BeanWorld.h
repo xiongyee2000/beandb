@@ -20,6 +20,8 @@ public:
     BeanWorld();
     virtual ~BeanWorld();
 
+    void clear();
+
     Bean *createBean();
     void removeBean(oidType id);
 
@@ -28,29 +30,19 @@ public:
 
     Bean* getBean(oidType id);
 
-    void findEqual(const char* propertyName,  Json::Int value, std::list<Bean*>& beans);
-    void findEqual(const char* propertyName,  Json::UInt value, std::list<Bean*>& beans);
-    void findEqual(const char* propertyName,  Json::Int64 value, std::list<Bean*>& beans);
-    void findEqual(const char* propertyName,  Json::UInt64 value, std::list<Bean*>& beans);
-    void findEqual(const char* propertyName,  bool value, std::list<Bean*>& beans);
-    void findEqual(const char* propertyName,  double value, std::list<Bean*>& beans);
-    void findEqual(const char* propertyName,  const char* value, std::list<Bean*>& beans);
-    template<typename T>
-    static void findEqualCommon(const BeanWorld *world, 
-        const char* propertyName,  
-        const T& value, 
-        std::list<Bean*>& beans);
-
-
     int getPropertyId(const char* name) const;
+    const Property* getProperty(pidType pid) const;
     const Property* getProperty(const char* name) const;
     const std::unordered_map<std::string, unsigned int>& getProperties() const 
      {return m_propertyMap_;};
 
-    void clear();
+    void findEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findLessEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findGreaterEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findLessThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
 
 private:
-
     pidType setProperty(Bean* bean,  const char* name, bool value);
     pidType setProperty(Bean* bean,  const char* name, Json::Int value);
     pidType setProperty(Bean* bean,  const char* name, Json::UInt value);
@@ -64,6 +56,9 @@ private:
     pidType addProperty(const char* name);
     Json::Value removeProperty(Bean* bean, const char* name);
     void removeProperty(pidType pid);
+
+    void findCommon(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
 
     int addRelation(Bean* from, Bean* to, const char* propertyName);
     int removeRelation(Bean* from, Bean* to, const char* propertyName);

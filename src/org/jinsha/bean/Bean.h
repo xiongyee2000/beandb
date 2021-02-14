@@ -4,8 +4,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include "jsoncpp/json/value.h"
-
 #include "./common.h"
 
 namespace org {

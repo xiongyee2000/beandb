@@ -246,6 +246,75 @@ TEST(BeanWorld, removeBean)
     EXPECT_TRUE(world.getBean(oid) == nullptr);
 }
 
+TEST(BeanWorld, findEqual_without_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean &bean1 = *world.createBean();
+    bean1["double_p"] = 1.0;
+    bean1["str_p"] = "hello";
+    bean1["bool_p0"] = false;
+    bean1["bool_p1"] = true;
+    bean1["int_p"] = 1;
+    bean1["uint_p"] = 2U;
+    bean1["int64_p"] = 3;
+    bean1["uint64_p"] = 4U;
+
+    Bean& bean2 = *world.createBean();
+    bean2["double_p"] = 1.0;
+    bean2["str_p"] = "hello";
+    bean2["bool_p0"] = false;
+    bean2["bool_p1"] = true;
+    bean2["int_p"] = 1;
+    bean2["uint_p"] = 2U;
+    bean2["int64_p"] = 3;
+    bean2["uint64_p"] = 4U;
+
+    world.findEqual("double_p", 1.0, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] == 1.0);
+    }
+
+    world.findEqual("bool_p0", false, beans);
+
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["bool_p0"] == false);
+    }
+
+    world.findEqual("bool_p1", true, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["bool_p1"] == true);
+    }
+
+
+    world.findEqual("str_p", "hello", beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"] == "hello");
+    }
+
+   world.findEqual("int_p", (int_t)1, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] == 1);
+    }
+
+    world.findEqual("uint_p", (uint_t)2U, beans);
+    EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] == 2U);
+    }
+}
 
 TEST(BeanWorld, findEqual_with_index)
 {
@@ -316,77 +385,6 @@ TEST(BeanWorld, findEqual_with_index)
 
 }
 
-TEST(BeanWorld, findEqual_without_index)
-{
-    BeanWorld world;
-    std::list<Bean*> beans;
-
-    Bean &bean1 = *world.createBean();
-    bean1["double_p"] = 1.0;
-    bean1["str_p"] = "hello";
-    bean1["bool_p0"] = false;
-    bean1["bool_p1"] = true;
-    bean1["int_p"] = 1;
-    bean1["uint_p"] = 2U;
-    bean1["int64_p"] = 3;
-    bean1["uint64_p"] = 4U;
-
-    Bean& bean2 = *world.createBean();
-    bean2["double_p"] = 1.0;
-    bean2["str_p"] = "hello";
-    bean2["bool_p0"] = false;
-    bean2["bool_p1"] = true;
-    bean2["int_p"] = 1;
-    bean2["uint_p"] = 2U;
-    bean2["int64_p"] = 3;
-    bean2["uint64_p"] = 4U;
-
-    world.findEqual("double_p", 1.0, beans);
-   EXPECT_TRUE(beans.size() == 2);
-    for (auto& bean : beans)
-    {
-        EXPECT_TRUE((*bean)["double_p"] == 1.0);
-    }
-
-    world.findEqual("bool_p0", false, beans);
-
-   EXPECT_TRUE(beans.size() == 2);
-    for (auto& bean : beans)
-    {
-        EXPECT_TRUE((*bean)["bool_p0"] == false);
-    }
-
-    world.findEqual("bool_p1", true, beans);
-   EXPECT_TRUE(beans.size() == 2);
-    for (auto& bean : beans)
-    {
-        EXPECT_TRUE((*bean)["bool_p1"] == true);
-    }
-
-
-    world.findEqual("str_p", "hello", beans);
-   EXPECT_TRUE(beans.size() == 2);
-    for (auto& bean : beans)
-    {
-        EXPECT_TRUE((*bean)["str_p"] == "hello");
-    }
-
-   world.findEqual("int_p", (int_t)1, beans);
-   EXPECT_TRUE(beans.size() == 2);
-    for (auto& bean : beans)
-    {
-        EXPECT_TRUE((*bean)["int_p"] == 1);
-    }
-
-    world.findEqual("uint_p", (uint_t)2U, beans);
-    EXPECT_TRUE(beans.size() == 2);
-    for (auto& bean : beans)
-    {
-        EXPECT_TRUE((*bean)["uint_p"] == 2U);
-    }
-
-}
-
 TEST(BeanWorld, findEqual_type_diff)
 {
     BeanWorld world;
@@ -426,6 +424,112 @@ TEST(BeanWorld, findEqual_type_diff)
 
 }
 
+
+TEST(BeanWorld, findLessEqual_without_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean* bean1 = world.createBean();
+    (*bean1)["double_p"] = 1.0;
+    (*bean1)["str_p"] = "hello";
+    (*bean1)["int_p"] = 1;
+    (*bean1)["uint_p"] = 1U;
+    (*bean1)["int64_p"] = 101;
+    (*bean1)["uint64_p"] = 101U;
+
+    Bean* bean2 = world.createBean();
+    (*bean2)["double_p"] = 2.0;
+    (*bean2)["str_p"] = "my";
+    (*bean2)["int_p"] = 2;
+    (*bean2)["uint_p"] = 2U;
+    (*bean2)["int64_p"] = 102;
+    (*bean2)["uint64_p"] = 102U;
+
+    Bean* bean3 = world.createBean();
+    (*bean3)["double_p"] = 3.0;
+    (*bean3)["str_p"] = "world";
+    (*bean3)["int_p"] = 3;
+    (*bean3)["uint_p"] = 3U;
+    (*bean3)["int64_p"] = 103;
+    (*bean3)["uint64_p"] = 103U;
+
+    world.findLessEqual("double_p", 1.0, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] <= 1.0);
+    }
+    world.findLessEqual("double_p", 2.0, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] <= 2.0);
+    }
+    world.findLessEqual("double_p", 3.0, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] <= 3.0);
+    }
+
+    world.findLessEqual("str_p", "hello", beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("hello") <= 0);
+    }
+    world.findLessEqual("str_p", "my", beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("my") <= 0);
+    }
+    world.findLessEqual("str_p", "world", beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("world") <= 0);
+    }
+
+   world.findLessEqual("int_p", (int_t)1, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] <= 1);
+    }
+   world.findLessEqual("int_p", (int_t)2, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] <= 2);
+    }
+   world.findLessEqual("int_p", (int_t)3, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] <= 3);
+    }
+
+    world.findLessEqual("uint_p", (uint_t)1, beans);
+    EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] <= (uint_t)1);
+    }
+    world.findLessEqual("uint_p", (uint_t)2, beans);
+    EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] <= (uint_t)2);
+    }
+    world.findLessEqual("uint_p", (uint_t)3, beans);
+    EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] <= (uint_t)3);
+    }
+}
 
 TEST(BeanWorld, findLessEqual_with_index)
 {
@@ -531,5 +635,450 @@ TEST(BeanWorld, findLessEqual_with_index)
     {
         EXPECT_TRUE((*bean)["uint_p"] <= (uint_t)3);
     }
-
 }
+
+TEST(BeanWorld, findGreaterEqual_without_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean* bean1 = world.createBean();
+    (*bean1)["double_p"] = 1.0;
+
+    Bean* bean2 = world.createBean();
+    (*bean2)["double_p"] = 2.0;
+
+    Bean* bean3 = world.createBean();
+    (*bean3)["double_p"] = 3.0;
+
+    world.findGreaterEqual("double_p", 1.0, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] >= 1.0);
+    }
+    world.findGreaterEqual("double_p", 2.0, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] >= 2.0);
+    }
+    world.findGreaterEqual("double_p", 3.0, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] >= 3.0);
+    }
+}
+
+TEST(BeanWorld, findGreaterEqual_with_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean* bean1 = world.createBean();
+    bean1->setProperty("double_p", 1.0);
+    bean1->setProperty("str_p", "hello");
+    bean1->setProperty("int_p", 1);
+    bean1->setProperty("uint_p", 1U);
+    bean1->setProperty("int64_p", 101);
+    bean1->setProperty("uint64_p", 101U);
+
+    Bean* bean2 = world.createBean();
+    bean2->setProperty("double_p", 2.0);
+    bean2->setProperty("str_p", "my");
+    bean2->setProperty("int_p", 2);
+    bean2->setProperty("uint_p", 2U);
+    bean2->setProperty("int64_p", 102);
+    bean2->setProperty("uint64_p", 102U);
+
+    Bean* bean3 = world.createBean();
+    bean3->setProperty("double_p", 3.0);
+    bean3->setProperty("str_p", "world");
+    bean3->setProperty("int_p", 3);
+    bean3->setProperty("uint_p", 3U);
+    bean3->setProperty("int64_p", 103);
+    bean3->setProperty("uint64_p", 103U);
+
+    world.findGreaterEqual("double_p", 1.0, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] >= 1.0);
+    }
+    world.findGreaterEqual("double_p", 2.0, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] >= 2.0);
+    }
+    world.findGreaterEqual("double_p", 3.0, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] >= 3.0);
+    }
+
+    world.findGreaterEqual("str_p", "hello", beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("hello") >= 0);
+    }
+    world.findGreaterEqual("str_p", "my", beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("my") >= 0);
+    }
+    world.findGreaterEqual("str_p", "world", beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("world") >= 0);
+    }
+
+   world.findGreaterEqual("int_p", (int_t)1, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] >= 1);
+    }
+   world.findGreaterEqual("int_p", (int_t)2, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] >= 2);
+    }
+   world.findGreaterEqual("int_p", (int_t)3, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] >= 3);
+    }
+
+    world.findGreaterEqual("uint_p", (uint_t)1, beans);
+    EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] >= (uint_t)1);
+    }
+    world.findGreaterEqual("uint_p", (uint_t)2, beans);
+    EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] >= (uint_t)2);
+    }
+    world.findGreaterEqual("uint_p", (uint_t)3, beans);
+    EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] >= (uint_t)3);
+    }
+}
+
+TEST(BeanWorld, findLessThan_without_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean* bean1 = world.createBean();
+    (*bean1)["double_p"] = 1.0;
+
+    Bean* bean2 = world.createBean();
+    (*bean2)["double_p"] =  2.0;
+
+    Bean* bean3 = world.createBean();
+    (*bean3)["double_p"] = 3.0;
+
+    world.findLessThan("double_p", 1.0, beans);
+   EXPECT_TRUE(beans.size() == 0);
+    world.findLessThan("double_p", 2.0, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] < 2.0);
+    }
+    world.findLessThan("double_p", 3.0, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] < 3.0);
+    }
+    world.findLessThan("double_p", 4.0, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] < 4.0);
+    }
+}
+
+TEST(BeanWorld, findLessThan_with_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean* bean1 = world.createBean();
+    bean1->setProperty("double_p", 1.0);
+    bean1->setProperty("str_p", "hello");
+    bean1->setProperty("int_p", 1);
+    bean1->setProperty("uint_p", 1U);
+    bean1->setProperty("int64_p", 101);
+    bean1->setProperty("uint64_p", 101U);
+
+    Bean* bean2 = world.createBean();
+    bean2->setProperty("double_p", 2.0);
+    bean2->setProperty("str_p", "my");
+    bean2->setProperty("int_p", 2);
+    bean2->setProperty("uint_p", 2U);
+    bean2->setProperty("int64_p", 102);
+    bean2->setProperty("uint64_p", 102U);
+
+    Bean* bean3 = world.createBean();
+    bean3->setProperty("double_p", 3.0);
+    bean3->setProperty("str_p", "world");
+    bean3->setProperty("int_p", 3);
+    bean3->setProperty("uint_p", 3U);
+    bean3->setProperty("int64_p", 103);
+    bean3->setProperty("uint64_p", 103U);
+
+    world.findLessThan("double_p", 1.0, beans);
+   EXPECT_TRUE(beans.size() == 0);
+    world.findLessThan("double_p", 2.0, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] < 2.0);
+    }
+    world.findLessThan("double_p", 3.0, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] < 3.0);
+    }
+    world.findLessThan("double_p", 4.0, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] < 4.0);
+    }
+
+    world.findLessThan("str_p", "hello", beans);
+   EXPECT_TRUE(beans.size() == 0);
+    world.findLessThan("str_p", "my", beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("my") < 0);
+    }
+    world.findLessThan("str_p", "world", beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("world") < 0);
+    }
+    world.findLessThan("str_p", "zzz", beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("zzz") < 0);
+    }
+
+   world.findLessThan("int_p", (int_t)1, beans);
+   EXPECT_TRUE(beans.size() == 0);
+   world.findLessThan("int_p", (int_t)2, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] < 2);
+    }
+   world.findLessThan("int_p", (int_t)3, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] < 3);
+    }
+   world.findLessThan("int_p", 4, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] < 4);
+    }
+
+    world.findLessThan("uint_p", (uint_t)1, beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findLessThan("uint_p", (uint_t)2, beans);
+    EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] < (uint_t)2);
+    }
+    world.findLessThan("uint_p", (uint_t)3, beans);
+    EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] < (uint_t)3);
+    }
+    world.findLessThan("uint_p", (uint_t)4, beans);
+    EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] < (uint_t)4);
+    }
+}
+
+TEST(BeanWorld, findGreaterThan_without_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean* bean1 = world.createBean();
+    (*bean1)["double_p"] = 1.0;
+
+    Bean* bean2 = world.createBean();
+    (*bean2)["double_p"] = 2.0;
+
+    Bean* bean3 = world.createBean();
+    (*bean3)["double_p"] = 3.0;
+
+    world.findGreaterThan("double_p", 0.0, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] > 0.0);
+    }
+    world.findGreaterThan("double_p", 1.0, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] > 1.0);
+    }
+    world.findGreaterThan("double_p", 2.0, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] > 2.0);
+    }
+    world.findGreaterThan("double_p", 3.0, beans);
+   EXPECT_TRUE(beans.size() == 0);
+}
+
+TEST(BeanWorld, findGreaterThan_with_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean* bean1 = world.createBean();
+    bean1->setProperty("double_p", 1.0);
+    bean1->setProperty("str_p", "hello");
+    bean1->setProperty("int_p", 1);
+    bean1->setProperty("uint_p", 1U);
+    bean1->setProperty("int64_p", 101);
+    bean1->setProperty("uint64_p", 101U);
+
+    Bean* bean2 = world.createBean();
+    bean2->setProperty("double_p", 2.0);
+    bean2->setProperty("str_p", "my");
+    bean2->setProperty("int_p", 2);
+    bean2->setProperty("uint_p", 2U);
+    bean2->setProperty("int64_p", 102);
+    bean2->setProperty("uint64_p", 102U);
+
+    Bean* bean3 = world.createBean();
+    bean3->setProperty("double_p", 3.0);
+    bean3->setProperty("str_p", "world");
+    bean3->setProperty("int_p", 3);
+    bean3->setProperty("uint_p", 3U);
+    bean3->setProperty("int64_p", 103);
+    bean3->setProperty("uint64_p", 103U);
+
+    world.findGreaterThan("double_p", 0.0, beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] > 0.0);
+    }
+    world.findGreaterThan("double_p", 1.0, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] > 1.0);
+    }
+    world.findGreaterThan("double_p", 2.0, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["double_p"] > 2.0);
+    }
+    world.findGreaterThan("double_p", 3.0, beans);
+   EXPECT_TRUE(beans.size() == 0);
+
+    world.findGreaterThan("str_p", "a", beans);
+   EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("a") > 0);
+    }
+    world.findGreaterThan("str_p", "hello", beans);
+    EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("hello") > 0);
+    }
+    world.findGreaterThan("str_p", "my", beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("my") > 0);
+    }
+    world.findGreaterThan("str_p", "world", beans);
+   EXPECT_TRUE(beans.size() == 0);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["str_p"].compare("world") > 0);
+    }
+
+    world.findGreaterThan("int_p", 0, beans);
+    EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] > 0);
+    }
+
+   world.findGreaterThan("int_p", 1, beans);
+   EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] > 1);
+    }
+   world.findGreaterThan("int_p", 2, beans);
+   EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["int_p"] > 2);
+    }
+   world.findGreaterThan("int_p", 3, beans);
+   EXPECT_TRUE(beans.size() == 0);
+
+    world.findGreaterThan("uint_p", (uint_t)0, beans);
+    EXPECT_TRUE(beans.size() == 3);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] > (uint_t)0);
+    }
+    world.findGreaterThan("uint_p", (uint_t)1, beans);
+    EXPECT_TRUE(beans.size() == 2);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] > (uint_t)1);
+    }
+    world.findGreaterThan("uint_p", (uint_t)2, beans);
+    EXPECT_TRUE(beans.size() == 1);
+    for (auto& bean : beans)
+    {
+        EXPECT_TRUE((*bean)["uint_p"] > (uint_t)2);
+    }
+    world.findGreaterThan("uint_p", (uint_t)3, beans);
+    EXPECT_TRUE(beans.size() == 0);
+}
+

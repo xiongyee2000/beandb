@@ -193,11 +193,14 @@ static void doFindCommon(int opType, const ValueT& value, const MapT& map, std::
             break;
     }
 
+    const auto keyComparator = map.key_comp();
     for (auto iter = lowerBound; iter != upperBound; iter++)
     {
          if  (opType == op_gt || opType == op_lt)
         {
-            if (iter->first != value) //skip equal ones
+            if (keyComparator(iter->first, value) ||
+                keyComparator(value, iter->first) ) 
+                //skip equal ones
                 beans.push_back(iter->second);
         }
         else

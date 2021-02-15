@@ -190,7 +190,9 @@ TEST(Bean, isMember)
     
     EXPECT_TRUE(bean.isMember("p1"));
     EXPECT_TRUE(bean.isMember("p2"));
+    EXPECT_TRUE(bean.isMember(string("p2")));
     EXPECT_TRUE(!bean.isMember("xxx"));
+    EXPECT_TRUE(!bean.isMember(string("xxx")));
 }
 
 

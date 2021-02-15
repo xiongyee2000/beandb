@@ -37,7 +37,8 @@ public:
     bool 	empty () const {return m_jsonValue_.empty();};
     Json::Value get (const char *key, const Json::Value &defaultValue) const {return m_jsonValue_.get(key, defaultValue);};
     Json::Value get (const std::string &key, const Json::Value &defaultValue) const {return m_jsonValue_.get(key, defaultValue);};
-    bool isMember (const std::string &key) const {return m_jsonValue_.isMember(key);};
+    bool isMember (const char* key) const;
+    bool isMember (const std::string &key) const;
     Json::Value::Members getMemberNames () const {return m_jsonValue_.getMemberNames();};
     Json::Value & operator[] (const char *key) {return m_jsonValue_[key];};
     const Json::Value & operator[] (const char *key) const {return m_jsonValue_[key];};
@@ -72,14 +73,7 @@ public:
      * error code:
      *      -1 if name is nullptr or empty, or the value is nullptr
      */
-    // int setProperty(const char* name, const Json::Value& value);
-    pidType setProperty( const char* name, bool value);
-    pidType setProperty( const char* name, Json::Int value);
-    pidType setProperty( const char* name, Json::UInt value);
-    pidType setProperty( const char* name, Json::Int64 value);
-    pidType setProperty( const char* name, Json::UInt64 value);
-    pidType setProperty( const char* name, double value);
-    pidType setProperty( const char* name, const char* value);
+    pidType setProperty(const char* name, const Json::Value& value);
 
     /**
      * Remove property from this bean
@@ -97,17 +91,6 @@ private:
     // void swap(Json::Value &other);
 
     Json::Value m_jsonValue_;
-
-
-    // template<typename T>
-    // int setProperty(const char* name,  const T& value)
-    // {
-    //     Json::Value v(v);
-    //     return doSetProperty(name, v);
-    // }
-
-    // int doSetProperty(const char* name, const Json::Value& value);
-
     BeanWorld* m_world_;
 
     // otype classId_ = 0;

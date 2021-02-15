@@ -1,6 +1,8 @@
 
 #include <assert.h>
 #include <cstring>
+#include <locale.h>
+
 #include "./BeanWorld.h"
 #include "./internal_common.hxx"
 
@@ -13,7 +15,7 @@ namespace bean {
 
 BeanWorld::BeanWorld()
 {
-
+    setlocale(LC_ALL, "");
 }
 
 
@@ -99,7 +101,7 @@ int BeanWorld::getPropertyId(const char* name) const
 
 const Property* BeanWorld::getProperty(pidType pid) const
 {
-    if (pid < 0 || pid >= m_properties_.size())
+    if (pid < 0 || (size_t)pid >= m_properties_.size())
         return nullptr;
     else
         return m_properties_[pid];
@@ -164,12 +166,9 @@ int BeanWorld::removeRelation(Bean* from, Bean* to, const char* propertyName)
         // m_propertyIndexTypes_[pid] = Json::objectValue;
 }
 
-template<typename T>
-pidType BeanWorld::doSetProperty( Bean* bean, const char* name, T value)
-{
-    if (name == nullptr) return -1;
-    if (name[0] == 0) return -1;
 
+pidType BeanWorld::setProperty( Bean* bean, const char* name, const Json::Value& value)
+{
     pidType  pid = getPropertyId(name);
     Property* property = nullptr;
 
@@ -192,48 +191,11 @@ pidType BeanWorld::doSetProperty( Bean* bean, const char* name, T value)
     }
     
     //set value for json object
-    auto& v = (*bean)[name];
-    v = value;
-    property->addIndex(bean, value);
+    Json::Value& v = (*bean)[name];
+    v  = value;
+    property->addIndex(bean, v);
 
     return pid;
-}
-
-
-pidType BeanWorld::setProperty(Bean* bean, const char* name, Json::Int value)
-{
-    return doSetProperty<Json::Int>(bean, name, value);
-}
-
-pidType BeanWorld::setProperty(Bean* bean, const char* name, Json::UInt value)
-{
-    return doSetProperty<Json::UInt>(bean, name, value);
-}
-
-pidType BeanWorld::setProperty(Bean* bean, const char* name, Json::Int64 value)
-{
-    return doSetProperty<Json::Int64>(bean, name, value);
-}
-
-pidType BeanWorld::setProperty(Bean* bean, const char* name, Json::UInt64 value)
-{
-    return doSetProperty<Json::UInt64>(bean, name, value);
-}
-
-pidType BeanWorld::setProperty(Bean* bean, const char* name, bool value)
-{
-    return doSetProperty<bool>(bean, name, value);
-}
-
-pidType BeanWorld::setProperty(Bean* bean, const char* name, double value)
-{
-    return doSetProperty<double>(bean, name, value);
-}
-
-pidType BeanWorld::setProperty(Bean* bean, const char* name, const char* value)
-{
-    if (value == nullptr) return -1;
-    return doSetProperty<const char*>(bean, name, value);
 }
 
 
@@ -284,6 +246,21 @@ void BeanWorld::removeProperty(pidType pid)
 }
 
 
+void BeanWorld::findCommon(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
+{
+   const Property* property = getProperty(propertyName);
+    if (property != nullptr)
+    { //indexed by property, use index to improve performance
+        // switch (type)
+        property->findCommon(opType, value, beans);
+    }
+    else
+    { //no index, do trivial find
+        trivialFind(opType, propertyName, value, beans);
+    }
+}
+
+
 void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
     if (value.isNull() || value.isArray() || value.isObject()) return;
@@ -314,21 +291,6 @@ void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::V
             default:
                 break;
         }
-    }
-}
-
-
-void BeanWorld::findCommon(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
-{
-   const Property* property = getProperty(propertyName);
-    if (property != nullptr)
-    { //indexed by property, use index to improve performance
-        // switch (type)
-        property->findCommon(opType, value, beans);
-    }
-    else
-    { //no index, do trivial find
-        trivialFind(opType, propertyName, value, beans);
     }
 }
 

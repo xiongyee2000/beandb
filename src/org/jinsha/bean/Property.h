@@ -26,29 +26,12 @@ private:
     void clear();
 
 private:
-    void addIndex(Bean* bean, Json::Int value);
-    void addIndex(Bean* bean, Json::UInt value);
-    void addIndex(Bean* bean, Json::Int64 value);
-    void addIndex(Bean* bean, Json::UInt64 value);
-    void addIndex(Bean* bean, double value);
-    void addIndex(Bean* bean, const char* value);
-    void addIndex(Bean* bean, bool value);
-
-    void removeIndex(Bean* bean, Json::Int value);
-    void removeIndex(Bean* bean, Json::UInt value);
-    void removeIndex(Bean* bean, Json::Int64 value);
-    void removeIndex(Bean* bean, Json::UInt64 value);
-    void removeIndex(Bean* bean,  double value);
-    void removeIndex(Bean* bean, const char* value);
-    void removeIndex(Bean* bean, bool value);
+    void addIndex(Bean* bean, const Json::Value& value);
     void removeIndex(Bean* bean, const Json::Value& value);
 
-    void findEqual(const Json::Value& value, std::list<Bean*>& beans) const; 
-    void findLessEqual(const Json::Value& value, std::list<Bean*>& beans) const;
-    void findGreaterEqual(const Json::Value& value, std::list<Bean*>& beans) const;
-    void findLessThan(const Json::Value& value, std::list<Bean*>& beans) const;
-    void findGreaterThan(const Json::Value& value, std::list<Bean*>& beans) const;
     void findCommon(int type, const Json::Value& value, std::list<Bean*>& beans) const; 
+
+    // void* getMap(const Json::Value& value);
 
 private:
     std::string m_name_;

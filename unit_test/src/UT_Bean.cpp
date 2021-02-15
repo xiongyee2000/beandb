@@ -178,3 +178,19 @@ TEST(Bean, removeMember)
     EXPECT_TRUE(bean.isMember("p1") == false);
 }
 
+TEST(Bean, isMember)
+{
+    BeanWorld world;
+    Value value;
+    pidType pid = 0;
+
+    Bean& bean = *world.createBean();
+    bean["p1"] = 1;
+    bean.setProperty("p2", 2);
+    
+    EXPECT_TRUE(bean.isMember("p1"));
+    EXPECT_TRUE(bean.isMember("p2"));
+    EXPECT_TRUE(!bean.isMember("xxx"));
+}
+
+

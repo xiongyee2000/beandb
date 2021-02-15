@@ -43,16 +43,7 @@ public:
     void findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
 
 private:
-    pidType setProperty(Bean* bean,  const char* name, bool value);
-    pidType setProperty(Bean* bean,  const char* name, Json::Int value);
-    pidType setProperty(Bean* bean,  const char* name, Json::UInt value);
-    pidType setProperty(Bean* bean,  const char* name, Json::Int64 value);
-    pidType setProperty(Bean* bean,  const char* name, Json::UInt64 value);
-    pidType setProperty(Bean* bean,  const char* name, double value);
-    pidType setProperty(Bean* bean,  const char* name, const char* value);
-    template<typename T>
-    pidType doSetProperty( Bean* bean, const char* name, T value);
-
+    pidType setProperty( Bean* bean, const char* name, const Json::Value&  value);
     pidType addProperty(const char* name);
     Json::Value removeProperty(Bean* bean, const char* name);
     void removeProperty(pidType pid);

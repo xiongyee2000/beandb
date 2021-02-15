@@ -4,6 +4,8 @@
 #include "./Bean.h"
 #include "./BeanWorld.h"
 
+using namespace std;
+
 namespace org {
 namespace jinsha {
 namespace bean {
@@ -19,6 +21,20 @@ m_world_(world)
 Bean::~Bean()
 {
     clear();
+}
+
+
+bool Bean::isMember (const char* key) const
+{
+    if (key == nullptr) return false;
+    const Json::Value& v = m_jsonValue_.get(key, Json::Value::null);
+    return (v != Json::Value::null);
+}
+
+
+bool Bean::isMember (const string& key) const
+{
+    return isMember(key.c_str());
 }
 
 
@@ -42,46 +58,15 @@ void Bean::clear()
     }
 }
 
-// int Bean::setProperty(const char* name,  const Json::Value& value)
-// {
-//     return m_world_->setProperty(this, name, value);
-// }
 
-
-pidType Bean::setProperty(const char* name, Json::Int value)
+int Bean::setProperty(const char* name,  const Json::Value& value)
 {
+    if (name == nullptr) return -1;
+    if (name[0] == 0) return -1;
+    if (value.isNull()) return -1;
     return m_world_->setProperty(this, name, value);
 }
 
-pidType Bean::setProperty(const char* name, Json::UInt value)
-{
-    return m_world_->setProperty(this, name, value);
-}
-
-pidType Bean::setProperty(const char* name, Json::Int64 value)
-{
-    return m_world_->setProperty(this, name, value);
-}
-
-pidType Bean::setProperty(const char* name, Json::UInt64 value)
-{
-    return m_world_->setProperty(this, name, value);
-}
-
-pidType Bean::setProperty(const char* name, bool value)
-{
-    return m_world_->setProperty(this, name, value);
-}
-
-pidType Bean::setProperty(const char* name, double value)
-{
-    return m_world_->setProperty(this, name, value);
-}
-
-pidType Bean::setProperty(const char* name, const char* value)
-{
-    return m_world_->setProperty(this, name, value);
-}
 
 Json::Value Bean::removeProperty( const char* name)
 {

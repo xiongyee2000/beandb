@@ -159,7 +159,7 @@ TEST(BeanWorld, getProperties)
     EXPECT_TRUE(pid == -1);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    pid = bean1->setProperty("p1", nullptr);
+    pid = bean1->setProperty("p1", Json::Value());
     EXPECT_TRUE(pid == -1);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
@@ -292,7 +292,6 @@ TEST(BeanWorld, findEqual_with_index)
     {
         EXPECT_TRUE((*bean)["bool_p1"] == true);
     }
-
 
     world.findEqual("str_p", "hello", beans);
    EXPECT_TRUE(beans.size() == 2);

@@ -38,23 +38,11 @@ bool Bean::isMember (const string& key) const
 }
 
 
-Json::Value Bean::removeMember (const char *key)
-{
-    return removeProperty(key);
-}
-
-
-Json::Value Bean::removeMember (const std::string &key)
-{
-    return removeMember(key.c_str());
-}
-
-
 void Bean::clear()
 {
     for (auto& memberName : m_jsonValue_.getMemberNames())
     {
-        removeMember(memberName);
+        removeProperty(memberName.c_str());
     }
 }
 
@@ -68,10 +56,31 @@ int Bean::setProperty(const char* name,  const Json::Value& value)
 }
 
 
+pidType Bean::setProperty(pidType pid,  const Json::Value& value)
+{
+    if (value.isNull()) return -1;
+    Property* property = (Property*)m_world_->getProperty(pid);
+    if (property == nullptr) return -1;
+    m_world_->setProperty(this, pid, value);
+    return pid;
+}
+
+
 Json::Value Bean::removeProperty( const char* name)
 {
     return m_world_->removeProperty(this, name);
 }
+
+
+Json::Value Bean::removeProperty(pidType pid)
+{
+    if (pid < 0 || (size_t)pid >= m_world_->m_properties_.size()) 
+        return Json::Value::null;
+    else
+        return m_world_->removeProperty(this, pid);
+        
+}
+
 
 // class Iterator
 // {

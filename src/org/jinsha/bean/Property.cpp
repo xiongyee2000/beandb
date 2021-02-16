@@ -14,7 +14,7 @@ template<typename ValueT, typename MapT>
 static void doFindCommon(int opType, const ValueT& value, const MapT& map, std::list<Bean*>& beans);
 
 template<typename ValueT, typename MapT>
-static void doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
+static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
 
 Property::~Property()
 {
@@ -66,41 +66,51 @@ void Property::addIndex(Bean* bean, const Json::Value& value)
 }
 
 
-void Property::removeIndex(Bean* bean, const Json::Value& value)
+bool Property::removeIndex(Bean* bean, const Json::Value& value)
 {
+    bool rtn = false;
     switch (value.type()) 
     {
         case Json::intValue:
-            doRemoveIndex<int_t, decltype(m_intValueMap_)>
+            rtn = doRemoveIndex<int_t, decltype(m_intValueMap_)>
                 (bean, (int_t)value.asInt64(), m_intValueMap_);
             break;
         case Json::uintValue:
-            doRemoveIndex<uint_t, decltype(m_uintValueMap_)>
+             rtn = doRemoveIndex<uint_t, decltype(m_uintValueMap_)>
                 (bean, (uint_t)value.asUInt64(), m_uintValueMap_);
             break;
         case Json::realValue:
-            doRemoveIndex<double, decltype(m_doubleValueMap_)>
+             rtn = doRemoveIndex<double, decltype(m_doubleValueMap_)>
                 (bean, value.asDouble(), m_doubleValueMap_);
             break;
         case Json::stringValue:
-            doRemoveIndex<const char*, decltype(m_strValueMap_)>
+             rtn = doRemoveIndex<const char*, decltype(m_strValueMap_)>
                 (bean, value.asCString(), m_strValueMap_);
             break;
         case Json::booleanValue:
             if (value == true)
             {
                 auto item = m_trueValueMap_.find(bean->getId());
-                m_trueValueMap_.erase(item);
+                if (item != m_trueValueMap_.end())
+                {
+                     rtn = true;
+                     m_trueValueMap_.erase(item);
+                }
             }
             else
             {
                 auto item = m_falseValueMap_.find(bean->getId());
-                m_falseValueMap_.erase(item);
+                if (item != m_falseValueMap_.end())
+                {
+                    rtn = true;
+                    m_falseValueMap_.erase(item);
+                }
             }
             break;
         default:
             break;
     }
+    return rtn;
 }
 
 
@@ -154,7 +164,7 @@ bool Property::StrComparator::operator()(const char* const & a, const char* cons
 
 
 template<typename ValueT, typename MapT>
-static void doRemoveIndex(Bean* bean, const ValueT& value, MapT& map)
+static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map)
 {
     auto ret = map.equal_range(value);
     for (auto& it = ret.first; it != ret.second; ++it)
@@ -162,9 +172,10 @@ static void doRemoveIndex(Bean* bean, const ValueT& value, MapT& map)
         if (it->second == bean) 
         {
             map.erase(it);
-            return;
+            return true;
         }
     }
+    return false;
 }
 
 

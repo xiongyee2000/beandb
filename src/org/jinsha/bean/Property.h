@@ -16,10 +16,20 @@ class BeanWorld;
 class Property
 {
 public:
+    /**
+     * Constructor
+     * 
+     * @param name property name (similar to json key)
+     */
     Property(const std::string& name) : m_name_(name) {};
     Property(const char* name) : m_name_(name) {};
     virtual ~Property();
 
+    /**
+     * Get the name of the property
+     * 
+     * @return property name (key)
+     */
     const std::string& getName() const {return m_name_;};
 
 private:
@@ -27,7 +37,7 @@ private:
 
 private:
     void addIndex(Bean* bean, const Json::Value& value);
-    void removeIndex(Bean* bean, const Json::Value& value);
+    bool removeIndex(Bean* bean, const Json::Value& value);
 
     void findCommon(int type, const Json::Value& value, std::list<Bean*>& beans) const; 
 

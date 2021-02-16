@@ -22,36 +22,165 @@ public:
 
     void clear();
 
+    /**
+     *  Create a bean.
+     * 
+     * @return the created bean
+     */
     Bean *createBean();
+
+    /**
+     * Remove a bean.
+     * 
+     * @param id the id of the bean
+     */
     void removeBean(oidType id);
 
+    /**
+     * Get total number of beans.
+     * 
+     * @return the total number of beans
+     */
     int getNumOfBeans();
+
+    /**
+     * Get all beans.
+     * 
+     * @return a map containing all beans
+     */
     const std::unordered_map<oidType, Bean*>& getBeans();
 
+    /**
+     * Get bean by id.
+     * 
+     * @param id the bean id
+     * @return the bean, or nullptr
+     */
     Bean* getBean(oidType id);
 
+    /**
+     * Get the id of a property. Later the property id 
+     * can be used in other methods.
+     * 
+     * It is highly encouraged to use property id, for it
+     * can reduce a lot of string calculation and achieve 
+     * higher performance.
+     *  
+     * @param property name
+     * @return property id
+     */
     int getPropertyId(const char* name) const;
+
+    /**
+     * Get property by id.
+     * 
+     * @param pid property id
+     * @return property
+     */
     const Property* getProperty(pidType pid) const;
+
+    /**
+     * Get property by name.
+     * 
+     * @param name property name
+     * @return property
+     */
     const Property* getProperty(const char* name) const;
+
+    /**
+     * Get all properties.
+     * 
+     * @return a map containing all properties.
+     */
     const std::unordered_map<std::string, unsigned int>& getProperties() const 
      {return m_propertyMap_;};
 
+    /**
+     * Find beans whose property values are equal to the given one.
+     * 
+     * @param propertyName the name of the property
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
     void findEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+
+    /**
+     * Find beans whose property values are less equal to the given one.
+     * 
+     * @param propertyName the name of the property
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
     void findLessEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+
+    /**
+     * Find beans whose property values are greater equal to the given one.
+     * 
+     * @param propertyName the name of the property
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
     void findGreaterEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+
+    /**
+     * Find beans whose property values are less than the given one.
+     * 
+     * @param propertyName the name of the property
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
     void findLessThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+
+    /**
+     * Find beans whose property values are greater than the given one.
+     * 
+     * @param propertyName the name of the property
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
     void findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+
+    // void findEqual(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
+    // void findLessEqual(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
+    // void findGreaterEqual(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
+    // void findLessThan(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
+    // void findGreaterThan(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
 
 private:
     pidType setProperty( Bean* bean, const char* name, const Json::Value&  value);
+    void setProperty( Bean* bean, pidType pid, const Json::Value&  value);
+    void doSetProperty( Bean* bean, Property* property, const Json::Value&  value, bool newProperty = false);
     pidType addProperty(const char* name);
     Json::Value removeProperty(Bean* bean, const char* name);
+    Json::Value removeProperty(Bean* bean, pidType pid);
     void removeProperty(pidType pid);
+    // void recreateIndex(Property* property);
 
     void findCommon(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
     void trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
 
     int addRelation(Bean* from, Bean* to, const char* propertyName);
+    // int addRelation(Bean* from, Bean* to, const char* propertyName);
     int removeRelation(Bean* from, Bean* to, const char* propertyName);
 
     oidType generateBeanId();

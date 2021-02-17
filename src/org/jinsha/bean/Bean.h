@@ -41,37 +41,28 @@ public:
     ////////////////////////////////////////////////////////////////
     bool 	empty () const {return m_jsonValue_.empty();};
 
-    Json::Value get (const char *key, const Json::Value &defaultValue) const 
-        {return m_jsonValue_.get(key, defaultValue);};
-
-    Json::Value get (const std::string &key, const Json::Value &defaultValue) const 
-        {return m_jsonValue_.get(key, defaultValue);};
-
     bool isMember (const char* key) const;
     bool isMember (const std::string &key) const;
 
     Json::Value::Members getMemberNames () const 
         {return m_jsonValue_.getMemberNames();};
 
-    Json::Value & operator[] (const char *key) 
-        {return m_jsonValue_[key];};
-
-    const Json::Value & operator[] (const char *key) const 
-        {return m_jsonValue_[key];};
-
-    Json::Value & operator[] (const std::string &key) 
-        {return m_jsonValue_[key];};
-
-    const Json::Value & operator[] (const std::string &key) const 
-        {return m_jsonValue_[key];};
-
-    Json::Value & operator[] (const Json::StaticString &key) 
-        {return m_jsonValue_[key];};
-
     void clear();
     ////////////////////////////////////////////////////////////////
     //Abov  are corresponding Json::Value methods
     ////////////////////////////////////////////////////////////////
+
+    /**
+     * Get property value.
+     * 
+     * @param propertyName the property name
+     * @return the property value
+     * 
+     * Note:
+     * If this bean does not have property with propertyName,
+     * a json value of null will be returned.
+     */
+    Json::Value getProperty(const char* propertyName) const;
 
     /**
      * Set the value of a property of this bean. 
@@ -95,15 +86,16 @@ public:
      /**
      * Set the value of a property of this bean. 
      * 
-     * This method is basically the same as operator[](), except it will
-     * create an index for this property to optimize the search.
+     * This method is basically the same as bean['key'] = value, 
+     * except that it will create an index for this property to 
+     * optimize the search.
      * 
      * Notes:
      * 1. This method is aimed to achieve better performance. It is highly 
      *      encouraged to use this one if the property has already been set
      *      before.
      * 
-     * @param pid id of the property
+     * @param pid id of the property (see BeanWorld::getPropertyId())
      * @param value value of the property
      * @return The pid of the property if success, or an error code.
      *                   error code:
@@ -113,16 +105,25 @@ public:
     pidType setProperty(pidType pid, const Json::Value& value);
 
     /**
-     * Remove property from this bean
+     * Remove property from this bean.
+     * 
+     * Note the property will be removed no matter is was previously
+     * set by setProperty() or by bean['key'] = value .
+     * 
      * @param name the property name
      * @return the removed item as json value
      */
     Json::Value removeProperty( const char* name);
 
     /**
-     * Remove property from this bean
+     * Remove property from this bean.
+     * 
+     * Note the method is only effective when the pid is valid, 
+     * i.e. the property was previously set by setProperty().
+     * 
      * @param pid the property id
-     * @return the removed item as json value
+     * @return the removed item as json value, or null value if
+     *                   the pid is invalid.
      */
     Json::Value removeProperty(pidType pid);
 

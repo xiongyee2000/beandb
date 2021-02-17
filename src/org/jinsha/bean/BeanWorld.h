@@ -1,6 +1,5 @@
 #pragma once
 
-// #include <memory>
 #include <vector>
 #include <list>
 #include <unordered_map>
@@ -96,6 +95,36 @@ public:
      {return m_propertyMap_;};
 
     /**
+     * Create index for a property, which can be used to improve
+     * search performance.
+     * 
+     * Note this method will create index entries by checking 
+     * each bean's properties: if it has this property (member) then
+     * create an entry for it in the index, otherwise skip. This results 
+     * the time complexity of this method O(n) where n is the number 
+     * of beans in this world.
+     * 
+     * If index is desired, It is highly sugguested to call this method 
+     * before setting any  value for a property so as to achieve the 
+     * best performance.
+     * 
+     * @param propertyName the name of the property
+     * @return the property id, or error code:
+     *                   -1: if name is nullptr or empty
+     *                   -2: if the index already exists
+     */
+    pidType createIndex(const char* propertyName);
+    pidType removeIndex(pidType pid);
+
+    /**
+     * Update index for a property.
+     * 
+     * @param pid the id of the property
+     * @return the property id, or -1 if pid is invalid
+     */
+    pidType updateIndex(Property* property);
+
+    /**
      * Find beans whose property values are equal to the given one.
      * 
      * @param propertyName the name of the property
@@ -169,12 +198,11 @@ public:
 private:
     pidType setProperty( Bean* bean, const char* name, const Json::Value&  value);
     void setProperty( Bean* bean, pidType pid, const Json::Value&  value);
-    void doSetProperty( Bean* bean, Property* property, const Json::Value&  value, bool newProperty = false);
+    void doSetProperty( Bean* bean, Property* property, const Json::Value&  value);
     pidType addProperty(const char* name);
     Json::Value removeProperty(Bean* bean, const char* name);
-    Json::Value removeProperty(Bean* bean, pidType pid);
+    Json::Value removeProperty(Bean* bean, Property* property);
     void removeProperty(pidType pid);
-    // void recreateIndex(Property* property);
 
     void findCommon(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
     void trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
@@ -192,7 +220,6 @@ private:
     std::vector<Property*> m_properties_;
     //map from property name to index
     std::unordered_map<std::string, unsigned int> m_propertyMap_; 
-
 friend class Bean;
 
 };

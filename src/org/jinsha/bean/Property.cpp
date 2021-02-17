@@ -222,39 +222,6 @@ static void doFindCommon(int opType, const ValueT& value, const MapT& map, std::
 }
 
 
-// void* Property::getMap(const Json::Value& value)
-// {
-//     void *rtn = nullptr;
-//     switch (value.type()) 
-//     {
-//         case Json::intValue:
-//             rtn = &m_intValueMap_;
-//             break;
-//         case Json::uintValue:
-//             rtn = &m_uintValueMap_;
-//             break;
-//         case Json::realValue:
-//             rtn = &m_doubleValueMap_;
-//             break;
-//         case Json::booleanValue:
-//             if (value == true)
-//             {
-//                 rtn = &m_trueValueMap_;
-//             }
-//             else
-//             {
-//                 rtn = &m_falseValueMap_;
-//             }
-//             break;
-//         case Json::stringValue:
-//             return &m_strValueMap_;
-//             break;
-//         default:
-//             break;
-//     }
-//     return rtn;
-// }
-
 }
 }
 }

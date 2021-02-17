@@ -57,7 +57,7 @@ TEST(Bean, setProperty_removeProperty_pid)
     pid = bean.setProperty(pid, 1);
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == 1);
+    EXPECT_TRUE(bean.getProperty("p1") == 1);
 }
 
 TEST(Bean, setProperty_removeProperty)
@@ -83,7 +83,7 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p1", Json::Value::minInt);
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == Json::Value::minInt);
+    EXPECT_TRUE(bean.getProperty("p1") == Json::Value::minInt);
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -92,7 +92,7 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p1", Json::Value::maxUInt);
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == Json::Value::maxUInt);
+    EXPECT_TRUE(bean.getProperty("p1") == Json::Value::maxUInt);
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -101,7 +101,7 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p1", Json::Value::minInt64);
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == Json::Value::minInt64);
+    EXPECT_TRUE(bean.getProperty("p1") == Json::Value::minInt64);
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -110,7 +110,7 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p1", Json::Value::maxUInt64);
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == Json::Value::maxUInt64);
+    EXPECT_TRUE(bean.getProperty("p1") == Json::Value::maxUInt64);
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -119,7 +119,7 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p1", 8.8f);
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == 8.8f);
+    EXPECT_TRUE(bean.getProperty("p1") == 8.8f);
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -128,7 +128,7 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p1", 8.8);
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == 8.8);
+    EXPECT_TRUE(bean.getProperty("p1") == 8.8);
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -137,7 +137,7 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p1", 'a');
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == 'a');
+    EXPECT_TRUE(bean.getProperty("p1") == 'a');
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -146,7 +146,7 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p1", true);
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == true);
+    EXPECT_TRUE(bean.getProperty("p1") == true);
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -155,7 +155,7 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p1", false);
     EXPECT_TRUE(pid == world.getPropertyId("p1"));
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == false);
+    EXPECT_TRUE(bean.getProperty("p1") == false);
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -163,7 +163,7 @@ TEST(Bean, setProperty_removeProperty)
 
     bean.setProperty("p1", "v1");
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean["p1"] == "v1");
+    EXPECT_TRUE(bean.getProperty("p1") == "v1");
     value = bean.removeProperty("p1");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -173,17 +173,17 @@ TEST(Bean, setProperty_removeProperty)
     pid = bean.setProperty("p2", "v2");
     EXPECT_TRUE(pid == world.getPropertyId("p2"));
     EXPECT_TRUE(bean.getMemberNames().size() == 2);
-    EXPECT_TRUE(bean["p2"] == "v2");
+    EXPECT_TRUE(bean.getProperty("p2") == "v2");
 
     value = bean.removeProperty("p1");
     EXPECT_TRUE(value == "v1");
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
-    EXPECT_TRUE(bean.get("p1", Json::Value::null).isNull());
+    EXPECT_TRUE(bean.getProperty("p1").isNull());
 
     value = bean.removeProperty("p2");
     EXPECT_TRUE(value == "v2");
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
-    EXPECT_TRUE(bean.get("p2",  Json::Value::null).isNull());
+    EXPECT_TRUE(bean.getProperty("p2").isNull());
     
     value = bean.removeProperty("null");
     EXPECT_TRUE(value.isNull());
@@ -207,7 +207,7 @@ TEST(Bean, removeProperty)
     EXPECT_TRUE(value.isNull());
     EXPECT_TRUE(bean.isMember("p1") == false);
 
-    bean["p1"] = 1;
+    bean.setProperty("p1", 1);
     value = bean.removeProperty("p1");
     EXPECT_TRUE(value == 1);
     EXPECT_TRUE(bean.isMember("p1") == false);
@@ -234,11 +234,6 @@ TEST(Bean, removeProperty_pid)
     value = bean.removeProperty(pid);
     EXPECT_TRUE(value.isNull());
 
-    bean["p1"] = 1;
-    value = bean.removeProperty(world.getPropertyId("p1"));
-    EXPECT_TRUE(value.isNull());
-    EXPECT_TRUE(bean.isMember("p1") == true);
-
     value = bean.removeProperty(world.getPropertyId("p1"));
     EXPECT_TRUE(value.isNull());
 }
@@ -250,7 +245,7 @@ TEST(Bean, isMember)
     pidType pid = 0;
 
     Bean& bean = *world.createBean();
-    bean["p1"] = 1;
+    bean.setProperty("p1", 1);
     bean.setProperty("p2", 2);
     
     EXPECT_TRUE(bean.isMember("p1"));

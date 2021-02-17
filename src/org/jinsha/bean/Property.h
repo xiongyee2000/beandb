@@ -41,11 +41,11 @@ private:
 
     void findCommon(int type, const Json::Value& value, std::list<Bean*>& beans) const; 
 
-    // void* getMap(const Json::Value& value);
-
 private:
     std::string m_name_;
+    pidType m_pid_ = -1;
     unsigned int m_refCount_ = 0;
+    bool m_indexed_ = false;
     std::unordered_map<oidType, Bean*> m_trueValueMap_;
     std::unordered_map<oidType, Bean*> m_falseValueMap_;
     std::multimap<int_t, Bean*> m_intValueMap_;

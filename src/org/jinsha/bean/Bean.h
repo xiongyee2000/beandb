@@ -133,6 +133,8 @@ private:
     Bean& operator =(const Bean& bean) = delete;
     virtual ~Bean();
 
+    const Json::Value& get(const char* key);
+
     // void swap(Json::Value &other);
 
     Json::Value m_jsonValue_;

@@ -51,8 +51,11 @@ void Bean::clear()
 
 Json::Value Bean::getProperty(const char* propertyName) const
 {
-    return isMember(propertyName) ? m_jsonValue_[propertyName] : 
-        Json::Value();
+    Json::Value value;
+    value = m_jsonValue_.get(propertyName, value);
+    return value;
+    // return isMember(propertyName) ? m_jsonValue_[propertyName] : 
+    //     Json::Value();
 }
 
 
@@ -77,9 +80,13 @@ pidType Bean::setProperty(pidType pid,  const Json::Value& value)
 
 Json::Value Bean::removeProperty( const char* name)
 {
+    if (name == nullptr) return Json::Value();
+    if (name[0] == 0) return Json::Value();
     Property* property = (Property*)m_world_->getProperty(name);
-    if (property == nullptr) return Json::Value();
-    return m_world_->removeProperty(this, property);
+    if (property == nullptr) 
+        return m_jsonValue_.removeMember(name); 
+    else
+        return m_world_->removeProperty(this, property);
 }
 
 
@@ -88,6 +95,12 @@ Json::Value Bean::removeProperty(pidType pid)
     Property* property = (Property*)m_world_->getProperty(pid);
     if (property == nullptr) return Json::Value();
     return m_world_->removeProperty(this, property);
+}
+
+const Json::Value& Bean::get(const char* key)
+{
+    if (isMember(key)) return m_jsonValue_[key];
+    return Json::Value::null;
 }
 
 // class Iterator

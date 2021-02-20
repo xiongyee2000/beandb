@@ -2,6 +2,7 @@
 #include <wchar.h>
 #include "./Property.h"
 #include "./Bean.h"
+#include "./BeanWorld.h"
 #include "./internal_common.hxx"
 
 using namespace Json;
@@ -18,18 +19,30 @@ static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
 
 Property::~Property()
 {
-    clear();
+    removeIndex();
 }
 
 
-void Property::clear()
+int Property::createIndex()
 {
-    m_refCount_ = 0;
+    if (m_indexed_) return -1;
+    m_world_->recreateIndex(this);
+    m_indexed_ = true;
+    return 0;
+}
+
+
+int Property::removeIndex()
+{
+    if (!m_indexed_) return -1;
     m_trueValueMap_.clear();
     m_falseValueMap_.clear();
     m_intValueMap_.clear();
     m_uintValueMap_.clear();
     m_doubleValueMap_.clear();
+    m_strValueMap_.clear();
+    m_indexed_ = false;
+    return 0;
 }
 
 

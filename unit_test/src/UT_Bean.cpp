@@ -194,7 +194,7 @@ TEST(Bean, removeProperty)
 {
     BeanWorld world;
     Value value;
-    pidType pid = 0;
+    // pidType pid = 0;
     Bean& bean = *world.createBean();
 
     value = bean.removeProperty(nullptr);
@@ -242,7 +242,7 @@ TEST(Bean, isMember)
 {
     BeanWorld world;
     Value value;
-    pidType pid = 0;
+    // pidType pid = 0;
 
     Bean& bean = *world.createBean();
     bean.setProperty("p1", 1);

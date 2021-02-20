@@ -108,61 +108,37 @@ const Property* BeanWorld::getProperty(pidType pid) const
 }
 
 
+Property* BeanWorld::getProperty(pidType pid)
+{
+    return (Property*)((const BeanWorld*)this)->getProperty(pid);
+}
+
+
 const Property* BeanWorld::getProperty(const char* name) const
 {
     return getProperty(getPropertyId(name));
 }
 
-
-pidType BeanWorld::createIndex(const char* propertyName)
+Property* BeanWorld::getProperty(const char* name)
 {
-    if (propertyName == nullptr) return -1;
-    if (propertyName[0] == 0) return -1;
-    pidType pid = getPropertyId(propertyName);
-    if (pid == -1)
-    {
-        pid = addProperty(propertyName);
-        Property* property = (Property*)getProperty(pid);
-        property->m_indexed_ = true;
-        updateIndex(property);
-    }
-    return pid;
+    return getProperty(getPropertyId(name));
 }
 
-
-pidType BeanWorld::removeIndex(pidType pid)
-{
-    if (pid < 0 || pid >= m_properties_.size()) return -1;
-    Property* property = m_properties_[pid];
-    if (property != nullptr) 
-    {
-        property->clear();
-        property->m_indexed_ = false;
-        return pid;
-    }
-    else
-    {
-        return -2;
-    }
-}
-
-
-pidType BeanWorld::updateIndex(Property* property)
+void BeanWorld::recreateIndex(Property* property)
 {
     Bean* bean = nullptr;
     const string& pname = property->getName();
-    Json::Value value;
-    property->clear();
+    property->removeIndex();
     for (auto& iter : m_beans_)
     {
         bean = iter.second;
-        value = bean->getProperty(pname.c_str());
-        if (!value.isNull())
+        if (bean->isMember(pname))
         {
-            property->addIndex(bean, value);
-            property->m_refCount_++;
+                Json::Value& value = bean->m_jsonValue_[pname];
+                property->addIndex(bean, value);
         }
     }
+    property->m_indexed_ = true;
 }
 
 
@@ -243,17 +219,17 @@ void BeanWorld::setProperty( Bean* bean, pidType pid, const Json::Value& value)
 void BeanWorld::doSetProperty( Bean* bean, Property* property, const Json::Value& value)
 {
     const string& pname = property->getName();
-    Json::Value&& oldValue = bean->getProperty(pname.c_str());
+    const Json::Value& oldValue = bean->get(pname.c_str());
     if (oldValue.isNull())
     { //no old value, new property added to bean
         property->m_refCount_++;
     }
     else
     {
-        if (property->m_indexed_)
+        if (property->indexed())
         {
             //remove index for previous value
-            if (!oldValue.isNull() && !oldValue.isObject() && !oldValue.isArray())
+            if (!oldValue.isObject() && !oldValue.isArray())
                 property->removeIndex(bean, oldValue);
         }
     }
@@ -261,7 +237,7 @@ void BeanWorld::doSetProperty( Bean* bean, Property* property, const Json::Value
     //set value for json object
     Json::Value& v =bean->m_jsonValue_[pname];
     v  = value;
-    if (property->m_indexed_)
+    if (property->indexed())
         property->addIndex(bean, v);
     
 }
@@ -273,9 +249,9 @@ Json::Value BeanWorld::removeProperty(Bean* bean,  Property* property)
     Json::Value value;
     if (bean->isMember(pname))
     {
-        if (property->m_indexed_)
+        if (property->indexed())
            //remove index first
-            property->removeIndex(bean, bean->getProperty(pname));
+            property->removeIndex(bean, bean->get(pname));
         //remove member of json object
         value = bean->m_jsonValue_.removeMember(pname);
         property->m_refCount_--;
@@ -294,7 +270,7 @@ pidType BeanWorld::addProperty(const char* name)
     int pid = getPropertyId(name);
     if (pid == -1)
     {//no such property
-        Property* property = new Property(name);
+        Property* property = new Property(this, name);
         m_properties_.push_back(property);
         m_propertyMap_[name] = m_properties_.size() - 1;
         pid = m_properties_.size() - 1;
@@ -317,9 +293,10 @@ void BeanWorld::removeProperty(pidType pid)
 
 void BeanWorld::findCommon(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
+    beans.clear();
    const Property* property = getProperty(propertyName);
    if (property == nullptr) return;
-    if (property->m_indexed_)
+    if (property->indexed())
     { //indexed by property, use index to improve performance
         // switch (type)
         property->findCommon(opType, value, beans);
@@ -335,12 +312,11 @@ void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::V
 {
     if (value.isNull() || value.isArray() || value.isObject()) return;
     beans.clear();
-    Json::Value v;
     Bean* bean = nullptr;
     for (auto& item : m_beans_)
     {
         bean = item.second;
-        v = bean->getProperty(propertyName);
+        const Json::Value& v = bean->get(propertyName);
         if (v.isNull()) continue; //not found or null
         switch (opType) {
             case op_eq:

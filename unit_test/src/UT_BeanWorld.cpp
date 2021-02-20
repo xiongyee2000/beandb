@@ -66,7 +66,6 @@ TEST(BeanWorld, getNumOfBeans)
 TEST(BeanWorld, getBeans)
 {
     BeanWorld *world = new BeanWorld();
-    Bean* bean_ = nullptr;
 
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
@@ -119,7 +118,7 @@ TEST(BeanWorld, getProperty)
 {
     BeanWorld world;
     Value value;
-    int pid = 0;
+    // int pid = 0;
     const Property* property = nullptr;
 
     Bean *bean = world.createBean();
@@ -243,45 +242,6 @@ TEST(BeanWorld, removeBean)
     EXPECT_TRUE(world.getBean(oid) == nullptr);
 }
 
-TEST(BeanWorld, createIndex_removeIndex)
-{
-    BeanWorld world;
-    std::list<Bean*> beans;
-    pidType pid = 0;
-
-    pid = world.createIndex(nullptr);
-    EXPECT_TRUE(pid == -1);
-    pid = world.createIndex("");
-    EXPECT_TRUE(pid == -1);
-
-    pid = world.removeIndex(-1);
-    EXPECT_TRUE(pid == -1);
-    pid = world.removeIndex(0);
-    EXPECT_TRUE(pid == -1);
-    pid = world.removeIndex(1);
-    EXPECT_TRUE(pid == -1);
-
-    Bean &bean1 = *world.createBean();
-    bean1.setProperty("double_p", 1.0);
-    Bean& bean2 = *world.createBean();
-    bean2.setProperty("double_p", 1.0);
-
-    world.findEqual("double_p", 1.0, beans);
-    EXPECT_TRUE(beans.size() == 2);
-    for (auto& bean : beans)
-    {
-        EXPECT_TRUE(bean->getProperty("double_p") == 1.0);
-    }
-
-    pid = world.createIndex("double_p");
-    EXPECT_TRUE(pid == world.getPropertyId("double_p"));
-    world.findEqual("double_p", 1.0, beans);
-    EXPECT_TRUE(beans.size() == 2);
-    for (auto& bean : beans)
-    {
-        EXPECT_TRUE(bean->getProperty("double_p") == 1.0);
-    }
-}
 
 TEST(BeanWorld, findEqual_without_index)
 {
@@ -358,15 +318,6 @@ TEST(BeanWorld, findEqual_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.createIndex("double_p");
-    world.createIndex("str_p");
-    world.createIndex("bool_p0");
-    world.createIndex("bool_p1");
-    world.createIndex("int_p");
-    world.createIndex("uint_p");
-    world.createIndex("int64_p");
-    world.createIndex("int64_p");
-
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
     bean1->setProperty("str_p", "hello");
@@ -386,6 +337,24 @@ TEST(BeanWorld, findEqual_with_index)
     bean2->setProperty("uint_p", 2U);
     bean2->setProperty("int64_p", 3);
     bean2->setProperty("uint64_p", 4U);
+
+    Property* double_p_property = world.getProperty("double_p");
+    Property* str_p_property = world.getProperty("str_p");
+    Property* bool_p0_property = world.getProperty("bool_p0");
+    Property* bool_p1_property = world.getProperty("bool_p1");
+    Property* int_p_property = world.getProperty("int_p");
+    Property* uint_p_property = world.getProperty("uint_p");
+    Property* int64_p_property = world.getProperty("int64_p");
+    Property* uint64_p_property = world.getProperty("uint64_p");
+
+    double_p_property->createIndex();
+    str_p_property->createIndex();
+    bool_p0_property->createIndex();
+    bool_p1_property->createIndex();
+    int_p_property->createIndex();
+    uint_p_property->createIndex();
+    int64_p_property->createIndex();
+    uint64_p_property->createIndex();
 
     world.findEqual("double_p", 1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
@@ -535,7 +504,7 @@ TEST(BeanWorld, findLessEqual_without_index)
    EXPECT_TRUE(beans.size() == 3);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("str_p").compare("world") <= 0);
+        EXPECT_TRUE(bean->getProperty("str_p").compare( "world") <= 0);
     }
 
    world.findLessEqual("int_p", (int_t)1, beans);
@@ -582,15 +551,6 @@ TEST(BeanWorld, findLessEqual_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.createIndex("double_p");
-    world.createIndex("str_p");
-    world.createIndex("bool_p0");
-    world.createIndex("bool_p1");
-    world.createIndex("int_p");
-    world.createIndex("uint_p");
-    world.createIndex("int64_p");
-    world.createIndex("int64_p");
-
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
     bean1->setProperty("str_p", "hello");
@@ -614,6 +574,20 @@ TEST(BeanWorld, findLessEqual_with_index)
     bean3->setProperty("uint_p", 3U);
     bean3->setProperty("int64_p", 103);
     bean3->setProperty("uint64_p", 103U);
+
+    Property* double_p_property = world.getProperty("double_p");
+    Property* str_p_property = world.getProperty("str_p");
+    Property* int_p_property = world.getProperty("int_p");
+    Property* uint_p_property = world.getProperty("uint_p");
+    Property* int64_p_property = world.getProperty("int64_p");
+    Property* uint64_p_property = world.getProperty("uint64_p");
+
+    double_p_property->createIndex();
+    str_p_property->createIndex();
+    int_p_property->createIndex();
+    uint_p_property->createIndex();
+    int64_p_property->createIndex();
+    uint64_p_property->createIndex();
 
     world.findLessEqual("double_p", 1.0, beans);
    EXPECT_TRUE(beans.size() == 1);
@@ -650,7 +624,7 @@ TEST(BeanWorld, findLessEqual_with_index)
    EXPECT_TRUE(beans.size() == 3);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("str_p").compare("world") <= 0);
+        EXPECT_TRUE(bean->getProperty("str_p").compare( "world") <= 0);
     }
 
    world.findLessEqual("int_p", (int_t)1, beans);
@@ -731,15 +705,6 @@ TEST(BeanWorld, findGreaterEqual_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.createIndex("double_p");
-    world.createIndex("str_p");
-    world.createIndex("bool_p0");
-    world.createIndex("bool_p1");
-    world.createIndex("int_p");
-    world.createIndex("uint_p");
-    world.createIndex("int64_p");
-    world.createIndex("int64_p");
-
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
     bean1->setProperty("str_p", "hello");
@@ -763,6 +728,20 @@ TEST(BeanWorld, findGreaterEqual_with_index)
     bean3->setProperty("uint_p", 3U);
     bean3->setProperty("int64_p", 103);
     bean3->setProperty("uint64_p", 103U);
+
+    Property* double_p_property = world.getProperty("double_p");
+    Property* str_p_property = world.getProperty("str_p");
+    Property* int_p_property = world.getProperty("int_p");
+    Property* uint_p_property = world.getProperty("uint_p");
+    Property* int64_p_property = world.getProperty("int64_p");
+    Property* uint64_p_property = world.getProperty("uint64_p");
+
+    double_p_property->createIndex();
+    str_p_property->createIndex();
+    int_p_property->createIndex();
+    uint_p_property->createIndex();
+    int64_p_property->createIndex();
+    uint64_p_property->createIndex();
 
     world.findGreaterEqual("double_p", 1.0, beans);
    EXPECT_TRUE(beans.size() == 3);
@@ -799,7 +778,7 @@ TEST(BeanWorld, findGreaterEqual_with_index)
    EXPECT_TRUE(beans.size() == 1);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("str_p").compare("world") >= 0);
+        EXPECT_TRUE(bean->getProperty("str_p").compare( "world") >= 0);
     }
 
    world.findGreaterEqual("int_p", (int_t)1, beans);
@@ -882,15 +861,6 @@ TEST(BeanWorld, findLessThan_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.createIndex("double_p");
-    world.createIndex("str_p");
-    world.createIndex("bool_p0");
-    world.createIndex("bool_p1");
-    world.createIndex("int_p");
-    world.createIndex("uint_p");
-    world.createIndex("int64_p");
-    world.createIndex("int64_p");
-
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
     bean1->setProperty("str_p", "hello");
@@ -914,6 +884,20 @@ TEST(BeanWorld, findLessThan_with_index)
     bean3->setProperty("uint_p", 3U);
     bean3->setProperty("int64_p", 103);
     bean3->setProperty("uint64_p", 103U);
+
+    Property* double_p_property = world.getProperty("double_p");
+    Property* str_p_property = world.getProperty("str_p");
+    Property* int_p_property = world.getProperty("int_p");
+    Property* uint_p_property = world.getProperty("uint_p");
+    Property* int64_p_property = world.getProperty("int64_p");
+    Property* uint64_p_property = world.getProperty("uint64_p");
+
+    double_p_property->createIndex();
+    str_p_property->createIndex();
+    int_p_property->createIndex();
+    uint_p_property->createIndex();
+    int64_p_property->createIndex();
+    uint64_p_property->createIndex();
 
     world.findLessThan("double_p", 1.0, beans);
    EXPECT_TRUE(beans.size() == 0);
@@ -948,7 +932,7 @@ TEST(BeanWorld, findLessThan_with_index)
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("str_p").compare("world") < 0);
+        EXPECT_TRUE(bean->getProperty("str_p").compare( "world") < 0);
     }
     world.findLessThan("str_p", "zzz", beans);
    EXPECT_TRUE(beans.size() == 3);
@@ -1041,15 +1025,6 @@ TEST(BeanWorld, findGreaterThan_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.createIndex("double_p");
-    world.createIndex("str_p");
-    world.createIndex("bool_p0");
-    world.createIndex("bool_p1");
-    world.createIndex("int_p");
-    world.createIndex("uint_p");
-    world.createIndex("int64_p");
-    world.createIndex("int64_p");
-
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
     bean1->setProperty("str_p", "hello");
@@ -1073,6 +1048,20 @@ TEST(BeanWorld, findGreaterThan_with_index)
     bean3->setProperty("uint_p", 3U);
     bean3->setProperty("int64_p", 103);
     bean3->setProperty("uint64_p", 103U);
+
+    Property* double_p_property = world.getProperty("double_p");
+    Property* str_p_property = world.getProperty("str_p");
+    Property* int_p_property = world.getProperty("int_p");
+    Property* uint_p_property = world.getProperty("uint_p");
+    Property* int64_p_property = world.getProperty("int64_p");
+    Property* uint64_p_property = world.getProperty("uint64_p");
+
+    double_p_property->createIndex();
+    str_p_property->createIndex();
+    int_p_property->createIndex();
+    uint_p_property->createIndex();
+    int64_p_property->createIndex();
+    uint64_p_property->createIndex();
 
     world.findGreaterThan("double_p", 0.0, beans);
    EXPECT_TRUE(beans.size() == 3);
@@ -1117,7 +1106,7 @@ TEST(BeanWorld, findGreaterThan_with_index)
    EXPECT_TRUE(beans.size() == 0);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("str_p").compare("world") > 0);
+        EXPECT_TRUE(bean->getProperty("str_p").compare( "world") > 0);
     }
 
     world.findGreaterThan("int_p", 0, beans);
@@ -1163,4 +1152,3 @@ TEST(BeanWorld, findGreaterThan_with_index)
     world.findGreaterThan("uint_p", (uint_t)3, beans);
     EXPECT_TRUE(beans.size() == 0);
 }
-

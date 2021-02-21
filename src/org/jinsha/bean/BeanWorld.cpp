@@ -229,8 +229,7 @@ void BeanWorld::doSetProperty( Bean* bean, Property* property, const Json::Value
         if (property->indexed())
         {
             //remove index for previous value
-            if (!oldValue.isObject() && !oldValue.isArray())
-                property->removeIndex(bean, oldValue);
+            property->removeIndex(bean, oldValue);
         }
     }
 

@@ -156,7 +156,7 @@ TEST(BeanWorld, getProperties)
     EXPECT_TRUE(world->getProperties().size() == 0);
 
     pid = bean1->setProperty("p1", Json::Value());
-    EXPECT_TRUE(pid == -1);
+    EXPECT_TRUE(pid == -2);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
     pid = bean1->setProperty("p1", 8);
@@ -1151,4 +1151,9 @@ TEST(BeanWorld, findGreaterThan_with_index)
     }
     world.findGreaterThan("uint_p", (uint_t)3, beans);
     EXPECT_TRUE(beans.size() == 0);
+
+    // Json::Value& v = (Json::Value&)Json::Value::null;
+    // Json::Value& v = (Json::Value&)Json::Value::nullSingleton();
+    // v["aaa"] = 1;
+    // int a;
 }

@@ -49,26 +49,27 @@ public:
 
     void clear();
     ////////////////////////////////////////////////////////////////
-    //Abov  are corresponding Json::Value methods
+    //Above  are corresponding Json::Value methods
     ////////////////////////////////////////////////////////////////
 
     /**
      * Get property value.
      * 
-     * @param propertyName the property name
+     * @param name the property name
      * @return the property value
      * 
      * Note:
-     * If this bean does not have property with propertyName,
+     * If this bean does not have property with name,
      * a json value of null will be returned.
      */
-    Json::Value getProperty(const char* propertyName) const;
+    Json::Value getProperty(const char* name) const;
 
     /**
      * Set the value of a property of this bean. 
      * 
-     * This method is basically the same as operator[](), except it will
-     * create an index for this property to optimize the search (find methods).
+     * This method is basically the same as bean['key'] = value, excpect
+     * that the index will be updated if the property is indexed. But also
+     * note that index won't apply to property values of list/object type.
      * 
      * Notes:
      * 1. the index created is based on the type of the value, so that only 
@@ -79,36 +80,118 @@ public:
      * @return The pid of the property if success, or an error code.
      *                   This is useful when the property is firstly set.
      *                   error code:
-     *                   -1: if name is nullptr or empty, or the value is null
+     *                   -1: if the property with the name does not exist
+     *                   -2: if the value is null
      */
     pidType setProperty(const char* name, const Json::Value& value);
     
      /**
      * Set the value of a property of this bean. 
      * 
-     * This method is basically the same as bean['key'] = value, 
-     * except that it will create an index for this property to 
-     * optimize the search.
-     * 
-     * Notes:
-     * 1. This method is aimed to achieve better performance. It is highly 
-     *      encouraged to use this one if the property has already been set
-     *      before.
+     * This method is basically the same as bean['key'] = value, excpect
+     * that the index will be updated if the property is indexed. But also
+     * note that index won't apply to property values of list/object type.
      * 
      * @param pid id of the property (see BeanWorld::getPropertyId())
      * @param value value of the property
      * @return The pid of the property if success, or an error code.
      *                   error code:
-     *                   -1: if the value is null
-     *                   -2: if the property with the pid does not exist.
+     *                   -1: if the property with the id does not exist
+     *                   -2: if the value is null
      */
     pidType setProperty(pidType pid, const Json::Value& value);
 
     /**
-     * Remove property from this bean.
+     * Is the specified property an array property.
      * 
-     * Note the property will be removed no matter is was previously
-     * set by setProperty() or by bean['key'] = value .
+     * @param name the property name
+     * @return true if it is an array property, false otherwise
+     * 
+     * Note:
+     * If this bean does not have property with name,
+     * false will be returned;
+     * If the current property value is not a json array, 
+     * false will be returned;
+     */
+    bool isArrayProperty(const char* name) const;
+
+    /**
+     * Get size of an array property.
+     * 
+     * @param name the property name
+     * @return the size
+     * 
+     * Note:
+     * If this bean does not have property with name,
+     * 0 will be returned;
+     * The current property value must be a json array, 
+     * or 0 will be returned;
+     */
+    Json::Value::ArrayIndex getPropertySize(const char* name) const;
+
+    /**
+     * Get value of an array property at specified index.
+     * 
+     * @param name the property name
+     * @param index the index in the array
+     * @return the property value
+     * 
+     * Note:
+     * If this bean does not have property with name,
+     * a json value of null will be returned;
+     * The current property value must be a json array, or a json 
+     * value of null will be returned;
+     * If the index is invalid, a json value of null will be returned;
+     */
+    Json::Value getProperty(const char* name, 
+        Json::Value::ArrayIndex index) const;
+
+     /**
+     * Set the value of an array property at specified index. 
+     * 
+     * Note this method must be called after the array property
+     * is created, say be setProperty() with  json value of array type.
+     * 
+     * @param name name of the property
+     * @param index the index in the array
+     * @param value value to be set
+     * @return 0 if success, or an error code.
+     *                   error code:
+     *                   -1: if the property with the name does not exist
+     *                   -2: if the value is null
+     *                   -3: if he current property value is not a json array
+     *                   -4: if the index is invalid
+     */
+    int setProperty(const char* name, Json::Value::ArrayIndex index,
+        const Json::Value& value);
+
+     /**
+     * Append an item to the end of an array property. 
+     * 
+     * @param name name of the property
+     * @param value value to be added
+     * @return 0 if success, or an error code.
+     *                   error code:
+     *                   -1: if the property with the name does not exist
+     *                   -2: if the value is null
+     *                   -3: if he current property value is not a json array
+     */
+    int appendProperty(const char* name, const Json::Value& value); 
+
+     /**
+     * Resize an array property. 
+     * 
+     * @param name name of the property
+     * @param value value to be added
+     * @return The pid of the property if success, or an error code.
+     *                   error code:
+     *                   -1: if the property with the name does not exist
+     *                   -3: if he current property value is not a json array
+     */
+    pidType resizeProperty(const char* name, Json::Value::ArrayIndex size);        
+
+    /**
+     * Remove property from this bean.
      * 
      * @param name the property name
      * @return the removed item as json value

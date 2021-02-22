@@ -35,7 +35,22 @@ TEST(Bean, getId)
     EXPECT_TRUE(bean1->getId() != bean2->getId());
 }
 
+TEST(Bean, isMember)
+{
+    BeanWorld world;
+    Value value;
+    // pidType pid = 0;
 
+    Bean& bean = *world.createBean();
+    bean.setProperty("p1", 1);
+    bean.setProperty("p2", 2);
+    
+    EXPECT_TRUE(bean.isMember("p1"));
+    EXPECT_TRUE(bean.isMember("p2"));
+    EXPECT_TRUE(bean.isMember(string("p2")));
+    EXPECT_TRUE(!bean.isMember("xxx"));
+    EXPECT_TRUE(!bean.isMember(string("xxx")));
+}
 
 TEST(Bean, setProperty_removeProperty_pid)
 {
@@ -189,7 +204,6 @@ TEST(Bean, setProperty_removeProperty)
     EXPECT_TRUE(value.isNull());
 }
 
-
 TEST(Bean, removeProperty)
 {
     BeanWorld world;
@@ -238,21 +252,119 @@ TEST(Bean, removeProperty_pid)
     EXPECT_TRUE(value.isNull());
 }
 
-TEST(Bean, isMember)
+
+TEST(Bean, array_property)
 {
     BeanWorld world;
     Value value;
-    // pidType pid = 0;
+    pidType pid = 0;
+    int result = 0;
 
-    Bean& bean = *world.createBean();
+    Bean &bean = *world.createBean();
+    EXPECT_TRUE(bean.isArrayProperty("array_1") == false);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 0);
+    value = bean.getProperty("array_1", 0);
+    EXPECT_TRUE(value.isNull());
+
     bean.setProperty("p1", 1);
-    bean.setProperty("p2", 2);
-    
-    EXPECT_TRUE(bean.isMember("p1"));
-    EXPECT_TRUE(bean.isMember("p2"));
-    EXPECT_TRUE(bean.isMember(string("p2")));
-    EXPECT_TRUE(!bean.isMember("xxx"));
-    EXPECT_TRUE(!bean.isMember(string("xxx")));
+
+    //create empty array
+    pid = bean.setProperty("array_1", Json::Value(Json::arrayValue));
+    EXPECT_TRUE(pid >=0 && pid == world.getPropertyId("array_1"));
+    EXPECT_TRUE(bean.isArrayProperty("array_1") == true);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 0);
+    value = bean.getProperty("array_1", 0);
+    EXPECT_TRUE(value.isNull());
+
+    //append
+    result = bean.appendProperty(nullptr, 0);
+    EXPECT_TRUE(result == -1);
+    result = bean.appendProperty("", 0);
+    EXPECT_TRUE(result == -1);
+    result = bean.appendProperty("a", 0);
+    EXPECT_TRUE(result == -1);
+    result = bean.appendProperty("p1", 0);
+    EXPECT_TRUE(result == -3);
+    result = bean.appendProperty("array_1", Json::Value::null);
+    EXPECT_TRUE(result == -2);
+    result = bean.appendProperty("array_1", 0);
+    EXPECT_TRUE(result == 0);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 1);
+    value = bean.getProperty("array_1", 0);
+    EXPECT_TRUE(value == 0);
+    value = bean.getProperty("array_1", 1);
+    EXPECT_TRUE(value.isNull());
+    result = bean.appendProperty("array_1", 1);
+    EXPECT_TRUE(result == 0);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 2);
+    value = bean.getProperty("array_1", 1);
+    EXPECT_TRUE(value == 1);
+
+    //setProperty
+    result = bean.setProperty(nullptr, 0, 99);
+    EXPECT_TRUE(result == -1);
+    result = bean.setProperty("", 0, 99);
+    EXPECT_TRUE(result == -1);
+    result = bean.setProperty("array", 0, 99);
+    EXPECT_TRUE(result == -1);
+    result = bean.setProperty("array_1", 0, Json::Value::null);
+    EXPECT_TRUE(result == -2);
+    result = bean.setProperty("p1", 2, 99);
+    EXPECT_TRUE(result == -3);
+    result = bean.setProperty("array_1", 0, 99);
+    EXPECT_TRUE(result == 0);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 2);
+    value = bean.getProperty("array_1", 0);
+    EXPECT_TRUE(value == 99);
+    result = bean.setProperty("array_1", 1, 999);
+    EXPECT_TRUE(result == 0);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 2);
+    value = bean.getProperty("array_1", 1);
+    EXPECT_TRUE(value == 999);
+
+    //resize
+    result = bean.resizeProperty(nullptr, 1);
+    EXPECT_TRUE(result == -1);
+    result = bean.resizeProperty("", 1);
+    EXPECT_TRUE(result == -1);
+    result = bean.resizeProperty("a", 1);
+    EXPECT_TRUE(result == -1);
+    result = bean.resizeProperty("p1", 1);
+    EXPECT_TRUE(result == -3);
+    result = bean.resizeProperty("array_1", 1);
+    EXPECT_TRUE(result == 0);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 1);
+    result = bean.resizeProperty("array_1", 1);
+    EXPECT_TRUE(result == 0);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 1);
+    value = bean.getProperty("array_1", 0);
+    EXPECT_TRUE(value == 99);
+    result = bean.resizeProperty("array_1", 2);
+    EXPECT_TRUE(result == 0);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 2);
+    value = bean.getProperty("array_1", 0);
+    EXPECT_TRUE(value == 99);
+    value = bean.getProperty("array_1", 1);
+    EXPECT_TRUE(value.isNull());
+    result = bean.resizeProperty("array_1", 1);
+    EXPECT_TRUE(result == 0);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 1);
+    value = bean.getProperty("array_1", 0);
+    EXPECT_TRUE(value == 99);
+
+    //change array property to primary property
+    pid = bean.setProperty("array_1", 0);
+    EXPECT_TRUE(pid >=0 && pid == world.getPropertyId("array_1"));
+    EXPECT_TRUE(bean.isArrayProperty("array_1") == false);
+
+    pid = bean.setProperty("array_1", Json::Value(Json::arrayValue));
+    EXPECT_TRUE(pid >=0 && pid == world.getPropertyId("array_1"));
+    EXPECT_TRUE(bean.isArrayProperty("array_1") == true);
+    EXPECT_TRUE(bean.getPropertySize("array_1") == 0);
+    value = bean.getProperty("array_1", 0);
+    EXPECT_TRUE(value.isNull());
+
 }
+
 
 

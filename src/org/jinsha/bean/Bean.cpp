@@ -119,7 +119,7 @@ int Bean::setProperty(const char* name,
     if (value.isNull()) return -2;
     if (!m_jsonValue_[name].isArray()) return -3;
     if (index >= m_jsonValue_[name].size()) return -4;
-    m_jsonValue_[name] = value;
+    m_jsonValue_[name][index] = value;
     return 0;
 }
 

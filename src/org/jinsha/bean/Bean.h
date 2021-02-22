@@ -183,12 +183,26 @@ public:
      * 
      * @param name name of the property
      * @param value value to be added
-     * @return The pid of the property if success, or an error code.
+     * @return 
      *                   error code:
      *                   -1: if the property with the name does not exist
      *                   -3: if he current property value is not a json array
      */
-    pidType resizeProperty(const char* name, Json::Value::ArrayIndex size);        
+    int resizeProperty(const char* name, Json::Value::ArrayIndex size);
+
+    // /**
+    //  * Is the specified property a bean object.
+    //  * 
+    //  * @param name the property name
+    //  * @return true if it is an object property, false otherwise
+    //  * 
+    //  * Note:
+    //  * If this bean does not have property with name,
+    //  * false will be returned;
+    //  * If the current property value is not a json array, 
+    //  * false will be returned;
+    //  */
+    // bool getBeanProperty(const char* name) const;
 
     /**
      * Remove property from this bean.

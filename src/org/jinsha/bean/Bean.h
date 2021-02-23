@@ -77,10 +77,10 @@ public:
      * 
      * @param name name of the property
      * @param value value of the property
-     * @return The pid of the property if success, or an error code.
-     *                   This is useful when the property is firstly set.
+     * @return the pid of the property if success, or an error code
+     *                   (This is useful when the property is firstly set.)
      *                   error code:
-     *                   -1: if the property with the name does not exist
+     *                   -1: if the property name is null or empty
      *                   -2: if the value is null
      */
     pidType setProperty(const char* name, const Json::Value& value);
@@ -94,7 +94,7 @@ public:
      * 
      * @param pid id of the property (see BeanWorld::getPropertyId())
      * @param value value of the property
-     * @return The pid of the property if success, or an error code.
+     * @return the pid of the property if success, or an error code
      *                   error code:
      *                   -1: if the property with the id does not exist
      *                   -2: if the value is null
@@ -155,9 +155,9 @@ public:
      * @param name name of the property
      * @param index the index in the array
      * @param value value to be set
-     * @return 0 if success, or an error code.
+     * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if the property with the name does not exist
+     *                   -1: if the property name is null or empty
      *                   -2: if the value is null
      *                   -3: if he current property value is not a json array
      *                   -4: if the index is invalid
@@ -170,7 +170,7 @@ public:
      * 
      * @param name name of the property
      * @param value value to be added
-     * @return 0 if success, or an error code.
+     * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if the property with the name does not exist
      *                   -2: if the value is null
@@ -183,7 +183,7 @@ public:
      * 
      * @param name name of the property
      * @param value value to be added
-     * @return 
+     * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if the property with the name does not exist
      *                   -3: if he current property value is not a json array
@@ -205,6 +205,81 @@ public:
     // bool getBeanProperty(const char* name) const;
 
     /**
+     * This method is used to set a one-to-one relationship between two beans, e.g.
+     * father/mather, etc. 
+     * 
+     * Notes:
+     * - A relation is different than a property, so don't mix them up;
+     * - If no relation with name has ever been created, a new one will be created;
+     * - This method will internally set a property for this relation, using 
+     *     "&"+"name"  as the key and the counter part bean's id as the value,
+     *     so don't use this key  to set any value using setProperty();
+     * 
+     * @param name name of the relation
+     * @param bean the counter part bean of the relation
+     * @return the pid of the relation if success, or an error code
+     *                   (This is useful when the property is firstly set.)
+     *                   error code:
+     *                   -1: if the property name is null or empty
+     *                   -2: if the bean is null
+     */
+    pidType setRelation(const char* name, Bean* bean);
+
+    /**
+     * This method is used to create a one-to-many relationship, e.g.
+     * friends, classMates, etc. 
+     * 
+     * Notes:
+     * - A relation is different than a property, so don't mix them up;
+     * - If no relation with name has ever been created, a new one 
+     *    will be created;
+     * - This method only "define" the relation, and user needs to 
+     *    add related beans  using appendRelation();
+     * - This method will internally create an json  array for this relation, using 
+     *     "&"+"name"  as the key, so don't use this key  to set any value using 
+     *     setProperty();
+     * 
+     * @param name name of the relation
+     * @return The pid of the relation if success, or an error code.
+     *                   error code:
+     *                   -1: if the property name is null or empty
+     *                   -2: if the bean is null
+     */
+    pidType setRelation(const char* name);
+
+    /**
+     * This method is used to append an item to a one-to-many relationship.
+     * 
+     * Notes:
+     * - This method will internally add the counter part bean's id to the 
+     *    json array property created by setRelation(const char* name).
+     * 
+     * @param name name of the relation
+     * @param bean the counter part bean of the relation to be added
+     * @return 0 if success, or an error code
+     *                   error code:
+     *                   -1: if the property name is null or empty
+     *                   -2: if the bean is null
+     */
+    int appendRelation(const char* name, Bean* bean);
+
+    /**
+     * This method is used to add an item to a one-to-many relationship.
+     * 
+     * Notes:
+     * - This method will internally add the counter part bean's id to 
+     *   the json array property created by setRelation(const char* name).
+     * 
+     * @param name name of the relation
+     * @param size the size to be resized
+     * @return 0 if success, or an error code
+     *                   error code:
+     *                   -1: if the property name is null or empty
+     *                   -2: if the bean is null
+     */
+    int resizeRelation(const char* name, Json::Value::ArrayIndex size);
+
+    /**
      * Remove property from this bean.
      * 
      * @param name the property name
@@ -223,6 +298,25 @@ public:
      *                   the pid is invalid.
      */
     Json::Value removeProperty(pidType pid);
+
+    /**
+     * Remove relation from this bean.
+     * 
+     * @param name the relation name
+     * @return
+     */
+    void removeRelation( const char* name);
+
+    /**
+     * Remove relation from this bean.
+     * 
+     * Note the method is only effective when the rid is valid, 
+     * i.e. the relation was previously set by setRelation().
+     * 
+     * @param rid the relation id
+     * @return 
+     */
+    void removeRelation(pidType rid);
 
 private:
     Bean(BeanWorld* world);

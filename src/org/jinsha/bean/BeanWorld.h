@@ -195,6 +195,10 @@ private:
     //map from property name to index
     std::unordered_map<std::string, unsigned int> m_propertyMap_; 
 
+    // std::vector<Relation*> m_relations_;
+    // //map from relation name to index
+    // std::unordered_map<std::string, unsigned int> m_relationMap_; 
+
 friend class Bean;
 friend class Property;
 };

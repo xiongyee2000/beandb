@@ -39,18 +39,28 @@ public:
     ////////////////////////////////////////////////////////////////
     //Below  are corresponding Json::Value methods
     ////////////////////////////////////////////////////////////////
-    bool 	empty () const {return m_jsonValue_.empty();};
+    bool 	empty () const {return m_propertyValues_.empty();};
 
+    //Note it is equal to (isPropery() || isRelation())
     bool isMember (const char* key) const;
     bool isMember (const std::string &key) const;
 
     Json::Value::Members getMemberNames () const 
-        {return m_jsonValue_.getMemberNames();};
+        {return m_propertyValues_.getMemberNames();};
 
     void clear();
     ////////////////////////////////////////////////////////////////
     //Above  are corresponding Json::Value methods
     ////////////////////////////////////////////////////////////////
+
+    /**
+     * Check the bean has a property with the given name.
+     * 
+     * @param name the property name
+     * @return true if it has such a property, false otherwise
+     * 
+     */
+    bool isProperty(const char* name) const;
 
     /**
      * Get property value.
@@ -190,19 +200,55 @@ public:
      */
     int resizeProperty(const char* name, Json::Value::ArrayIndex size);
 
-    // /**
-    //  * Is the specified property a bean object.
-    //  * 
-    //  * @param name the property name
-    //  * @return true if it is an object property, false otherwise
-    //  * 
-    //  * Note:
-    //  * If this bean does not have property with name,
-    //  * false will be returned;
-    //  * If the current property value is not a json array, 
-    //  * false will be returned;
-    //  */
-    // bool getBeanProperty(const char* name) const;
+    /**
+     * Check the bean has a relation with the given name.
+     * 
+     * @param name the relation name
+     * @return true if it has such a relation, false otherwise
+     * 
+     */
+    bool isRelation(const char* name) const;
+
+    /**
+     * Check the bean has an array relation with the given name.
+     * 
+     * @param name the relation name
+     * @return true if it has such an array relation, false otherwise
+     * 
+     */
+    bool isArrayRelation(const char* name) const;
+
+    /**
+     * Get relation bean.
+     * 
+     * @param name the relation name
+     * @return the relation bean, or null if it does not exist.
+     * 
+     */
+    Bean* getRelation(const char* name) const;
+
+    /**
+     * Get size of an array relation.
+     * 
+     * @param name the relation name
+     * @return the size
+     * 
+     * Note:
+     * If this bean does not have relation with the given name,
+     * 0 will be returned;
+     */
+    Json::Value::ArrayIndex getRelationSize(const char* name) const;
+
+    /**
+     * Get relation bean of an array relation at specified index.
+     * 
+     * @param name the relation name
+     * @param index the index in the array
+     * @return the relation bean, or null
+     * 
+     */
+    Bean* getRelation(const char* name, 
+        Json::Value::ArrayIndex index) const;
 
     /**
      * This method is used to set a one-to-one relationship between two beans, e.g.
@@ -324,11 +370,14 @@ private:
     Bean& operator =(const Bean& bean) = delete;
     virtual ~Bean();
 
+    bool isPropertyMember(const char* name);
+    bool isRelationMember(const char* name);
     const Json::Value& get(const char* key);
 
     // void swap(Json::Value &other);
 
-    Json::Value m_jsonValue_;
+    Json::Value m_propertyValues_;
+    Json::Value m_relationValues_;
     BeanWorld* m_world_;
 
     // otype classId_ = 0;

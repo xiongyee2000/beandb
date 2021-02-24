@@ -134,7 +134,7 @@ void BeanWorld::recreateIndex(Property* property)
         bean = iter.second;
         if (bean->isMember(pname))
         {
-                Json::Value& value = bean->m_jsonValue_[pname];
+                Json::Value& value = bean->m_propertyValues_[pname];
                 property->addIndex(bean, value);
         }
     }
@@ -234,7 +234,7 @@ void BeanWorld::doSetProperty( Bean* bean, Property* property, const Json::Value
     }
 
     //set value for json object
-    Json::Value& v =bean->m_jsonValue_[pname];
+    Json::Value& v =bean->m_propertyValues_[pname];
     v  = value;
     if (property->indexed())
         property->addIndex(bean, v);
@@ -252,7 +252,7 @@ Json::Value BeanWorld::removeProperty(Bean* bean,  Property* property)
            //remove index first
             property->removeIndex(bean, bean->get(pname));
         //remove member of json object
-        value = bean->m_jsonValue_.removeMember(pname);
+        value = bean->m_propertyValues_.removeMember(pname);
         property->m_refCount_--;
         if (property->m_refCount_ == 0)
         { //if this property is not used by any bean, remove it

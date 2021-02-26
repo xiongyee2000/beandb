@@ -13,6 +13,9 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
+class Property;
+class Relation;
+
 class BeanWorld
 {
 public:
@@ -68,7 +71,7 @@ public:
      * @param property name
      * @return property id
      */
-    int getPropertyId(const char* name) const;
+    pidType getPropertyId(const char* name) const;
 
     /**
      * Get property by id.
@@ -170,20 +173,35 @@ public:
 private:
     pidType setProperty( Bean* bean, const char* name, const Json::Value&  value);
     void setProperty( Bean* bean, pidType pid, const Json::Value&  value);
-    void doSetProperty( Bean* bean, Property* property, const Json::Value&  value);
-    pidType addProperty(const char* name);
-    Json::Value removeProperty(Bean* bean, const char* name);
-    Json::Value removeProperty(Bean* bean, Property* property);
-    void removeProperty(pidType pid);
-    void recreateIndex(Property* property);
 
+    int setRelation(const char* name, Bean* from, Bean* to);
+    pidType setRelation( Bean* bean, const char* name, const Json::Value&  value);
+
+    template<typename  T>
+    pidType addProperty(const char* name, 
+        std::vector<T*>&properties, 
+        std::unordered_map<std::string, unsigned int>& propertyMap);
+    // pidType addProperty(const char* name);
+
+    template<typename  T>
+    void removeProperty(T* property, 
+        std::vector<T*>&properties, 
+        std::unordered_map<std::string, unsigned int>& propertyMap);
+    // void removeProperty(Property* property);
+
+    template<typename T>
+    void doSetProperty( Bean* bean, T* property, const Json::Value&  value);
+
+    Json::Value removeProperty(Bean* bean, Property* property);
+
+
+    void setRelation( Bean* bean, pidType pid, const Json::Value&  value);
+    void doSetRelation( Bean* bean, Property* property, const Json::Value&  value);
+
+    void recreateIndex(Property* property);
 
     void findCommon(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
     void trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
-
-    int addRelation(Bean* from, Bean* to, const char* propertyName);
-    // int addRelation(Bean* from, Bean* to, const char* propertyName);
-    int removeRelation(Bean* from, Bean* to, const char* propertyName);
 
     oidType generateBeanId();
 
@@ -195,12 +213,13 @@ private:
     //map from property name to index
     std::unordered_map<std::string, unsigned int> m_propertyMap_; 
 
-    // std::vector<Relation*> m_relations_;
-    // //map from relation name to index
-    // std::unordered_map<std::string, unsigned int> m_relationMap_; 
+    std::vector<Relation*> m_relations_;
+    //map from relation name to index
+    std::unordered_map<std::string, unsigned int> m_relationMap_; 
 
 friend class Bean;
 friend class Property;
+friend class Relation;
 };
 
 }

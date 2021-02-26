@@ -104,12 +104,12 @@ public:
      * 
      * @param pid id of the property (see BeanWorld::getPropertyId())
      * @param value value of the property
-     * @return the pid of the property if success, or an error code
+     * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if the property with the id does not exist
      *                   -2: if the value is null
      */
-    pidType setProperty(pidType pid, const Json::Value& value);
+    int setProperty(pidType pid, const Json::Value& value);
 
     /**
      * Is the specified property an array property.
@@ -270,6 +270,22 @@ public:
      *                   -2: if the bean is null
      */
     pidType setRelation(const char* name, Bean* bean);
+    
+   /**
+     * This method is used to set a one-to-one relationship between two beans, e.g.
+     * father/mather, etc. 
+     * 
+     * Notes:
+     * - This method is provided for the sake of better performance.
+     * 
+     * @param rid id of the relation
+     * @param bean the counter part bean of the relation
+     * @return 0  if success, or an error code
+     *                   error code:
+     *                   -1: if the relation with the id does not exist
+     *                   -2: if the bean is null
+     */
+    int setRelation(pidType rid, Bean* bean);
 
     /**
      * This method is used to create a one-to-many relationship, e.g.
@@ -367,12 +383,14 @@ public:
 private:
     Bean(BeanWorld* world);
     Bean(const Bean& bean) = delete;
-    Bean& operator =(const Bean& bean) = delete;
+    Bean& operator =(const Bean& bean) = delete;    
     virtual ~Bean();
 
-    bool isPropertyMember(const char* name);
-    bool isRelationMember(const char* name);
-    const Json::Value& get(const char* key);
+    Json::Value::ArrayIndex doGetPropertySize(const char* name, 
+        bool isProperty_ = true) const;
+
+    const Json::Value& getPropertyRef(const char* key);
+    const Json::Value& getRelationRef(const char* key);
 
     // void swap(Json::Value &other);
 

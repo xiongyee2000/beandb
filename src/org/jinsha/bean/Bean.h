@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "./common.h"
+#include "./Relation.h"
 
 namespace org {
 namespace jinsha {

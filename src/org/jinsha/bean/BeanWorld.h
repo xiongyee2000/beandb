@@ -7,6 +7,7 @@
 
 #include "./common.h"
 #include "./Property.h"
+#include "./Relation.h"
 #include "./Bean.h"
 
 namespace org {
@@ -76,11 +77,11 @@ public:
     /**
      * Get property by id.
      * 
-     * @param pid property id
+     * @param id property id
      * @return property
      */
-    const Property* getProperty(pidType pid) const;
-    Property* getProperty(pidType pid);
+    const Property* getProperty(pidType id) const;
+    Property* getProperty(pidType id);
 
     /**
      * Get property by name.
@@ -96,8 +97,47 @@ public:
      * 
      * @return a map containing all properties.
      */
-    const std::unordered_map<std::string, unsigned int>& getProperties() const 
+    const std::unordered_map<std::string, pidType>& getProperties() const 
      {return m_propertyMap_;};
+
+    /**
+     * Get the id of a relation. Later the relation id 
+     * can be used in other methods.
+     * 
+     * It is highly encouraged to use id over name, for it
+     * can reduce a lot of string calculation and achieve 
+     * higher performance.
+     *  
+     * @param name relation name
+     * @return relation id
+     */
+    pidType getRelationId(const char* name) const;
+
+    /**
+     * Get relation by id.
+     * 
+     * @param id relation id
+     * @return the relation, or null
+     */
+    const Relation* getRelation(pidType id) const;
+    Relation* getRelation(pidType id);
+
+    /**
+     * Get relation by name.
+     * 
+     * @param name relation name
+     * @return the relation, or null
+     */
+    const Relation* getRelation(const char* name) const;
+    Relation* getRelation(const char* name);
+
+    /**
+     * Get all relations.
+     * 
+     * @return a map containing all relations.
+     */
+    const std::unordered_map<std::string, pidType>& getRelations() const 
+     {return m_relationMap_;};
 
     /**
      * Find beans whose property values are equal to the given one.
@@ -164,29 +204,23 @@ public:
      */
     void findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
 
-    // void findEqual(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
-    // void findLessEqual(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
-    // void findGreaterEqual(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
-    // void findLessThan(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
-    // void findGreaterThan(pidType pid,  const Json::Value& value, std::list<Bean*>& beans);
-
 private:
     pidType setProperty( Bean* bean, const char* name, const Json::Value&  value);
-    void setProperty( Bean* bean, pidType pid, const Json::Value&  value);
+    void setProperty( Bean* bean, pidType id, const Json::Value&  value);
 
     int setRelation(const char* name, Bean* from, Bean* to);
-    pidType setRelation( Bean* bean, const char* name, const Json::Value&  value);
+    void setRelation(pidType id, Bean* from, Bean* to);
 
-    template<typename  T>
+    template<typename T>
     pidType addProperty(const char* name, 
         std::vector<T*>&properties, 
-        std::unordered_map<std::string, unsigned int>& propertyMap);
+        std::unordered_map<std::string, pidType>& propertyMap);
     // pidType addProperty(const char* name);
 
-    template<typename  T>
+    template<typename T>
     void removeProperty(T* property, 
         std::vector<T*>&properties, 
-        std::unordered_map<std::string, unsigned int>& propertyMap);
+        std::unordered_map<std::string, pidType>& propertyMap);
     // void removeProperty(Property* property);
 
     template<typename T>
@@ -195,7 +229,7 @@ private:
     Json::Value removeProperty(Bean* bean, Property* property);
 
 
-    void setRelation( Bean* bean, pidType pid, const Json::Value&  value);
+    void setRelation( Bean* bean, pidType id, const Json::Value&  value);
     void doSetRelation( Bean* bean, Property* property, const Json::Value&  value);
 
     void recreateIndex(Property* property);
@@ -211,11 +245,11 @@ private:
 
     std::vector<Property*> m_properties_;
     //map from property name to index
-    std::unordered_map<std::string, unsigned int> m_propertyMap_; 
+    std::unordered_map<std::string, pidType> m_propertyMap_; 
 
     std::vector<Relation*> m_relations_;
     //map from relation name to index
-    std::unordered_map<std::string, unsigned int> m_relationMap_; 
+    std::unordered_map<std::string, pidType> m_relationMap_; 
 
 friend class Bean;
 friend class Property;

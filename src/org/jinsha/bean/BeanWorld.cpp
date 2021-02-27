@@ -99,18 +99,18 @@ pidType BeanWorld::getPropertyId(const char* name) const
 }
 
 
-const Property* BeanWorld::getProperty(pidType pid) const
+const Property* BeanWorld::getProperty(pidType id) const
 {
-    if (pid < 0 || (size_t)pid >= m_properties_.size())
+    if (id < 0 || (size_t)id >= m_properties_.size())
         return nullptr;
     else
-        return m_properties_[pid];
+        return m_properties_[id];
 }
 
 
-Property* BeanWorld::getProperty(pidType pid)
+Property* BeanWorld::getProperty(pidType id)
 {
-    return (Property*)((const BeanWorld*)this)->getProperty(pid);
+    return (Property*)((const BeanWorld*)this)->getProperty(id);
 }
 
 
@@ -125,24 +125,82 @@ Property* BeanWorld::getProperty(const char* name)
 }
 
 
-pidType BeanWorld::setProperty( Bean* bean, const char* name, const Json::Value& value)
+pidType BeanWorld::getRelationId(const char* name) const
 {
-    pidType  pid = getPropertyId(name);
-    if (pid == -1)
-    {
-        // pid = addProperty(name);
-        pid = addProperty<Property>(name, m_properties_, m_propertyMap_);
-    }
-    setProperty(bean, pid, value);
-    return pid;
+    if (name == nullptr) return -1;
+    if (name[0] == 0) return -1;
+    auto iter = m_relationMap_.find(name);
+    if (iter == m_relationMap_.end()) return -1; //no such relation
+    return (int)(iter->second);
 }
 
 
-void BeanWorld::setProperty( Bean* bean, pidType pid, const Json::Value& value)
+const Relation* BeanWorld::getRelation(pidType id) const
 {
-    Property* property = m_properties_[pid];
+    if (id < 0 || (size_t)id >= m_relations_.size())
+        return nullptr;
+    else
+        return m_relations_[id];
+}
+
+
+Relation* BeanWorld::getRelation(pidType id)
+{
+    return (Relation*)((const BeanWorld*)this)->getRelation(id);
+}
+
+
+const Relation* BeanWorld::getRelation(const char* name) const
+{
+    return getRelation(getRelationId(name));
+}
+
+Relation* BeanWorld::getRelation(const char* name)
+{
+    return getRelation(getRelationId(name));
+}
+
+
+pidType BeanWorld::setProperty( Bean* bean, const char* name, const Json::Value& value)
+{
+    pidType  id = getPropertyId(name);
+    if (id == -1)
+    {
+        id = addProperty<Property>(name, m_properties_, m_propertyMap_);
+    }
+    setProperty(bean, id, value);
+    return id;
+}
+
+
+void BeanWorld::setProperty( Bean* bean, pidType id, const Json::Value& value)
+{
+    Property* property = m_properties_[id];
     if (property != nullptr)
         doSetProperty<Property>(bean, property,  value);
+}
+
+
+pidType BeanWorld::setRelation(const char* name, Bean* from, Bean* to)
+{
+    pidType  id = getRelationId(name);
+    if (id == -1)
+    {
+        id = addProperty<Relation>(name, m_relations_, m_relationMap_);
+    }
+    setRelation(id, from, to);
+    return id;
+}
+
+
+void BeanWorld::setRelation( pidType id, Bean* from, Bean* to)
+{
+    Relation* relation = m_relations_[id];
+    if (relation != nullptr)
+    {
+        Json::Value value = to->getId();
+        doSetProperty<Relation>(from, relation,  value);
+    }
 }
 
 
@@ -206,42 +264,42 @@ Json::Value BeanWorld::removeProperty(Bean* bean,  Property* property)
     return value;
 }
 
-template<typename  T>
+template<typename T>
 pidType BeanWorld::addProperty(const char* name, 
     std::vector<T*>&properties, 
-    std::unordered_map<std::string, unsigned int>& propertyMap)
+    std::unordered_map<std::string, pidType>& propertyMap)
 {
-    int pid = getPropertyId(name);
-    if (pid == -1)
+    pidType id = getPropertyId(name);
+    if (id == -1)
     {//no such property
         T* property = new T(this, name);
         properties.push_back(property);
         propertyMap[name] = properties.size() - 1;
-        pid = properties.size() - 1;
-        property->m_pid_ = pid;
+        id = properties.size() - 1;
+        property->m_pid_ = id;
     }
-    return pid;
+    return id;
 }
 
 // pidType BeanWorld::addProperty(const char* name)
 // {
-//     int pid = getPropertyId(name);
-//     if (pid == -1)
+//     int id = getPropertyId(name);
+//     if (id == -1)
 //     {//no such property
 //         Property* property = new Property(this, name);
 //         m_properties_.push_back(property);
 //         m_propertyMap_[name] = m_properties_.size() - 1;
-//         pid = m_properties_.size() - 1;
-//         property->m_pid_ = pid;
+//         id = m_properties_.size() - 1;
+//         property->m_pid_ = id;
 //     }
-//     return pid;
+//     return id;
 // }
 
 
-template<typename  T>
+template<typename T>
 void BeanWorld::removeProperty(T* property,
     std::vector<T*>&properties, 
-    std::unordered_map<std::string, unsigned int>& propertyMap)
+    std::unordered_map<std::string, pidType>& propertyMap)
 {
     // if (property == nullptr) return;
     auto iter = propertyMap.find(property->getName());
@@ -261,16 +319,16 @@ void BeanWorld::removeProperty(T* property,
 
 // pidType BeanWorld::addRelation( const char* name)
 // {
-//     pidType rid = getRelationId(name);
-//     if (rid == -1)
+//     pidType id = getRelationId(name);
+//     if (id == -1)
 //     {//no such relation
 //         Relation* relation = new Relation(this, name);
 //         m_relations_.push_back(relation);
 //         m_relationMap_[name] = m_relations_.size() - 1;
-//         pid = m_properties_.size() - 1;
-//         property->m_pid_ = pid;
+//         id = m_properties_.size() - 1;
+//         property->m_pid_ = id;
 //     }
-//     return pid;
+//     return id;
 // }
 
 // pidType BeanWorld::addRelation(Bean* from, Bean* to, const char* propertyName)
@@ -278,7 +336,7 @@ void BeanWorld::removeProperty(T* property,
 //     // if (propertyName == nullptr) return -1;
 //     // if (propertyName[0] == 0) return -1;
 
-//     // pidType  pid = addProperty(propertyName);
+//     // pidType  id = addProperty(propertyName);
 //     // (*from)[propertyName] = to->getId();
 // }
 
@@ -290,9 +348,9 @@ void BeanWorld::removeProperty(T* property,
 
     // from->removeProperty(propertyName);
 
-    // pidType  pid = getPropertyId(propertyName);
+    // pidType  id = getPropertyId(propertyName);
         //todo
-        // m_propertyIndexTypes_[pid] = Json::objectValue;
+        // m_propertyIndexTypes_[id] = Json::objectValue;
 // }
 
 

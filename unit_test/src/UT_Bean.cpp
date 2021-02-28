@@ -41,17 +41,17 @@ TEST(Bean, isMember)
     Value value;
     // pidType pid = 0;
 
-    Bean& bean = *world.createBean();
+    Bean* bean = world.createBean();
     world.defineProperty("p1", Property::IntType);
     world.defineProperty("p2", Property::IntType);
-    bean.setProperty("p1", 1);
-    bean.setProperty("p2", 2);
+    bean->setProperty("p1", 1);
+    bean->setProperty("p2", 2);
     
-    EXPECT_TRUE(bean.isMember("p1"));
-    EXPECT_TRUE(bean.isMember("p2"));
-    EXPECT_TRUE(bean.isMember(string("p2")));
-    EXPECT_TRUE(!bean.isMember("xxx"));
-    EXPECT_TRUE(!bean.isMember(string("xxx")));
+    EXPECT_TRUE(bean->isMember("p1"));
+    EXPECT_TRUE(bean->isMember("p2"));
+    EXPECT_TRUE(bean->isMember(string("p2")));
+    EXPECT_TRUE(!bean->isMember("xxx"));
+    EXPECT_TRUE(!bean->isMember(string("xxx")));
 }
 
 TEST(Bean, setProperty_removeProperty_pid)
@@ -338,33 +338,33 @@ TEST(Bean, array_property)
     value = bean.getArrayProperty("array_1", 1);
     EXPECT_TRUE(value == 999);
 
-    //resize
-    result = bean.resizeProperty(nullptr, 1);
-    EXPECT_TRUE(result == -1);
-    result = bean.resizeProperty("", 1);
-    EXPECT_TRUE(result == -1);
-    result = bean.resizeProperty("a", 1);
-    EXPECT_TRUE(result == -1);
-    result = bean.resizeProperty("array_1", 1);
-    EXPECT_TRUE(result == 0);
-    EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 1);
-    result = bean.resizeProperty("array_1", 1);
-    EXPECT_TRUE(result == 0);
-    EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 1);
-    value = bean.getArrayProperty("array_1", 0);
-    EXPECT_TRUE(value == 99);
-    result = bean.resizeProperty("array_1", 2);
-    EXPECT_TRUE(result == 0);
-    EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 2);
-    value = bean.getArrayProperty("array_1", 0);
-    EXPECT_TRUE(value == 99);
-    value = bean.getArrayProperty("array_1", 1);
-    EXPECT_TRUE(value.isNull());
-    result = bean.resizeProperty("array_1", 1);
-    EXPECT_TRUE(result == 0);
-    EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 1);
-    value = bean.getArrayProperty("array_1", 0);
-    EXPECT_TRUE(value == 99);
+    // //resize
+    // result = bean.resizeProperty(nullptr, 1);
+    // EXPECT_TRUE(result == -1);
+    // result = bean.resizeProperty("", 1);
+    // EXPECT_TRUE(result == -1);
+    // result = bean.resizeProperty("a", 1);
+    // EXPECT_TRUE(result == -1);
+    // result = bean.resizeProperty("array_1", 1);
+    // EXPECT_TRUE(result == 0);
+    // EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 1);
+    // result = bean.resizeProperty("array_1", 1);
+    // EXPECT_TRUE(result == 0);
+    // EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 1);
+    // value = bean.getArrayProperty("array_1", 0);
+    // EXPECT_TRUE(value == 99);
+    // result = bean.resizeProperty("array_1", 2);
+    // EXPECT_TRUE(result == 0);
+    // EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 2);
+    // value = bean.getArrayProperty("array_1", 0);
+    // EXPECT_TRUE(value == 99);
+    // value = bean.getArrayProperty("array_1", 1);
+    // EXPECT_TRUE(value.isNull());
+    // result = bean.resizeProperty("array_1", 1);
+    // EXPECT_TRUE(result == 0);
+    // EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 1);
+    // value = bean.getArrayProperty("array_1", 0);
+    // EXPECT_TRUE(value == 99);
 
 }
 

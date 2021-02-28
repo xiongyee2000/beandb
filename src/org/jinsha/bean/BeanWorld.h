@@ -249,11 +249,11 @@ private:
     Property::ValueType valueType, bool createIndex = false);
 
     int setProperty( Bean* bean, Property* property, const Json::Value&  value);
-    void doSetProperty( Bean* bean, Property* property, const Json::Value&  value);
+    int setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value&  value);
+    void doSetProperty(Bean* bean, Property* property, Json::Value* oldValue,  const Json::Value&  newValue);
 
-    int setRelation(const char* name, Bean* from, Bean* to);
-    void setRelation(pidType id, Bean* from, Bean* to);
-
+    void setRelation(Property* property, Bean* from, Bean* to);
+    void setArrayRelation(Property* property, Bean* from, Json::Value::ArrayIndex index, Bean* to);
     Json::Value removeProperty(Bean* bean, Property* property);
 
     void setRelation( Bean* bean, pidType id, const Json::Value&  value);

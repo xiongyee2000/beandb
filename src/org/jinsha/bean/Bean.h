@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "./common.h"
+#include "./Property.h"
 
 namespace org {
 namespace jinsha {
@@ -42,7 +43,8 @@ public:
     bool empty () const {return m_propertyValues_.empty();};
 
     /**
-     * Does the bean have the named property/relation.
+     * Does the bean have the named property/relation/
+     * array property/array relation.
      */
     bool isMember(const char* name) const;
     bool isMember(const std::string& name) const;
@@ -68,6 +70,7 @@ public:
      * 
      */
     bool hasProperty(const char* name) const;
+    bool hasProperty(pidType id) const;
 
     /**
      * Get property value.
@@ -80,6 +83,7 @@ public:
      * a json value of null will be returned.
      */
     Json::Value getProperty(const char* name) const;
+    Json::Value getProperty(pidType id) const;
 
     /**
      * Set the value of a property of this bean. 
@@ -103,6 +107,7 @@ public:
      * @return true if it is an array property, false otherwise
      */
     bool hasArrayProperty(const char* name) const;
+    bool hasArrayProperty(pidType id) const;
 
     /**
      * Get size of an array property.
@@ -117,6 +122,7 @@ public:
      * 0 will be returned;
      */
     Json::Value::ArrayIndex getArrayPropertySize(const char* name) const;
+    Json::Value::ArrayIndex getArrayPropertySize(pidType id) const;
 
     /**
      * Get value of an array property at specified index.
@@ -141,34 +147,13 @@ public:
      * This method must be called before items can be added into 
      * the array property.
      * 
-     * @param name name of the property
+     * @param name name of the array property
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if no  array property with the name is defined
      */
     int setArrayProperty(const char* name);
     int setArrayProperty(pidType id);
-
-     /**
-     * Set the value of an array property at specified index. 
-     * 
-     * This method must be called after setArrayProperty();
-     * 
-     * @param name name of the property
-     * @param index the index in the array
-     * @param value value to be set
-     * @return 0 if success, or an error code
-     *                   error code:
-     *                   -1: if no  array property with the name is defined
-     *                   -2: if the value is null
-     *                   -3: if the value is of invalid type
-     *                   -4: if the index is invalid
-     *                   -5: if the array property is not a member of this bean
-     */
-    int setArrayProperty(const char* name, Json::Value::ArrayIndex index,
-        const Json::Value& value);
-    int setArrayProperty(pidType id, Json::Value::ArrayIndex index,
-        const Json::Value& value);
 
      /**
      * Append an item to the end of an array property. 
@@ -184,6 +169,27 @@ public:
      */
     int appendArrayProperty(const char* name, const Json::Value& value); 
     int appendArrayProperty(pidType id, const Json::Value& value); 
+
+     /**
+     * Set the value of an array property at specified index. 
+     * 
+     * This method must be called after setArrayProperty();
+     * 
+     * @param name name of the array property
+     * @param index the index in the array
+     * @param value value to be set
+     * @return 0 if success, or an error code
+     *                   error code:
+     *                   -1: if no  array property with the name is defined
+     *                   -2: if the value is null
+     *                   -3: if the value is of invalid type
+     *                   -4: if the index is invalid
+     *                   -5: if the array property is not a member of this bean
+     */
+    int setArrayProperty(const char* name, Json::Value::ArrayIndex index,
+        const Json::Value& value);
+    int setArrayProperty(pidType id, Json::Value::ArrayIndex index,
+        const Json::Value& value);
 
     //  /**
     //  * Remove an item from an array property at specified index.
@@ -207,8 +213,8 @@ public:
      *                   -1: if no array property is defined with the name
      *                   -5: if the array property is not a member of this bean
      */
-    int resizeProperty(const char* name, Json::Value::ArrayIndex size);
-    int resizeProperty(pidType id, Json::Value::ArrayIndex size);
+    // int resizeProperty(const char* name, Json::Value::ArrayIndex size);
+    // int resizeProperty(pidType id, Json::Value::ArrayIndex size);
 
     /**
      * Check the bean has a relation with the given name.
@@ -218,6 +224,17 @@ public:
      * 
      */
     bool hasRelation(const char* name) const;
+    bool hasRelation(pidType id) const;
+
+    /**
+     * Check the bean has an array relation with the given name.
+     * 
+     * @param name the array relation name
+     * @return true if it has such an array relation, false otherwise
+     * 
+     */
+    bool hasArrayRelation(const char* name) const;
+    bool hasArrayRelation(pidType id) const;
 
     /**
      * Get relation bean.
@@ -226,7 +243,8 @@ public:
      * @return the bean id, or 0 if it does not exist.
      * 
      */
-    oidType getBeanId(const char* name) const;
+    oidType getRelationBeanId(const char* name) const;
+    oidType getRelationBeanId(pidType id) const;
 
     /**
      * Get relation bean of an array relation at specified index.
@@ -236,67 +254,37 @@ public:
      * @return the bean id, or 0 if it does not exist.
      * 
      */
-    oidType getBeanId(const char* name, 
+    oidType getRelationBeanId(const char* name, 
+        Json::Value::ArrayIndex index) const;
+    oidType getRelationBeanId(pidType id, 
         Json::Value::ArrayIndex index) const;
 
     /**
      * This method is used to set a one-to-one relationship between two beans, e.g.
      * father/mather, etc. 
      * 
-     * Notes:
-     * - A relation is different than a property, so don't mix them up;
-     * - If no relation with name has ever been created, a new one will be created;
-     * - This method will internally set a property for this relation, using 
-     *     "&"+"name"  as the key and the counter part bean's id as the value,
-     *     so don't use this key  to set any value using setProperty();
-     * 
-     * @param name name of the relation
+     * @param name name of the relation proerty
      * @param bean the counter part bean of the relation
-     * @return the id of the relation if success, or an error code
-     *                   (This is useful when the property is firstly set.)
-     *                   error code:
-     *                   -1: if no property with the name is defined
+     * @return 0 if success, or an error code:
+     *                   -1: if no relation property with the name is defined
      *                   -2: if the bean is null
      */
-    pidType setRelation(const char* name, Bean* bean);
-    
-   /**
-     * This method is used to set a one-to-one relationship between two beans, e.g.
-     * father/mather, etc. 
+    int setRelation(const char* name, Bean* bean);
+    int setRelation(pidType id, Bean* bean);
+   
+     /**
+     * Create an empty array relation for this bean.
      * 
-     * Notes:
-     * - This method is provided for the sake of better performance.
+     * This method must be called before items can be added into 
+     * the array relation.
      * 
-     * @param rid id of the relation
-     * @param bean the counter part bean of the relation
-     * @return 0  if success, or an error code
+     * @param name name of the array relation
+     * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if the relation with the id does not exist
-     *                   -2: if the bean is null
+     *                   -1: if no  array relation with the name is defined
      */
-    int setRelation(pidType rid, Bean* bean);
-
-    /**
-     * This method is used to create a one-to-many relationship, e.g.
-     * friends, classMates, etc. 
-     * 
-     * Notes:
-     * - A relation is different than a property, so don't mix them up;
-     * - If no relation with name has ever been created, a new one 
-     *    will be created;
-     * - This method only "define" the relation, and user needs to 
-     *    add related beans  using appendRelation();
-     * - This method will internally create an json  array for this relation, using 
-     *     "&"+"name"  as the key, so don't use this key  to set any value using 
-     *     setProperty();
-     * 
-     * @param name name of the relation
-     * @return The id of the relation if success, or an error code.
-     *                   error code:
-     *                   -1: if no property with the name is defined
-     *                   -2: if the bean is null
-     */
-    pidType setRelation(const char* name);
+    int setArrayRelation(const char* name);
+    int setArrayRelation(pidType id);
 
     /**
      * This method is used to append an item to a one-to-many relationship.
@@ -305,14 +293,36 @@ public:
      * - This method will internally add the counter part bean's id to the 
      *    json array property created by setRelation(const char* name).
      * 
-     * @param name name of the relation
+     * @param name name of the array relation property
      * @param bean the counter part bean of the relation to be added
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if no property with the name is defined
+     *                   -1: if no array relation property with the name is defined
      *                   -2: if the bean is null
      */
     int appendRelation(const char* name, Bean* bean);
+    int appendRelation(pidType id, Bean* bean);
+ 
+     /**
+     * Set the value of an array relation at specified index. 
+     * 
+     * This method must be called after setArrayRelation();
+     * 
+     * @param name name of the array relation
+     * @param index the index in the array
+     * @param bean the counter part bean of the relation
+     * @return 0 if success, or an error code
+     *                   error code:
+     *                   -1: if no  array relation with the name is defined
+     *                   -2: if the value is null
+     *                   -3: if the value is of invalid type
+     *                   -4: if the index is invalid
+     *                   -5: if the array relation is not a member of this bean
+     */
+    int setArrayRelation(const char* name, Json::Value::ArrayIndex index,
+        Bean* bean);
+    int setArrayRelation(pidType id, Json::Value::ArrayIndex index,
+        Bean* bean);
 
     /**
      * This method is used to add an item to a one-to-many relationship.
@@ -337,17 +347,6 @@ public:
      * @return the removed item as json value
      */
     Json::Value removeProperty( const char* name);
-
-    /**
-     * Remove property from this bean.
-     * 
-     * Note the method is only effective when the id is valid, 
-     * i.e. the property was previously set by setProperty().
-     * 
-     * @param id the property id
-     * @return the removed item as json value, or null value if
-     *                   the id is invalid.
-     */
     Json::Value removeProperty(pidType id);
 
     /**
@@ -357,16 +356,6 @@ public:
      * @return
      */
     void removeRelation( const char* name);
-
-    /**
-     * Remove relation from this bean.
-     * 
-     * Note the method is only effective when the rid is valid, 
-     * i.e. the relation was previously set by setRelation().
-     * 
-     * @param rid the relation id
-     * @return 
-     */
     void removeRelation(pidType rid);
 
 private:
@@ -375,16 +364,16 @@ private:
     Bean& operator =(const Bean& bean) = delete;    
     virtual ~Bean();
 
-    Json::Value::ArrayIndex doGetPropertySize(const char* name, 
+    bool doHasProperty(pidType id, Property::Type type) const;
+
+    Json::Value::ArrayIndex doGetPropertySize(pidType id, 
         bool isProperty_ = true) const;
 
-    const Json::Value& getPropertyRef(const char* key);
-    const Json::Value& getRelationRef(const char* key);
+    const Json::Value& getMemberRef(const char* key);
 
     // void swap(Json::Value &other);
 
     Json::Value m_propertyValues_;
-    Json::Value m_relationValues_;
     BeanWorld* m_world_;
 
     // otype classId_ = 0;

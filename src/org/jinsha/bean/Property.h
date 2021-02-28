@@ -26,7 +26,7 @@ public:
         /**
          * the property is an array, the element of which is of ValueType
          */
-        PrimaryArrayType,
+        ArrayPrimaryType,
 
         /**
          * the property represents a relation between two beans
@@ -37,7 +37,7 @@ public:
          * the property represents an array of relations between one and
          * multiple beans
          */
-        RelationArrayType
+        ArrayRelationType
     };
 
     enum ValueType

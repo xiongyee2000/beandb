@@ -97,7 +97,7 @@ pidType BeanWorld::defineProperty(const char* name, Property::ValueType valueTyp
 
 pidType BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType)
 {
-    return doDefineProperty(name, Property::PrimaryArrayType, valueType);
+    return doDefineProperty(name, Property::ArrayPrimaryType, valueType);
 }
 
 
@@ -109,7 +109,7 @@ pidType BeanWorld::defineRelation(const char* name)
 
 pidType BeanWorld::defineArrayRelation(const char* name)
 {
-    return doDefineProperty(name, Property::RelationArrayType, Property::UIntType);
+    return doDefineProperty(name, Property::ArrayRelationType, Property::UIntType);
 }
 
 
@@ -191,36 +191,40 @@ Property* BeanWorld::getProperty(const char* name)
 
 int BeanWorld::setProperty( Bean* bean, Property* property, const Json::Value& value)
 {
-    doSetProperty(bean, property,  value);
-    return 0;
+    Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property->getName().c_str());
+    doSetProperty(bean, property,  oldValue, value);
 }
 
 
-pidType BeanWorld::setRelation(const char* name, Bean* from, Bean* to)
+int BeanWorld::setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value& value)
 {
-    return 0;
+    Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property->getName().c_str());
+    (*oldValue) = (*oldValue)[index];
+    doSetProperty(bean, property,  oldValue, value);
 }
 
 
-void BeanWorld::setRelation( pidType id, Bean* from, Bean* to)
+void BeanWorld::setRelation(Property* property, Bean* from, Bean* to)
 {
-
+    Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property->getName().c_str());
+    Json::Value newValue(to->getId());
+    doSetProperty(from, property, oldValue, newValue);
 }
 
 
-void BeanWorld::doSetProperty(Bean* bean, Property* property, 
-    const Json::Value&  value)
+void BeanWorld::setArrayRelation(Property* property, Bean* from, Json::Value::ArrayIndex index, Bean* to)
+{
+    Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property->getName().c_str());
+    (*oldValue) = (*oldValue)[index];
+    Json::Value newValue(to->getId());
+    doSetProperty(from, property, oldValue, newValue);
+}
+
+
+void BeanWorld::doSetProperty(Bean* bean,  Property* property, 
+    Json::Value* oldValue, const Json::Value&  value)
 {
     const string& pname = property->getName();
-    Json::Value* oldValue = nullptr;
-    if (property->getType() == Property::RelationType) 
-    {
-        oldValue = (Json::Value*)&bean->getRelationRef(pname.c_str());
-    } 
-    else 
-    {
-        oldValue = (Json::Value*)&bean->getPropertyRef(pname.c_str());
-    }
     if (oldValue->isNull())
     { 
         //no old value, need to increment ref. count
@@ -231,14 +235,13 @@ void BeanWorld::doSetProperty(Bean* bean, Property* property,
     {
         if (property->indexed())
             //remove index for previous value
-            property->removeIndex(bean, *oldValue);
+            property->removeIndex(bean, oldValue);
     }
 
     //set value for json object
     (*oldValue)  = value;
     if (property->indexed())
         property->addIndex(bean, *oldValue);
-    
 }
 
 
@@ -250,7 +253,7 @@ Json::Value BeanWorld::removeProperty(Bean* bean,  Property* property)
     {
         if (property->indexed())
            //remove index first
-            property->removeIndex(bean, bean->getPropertyRef(pname));
+            property->removeIndex(bean, bean->getMemberRef(pname));
         //remove member of json object
         value = bean->m_propertyValues_.removeMember(pname);
         property->m_refCount_--;
@@ -352,7 +355,7 @@ void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::V
     for (auto& item : m_beans_)
     {
         bean = item.second;
-        const Json::Value& v = bean->getPropertyRef(propertyName);
+        const Json::Value& v = bean->getMemberRef(propertyName);
         if (v.isNull()) continue; //not found or null
         switch (opType) {
             case op_eq:

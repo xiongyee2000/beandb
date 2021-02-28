@@ -16,12 +16,56 @@ class BeanWorld;
 class Property
 {
 public:
+    enum Type
+    {
+        /**
+         * the property value is a primary type, i.e. ValueType
+         */
+        PrimaryType = 0,
+
+        /**
+         * the property is an array, the element of which is of ValueType
+         */
+        PrimaryArrayType,
+
+        /**
+         * the property represents a relation between two beans
+         */
+        RelationType,
+
+        /**
+         * the property represents an array of relations between one and
+         * multiple beans
+         */
+        RelationArrayType
+    };
+
+    enum ValueType
+    {
+        IntType = Json::intValue,
+        UIntType = Json::uintValue,
+        RealType = Json::realValue,
+        StringType = Json::stringValue,
+        BoolType = Json::booleanValue
+    } ;
+
+public:
     /**
      * Get the name of the property
      * 
      * @return property name (key)
      */
     const std::string& getName() const {return m_name_;};
+
+    /**
+     * Get the value type of this property.
+     */
+    ValueType getValueType() {return m_valueType_;};
+
+    /**
+     * Get the type of this property.
+     */
+    Type getType() {return  m_propertyType_ ;};
 
     /**
      * Create index for a property, which can be used to improve
@@ -63,13 +107,12 @@ public:
     bool indexed() const {return m_indexed_;};
 
 private:
-    /**
-     * Constructor
-     * 
-     * @param name property name (similar to json key)
-     */
-    Property(BeanWorld* world, const char* name) : 
-        m_world_(world), m_name_(name) {};
+    Property(BeanWorld* world, const char* name, 
+        Type type, ValueType valueType, 
+        bool createIndex = false) : 
+        m_world_(world), m_name_(name), 
+        m_propertyType_(type), m_valueType_(valueType), 
+        m_indexed_(createIndex) {};
     Property(const char* name) : m_name_(name) {};
     virtual ~Property();
 
@@ -82,7 +125,9 @@ private:
 private:
     BeanWorld* m_world_;
     std::string m_name_;
-    pidType m_pid_ = -1;
+    pidType m_id_ = -1;
+    Type m_propertyType_;
+    ValueType m_valueType_ ;
     unsigned int m_refCount_ = 0;
     bool m_indexed_ = false;
     std::unordered_map<oidType, Bean*> m_trueValueMap_;
@@ -99,6 +144,7 @@ private:
 
 
 friend class BeanWorld;
+friend class Bean;
 };
 
 }

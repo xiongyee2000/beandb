@@ -114,11 +114,60 @@ TEST(BeanWorld, clear)
     delete world;
 }
 
+TEST(BeanWorld, defineProperty_undefineProperty)
+{
+    BeanWorld world;
+    Value value;
+    pidType pid = 0, pid_2 = 0;
+    const Property* property = nullptr;
+
+    pid = world.defineProperty(nullptr, Property::IntType);
+    EXPECT_TRUE(pid = -1);
+    pid = world.defineProperty("", Property::IntType);
+    EXPECT_TRUE(pid = -1);
+
+    world.undefineProperty("p1");
+    pid_2 = world.defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(pid_2 >= 0);
+    pid = world.defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(pid = -2);
+    world.undefineProperty("p1");
+    pid = world.defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+
+    world.undefineProperty("p1");
+    pid_2 = world.defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(pid_2 >= 0 && pid_2 == world.getPropertyId("p1"));
+    pid = world.defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(pid = -2);
+     world.undefineProperty("p1");
+    pid = world.defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+
+    world.undefineProperty("p1");
+    pid_2 = world.defineRelation("p1");
+    EXPECT_TRUE(pid_2 >= 0 && pid_2 == world.getPropertyId("p1"));
+    pid = world.defineRelation("p1");
+    EXPECT_TRUE(pid = -2);
+    world.undefineProperty("p1");
+    pid = world.defineRelation("p1");
+    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+
+    world.undefineProperty("p1");
+    pid_2 = world.defineArrayRelation("p1");
+    EXPECT_TRUE(pid_2 >= 0 && pid_2 == world.getPropertyId("p1"));
+    pid = world.defineArrayRelation("p1");
+    EXPECT_TRUE(pid = -2);
+     world.undefineProperty("p1");
+    pid = world.defineArrayRelation("p1");
+    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+}
+
 TEST(BeanWorld, getProperty)
 {
     BeanWorld world;
     Value value;
-    // int pid = 0;
+    int pid = 0;
     const Property* property = nullptr;
 
     Bean *bean = world.createBean();
@@ -129,7 +178,7 @@ TEST(BeanWorld, getProperty)
     property = world.getProperty("a");
     EXPECT_TRUE(property == nullptr);
 
-    bean->setProperty("p1", 1);
+    pid = world.defineProperty("p1", Property::IntType);
     property = world.getProperty("p1");
     EXPECT_TRUE(property->getName() == "p1");
 }
@@ -143,54 +192,39 @@ TEST(BeanWorld, getProperties)
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
 
-    pid = bean1->setProperty(nullptr, 1);
+    pid = world->defineProperty(nullptr, Property::IntType);
     EXPECT_TRUE(pid == -1);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    pid = bean1->setProperty("", 1);
+    pid = world->defineProperty("", Property::IntType);
     EXPECT_TRUE(pid == -1);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    pid = bean1->setProperty(string("").c_str(), 1);
+    pid = world->defineProperty(string("").c_str(),Property::IntType);
     EXPECT_TRUE(pid == -1);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    pid = bean1->setProperty("p1", Json::Value());
+    pid = world->defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(pid == world->getPropertyId("p1"));
+    EXPECT_TRUE(world->getProperties().size() == 1);
+
+    pid = world->defineProperty("p1", Property::IntType);
     EXPECT_TRUE(pid == -2);
+    EXPECT_TRUE(world->getProperties().size() == 1);
+
+    pid = world->defineProperty("p2", Property::IntType);
+    EXPECT_TRUE(pid == world->getPropertyId("p2"));
+    EXPECT_TRUE(world->getProperties().size() == 2);
+
+    bean1->setProperty("p1", 1);
+    bean2->setProperty("p1", 2);
+
+    world->undefineProperty("p1");
+    EXPECT_TRUE(world->getProperties().size() == 1);
+    EXPECT_TRUE(bean1->hasProperty("p1") == false);
+    world->undefineProperty("p2");
     EXPECT_TRUE(world->getProperties().size() == 0);
-
-    pid = bean1->setProperty("p1", 8);
-    EXPECT_TRUE(pid == world->getPropertyId("p1"));
-    EXPECT_TRUE(world->getProperties().size() == 1);
-
-    pid = bean1->setProperty("p2", 8);
-    EXPECT_TRUE(pid == world->getPropertyId("p2"));
-    EXPECT_TRUE(world->getProperties().size() == 2);
-
-    pid = bean2->setProperty("p1", "v1");
-    EXPECT_TRUE(pid == world->getPropertyId("p1"));
-    EXPECT_TRUE(world->getProperties().size() == 2);
-
-    pid = bean2->setProperty("p2", "v2");
-    EXPECT_TRUE(pid == world->getPropertyId("p2"));
-    EXPECT_TRUE(world->getProperties().size() == 2);
-
-    pid = bean2->setProperty("p2",  2);
-    EXPECT_TRUE(pid == world->getPropertyId("p2"));
-    EXPECT_TRUE(world->getProperties().size() == 2);
-
-    bean1->removeProperty("p1");
-    EXPECT_TRUE(world->getProperties().size() == 2);
-
-    bean2->removeProperty("p1");
-    EXPECT_TRUE(world->getProperties().size() == 1);
-
-    bean1->removeProperty("p2");
-    EXPECT_TRUE(world->getProperties().size() == 1);
-
-    bean2->removeProperty("p2");
-    EXPECT_TRUE(world->getProperties().size() == 0);
-
+    EXPECT_TRUE(bean2->hasProperty("p1") == false);
     delete world;
 }
 
@@ -202,10 +236,10 @@ TEST(BeanWorld, getPropertyId)
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
 
-    bean1->setProperty("p1", 8);
+    world->defineProperty("p1", Property::IntType);
     EXPECT_TRUE(world->getPropertyId("p1") == 0);
 
-    bean1->setProperty("p2", 8);
+    world->defineProperty("p2", Property::IntType);
     EXPECT_TRUE(world->getPropertyId("p2") == 1);
 
     bean2->setProperty("p1", "v1");
@@ -218,13 +252,13 @@ TEST(BeanWorld, getPropertyId)
     EXPECT_TRUE(world->getPropertyId("p1") == 0);
 
     bean2->removeProperty("p1");
-    EXPECT_TRUE(world->getPropertyId("p1") == -1);
+    EXPECT_TRUE(world->getPropertyId("p1") == 0);
 
     bean1->removeProperty("p2");
     EXPECT_TRUE(world->getPropertyId("p2") == 1);
 
     bean2->removeProperty("p2");
-    EXPECT_TRUE(world->getPropertyId("p2") == -1);
+    EXPECT_TRUE(world->getPropertyId("p2") == 1);
 
     delete world;
 }
@@ -236,8 +270,6 @@ TEST(BeanWorld, removeBean)
     oidType oid = 0;
     Bean* bean = world.createBean();
     oid = bean->getId();
-    bean->setProperty("p1", 1);
-    bean->setProperty("p2", 2);
     world.removeBean(bean->getId());
     EXPECT_TRUE(world.getBean(oid) == nullptr);
 }
@@ -247,6 +279,15 @@ TEST(BeanWorld, findEqual_without_index)
 {
     BeanWorld world;
     std::list<Bean*> beans;
+
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
 
     Bean &bean1 = *world.createBean();
     bean1.setProperty("double_p", 1.0);
@@ -317,6 +358,15 @@ TEST(BeanWorld, findEqual_with_index)
 {
     BeanWorld world;
     std::list<Bean*> beans;
+
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -400,50 +450,19 @@ TEST(BeanWorld, findEqual_with_index)
 
 }
 
-TEST(BeanWorld, findEqual_type_diff)
-{
-    BeanWorld world;
-    std::list<Bean*> beans;
-    Bean* bean1 = world.createBean();
-    Bean* bean2 = world.createBean();
-
-    bean1->setProperty("p1", 1);
-    bean1->setProperty("p2", 2);
-    bean1->setProperty("p3", 3);
-    bean1->setProperty("p4", 4);
-
-    bean2->setProperty("p1", 1U);
-    bean2->setProperty("p2", 2U);
-    bean2->setProperty("p3", 3U);
-     bean2->setProperty("p4", 4U);
-
-   world.findEqual("p1", (int_t)1, beans);
-   EXPECT_TRUE(beans.size() == 1);
-   world.findEqual("p1", (uint_t)1U, beans);
-   EXPECT_TRUE(beans.size() == 1);
-
-    world.findEqual("p2", (int_t)2, beans);
-    EXPECT_TRUE(beans.size() == 1);
-    world.findEqual("p2", (uint_t)2U, beans);
-    EXPECT_TRUE(beans.size() == 1);
-
-    world.findEqual("p3", (int_t)3, beans);
-    EXPECT_TRUE(beans.size() == 1);
-    world.findEqual("p3", (uint_t)3U, beans);
-   EXPECT_TRUE(beans.size() == 1);
-
-    world.findEqual("p4", (int_t)4, beans);
-    EXPECT_TRUE(beans.size() == 1);
-    world.findEqual("p4", (uint_t)4U, beans);
-   EXPECT_TRUE(beans.size() == 1);
-
-}
-
-
 TEST(BeanWorld, findLessEqual_without_index)
 {
     BeanWorld world;
     std::list<Bean*> beans;
+
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -550,6 +569,15 @@ TEST(BeanWorld, findLessEqual_with_index)
 {
     BeanWorld world;
     std::list<Bean*> beans;
+
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -671,6 +699,15 @@ TEST(BeanWorld, findGreaterEqual_without_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
+
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
 
@@ -704,6 +741,15 @@ TEST(BeanWorld, findGreaterEqual_with_index)
 {
     BeanWorld world;
     std::list<Bean*> beans;
+
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -825,6 +871,15 @@ TEST(BeanWorld, findLessThan_without_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
+
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
 
@@ -860,6 +915,15 @@ TEST(BeanWorld, findLessThan_with_index)
 {
     BeanWorld world;
     std::list<Bean*> beans;
+
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -989,6 +1053,15 @@ TEST(BeanWorld, findGreaterThan_without_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
+
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
 
@@ -1024,6 +1097,15 @@ TEST(BeanWorld, findGreaterThan_with_index)
 {
     BeanWorld world;
     std::list<Bean*> beans;
+
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);

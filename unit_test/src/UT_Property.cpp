@@ -18,46 +18,46 @@ using namespace std;
 using namespace Json;
 using namespace org::jinsha::bean;
 
-TEST(Bean, getName)
+TEST(Property, getName)
 {
     BeanWorld world;
     Bean* bean = world.createBean();
-    bean->setProperty("p1", 1);
+    world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
     EXPECT_TRUE(property != nullptr);
     EXPECT_TRUE(property->getName() == "p1");
 }
 
-TEST(Bean, indexed)
+TEST(Property, indexed)
 {
     BeanWorld world;
 
     Bean *bean = world.createBean();
-    bean->setProperty("p1", 1);
+    world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
     EXPECT_TRUE(property->indexed() == false);
     property->createIndex();
     EXPECT_TRUE(property->indexed() == true);
 }
 
-TEST(Bean, create_index)
+TEST(Property, create_index)
 {
     BeanWorld world;
 
     Bean *bean = world.createBean();
-    bean->setProperty("p1", 1);
+    world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
     EXPECT_TRUE(property->indexed() == false);
     property->createIndex();
     EXPECT_TRUE(property->indexed() == true);
 }
 
-TEST(Bean, remove_index)
+TEST(Property, remove_index)
 {
     BeanWorld world;
 
     Bean *bean = world.createBean();
-    bean->setProperty("p1", 1);
+    world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
     EXPECT_TRUE(property->indexed() == false);
     property->createIndex();
@@ -70,6 +70,15 @@ TEST(BeanWorld, index_more_complicated)
 {
     BeanWorld world;
     std::list<Bean*> beans;
+
+    world.defineProperty("int_p", Property::IntType);
+    world.defineProperty("uint_p", Property::UIntType);
+    world.defineProperty("int64_p", Property::IntType);
+    world.defineProperty("uint64_p", Property::UIntType);
+    world.defineProperty("double_p", Property::RealType);
+    world.defineProperty("str_p", Property::StringType);
+    world.defineProperty("bool_p0", Property::BoolType);
+    world.defineProperty("bool_p1", Property::BoolType);
 
     ///////////////////////////////////////////////////////
     //createIndex()

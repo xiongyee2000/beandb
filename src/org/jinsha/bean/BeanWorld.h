@@ -7,7 +7,6 @@
 
 #include "./common.h"
 #include "./Property.h"
-#include "./Relation.h"
 #include "./Bean.h"
 
 namespace org {
@@ -15,7 +14,6 @@ namespace jinsha {
 namespace bean {
 
 class Property;
-class Relation;
 
 class BeanWorld
 {
@@ -62,6 +60,78 @@ public:
     Bean* getBean(oidType id);
 
     /**
+     * Define a property.
+     * 
+     * Property must be defined before it can be used.
+     * 
+     * Notes:
+     * - Property is type sensitive: i.e. setting the property with a value of type other
+     *    than the one defined here will fail.
+     * 
+     * @param name the name of property
+     * @param valueType the value type of property
+     * @return the id of the property, or error code:
+     *                   -1: name is null or empty
+     *                  -2: the property is already defined
+     */
+    pidType defineProperty(const char* name, Property::ValueType valueType);
+
+    /**
+     * Define an array property.
+     * 
+     * Array property must be defined before it can be used.
+     * 
+     * Notes:
+     * - Array property is type sensitive: i.e. adding to the array property 
+     *   with a value of type other than the one defined here will fail.
+     * 
+     * @param name the name of property
+     * @param valueType the value type of the element of the array property
+     * @return the id of the property, or error code:
+     *                   -1: name is null or empty
+     *                  -2: the property is already defined
+     */
+    pidType defineArrayProperty(const char* name, Property::ValueType valueType);
+
+    /**
+     * Define a relation property.
+     * 
+     * Relation is a special kind of property, which represents relationship between
+     * two beans, e.g. father/mother etc.
+     * 
+     * @param name the name of relation property
+     * @return the id of the relation property, or error code:
+     *                   -1: name is null or empty
+     *                  -2: the relation property is already defined
+     */
+    pidType defineRelation(const char* name);
+
+    /**
+     * Define an array relation property.
+     * 
+     * Array relation property must be defined before it can be used.
+     * 
+     * @param name the name of array relation property
+     * @return the id of the array relation property, or error code:
+     *                   -1: name is null or empty
+     *                  -2: the array relation property is already defined
+     */
+    pidType defineArrayRelation(const char* name);
+
+    /**
+     * Undefine a property.
+     * 
+     * Notes:
+     * - This method can be used to undefine either a property, an array property,
+     *    a relation property, or an array relation property;
+     * - All beans that have this property will remove the property with this id.
+     * 
+     * @param name the name of property
+     * @return 
+     */
+    void undefineProperty(const char* name);
+
+    /**
      * Get the id of a property. Later the property id 
      * can be used in other methods.
      * 
@@ -101,43 +171,13 @@ public:
      {return m_propertyMap_;};
 
     /**
-     * Get the id of a relation. Later the relation id 
-     * can be used in other methods.
-     * 
-     * It is highly encouraged to use id over name, for it
-     * can reduce a lot of string calculation and achieve 
-     * higher performance.
-     *  
-     * @param name relation name
-     * @return relation id
-     */
-    pidType getRelationId(const char* name) const;
-
-    /**
-     * Get relation by id.
-     * 
-     * @param id relation id
-     * @return the relation, or null
-     */
-    const Relation* getRelation(pidType id) const;
-    Relation* getRelation(pidType id);
-
-    /**
      * Get relation by name.
      * 
      * @param name relation name
      * @return the relation, or null
      */
-    const Relation* getRelation(const char* name) const;
-    Relation* getRelation(const char* name);
-
-    /**
-     * Get all relations.
-     * 
-     * @return a map containing all relations.
-     */
-    const std::unordered_map<std::string, pidType>& getRelations() const 
-     {return m_relationMap_;};
+    const Property* getRelation(const char* name) const;
+    Property* getRelation(const char* name);
 
     /**
      * Find beans whose property values are equal to the given one.
@@ -205,29 +245,16 @@ public:
     void findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
 
 private:
-    pidType setProperty( Bean* bean, const char* name, const Json::Value&  value);
-    void setProperty( Bean* bean, pidType id, const Json::Value&  value);
+    pidType doDefineProperty(const char* name, Property::Type type, 
+    Property::ValueType valueType, bool createIndex = false);
+
+    int setProperty( Bean* bean, Property* property, const Json::Value&  value);
+    void doSetProperty( Bean* bean, Property* property, const Json::Value&  value);
 
     int setRelation(const char* name, Bean* from, Bean* to);
     void setRelation(pidType id, Bean* from, Bean* to);
 
-    template<typename T>
-    pidType addProperty(const char* name, 
-        std::vector<T*>&properties, 
-        std::unordered_map<std::string, pidType>& propertyMap);
-    // pidType addProperty(const char* name);
-
-    template<typename T>
-    void removeProperty(T* property, 
-        std::vector<T*>&properties, 
-        std::unordered_map<std::string, pidType>& propertyMap);
-    // void removeProperty(Property* property);
-
-    template<typename T>
-    void doSetProperty( Bean* bean, T* property, const Json::Value&  value);
-
     Json::Value removeProperty(Bean* bean, Property* property);
-
 
     void setRelation( Bean* bean, pidType id, const Json::Value&  value);
     void doSetRelation( Bean* bean, Property* property, const Json::Value&  value);
@@ -247,13 +274,8 @@ private:
     //map from property name to index
     std::unordered_map<std::string, pidType> m_propertyMap_; 
 
-    std::vector<Relation*> m_relations_;
-    //map from relation name to index
-    std::unordered_map<std::string, pidType> m_relationMap_; 
-
 friend class Bean;
 friend class Property;
-friend class Relation;
 };
 
 }

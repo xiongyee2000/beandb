@@ -189,17 +189,17 @@ Property* BeanWorld::getProperty(const char* name)
 }
 
 
-int BeanWorld::setProperty( Bean* bean, Property* property, const Json::Value& value)
+void BeanWorld::setProperty( Bean* bean, Property* property, const Json::Value& value)
 {
     Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property->getName().c_str());
     doSetProperty(bean, property,  oldValue, value);
 }
 
 
-int BeanWorld::setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value& value)
+void BeanWorld::setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value& value)
 {
     Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property->getName().c_str());
-    (*oldValue) = (*oldValue)[index];
+    oldValue = &(*oldValue)[index];
     doSetProperty(bean, property,  oldValue, value);
 }
 
@@ -215,15 +215,16 @@ void BeanWorld::setRelation(Property* property, Bean* from, Bean* to)
 void BeanWorld::setArrayRelation(Property* property, Bean* from, Json::Value::ArrayIndex index, Bean* to)
 {
     Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property->getName().c_str());
-    (*oldValue) = (*oldValue)[index];
+    oldValue = &(*oldValue)[index];
     Json::Value newValue(to->getId());
     doSetProperty(from, property, oldValue, newValue);
 }
 
 
 void BeanWorld::doSetProperty(Bean* bean,  Property* property, 
-    Json::Value* oldValue, const Json::Value&  value)
+    Json::Value* oldValue, const Json::Value&  newValue)
 {
+    if ((*oldValue) == newValue) return;
     const string& pname = property->getName();
     if (oldValue->isNull())
     { 
@@ -235,11 +236,11 @@ void BeanWorld::doSetProperty(Bean* bean,  Property* property,
     {
         if (property->indexed())
             //remove index for previous value
-            property->removeIndex(bean, oldValue);
+            property->removeIndex(bean, *oldValue);
     }
 
     //set value for json object
-    (*oldValue)  = value;
+    (*oldValue)  = newValue;
     if (property->indexed())
         property->addIndex(bean, *oldValue);
 }

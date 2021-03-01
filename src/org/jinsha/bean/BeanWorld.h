@@ -248,8 +248,8 @@ private:
     pidType doDefineProperty(const char* name, Property::Type type, 
     Property::ValueType valueType, bool createIndex = false);
 
-    int setProperty( Bean* bean, Property* property, const Json::Value&  value);
-    int setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value&  value);
+    void setProperty( Bean* bean, Property* property, const Json::Value&  value);
+    void setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value&  value);
     void doSetProperty(Bean* bean, Property* property, Json::Value* oldValue,  const Json::Value&  newValue);
 
     void setRelation(Property* property, Bean* from, Bean* to);

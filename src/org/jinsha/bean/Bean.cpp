@@ -135,7 +135,7 @@ Json::Value::ArrayIndex Bean::doGetPropertySize(pidType id,
         bool isProperty_) const
 {
     Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return -1;
+    if (property == nullptr) return 0;
 
     const char* pname = property->getName().c_str();
     const Json::Value* value = nullptr;
@@ -226,7 +226,7 @@ int Bean::appendArrayProperty(pidType id,  const Json::Value& value)
     if (value.isNull()) return -2;
     if (property->getValueType() != value.type()) return -3;
     auto& arrayValue = m_propertyValues_[pname];
-    arrayValue.append(Json::Value(Json::nullValue));
+    arrayValue.append(Json::Value(property->getValueType()));
     m_world_->setArrayProperty(this, property, arrayValue.size() - 1, value);
     return 0;
 }

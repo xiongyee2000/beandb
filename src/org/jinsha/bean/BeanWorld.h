@@ -170,14 +170,14 @@ public:
     const std::unordered_map<std::string, pidType>& getProperties() const 
      {return m_propertyMap_;};
 
-    /**
-     * Get relation by name.
-     * 
-     * @param name relation name
-     * @return the relation, or null
-     */
-    const Property* getRelation(const char* name) const;
-    Property* getRelation(const char* name);
+    // /**
+    //  * Get relation by name.
+    //  * 
+    //  * @param name relation name
+    //  * @return the relation, or null
+    //  */
+    // const Property* getRelation(const char* name) const;
+    // Property* getRelation(const char* name);
 
     /**
      * Find beans whose property values are equal to the given one.
@@ -253,7 +253,7 @@ private:
     void doSetProperty(Bean* bean, Property* property, Json::Value* oldValue,  const Json::Value&  newValue);
 
     void setRelation(Property* property, Bean* from, Bean* to);
-    void setArrayRelation(Property* property, Bean* from, Json::Value::ArrayIndex index, Bean* to);
+    void setArrayRelation(Property* property, Json::Value::ArrayIndex index, Bean* from, Bean* to);
     Json::Value removeProperty(Bean* bean, Property* property);
 
     void setRelation( Bean* bean, pidType id, const Json::Value&  value);

@@ -167,8 +167,8 @@ public:
      *                   -3: if he value is of invalid type
      *                   -5: if the array property is not a member of this bean
      */
-    int appendArrayProperty(const char* name, const Json::Value& value); 
-    int appendArrayProperty(pidType id, const Json::Value& value); 
+    int appendProperty(const char* name, const Json::Value& value); 
+    int appendProperty(pidType id, const Json::Value& value); 
 
      /**
      * Set the value of an array property at specified index. 
@@ -304,7 +304,7 @@ public:
     int appendRelation(pidType id, Bean* bean);
  
      /**
-     * Set the value of an array relation at specified index. 
+     * Set the relation of an array relation at specified index. 
      * 
      * This method must be called after setArrayRelation();
      * 
@@ -314,8 +314,7 @@ public:
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if no  array relation with the name is defined
-     *                   -2: if the value is null
-     *                   -3: if the value is of invalid type
+     *                   -2: if the bean is null
      *                   -4: if the index is invalid
      *                   -5: if the array relation is not a member of this bean
      */

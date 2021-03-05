@@ -291,24 +291,24 @@ TEST(Bean, array_property)
     EXPECT_TRUE(value.isNull());
 
     //append
-    result = bean.appendArrayProperty(nullptr, 0);
+    result = bean.appendProperty(nullptr, 0);
     EXPECT_TRUE(result == -1);
-    result = bean.appendArrayProperty("", 0);
+    result = bean.appendProperty("", 0);
     EXPECT_TRUE(result == -1);
-    result = bean.appendArrayProperty("a", 0);
+    result = bean.appendProperty("a", 0);
     EXPECT_TRUE(result == -1);
-    result = bean.appendArrayProperty("array_1", "0");
+    result = bean.appendProperty("array_1", "0");
     EXPECT_TRUE(result == -3);
-    result = bean.appendArrayProperty("array_1", Json::Value::null);
+    result = bean.appendProperty("array_1", Json::Value::null);
     EXPECT_TRUE(result == -2);
-    result = bean.appendArrayProperty("array_1", 0);
+    result = bean.appendProperty("array_1", 0);
     EXPECT_TRUE(result == 0);
     EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 1);
     value = bean.getArrayProperty("array_1", 0);
     EXPECT_TRUE(value == 0);
     value = bean.getArrayProperty("array_1", 1);
     EXPECT_TRUE(value.isNull());
-    result = bean.appendArrayProperty("array_1", 1);
+    result = bean.appendProperty("array_1", 1);
     EXPECT_TRUE(result == 0);
     EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 2);
     value = bean.getArrayProperty("array_1", 1);

@@ -212,7 +212,7 @@ void BeanWorld::setRelation(Property* property, Bean* from, Bean* to)
 }
 
 
-void BeanWorld::setArrayRelation(Property* property, Bean* from, Json::Value::ArrayIndex index, Bean* to)
+void BeanWorld::setArrayRelation(Property* property, Json::Value::ArrayIndex index, Bean* from, Bean* to)
 {
     Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property->getName().c_str());
     oldValue = &(*oldValue)[index];

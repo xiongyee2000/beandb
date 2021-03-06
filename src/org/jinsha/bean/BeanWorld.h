@@ -245,7 +245,7 @@ public:
     void findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
 
 private:
-    pidType doDefineProperty(const char* name, Property::Type type, 
+    pidType definePropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool createIndex = false);
 
     void setProperty( Bean* bean, Property* property, const Json::Value&  value);

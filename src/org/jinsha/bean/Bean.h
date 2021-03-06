@@ -47,7 +47,7 @@ public:
      * array property/array relation.
      */
     bool isMember(const char* name) const;
-    bool isMember(const std::string& name) const;
+    // bool isMember(const std::string& name) const;
 
     /**
      * Get all property/relation names of this bean.
@@ -152,8 +152,8 @@ public:
      *                   error code:
      *                   -1: if no  array property with the name is defined
      */
-    int setArrayProperty(const char* name);
-    int setArrayProperty(pidType id);
+    int createArrayProperty(const char* name);
+    int createArrayProperty(pidType id);
 
      /**
      * Append an item to the end of an array property. 
@@ -173,7 +173,7 @@ public:
      /**
      * Set the value of an array property at specified index. 
      * 
-     * This method must be called after setArrayProperty();
+     * This method must be called after createArrayProperty();
      * 
      * @param name name of the array property
      * @param index the index in the array
@@ -283,8 +283,8 @@ public:
      *                   error code:
      *                   -1: if no  array relation with the name is defined
      */
-    int setArrayRelation(const char* name);
-    int setArrayRelation(pidType id);
+    int createArrayRelation(const char* name);
+    int createArrayRelation(pidType id);
 
     /**
      * This method is used to append an item to a one-to-many relationship.
@@ -306,7 +306,7 @@ public:
      /**
      * Set the relation of an array relation at specified index. 
      * 
-     * This method must be called after setArrayRelation();
+     * This method must be called after createArrayRelation();
      * 
      * @param name name of the array relation
      * @param index the index in the array

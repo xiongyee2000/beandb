@@ -91,29 +91,29 @@ Bean* BeanWorld::getBean(oidType id)
 
 pidType BeanWorld::defineProperty(const char* name, Property::ValueType valueType)
 {
-    return doDefineProperty(name, Property::PrimaryType, valueType);
+    return definePropertyCommon_(name, Property::PrimaryType, valueType);
 }
 
 
 pidType BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType)
 {
-    return doDefineProperty(name, Property::ArrayPrimaryType, valueType);
+    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType);
 }
 
 
 pidType BeanWorld::defineRelation(const char* name)
 {
-    return doDefineProperty(name, Property::RelationType, Property::UIntType);
+    return definePropertyCommon_(name, Property::RelationType, Property::UIntType);
 }
 
 
 pidType BeanWorld::defineArrayRelation(const char* name)
 {
-    return doDefineProperty(name, Property::ArrayRelationType, Property::UIntType);
+    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType);
 }
 
 
-pidType BeanWorld::doDefineProperty(const char* name, Property::Type type, 
+pidType BeanWorld::definePropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool createIndex)
 {
     if (name == nullptr) return -1;
@@ -291,7 +291,7 @@ void BeanWorld::recreateIndex(Property* property)
     for (auto& iter : m_beans_)
     {
         bean = iter.second;
-        if (bean->isMember(pname))
+        if (bean->isMember(pname.c_str()))
         {
                 Json::Value& value = bean->m_propertyValues_[pname];
                 property->addIndex(bean, value);

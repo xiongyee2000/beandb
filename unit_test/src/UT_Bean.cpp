@@ -39,19 +39,102 @@ TEST(Bean, isMember)
 {
     BeanWorld world;
     Value value;
-    // pidType pid = 0;
-
-    Bean* bean = world.createBean();
+    pidType pid = 0;
+    
     world.defineProperty("p1", Property::IntType);
     world.defineProperty("p2", Property::IntType);
-    bean->setProperty("p1", 1);
-    bean->setProperty("p2", 2);
+    world.defineArrayProperty("array_1", Property::IntType);
+    world.defineRelation("relation_1");
+     world.defineArrayRelation("relationArray_1");
     
-    EXPECT_TRUE(bean->isMember("p1"));
-    EXPECT_TRUE(bean->isMember("p2"));
-    EXPECT_TRUE(bean->isMember(string("p2")));
-    EXPECT_TRUE(!bean->isMember("xxx"));
-    EXPECT_TRUE(!bean->isMember(string("xxx")));
+    Bean* bean1 = world.createBean();
+
+    EXPECT_TRUE(!bean1->isMember(nullptr));
+    EXPECT_TRUE(!bean1->isMember(""));
+
+    EXPECT_TRUE(!bean1->isMember("p1"));
+    // EXPECT_TRUE(!bean1->isMember(string("p1")));
+    bean1->setProperty("p1", 1);
+    EXPECT_TRUE(bean1->isMember("p1"));
+    // EXPECT_TRUE(bean1->isMember(string("p1")));
+
+    EXPECT_TRUE(!bean1->isMember("p2"));
+    bean1->setProperty("p2", 2);
+    EXPECT_TRUE(bean1->isMember("p2"));
+
+    EXPECT_TRUE(!bean1->isMember("array_1"));
+    bean1->createArrayProperty("array_1");
+    EXPECT_TRUE(bean1->isMember("array_1"));
+
+    Bean* bean2 = world.createBean();
+
+    EXPECT_TRUE(!bean1->isMember("relation_1"));
+    bean1->setRelation("relation_1", nullptr);
+    EXPECT_TRUE(!bean1->isMember("relation_1"));
+    bean1->setRelation("relation_1", bean2);
+    EXPECT_TRUE(bean1->isMember("relation_1"));
+
+    EXPECT_TRUE(!bean1->isMember("relationArray_1"));
+    bean1->createArrayRelation("relationArray_1");
+    EXPECT_TRUE(bean1->isMember("relationArray_1"));
+
+}
+
+TEST(Bean, hasProperty_hasRelation)
+{
+    BeanWorld world;
+    Value value;
+    pidType pid = 0;
+    
+    world.defineProperty("p1", Property::IntType);
+    world.defineProperty("p2", Property::IntType);
+    world.defineArrayProperty("array_1", Property::IntType);
+    world.defineRelation("relation_1");
+     world.defineArrayRelation("relationArray_1");
+
+    Bean* bean1 = world.createBean();
+
+    EXPECT_TRUE(!bean1->hasProperty(nullptr));
+    EXPECT_TRUE(!bean1->hasProperty(""));
+    EXPECT_TRUE(!bean1->hasArrayProperty(nullptr));
+    EXPECT_TRUE(!bean1->hasArrayProperty(""));
+    EXPECT_TRUE(!bean1->hasRelation(nullptr));
+    EXPECT_TRUE(!bean1->hasRelation(""));
+    EXPECT_TRUE(!bean1->hasArrayRelation(nullptr));
+    EXPECT_TRUE(!bean1->hasArrayRelation(""));
+
+    EXPECT_TRUE(!bean1->hasProperty("p1"));
+    bean1->setProperty("p1", 1);
+    EXPECT_TRUE(bean1->hasProperty("p1"));
+    EXPECT_TRUE(!bean1->hasArrayProperty("p1"));
+    EXPECT_TRUE(!bean1->hasRelation("p1"));
+    EXPECT_TRUE(!bean1->hasArrayRelation("p1"));
+
+    EXPECT_TRUE(!bean1->hasArrayProperty("array_1"));
+    bean1->createArrayProperty("array_1");
+    EXPECT_TRUE(!bean1->hasProperty("array_1"));
+    EXPECT_TRUE(bean1->hasArrayProperty("array_1"));
+    EXPECT_TRUE(!bean1->hasRelation("array_1"));
+    EXPECT_TRUE(!bean1->hasArrayRelation("array_1"));
+
+    Bean* bean2 = world.createBean();
+
+    EXPECT_TRUE(!bean1->hasRelation("relation_1"));
+    bean1->setRelation("relation_1", nullptr);
+    EXPECT_TRUE(!bean1->hasRelation("relation_1"));
+    bean1->setRelation("relation_1", bean2);
+    EXPECT_TRUE(!bean1->hasProperty("relation_1"));
+    EXPECT_TRUE(!bean1->hasArrayProperty("relation_1"));
+    EXPECT_TRUE(bean1->hasRelation("relation_1"));
+    EXPECT_TRUE(!bean1->hasArrayRelation("relation_1"));
+
+    EXPECT_TRUE(!bean1->hasArrayRelation("relationArray_1"));
+    bean1->createArrayRelation("relationArray_1");
+    EXPECT_TRUE(!bean1->hasProperty("relationArray_1"));
+    EXPECT_TRUE(!bean1->hasArrayProperty("relationArray_1"));
+    EXPECT_TRUE(!bean1->hasRelation("relationArray_1"));
+    EXPECT_TRUE(bean1->hasArrayRelation("relationArray_1"));
+
 }
 
 TEST(Bean, setProperty_removeProperty_pid)
@@ -283,7 +366,7 @@ TEST(Bean, array_property)
     EXPECT_TRUE(pid == -5);
 
     //create empty array
-    pid = bean.setArrayProperty("array_1");
+    pid = bean.createArrayProperty("array_1");
     EXPECT_TRUE(pid == 0);
     EXPECT_TRUE(bean.hasArrayProperty("array_1") == true);
     EXPECT_TRUE(bean.getArrayPropertySize("array_1") == 0);

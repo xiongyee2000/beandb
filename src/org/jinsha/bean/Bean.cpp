@@ -77,7 +77,7 @@ Json::Value Bean::getProperty(const char* name) const
 
 Json::Value Bean::getProperty(pidType id) const
 {
-    Json::Value value;
+    Json::Value value(Json::nullValue);
     Property* property = (Property*)m_world_->getProperty(id);
     if (property == nullptr) return value;
     if (property->getType() != Property::PrimaryType) return value;
@@ -95,11 +95,11 @@ int Bean::setProperty(const char* name,  const Json::Value& value)
 
 int Bean::setProperty(pidType id,  const Json::Value& value)
 {
+    if (value.isNull()) return -1;
     Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return -1;
-    if (value.isNull()) return -2;
-    if (property->getType() != Property::PrimaryType) return -3;
-    if (property->getValueType() != (Property::ValueType)value.type()) return -4;
+    if (property == nullptr) return -2;
+    if (property->getType() != Property::PrimaryType) return -2;
+    if (property->getValueType() != (Property::ValueType)value.type()) return -3;
     m_world_->setProperty(this, property, value);
     return 0;
 }
@@ -128,26 +128,25 @@ Json::Value::ArrayIndex Bean::getArrayPropertySize(const char* name) const
 
 Json::Value::ArrayIndex Bean::getArrayPropertySize(pidType id) const
 {
-    return doGetPropertySize(id, true);
+    return getArrayMemberSizeCommon_(id, true);
 }
 
 
-Json::Value::ArrayIndex Bean::doGetPropertySize(pidType id, 
+Json::Value::ArrayIndex Bean::getArrayMemberSizeCommon_(pidType id, 
         bool isProperty_) const
 {
-    Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return 0;
-
-    const char* pname = property->getName().c_str();
+    const char* pname = nullptr;
     const Json::Value* value = nullptr;
     if (isProperty_)
     {
         if (!hasArrayProperty(id)) return 0;
+        pname = m_world_->getProperty(id)->getName().c_str();
         value = &m_propertyValues_[pname];
     }
     else
     {
-        if (!hasArrayRelation(pname)) return 0;
+        if (!hasArrayRelation(id)) return 0;
+        pname = m_world_->getProperty(id)->getName().c_str();
         value = &m_propertyValues_[pname];
     }
     
@@ -159,7 +158,7 @@ Json::Value::ArrayIndex Bean::doGetPropertySize(pidType id,
 Json::Value Bean::getArrayProperty(const char* name,  
     Json::Value::ArrayIndex index) const
 {
-    Json::Value value;
+    Json::Value value(Json::nullValue);
     if (name == nullptr) return value;
     if (name[0] == 0) return value;
     if (!hasArrayProperty(name)) return value;
@@ -178,8 +177,8 @@ int Bean::createArrayProperty(const char* name)
 int Bean::createArrayProperty(pidType id)
 {
     Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return -1;
-    if (property->getType() != Property::ArrayPrimaryType) return -1;
+    if (property == nullptr) return -2;
+    if (property->getType() != Property::ArrayPrimaryType) return -2;
     m_propertyValues_[property->getName()] = Json::Value(Json::arrayValue);
     return 0;
 }
@@ -196,14 +195,15 @@ int Bean::setArrayProperty(const char* name,
 int Bean::setArrayProperty(pidType id, 
     Json::Value::ArrayIndex index, const Json::Value& value)
 {
+    if (value.isNull()) return -1;
     Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return -1;
-    if (property->getType() != Property::ArrayPrimaryType) return -1;
-    const auto& pname = property->getName().c_str();
-    if (!hasArrayProperty(pname)) return -5;
-    if (value.isNull()) return -2;
+    if (property == nullptr) return -2;
+    if (property->getType() != Property::ArrayPrimaryType) return -2;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
-    if (index >= m_propertyValues_[pname].size()) return -4;
+    const auto& pname = property->getName().c_str();
+    if (!hasArrayProperty(pname)) return -4;
+    if (index >= m_propertyValues_[pname].size()) return -5;
+
     // m_propertyValues_[pname][index] = value;
     m_world_->setArrayProperty(this, property, index, value);
     return 0;
@@ -219,13 +219,13 @@ int Bean::appendProperty(const char* name,  const Json::Value& value)
 
 int Bean::appendProperty(pidType id,  const Json::Value& value)
 {
+    if (value.isNull()) return -1;
     Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return -1;
-    if (property->getType() != Property::ArrayPrimaryType) return -1;
+    if (property == nullptr) return -2;
+    if (property->getType() != Property::ArrayPrimaryType) return -2;
     const auto& pname = property->getName().c_str();
-    if (!hasArrayProperty(pname)) return -5;
-    if (value.isNull()) return -2;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
+    if (!hasArrayProperty(pname)) return -4;
     auto& arrayValue = m_propertyValues_[pname];
     arrayValue.append(Json::Value(property->getValueType()));
     m_world_->setArrayProperty(this, property, arrayValue.size() - 1, value);
@@ -278,6 +278,19 @@ bool Bean::hasArrayRelation(pidType id) const
 }
 
 
+Json::Value::ArrayIndex Bean::getArrayRelationSize(const char* name) const
+{
+    pidType pid = m_world_->getPropertyId(name);
+    return getArrayRelationSize(pid);
+}
+
+
+Json::Value::ArrayIndex Bean::getArrayRelationSize(pidType id) const
+{
+    return getArrayMemberSizeCommon_(id, false);
+}
+
+
 oidType Bean::getRelationBeanId(const char* name) const
 {
     pidType pid = m_world_->getPropertyId(name);
@@ -323,10 +336,10 @@ pidType Bean::setRelation(const char* name, Bean* bean)
 
 int Bean::setRelation(pidType id,  Bean* bean)
 {
+    if (bean == nullptr) return -1;
     Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return -1;
-    if (property->getType() != Property::RelationType) return -1;
-    if (bean == nullptr) return -2;
+    if (property == nullptr) return -2;
+    if (property->getType() != Property::RelationType) return -2;
     m_world_->setRelation(property, this, bean);
     return 0;
 }
@@ -342,9 +355,11 @@ int Bean::createArrayRelation(const char* name)
 int Bean::createArrayRelation(pidType id)
 {
     Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return -1;
-    if (property->getType() != Property::ArrayRelationType) return -1;
-    m_propertyValues_[property->getName()] = Json::Value(Json::arrayValue);
+    if (property == nullptr) return -2;
+    if (property->getType() != Property::ArrayRelationType) return -2;
+    const char* pname = property->getName().c_str();
+    if (isMember(pname)) return 0;
+    m_propertyValues_[pname] = Json::Value(Json::arrayValue);
     return 0;
 }
 
@@ -358,12 +373,12 @@ int Bean::appendRelation(const char* name,  Bean* bean)
 
 int Bean::appendRelation(pidType id,  Bean* bean)
 {
+    if (bean == nullptr) return -1;
     Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return -1;
-    if (property->getType() != Property::ArrayRelationType) return -1;
+    if (property == nullptr) return -2;
+    if (property->getType() != Property::ArrayRelationType) return -2;
     const auto& pname = property->getName().c_str();
-    if (!hasArrayRelation(pname)) return -5;
-    if (bean == nullptr) return -2;
+    if (!hasArrayRelation(pname)) return -4;
     auto& arrayValue = m_propertyValues_[pname];
     arrayValue.append(bean->getId());
     m_world_->setArrayRelation(property, arrayValue.size() - 1, this, bean);
@@ -371,47 +386,56 @@ int Bean::appendRelation(pidType id,  Bean* bean)
 }
 
 
-int Bean::setArrayRelation(const char* name,  
+int Bean::setRelation(const char* name,  
     Json::Value::ArrayIndex index, Bean* bean)
 {
     pidType pid = m_world_->getPropertyId(name);
-    return setArrayRelation(pid, index, bean);
+    return setRelation(pid, index, bean);
 }
 
 
-int Bean::setArrayRelation(pidType id, 
+int Bean::setRelation(pidType id, 
     Json::Value::ArrayIndex index, Bean* bean)
 {
+    if (bean == nullptr) return -1;
     Property* property = (Property*)m_world_->getProperty(id);
-    if (property == nullptr) return -1;
-    if (property->getType() != Property::ArrayRelationType) return -1;
+    if (property == nullptr) return -2;
+    if (property->getType() != Property::ArrayRelationType) return -2;
     const auto& pname = property->getName().c_str();
-    if (!hasArrayRelation(pname)) return -5;
-    if (bean == nullptr) return -2;
-    if (index >= m_propertyValues_[pname].size()) return -4;
+    if (!hasArrayRelation(pname)) return -4;
+    if (index >= m_propertyValues_[pname].size()) return -5;
     // Json::Value &oldValue = m_propertyValues_[pname][index];
     // m_propertyValues_[pname][index] = bean.getId();
     m_world_->setArrayRelation(property, index, this, bean);
     return 0;
 }
 
+
 Json::Value Bean::removeProperty( const char* name)
 {
-    if (name == nullptr) return Json::Value();
-    if (name[0] == 0) return Json::Value();
-    Property* property = (Property*)m_world_->getProperty(name);
-    if (property == nullptr) 
-        return m_propertyValues_.removeMember(name); 
-    else
-        return m_world_->removeProperty(this, property);
+    pidType pid = m_world_->getPropertyId(name);
+    return removeProperty(pid);
 }
 
 
-Json::Value Bean::removeProperty(pidType pid)
+Json::Value Bean::removeProperty(pidType id)
 {
-    Property* property = (Property*)m_world_->getProperty(pid);
+    Property* property = (Property*)m_world_->getProperty(id);
     if (property == nullptr) return Json::Value();
     return m_world_->removeProperty(this, property);
+}
+
+
+void Bean::removeRelation( const char* name)
+{
+    pidType pid = m_world_->getPropertyId(name);
+    return removeRelation(pid);
+}
+
+
+void Bean::removeRelation(pidType id)
+{
+    removeProperty(id);
 }
 
 

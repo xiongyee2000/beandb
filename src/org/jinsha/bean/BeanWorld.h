@@ -250,7 +250,7 @@ private:
 
     void setProperty( Bean* bean, Property* property, const Json::Value&  value);
     void setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value&  value);
-    void doSetProperty(Bean* bean, Property* property, Json::Value* oldValue,  const Json::Value&  newValue);
+    void setPropertyCommon_(Bean* bean, Property* property, Json::Value* oldValue,  const Json::Value&  newValue);
 
     void setRelation(Property* property, Bean* from, Bean* to);
     void setArrayRelation(Property* property, Json::Value::ArrayIndex index, Bean* from, Bean* to);

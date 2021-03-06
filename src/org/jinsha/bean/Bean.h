@@ -92,10 +92,9 @@ public:
      * @param value value of the property
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if no property with the name is defined
-     *                   -2: if the value is null
-     *                   -3: if the property is not of primary type
-     *                   -4: if the value type is invalid
+     *                   -1: if the value is null
+     *                   -2: if no property is defined with the name
+     *                   -3: if he value is of invalid type
      */
     int setProperty(const char* name, const Json::Value& value);
     int setProperty(pidType id, const Json::Value& value);
@@ -116,9 +115,7 @@ public:
      * @return the size
      * 
      * Note:
-     * If this bean does not have the named property,
-     * 0 will be returned;
-     * If the property is not an array property, 
+     * If this bean does not have the named array property,
      * 0 will be returned;
      */
     Json::Value::ArrayIndex getArrayPropertySize(const char* name) const;
@@ -150,7 +147,7 @@ public:
      * @param name name of the array property
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if no  array property with the name is defined
+     *                   -2: if no  array property with the name is defined
      */
     int createArrayProperty(const char* name);
     int createArrayProperty(pidType id);
@@ -162,10 +159,10 @@ public:
      * @param value value to be added
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if no  array property is defined with the name
-     *                   -2: if the value is null
+     *                   -1: if the value is null
+     *                   -2: if no  array property is defined with the name
      *                   -3: if he value is of invalid type
-     *                   -5: if the array property is not a member of this bean
+     *                   -4: if the array property is not a member of this bean
      */
     int appendProperty(const char* name, const Json::Value& value); 
     int appendProperty(pidType id, const Json::Value& value); 
@@ -180,11 +177,11 @@ public:
      * @param value value to be set
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if no  array property with the name is defined
-     *                   -2: if the value is null
+     *                   -1: if the value is null
+     *                   -2: if no  array property with the name is defined
      *                   -3: if the value is of invalid type
-     *                   -4: if the index is invalid
-     *                   -5: if the array property is not a member of this bean
+     *                   -4: if the array property is not a member of this bean
+     *                   -5: if the index is invalid
      */
     int setArrayProperty(const char* name, Json::Value::ArrayIndex index,
         const Json::Value& value);
@@ -199,7 +196,7 @@ public:
     //  * @return 0 if success, or an error code
     //  *                   error code:
     //  *                   -1: if no property is defined with the name
-    //  *                   -4: if the index is invalid
+    //  *                   -5: if the index is invalid
     //  */
     // int removeArrayProperty(const char* name, Json::Value::ArrayIndex index); 
 
@@ -211,7 +208,7 @@ public:
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if no array property is defined with the name
-     *                   -5: if the array property is not a member of this bean
+     *                   -4: if the array property is not a member of this bean
      */
     // int resizeProperty(const char* name, Json::Value::ArrayIndex size);
     // int resizeProperty(pidType id, Json::Value::ArrayIndex size);
@@ -235,6 +232,19 @@ public:
      */
     bool hasArrayRelation(const char* name) const;
     bool hasArrayRelation(pidType id) const;
+
+    /**
+     * Get size of an array relation.
+     * 
+     * @param name the relation name
+     * @return the size
+     * 
+     * Note:
+     * If this bean does not have the named array relation,
+     * 0 will be returned;
+     */
+    Json::Value::ArrayIndex getArrayRelationSize(const char* name) const;
+    Json::Value::ArrayIndex getArrayRelationSize(pidType id) const;
 
     /**
      * Get relation bean.
@@ -266,8 +276,8 @@ public:
      * @param name name of the relation proerty
      * @param bean the counter part bean of the relation
      * @return 0 if success, or an error code:
-     *                   -1: if no relation property with the name is defined
-     *                   -2: if the bean is null
+     *                   -1: if the bean is null
+     *                   -2: if no relation property with the name is defined
      */
     int setRelation(const char* name, Bean* bean);
     int setRelation(pidType id, Bean* bean);
@@ -281,7 +291,7 @@ public:
      * @param name name of the array relation
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if no  array relation with the name is defined
+     *                   -2: if no  array relation with the name is defined
      */
     int createArrayRelation(const char* name);
     int createArrayRelation(pidType id);
@@ -297,8 +307,9 @@ public:
      * @param bean the counter part bean of the relation to be added
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if no array relation property with the name is defined
-     *                   -2: if the bean is null
+     *                   -1: if the bean is null
+     *                   -2: if no  array relation with the name is defined
+     *                   -4: if the array relation is not a member of this bean
      */
     int appendRelation(const char* name, Bean* bean);
     int appendRelation(pidType id, Bean* bean);
@@ -313,14 +324,14 @@ public:
      * @param bean the counter part bean of the relation
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -1: if no  array relation with the name is defined
-     *                   -2: if the bean is null
-     *                   -4: if the index is invalid
-     *                   -5: if the array relation is not a member of this bean
+     *                   -1: if the bean is null
+     *                   -2: if no  array relation with the name is defined
+     *                   -4: if the array relation is not a member of this bean
+     *                   -5: if the index is invalid
      */
-    int setArrayRelation(const char* name, Json::Value::ArrayIndex index,
+    int setRelation(const char* name, Json::Value::ArrayIndex index,
         Bean* bean);
-    int setArrayRelation(pidType id, Json::Value::ArrayIndex index,
+    int setRelation(pidType id, Json::Value::ArrayIndex index,
         Bean* bean);
 
     /**
@@ -355,7 +366,7 @@ public:
      * @return
      */
     void removeRelation( const char* name);
-    void removeRelation(pidType rid);
+    void removeRelation(pidType id);
 
 private:
     Bean(BeanWorld* world);
@@ -365,7 +376,7 @@ private:
 
     bool doHasProperty(pidType id, Property::Type type) const;
 
-    Json::Value::ArrayIndex doGetPropertySize(pidType id, 
+    Json::Value::ArrayIndex getArrayMemberSizeCommon_(pidType id, 
         bool isProperty_ = true) const;
 
     const Json::Value& getMemberRef(const char* key);

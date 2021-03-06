@@ -520,6 +520,20 @@ TEST(BeanWorld, findEqual_with_index)
     world.defineProperty("bool_p0", Property::BoolType);
     world.defineProperty("bool_p1", Property::BoolType);
 
+    Property* double_p_property = world.getProperty("double_p");
+    Property* str_p_property = world.getProperty("str_p");
+    Property* int_p_property = world.getProperty("int_p");
+    Property* uint_p_property = world.getProperty("uint_p");
+    Property* int64_p_property = world.getProperty("int64_p");
+    Property* uint64_p_property = world.getProperty("uint64_p");
+    
+    double_p_property->createIndex();
+    str_p_property->createIndex();
+    int_p_property->createIndex();
+    uint_p_property->createIndex();
+    int64_p_property->createIndex();
+    uint64_p_property->createIndex();
+
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
     bean1->setProperty("str_p", "hello");
@@ -540,23 +554,9 @@ TEST(BeanWorld, findEqual_with_index)
     bean2->setProperty("int64_p", 3);
     bean2->setProperty("uint64_p", 4U);
 
-    Property* double_p_property = world.getProperty("double_p");
-    Property* str_p_property = world.getProperty("str_p");
-    Property* bool_p0_property = world.getProperty("bool_p0");
-    Property* bool_p1_property = world.getProperty("bool_p1");
-    Property* int_p_property = world.getProperty("int_p");
-    Property* uint_p_property = world.getProperty("uint_p");
-    Property* int64_p_property = world.getProperty("int64_p");
-    Property* uint64_p_property = world.getProperty("uint64_p");
-
-    double_p_property->createIndex();
-    str_p_property->createIndex();
-    bool_p0_property->createIndex();
-    bool_p1_property->createIndex();
-    int_p_property->createIndex();
-    uint_p_property->createIndex();
-    int64_p_property->createIndex();
-    uint64_p_property->createIndex();
+    //reset property
+    bean2->setProperty("double_p", 2.0);
+    bean2->setProperty("double_p", 1.0);
 
     world.findEqual("double_p", 1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
@@ -761,7 +761,7 @@ TEST(BeanWorld, findLessEqual_with_index)
     Property* uint_p_property = world.getProperty("uint_p");
     Property* int64_p_property = world.getProperty("int64_p");
     Property* uint64_p_property = world.getProperty("uint64_p");
-
+    
     double_p_property->createIndex();
     str_p_property->createIndex();
     int_p_property->createIndex();

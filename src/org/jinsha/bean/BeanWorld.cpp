@@ -192,7 +192,7 @@ Property* BeanWorld::getProperty(const char* name)
 void BeanWorld::setProperty( Bean* bean, Property* property, const Json::Value& value)
 {
     Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property->getName().c_str());
-    doSetProperty(bean, property,  oldValue, value);
+    setPropertyCommon_(bean, property,  oldValue, value);
 }
 
 
@@ -200,7 +200,7 @@ void BeanWorld::setArrayProperty( Bean* bean, Property* property, Json::Value::A
 {
     Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property->getName().c_str());
     oldValue = &(*oldValue)[index];
-    doSetProperty(bean, property,  oldValue, value);
+    setPropertyCommon_(bean, property,  oldValue, value);
 }
 
 
@@ -208,7 +208,7 @@ void BeanWorld::setRelation(Property* property, Bean* from, Bean* to)
 {
     Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property->getName().c_str());
     Json::Value newValue(to->getId());
-    doSetProperty(from, property, oldValue, newValue);
+    setPropertyCommon_(from, property, oldValue, newValue);
 }
 
 
@@ -217,11 +217,11 @@ void BeanWorld::setArrayRelation(Property* property, Json::Value::ArrayIndex ind
     Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property->getName().c_str());
     oldValue = &(*oldValue)[index];
     Json::Value newValue(to->getId());
-    doSetProperty(from, property, oldValue, newValue);
+    setPropertyCommon_(from, property, oldValue, newValue);
 }
 
 
-void BeanWorld::doSetProperty(Bean* bean,  Property* property, 
+void BeanWorld::setPropertyCommon_(Bean* bean,  Property* property, 
     Json::Value* oldValue, const Json::Value&  newValue)
 {
     if ((*oldValue) == newValue) return;

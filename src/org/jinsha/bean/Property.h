@@ -2,7 +2,7 @@
 
 #include <string>
 #include <list>
-#include <unordered_map>
+#include <map>
 
 #include "common.h"
 
@@ -113,14 +113,15 @@ private:
         m_world_(world), m_name_(name), 
         m_propertyType_(type), m_valueType_(valueType), 
         m_indexed_(createIndex) {};
-    Property(const char* name) : m_name_(name) {};
+    // Property(const char* name) : m_name_(name) {};
     virtual ~Property();
 
 private:
     void addIndex(Bean* bean, const Json::Value& value);
     bool removeIndex(Bean* bean, const Json::Value& value);
 
-    void findCommon(int type, const Json::Value& value, std::list<Bean*>& beans) const; 
+    void findHas(std::list<Bean*>& beans) const;
+    void findCommon_(int type, const Json::Value& value, std::list<Bean*>& beans) const; 
 
 private:
     BeanWorld* m_world_;
@@ -130,10 +131,25 @@ private:
     ValueType m_valueType_ ;
     unsigned int m_refCount_ = 0;
     bool m_indexed_ = false;
-    std::unordered_map<oidType, Bean*> m_trueValueMap_;
-    std::unordered_map<oidType, Bean*> m_falseValueMap_;
+
+    //keep all beans that have this property
+    //used only for array property and array relation
+    //for better performance
+    std::map<Bean*, unsigned int> m_beanMap_; 
+
+    //index for true values
+    std::map<oidType, Bean*> m_trueValueMap_;
+
+    //index for false values
+    std::map<oidType, Bean*> m_falseValueMap_;
+
+    //index for int values
     std::multimap<int_t, Bean*> m_intValueMap_;
+
+    //index for uint values
     std::multimap<uint_t, Bean*> m_uintValueMap_;
+
+    //index for double values
     std::multimap<double, Bean*> m_doubleValueMap_;
 
      struct StrComparator

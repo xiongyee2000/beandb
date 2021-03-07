@@ -301,45 +301,60 @@ void BeanWorld::recreateIndex(Property* property)
 }
 
 
+void BeanWorld::findHas(const char* propertyName,  std::list<Bean*>& beans)
+{
+    beans.clear();
+    const Property* property = getProperty(propertyName);
+    if (property == nullptr) return;
+    if (property->indexed())
+    { //indexed by property, use index to improve performance
+        property->findHas(beans);
+    }
+    else
+    { //no index, do trivial find
+        trivialFind(op_has, propertyName, Json::Value::null, beans);
+    }
+}
+
+
 void BeanWorld::findEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon(op_eq, propertyName, value, beans);
+    findCommon_(op_eq, propertyName, value, beans);
 }
 
 
 void BeanWorld::findLessEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon(op_le, propertyName, value, beans);
+    findCommon_(op_le, propertyName, value, beans);
 }
 
 
 void BeanWorld::findGreaterEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon(op_ge, propertyName, value, beans);
+    findCommon_(op_ge, propertyName, value, beans);
 }
 
 
 void BeanWorld::findLessThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon(op_lt, propertyName, value, beans);
+    findCommon_(op_lt, propertyName, value, beans);
 }
 
 
 void BeanWorld::findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon(op_gt, propertyName, value, beans);
+    findCommon_(op_gt, propertyName, value, beans);
 }
 
 
-void BeanWorld::findCommon(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
+void BeanWorld::findCommon_(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
     beans.clear();
-   const Property* property = getProperty(propertyName);
-   if (property == nullptr) return;
+    const Property* property = getProperty(propertyName);
+    if (property == nullptr) return;
     if (property->indexed())
     { //indexed by property, use index to improve performance
-        // switch (type)
-        property->findCommon(opType, value, beans);
+        property->findCommon_(opType, value, beans);
     }
     else
     { //no index, do trivial find
@@ -359,6 +374,9 @@ void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::V
         const Json::Value& v = bean->getMemberRef(propertyName);
         if (v.isNull()) continue; //not found or null
         switch (opType) {
+            case op_has:
+                if (!v.isNull()) beans.push_back(bean);
+                break;
             case op_eq:
                 if (v == value) beans.push_back(bean);
                 break;

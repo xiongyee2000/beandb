@@ -12,7 +12,7 @@ namespace jinsha {
 namespace bean {
 
 template<typename ValueT, typename MapT>
-static void doFindCommon(int opType, const ValueT& value, const MapT& map, std::list<Bean*>& beans);
+static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std::list<Bean*>& beans);
 
 template<typename ValueT, typename MapT>
 static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
@@ -48,6 +48,16 @@ int Property::removeIndex()
 
 void Property::addIndex(Bean* bean, const Json::Value& value)
 {
+    if (m_propertyType_ == ArrayPrimaryType ||
+        m_propertyType_ == ArrayRelationType)
+    {
+        auto iter = m_beanMap_.find(bean);
+        if (iter == m_beanMap_.end())
+            m_beanMap_[bean] == 1;
+        else
+            iter->second++;
+    }
+
     switch (value.type()) 
     {
         case Json::intValue:
@@ -82,6 +92,17 @@ void Property::addIndex(Bean* bean, const Json::Value& value)
 bool Property::removeIndex(Bean* bean, const Json::Value& value)
 {
     bool rtn = false;
+
+    if (m_propertyType_ == ArrayPrimaryType ||
+        m_propertyType_ == ArrayRelationType)
+    {
+        auto iter = m_beanMap_.find(bean);
+        if (iter != m_beanMap_.end())
+            iter->second--;
+        if (iter->second == 0)
+            m_beanMap_.erase(iter);
+    }
+
     switch (value.type()) 
     {
         case Json::intValue:
@@ -127,29 +148,74 @@ bool Property::removeIndex(Bean* bean, const Json::Value& value)
 }
 
 
-void Property::findCommon(int opType, const Json::Value& value, std::list<Bean*>& beans) const
+void Property::findHas(std::list<Bean*>& beans) const
 {
+    beans.clear();
+    if (m_propertyType_ == ArrayPrimaryType || 
+        m_propertyType_ == ArrayRelationType)
+    {
+            for (auto& item : m_beanMap_)
+            {
+                beans.push_back(item.first);
+            }
+    } 
+    else
+    {
+        Json::Value value;
+        switch (m_valueType_)
+        {
+            case IntType:
+                value = 0;
+                break;
+            case UIntType:
+                value = 0U;
+                break;
+            case RealType:
+                value = 0.0f;
+                break;
+            case StringType:
+                value = "";
+                break;
+            case BoolType:
+                value = true;
+                break;
+            default:
+                break;
+        }
+        findCommon_(op_has, value, beans);
+    }
+}
+
+
+void Property::findCommon_(int opType, const Json::Value& value, std::list<Bean*>& beans) const
+{  
     switch (value.type()) {
         case Json::intValue:
-            doFindCommon<int_t, decltype(m_intValueMap_)>
+            doFindCommon_<int_t, decltype(m_intValueMap_)>
                 (opType, value.asInt64(), m_intValueMap_, beans);
             break;
         case Json::uintValue:
-            doFindCommon<uint_t, decltype(m_uintValueMap_)>
+            doFindCommon_<uint_t, decltype(m_uintValueMap_)>
                 (opType, value.asUInt64(), m_uintValueMap_, beans);
             break;
         case Json::realValue:
-            doFindCommon<double, decltype(m_doubleValueMap_)>
+            doFindCommon_<double, decltype(m_doubleValueMap_)>
                 (opType, value.asDouble(), m_doubleValueMap_, beans);
             break;
         case Json::stringValue:
-            doFindCommon<const char*, decltype(m_strValueMap_)>
+            doFindCommon_<const char*, decltype(m_strValueMap_)>
                 (opType, value.asCString(), m_strValueMap_, beans);
             break;
         case Json::booleanValue:
-            if (opType == op_eq)
-            { //only equal makes sense
-                beans.clear();
+            if (opType == op_has)
+            { //add all beans
+                for (auto& item : m_trueValueMap_)
+                    beans.push_back(item.second);
+                for (auto& item : m_falseValueMap_)
+                    beans.push_back(item.second);
+            }
+            else if (opType == op_eq)
+            {
                 if (value == true)
                 {
                     for (auto& item : m_trueValueMap_)
@@ -160,6 +226,10 @@ void Property::findCommon(int opType, const Json::Value& value, std::list<Bean*>
                     for (auto& item : m_falseValueMap_)
                         beans.push_back(item.second);
                 }
+            } 
+            else
+            {
+                //other operations don't make sense
             }
             break;
         default:
@@ -193,13 +263,18 @@ static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map)
 
 
 template<typename ValueT, typename MapT>
-static void doFindCommon(int opType, const ValueT& value, const MapT& map, std::list<Bean*>& beans) 
+static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std::list<Bean*>& beans) 
 {
     beans.clear();
     auto lowerBound = map.begin();
     auto upperBound = map.end();
 
     switch (opType) {
+        case op_has:
+            //need to add all items
+            // lowerBound = map.begin();
+            // upperBound = map.end();
+            break; 
         case op_eq:
             lowerBound = map.lower_bound(value);
             upperBound = map.upper_bound(value);
@@ -212,8 +287,9 @@ static void doFindCommon(int opType, const ValueT& value, const MapT& map, std::
         case op_gt:
            lowerBound = map.lower_bound(value);
             break;
-
         default:
+            //make the output beans empty 
+            lowerBound = map.end();
             break;
     }
 

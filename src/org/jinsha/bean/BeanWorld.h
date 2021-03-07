@@ -102,7 +102,7 @@ public:
      * @param name the name of relation property
      * @return the id of the relation property, or error code:
      *                   -1: name is null or empty
-     *                  -2: the relation property is already defined
+     *                  -2: the property is already defined
      */
     pidType defineRelation(const char* name);
 
@@ -123,7 +123,7 @@ public:
      * 
      * Notes:
      * - This method can be used to undefine either a property, an array property,
-     *    a relation property, or an array relation property;
+     *    a relation, or an array relation;
      * - All beans that have this property will remove the property with this id.
      * 
      * @param name the name of property
@@ -178,6 +178,17 @@ public:
     //  */
     // const Property* getRelation(const char* name) const;
     // Property* getRelation(const char* name);
+
+    /**
+     * Find beans which has a certain property (relation).
+     * 
+     * @param propertyName the name of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 
+     */
+    void findHas(const char* propertyName,  std::list<Bean*>& beans);
 
     /**
      * Find beans whose property values are equal to the given one.
@@ -261,7 +272,7 @@ private:
 
     void recreateIndex(Property* property);
 
-    void findCommon(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findCommon_(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
     void trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
 
     oidType generateBeanId();

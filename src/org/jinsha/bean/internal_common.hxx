@@ -17,12 +17,16 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
+/**
+ * operation type used for search condition
+ */
 enum {
     op_eq = 0,
     op_le,
     op_lt,
     op_ge,
     op_gt,
+    op_has
 } optype;
 
 }

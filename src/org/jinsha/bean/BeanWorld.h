@@ -70,11 +70,12 @@ public:
      * 
      * @param name the name of property
      * @param valueType the value type of property
+     * @param needIndex if index is needed
      * @return the id of the property, or error code:
      *                   -1: name is null or empty
      *                  -2: the property is already defined
      */
-    pidType defineProperty(const char* name, Property::ValueType valueType);
+    pidType defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
 
     /**
      * Define an array property.
@@ -87,11 +88,12 @@ public:
      * 
      * @param name the name of property
      * @param valueType the value type of the element of the array property
+     * @param needIndex if index is needed
      * @return the id of the property, or error code:
      *                   -1: name is null or empty
      *                  -2: the property is already defined
      */
-    pidType defineArrayProperty(const char* name, Property::ValueType valueType);
+    pidType defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
 
     /**
      * Define a relation property.
@@ -100,11 +102,12 @@ public:
      * two beans, e.g. father/mother etc.
      * 
      * @param name the name of relation property
+     * @param needIndex if index is needed
      * @return the id of the relation property, or error code:
      *                   -1: name is null or empty
      *                  -2: the property is already defined
      */
-    pidType defineRelation(const char* name);
+    pidType defineRelation(const char* name, bool needIndex = false);
 
     /**
      * Define an array relation property.
@@ -112,11 +115,12 @@ public:
      * Array relation property must be defined before it can be used.
      * 
      * @param name the name of array relation property
+     * @param needIndex if index is needed
      * @return the id of the array relation property, or error code:
      *                   -1: name is null or empty
      *                  -2: the array relation property is already defined
      */
-    pidType defineArrayRelation(const char* name);
+    pidType defineArrayRelation(const char* name, bool needIndex = false);
 
     /**
      * Undefine a property.
@@ -130,6 +134,7 @@ public:
      * @return 
      */
     void undefineProperty(const char* name);
+    void undefineRelation(const char* name) {undefineProperty(name);};
 
     /**
      * Get the id of a property. Later the property id 
@@ -257,18 +262,16 @@ public:
 
 private:
     pidType definePropertyCommon_(const char* name, Property::Type type, 
-    Property::ValueType valueType, bool createIndex = false);
+    Property::ValueType valueType, bool needIndex = false);
 
+    //todo: move these methods to Bean
     void setProperty( Bean* bean, Property* property, const Json::Value&  value);
     void setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value&  value);
     void setPropertyCommon_(Bean* bean, Property* property, Json::Value* oldValue,  const Json::Value&  newValue);
 
+    //todo: move these methods to Bean
     void setRelation(Property* property, Bean* from, Bean* to);
     void setArrayRelation(Property* property, Json::Value::ArrayIndex index, Bean* from, Bean* to);
-    Json::Value removeProperty(Bean* bean, Property* property);
-
-    void setRelation( Bean* bean, pidType id, const Json::Value&  value);
-    void doSetRelation( Bean* bean, Property* property, const Json::Value&  value);
 
     void recreateIndex(Property* property);
 

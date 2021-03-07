@@ -109,14 +109,17 @@ public:
 private:
     Property(BeanWorld* world, const char* name, 
         Type type, ValueType valueType, 
-        bool createIndex = false) : 
+        bool needIndex = false) : 
         m_world_(world), m_name_(name), 
         m_propertyType_(type), m_valueType_(valueType), 
-        m_indexed_(createIndex) {};
+        m_indexed_(needIndex) {};
     // Property(const char* name) : m_name_(name) {};
     virtual ~Property();
 
 private:
+    void addBean(Bean* bean);
+    void removeBean(Bean* bean);
+
     void addIndex(Bean* bean, const Json::Value& value);
     bool removeIndex(Bean* bean, const Json::Value& value);
 

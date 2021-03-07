@@ -15,6 +15,82 @@ using namespace std;
 using namespace Json;
 using namespace org::jinsha::bean;
 
+pidType pid_int_p = 0;
+pidType pid_uint_p = 0;
+pidType pid_int64_p = 0;
+pidType pid_uint64_p = 0;
+pidType pid_double_p = 0;
+pidType pid_str_p = 0;
+pidType pid_bool_p0 = 0;
+pidType pid_bool_p1 = 0;
+pidType pid_p1 = 0;
+pidType pid_p2 = 0;
+pidType pid_pArray_1 = 0;
+pidType pid_r1 = 0;
+pidType pid_rArray_1 =  0;
+
+Property* double_p_property = nullptr;
+Property* str_p_property = nullptr;
+Property* int_p_property = nullptr;
+Property* uint_p_property = nullptr;
+Property* int64_p_property = nullptr;
+Property* uint64_p_property = nullptr;
+Property* bool_p0_property = nullptr;
+Property* bool_p1_property = nullptr;
+Property* p1_property = nullptr;
+Property* p2_property = nullptr;
+Property* pArray_1 = nullptr;
+Property* r1 = nullptr;
+Property* rArray_1 = nullptr;
+
+void init_world(BeanWorld& world, bool needIndex = false)
+{
+    pid_int_p = world.defineProperty("int_p", Property::IntType);
+    pid_uint_p = world.defineProperty("uint_p", Property::UIntType);
+    pid_int64_p = world.defineProperty("int64_p", Property::IntType);
+    pid_uint64_p = world.defineProperty("uint64_p", Property::UIntType);
+    pid_double_p = world.defineProperty("double_p", Property::RealType);
+    pid_str_p = world.defineProperty("str_p", Property::StringType);
+    pid_bool_p0 = world.defineProperty("bool_p0", Property::BoolType);
+    pid_bool_p1 = world.defineProperty("bool_p1", Property::BoolType);
+
+    pid_p1 = world.defineProperty("p1", Property::IntType);
+    pid_p2 = world.defineProperty("p2", Property::IntType);
+    pid_pArray_1 = world.defineArrayProperty("pArray_1", Property::IntType);
+    pid_r1 = world.defineRelation("r1");
+    pid_rArray_1 =  world.defineArrayRelation("rArray_1");
+
+    double_p_property = world.getProperty("double_p");
+    str_p_property = world.getProperty("str_p");
+    int_p_property = world.getProperty("int_p");
+    uint_p_property = world.getProperty("uint_p");
+    int64_p_property = world.getProperty("int64_p");
+    uint64_p_property = world.getProperty("uint64_p");
+    bool_p0_property = world.getProperty("bool_p0");
+    bool_p1_property = world.getProperty("bool_p1");
+    p1_property = world.getProperty("p1");
+    p2_property = world.getProperty("p2");
+    pArray_1 = world.getProperty("pArray_1");
+    r1 = world.getProperty("r1");;
+    rArray_1 = world.getProperty("rArray_1");
+
+    if (needIndex)
+    {
+        double_p_property->createIndex();
+        str_p_property->createIndex();
+        int_p_property->createIndex();
+        uint_p_property->createIndex();
+        int64_p_property->createIndex();
+        uint64_p_property->createIndex();
+        bool_p0_property->createIndex();
+        bool_p1_property->createIndex();
+        p1_property->createIndex();
+        p2_property->createIndex();
+        pArray_1->createIndex();
+        rArray_1->createIndex();
+    }
+}
+
 void basic()
 {
     BeanWorld *world = new BeanWorld();
@@ -426,6 +502,207 @@ TEST(BeanWorld, removeBean)
     EXPECT_TRUE(world.getBean(oid) == nullptr);
 }
 
+void test_findHas_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<Bean*>& beans, bool needIndex = false)
+{
+    init_world(world, needIndex);
+
+    world.findHas("int_p", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findHas("uint_p", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findHas("int64_p", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findHas("uint64_p", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findHas("double_p", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findHas("str_p", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findHas("bool_p0", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findHas("bool_p1", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findHas("r1", beans);
+    EXPECT_TRUE(beans.size() == 0);
+
+    bean1.setProperty("double_p", 1.0);
+    bean1.setProperty("str_p", "hello");
+    bean1.setProperty("bool_p0", false);
+    bean1.setProperty("bool_p1", true);
+    bean1.setProperty("int_p", 1);
+    bean1.setProperty("uint_p", 2U);
+    bean1.setProperty("int64_p", 3);
+    bean1.setProperty("uint64_p", 4U);
+    bean1.setRelation("r1", &bean2);
+
+    world.findHas("int_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("uint_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("int64_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("uint64_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("double_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("str_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("bool_p0", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("bool_p1", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("r1", beans);
+    EXPECT_TRUE(beans.size() == 1);
+
+    bean2.setProperty("double_p", 1.0);
+    bean2.setProperty("str_p", "hello");
+    bean2.setProperty("bool_p0", false);
+    bean2.setProperty("bool_p1", true);
+    bean2.setProperty("int_p", 1);
+    bean2.setProperty("uint_p", 2U);
+    bean2.setProperty("int64_p", 3);
+    bean2.setProperty("uint64_p", 4U);
+    bean2.setRelation("r1", &bean1);
+
+    world.findHas("int_p", beans);
+    EXPECT_TRUE(beans.size() == 2);
+    world.findHas("uint_p", beans);
+    EXPECT_TRUE(beans.size() == 2);
+    world.findHas("int64_p", beans);
+    EXPECT_TRUE(beans.size() == 2);
+    world.findHas("uint64_p", beans);
+    EXPECT_TRUE(beans.size() == 2);
+    world.findHas("double_p", beans);
+    EXPECT_TRUE(beans.size() == 2);
+    world.findHas("str_p", beans);
+    EXPECT_TRUE(beans.size() == 2);
+    world.findHas("bool_p0", beans);
+    EXPECT_TRUE(beans.size() == 2);
+    world.findHas("bool_p1", beans);
+    EXPECT_TRUE(beans.size() == 2);
+    world.findHas("r1", beans);
+    EXPECT_TRUE(beans.size() == 2);
+
+    bean2.removeProperty("double_p");
+    bean2.removeProperty("str_p");
+    bean2.removeProperty("bool_p0");
+    bean2.removeProperty("bool_p1");
+    bean2.removeProperty("int_p");
+    bean2.removeProperty("uint_p");
+    bean2.removeProperty("int64_p");
+    bean2.removeProperty("uint64_p");
+    bean2.removeRelation("r1");
+
+    world.findHas("int_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("uint_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("int64_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("uint64_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("double_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("str_p", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("bool_p0", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("bool_p1", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.findHas("r1", beans);
+    EXPECT_TRUE(beans.size() == 1);
+}
+
+void test_findHas_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<Bean*>& beans, bool needIndex)
+{
+    world.findHas("pArray", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.findHas("rArray", beans);
+    EXPECT_TRUE(beans.size() == 0);
+
+    world.defineArrayProperty("pArray", Property::IntType, needIndex);
+
+    world.findHas("pArray", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    bean1.createArrayProperty("pArray");
+    world.findHas("pArray", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.undefineProperty("pArray");
+    world.findHas("pArray", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    world.defineArrayProperty("pArray", Property::BoolType, needIndex);
+    bean1.createArrayProperty("pArray");
+    world.findHas("pArray", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    bean1.removeProperty("pArray");
+    world.findHas("pArray", beans);
+    EXPECT_TRUE(beans.size() == 0);
+
+    world.defineArrayRelation("rArray");
+    world.findHas("rArray", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    bean1.createArrayRelation("rArray");
+    world.findHas("rArray", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    bean1.removeRelation("rArray");
+    world.findHas("rArray", beans);
+    EXPECT_TRUE(beans.size() == 0);
+    bean1.createArrayRelation("rArray");
+    world.findHas("rArray", beans);
+    EXPECT_TRUE(beans.size() == 1);
+    world.undefineRelation("rArray");
+    world.findHas("rArray", beans);
+    EXPECT_TRUE(beans.size() == 0);
+
+}
+
+TEST(BeanWorld, findHas_without_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    init_world(world);
+
+    Bean &bean1 = *world.createBean();
+    Bean& bean2 = *world.createBean();
+
+    test_findHas_common(world, bean1, bean2, beans, false);
+}
+
+TEST(BeanWorld, findHas_with_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    init_world(world);
+
+    Bean &bean1 = *world.createBean();
+    Bean& bean2 = *world.createBean();
+
+    test_findHas_common(world, bean1, bean2, beans, true);
+}
+
+TEST(BeanWorld, findHas_array_without_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean &bean1 = *world.createBean();
+    Bean& bean2 = *world.createBean();
+
+    test_findHas_common_array(world, bean1, bean2, beans, false);
+}
+
+TEST(BeanWorld, findHas_array_with_index)
+{
+    BeanWorld world;
+    std::list<Bean*> beans;
+
+    Bean &bean1 = *world.createBean();
+    Bean& bean2 = *world.createBean();
+
+    test_findHas_common_array(world, bean1, bean2, beans, true);
+}
 
 TEST(BeanWorld, findEqual_without_index)
 {
@@ -442,6 +719,8 @@ TEST(BeanWorld, findEqual_without_index)
     world.defineProperty("bool_p1", Property::BoolType);
 
     Bean &bean1 = *world.createBean();
+    Bean& bean2 = *world.createBean();
+
     bean1.setProperty("double_p", 1.0);
     bean1.setProperty("str_p", "hello");
     bean1.setProperty("bool_p0", false);
@@ -451,7 +730,6 @@ TEST(BeanWorld, findEqual_without_index)
     bean1.setProperty("int64_p", 3);
     bean1.setProperty("uint64_p", 4U);
 
-    Bean& bean2 = *world.createBean();
     bean2.setProperty("double_p", 1.0);
     bean2.setProperty("str_p", "hello");
     bean2.setProperty("bool_p0", false);
@@ -469,7 +747,6 @@ TEST(BeanWorld, findEqual_without_index)
     }
 
     world.findEqual("bool_p0", false, beans);
-
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
@@ -482,7 +759,6 @@ TEST(BeanWorld, findEqual_without_index)
     {
         EXPECT_TRUE(bean->getProperty("bool_p1") == true);
     }
-
 
     world.findEqual("str_p", "hello", beans);
    EXPECT_TRUE(beans.size() == 2);

@@ -89,39 +89,39 @@ Bean* BeanWorld::getBean(oidType id)
 }
 
 
-pidType BeanWorld::defineProperty(const char* name, Property::ValueType valueType)
+pidType BeanWorld::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::PrimaryType, valueType);
+    return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
 }
 
 
-pidType BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType)
+pidType BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType);
+    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
 }
 
 
-pidType BeanWorld::defineRelation(const char* name)
+pidType BeanWorld::defineRelation(const char* name, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::RelationType, Property::UIntType);
+    return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
 }
 
 
-pidType BeanWorld::defineArrayRelation(const char* name)
+pidType BeanWorld::defineArrayRelation(const char* name, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType);
+    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
 }
 
 
 pidType BeanWorld::definePropertyCommon_(const char* name, Property::Type type, 
-    Property::ValueType valueType, bool createIndex)
+    Property::ValueType valueType, bool needIndex)
 {
     if (name == nullptr) return -1;
     if (name[0] == 0) return -1;
     auto iter = m_propertyMap_.find(name);
     if (iter != m_propertyMap_.end()) return -2; 
     
-    Property* property = new Property(this, name, type, valueType, createIndex);
+    Property* property = new Property(this, name, type, valueType, needIndex);
     m_properties_.push_back(property);
     m_propertyMap_[name] = m_properties_.size() - 1;
     pidType id = m_properties_.size() - 1;
@@ -145,7 +145,7 @@ void BeanWorld::undefineProperty(const char* name)
     //instance for how many beans have this property 
     for (auto& iter : m_beans_)
     {
-        removeProperty(iter.second, property);
+        iter.second->removeProperty(property->m_id_);
     }
 
     m_properties_[id] = nullptr;
@@ -229,7 +229,7 @@ void BeanWorld::setPropertyCommon_(Bean* bean,  Property* property,
     if (oldValue->isNull())
     { 
         //no old value, need to increment ref. count
-        property->m_refCount_++;
+        // property->m_refCount_++;
         oldValue = &bean->m_propertyValues_[pname];
     }
     else
@@ -243,28 +243,6 @@ void BeanWorld::setPropertyCommon_(Bean* bean,  Property* property,
     (*oldValue)  = newValue;
     if (property->indexed())
         property->addIndex(bean, *oldValue);
-}
-
-
-Json::Value BeanWorld::removeProperty(Bean* bean,  Property* property)
-{
-    const char* pname = property->getName().c_str();
-    Json::Value value;
-    if (bean->isMember(pname))
-    {
-        if (property->indexed())
-           //remove index first
-            property->removeIndex(bean, bean->getMemberRef(pname));
-        //remove member of json object
-        value = bean->m_propertyValues_.removeMember(pname);
-        property->m_refCount_--;
-        // if (property->m_refCount_ == 0)
-        // { //if this property is not used by any bean, remove it
-        //     undefineProperty(pname);
-        // }
-    }
-
-    return value;
 }
 
 
@@ -365,7 +343,7 @@ void BeanWorld::findCommon_(int opType, const char* propertyName,  const Json::V
 
 void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    if (value.isNull() || value.isArray() || value.isObject()) return;
+    if ((value.isNull() && opType != op_has) || value.isArray() || value.isObject()) return;
     beans.clear();
     Bean* bean = nullptr;
     for (auto& item : m_beans_)

@@ -179,7 +179,10 @@ int Bean::createArrayProperty(pidType id)
     Property* property = (Property*)m_world_->getProperty(id);
     if (property == nullptr) return -2;
     if (property->getType() != Property::ArrayPrimaryType) return -2;
-    m_propertyValues_[property->getName()] = Json::Value(Json::arrayValue);
+    const char* pname = property->getName().c_str();
+    if (isMember(pname)) return 0;
+    m_propertyValues_[pname] = Json::Value(Json::arrayValue);
+    property->addBean(this);
     return 0;
 }
 
@@ -360,6 +363,7 @@ int Bean::createArrayRelation(pidType id)
     const char* pname = property->getName().c_str();
     if (isMember(pname)) return 0;
     m_propertyValues_[pname] = Json::Value(Json::arrayValue);
+    property->addBean(this);
     return 0;
 }
 
@@ -422,7 +426,29 @@ Json::Value Bean::removeProperty(pidType id)
 {
     Property* property = (Property*)m_world_->getProperty(id);
     if (property == nullptr) return Json::Value();
-    return m_world_->removeProperty(this, property);
+    const char* pname = property->getName().c_str();
+    if (!isMember(pname)) return Json::Value();
+    property->removeBean(this);
+    if (property->indexed())
+    { //remove index first
+        if (property->getType() == Property::ArrayPrimaryType ||
+            property->getType() == Property::ArrayRelationType) 
+        {
+            auto& array = getMemberRef(pname);
+            for (int i = 0; i< array.size(); i++)
+            {
+                property->removeIndex(this, array[i]);
+            }
+        }
+        else
+        {
+            property->removeIndex(this, getMemberRef(pname));
+        }
+    }
+
+    //remove member of json object
+    Json::Value&& value = this->m_propertyValues_.removeMember(pname);
+    return value;
 }
 
 

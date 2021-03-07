@@ -35,6 +35,7 @@ int Property::createIndex()
 int Property::removeIndex()
 {
     if (!m_indexed_) return -1;
+    m_beanMap_.clear();
     m_trueValueMap_.clear();
     m_falseValueMap_.clear();
     m_intValueMap_.clear();
@@ -46,15 +47,27 @@ int Property::removeIndex()
 }
 
 
+void Property::addBean(Bean* bean)
+{
+    m_beanMap_[bean] = 0;
+}
+
+
+void Property::removeBean(Bean* bean)
+{
+        auto iter = m_beanMap_.find(bean);
+        if (iter != m_beanMap_.end())
+            m_beanMap_.erase(iter);
+}
+
+
 void Property::addIndex(Bean* bean, const Json::Value& value)
 {
     if (m_propertyType_ == ArrayPrimaryType ||
         m_propertyType_ == ArrayRelationType)
     {
         auto iter = m_beanMap_.find(bean);
-        if (iter == m_beanMap_.end())
-            m_beanMap_[bean] == 1;
-        else
+        if (iter != m_beanMap_.end())
             iter->second++;
     }
 
@@ -99,8 +112,6 @@ bool Property::removeIndex(Bean* bean, const Json::Value& value)
         auto iter = m_beanMap_.find(bean);
         if (iter != m_beanMap_.end())
             iter->second--;
-        if (iter->second == 0)
-            m_beanMap_.erase(iter);
     }
 
     switch (value.type()) 

@@ -231,34 +231,33 @@ void BeanWorld::setPropertyCommon_(Bean* bean,  Property* property,
         //no old value, need to increment ref. count
         // property->m_refCount_++;
         oldValue = &bean->m_propertyValues_[pname];
+
+        if (property->getType() != Property::ArrayPrimaryType &&
+             property->getType() != Property::ArrayRelationType )
+            //keep track the bean who has this property
+            property->addBean(bean);
     }
     else
     {
-        if (property->indexed())
+        //todo: do not index array property/relation for now
+        // if (property->indexed())
+        if (property->getType() != Property::ArrayPrimaryType && 
+            property->getType() != Property::ArrayRelationType && 
+             property->indexed())
             //remove index for previous value
             property->removeIndex(bean, *oldValue);
     }
 
     //set value for json object
     (*oldValue)  = newValue;
-    if (property->indexed())
-        property->addIndex(bean, *oldValue);
+
+    //todo: do not index array property/relation for now
+    // if (property->indexed())
+    if (property->getType() != Property::ArrayPrimaryType && 
+        property->getType() != Property::ArrayRelationType && 
+            property->indexed())
+    property->addIndex(bean, *oldValue);
 }
-
-
-// pidType BeanWorld::addRelation( const char* name)
-// {
-//     pidType id = getRelationId(name);
-//     if (id == -1)
-//     {//no such relation
-//         Relation* relation = new Relation(this, name);
-//         m_relations_.push_back(relation);
-//         m_relationMap_[name] = m_relations_.size() - 1;
-//         id = m_properties_.size() - 1;
-//         property->m_pid_ = id;
-//     }
-//     return id;
-// }
 
 
 void BeanWorld::recreateIndex(Property* property)
@@ -284,14 +283,7 @@ void BeanWorld::findHas(const char* propertyName,  std::list<Bean*>& beans)
     beans.clear();
     const Property* property = getProperty(propertyName);
     if (property == nullptr) return;
-    if (property->indexed())
-    { //indexed by property, use index to improve performance
-        property->findHas(beans);
-    }
-    else
-    { //no index, do trivial find
-        trivialFind(op_has, propertyName, Json::Value::null, beans);
-    }
+    property->findHas(beans);
 }
 
 
@@ -328,8 +320,14 @@ void BeanWorld::findGreaterThan(const char* propertyName,  const Json::Value& va
 void BeanWorld::findCommon_(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
     beans.clear();
+    if ((value.isNull() && opType != op_has) || value.isArray() || value.isObject()) return;
     const Property* property = getProperty(propertyName);
     if (property == nullptr) return;
+    if (property->getValueType() != (Property::ValueType)value.type()) return;
+    //todo: search on array not supported yet
+    if (property->getType() == Property::ArrayPrimaryType || 
+        property->getType() == Property::ArrayRelationType) return; 
+
     if (property->indexed())
     { //indexed by property, use index to improve performance
         property->findCommon_(opType, value, beans);
@@ -343,8 +341,15 @@ void BeanWorld::findCommon_(int opType, const char* propertyName,  const Json::V
 
 void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    if ((value.isNull() && opType != op_has) || value.isArray() || value.isObject()) return;
     beans.clear();
+    if (value.isNull() || value.isArray() || value.isObject()) return;
+    const Property* property = getProperty(propertyName);
+    if (property == nullptr) return;
+    if (property->getValueType() != (Property::ValueType)value.type()) return;
+    //todo: search on array not supported yet
+    if (property->getType() == Property::ArrayPrimaryType || 
+        property->getType() == Property::ArrayRelationType) return; 
+
     Bean* bean = nullptr;
     for (auto& item : m_beans_)
     {
@@ -352,9 +357,6 @@ void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::V
         const Json::Value& v = bean->getMemberRef(propertyName);
         if (v.isNull()) continue; //not found or null
         switch (opType) {
-            case op_has:
-                if (!v.isNull()) beans.push_back(bean);
-                break;
             case op_eq:
                 if (v == value) beans.push_back(bean);
                 break;

@@ -60,12 +60,12 @@ public:
     /**
      * Get the value type of this property.
      */
-    ValueType getValueType() {return m_valueType_;};
+    ValueType getValueType() const {return m_valueType_;};
 
     /**
      * Get the type of this property.
      */
-    Type getType() {return  m_propertyType_ ;};
+    Type getType() const {return  m_propertyType_ ;};
 
     /**
      * Create index for a property, which can be used to improve
@@ -117,8 +117,8 @@ private:
     virtual ~Property();
 
 private:
-    void addBean(Bean* bean);
-    void removeBean(Bean* bean);
+    void addBean(Bean* bean); //used only for array property/relation
+    void removeBean(Bean* bean); //used only for array property/relation
 
     void addIndex(Bean* bean, const Json::Value& value);
     bool removeIndex(Bean* bean, const Json::Value& value);

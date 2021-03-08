@@ -20,6 +20,7 @@ static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
 Property::~Property()
 {
     removeIndex();
+    m_beanMap_.clear();
 }
 
 
@@ -35,7 +36,6 @@ int Property::createIndex()
 int Property::removeIndex()
 {
     if (!m_indexed_) return -1;
-    m_beanMap_.clear();
     m_trueValueMap_.clear();
     m_falseValueMap_.clear();
     m_intValueMap_.clear();
@@ -63,13 +63,14 @@ void Property::removeBean(Bean* bean)
 
 void Property::addIndex(Bean* bean, const Json::Value& value)
 {
-    if (m_propertyType_ == ArrayPrimaryType ||
-        m_propertyType_ == ArrayRelationType)
-    {
-        auto iter = m_beanMap_.find(bean);
-        if (iter != m_beanMap_.end())
-            iter->second++;
-    }
+    //todo:
+    // if (m_propertyType_ == ArrayPrimaryType ||
+    //     m_propertyType_ == ArrayRelationType)
+    // {
+    //     auto iter = m_beanMap_.find(bean);
+    //     if (iter != m_beanMap_.end())
+    //         iter->second++;
+    // }    
 
     switch (value.type()) 
     {
@@ -106,13 +107,14 @@ bool Property::removeIndex(Bean* bean, const Json::Value& value)
 {
     bool rtn = false;
 
-    if (m_propertyType_ == ArrayPrimaryType ||
-        m_propertyType_ == ArrayRelationType)
-    {
-        auto iter = m_beanMap_.find(bean);
-        if (iter != m_beanMap_.end())
-            iter->second--;
-    }
+    //todo:
+    // if (m_propertyType_ == ArrayPrimaryType ||
+    //     m_propertyType_ == ArrayRelationType)
+    // {
+    //     auto iter = m_beanMap_.find(bean);
+    //     if (iter != m_beanMap_.end())
+    //         iter->second--;
+    // }
 
     switch (value.type()) 
     {
@@ -169,31 +171,42 @@ void Property::findHas(std::list<Bean*>& beans) const
             {
                 beans.push_back(item.first);
             }
-    } 
+    }
     else
     {
-        Json::Value value;
-        switch (m_valueType_)
-        {
-            case IntType:
-                value = 0;
-                break;
-            case UIntType:
-                value = 0U;
-                break;
-            case RealType:
-                value = 0.0f;
-                break;
-            case StringType:
-                value = "";
-                break;
-            case BoolType:
-                value = true;
-                break;
-            default:
-                break;
+        if (m_indexed_)
+        { //when indexed, take use of the index
+            //make a fake value to reuse findCommon_() 
+            Json::Value value;
+            switch (m_valueType_)
+            {
+                case IntType:
+                    value = 0;
+                    break;
+                case UIntType:
+                    value = 0U;
+                    break;
+                case RealType:
+                    value = 0.0f;
+                    break;
+                case StringType:
+                    value = "";
+                    break;
+                case BoolType:
+                    value = true;
+                    break;
+                default:
+                    break;
+            }
+            findCommon_(op_has, value, beans);
         }
-        findCommon_(op_has, value, beans);
+        else
+        {
+            for (auto& item : m_beanMap_)
+            {
+                beans.push_back(item.first);
+            } 
+        }
     }
 }
 

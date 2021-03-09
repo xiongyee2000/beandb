@@ -210,8 +210,8 @@ public:
      *                   -1: if no array property is defined with the name
      *                   -4: if the array property is not a member of this bean
      */
-    // int resizeProperty(const char* name, Json::Value::ArrayIndex size);
-    // int resizeProperty(pidType id, Json::Value::ArrayIndex size);
+    int resizeProperty(const char* name, Json::Value::ArrayIndex size);
+    int resizeProperty(pidType id, Json::Value::ArrayIndex size);
 
     /**
      * Check the bean has a relation with the given name.
@@ -395,6 +395,7 @@ private:
     // std::string uri_;
 
 friend class BeanWorld;
+friend class Property;
 };
 
 }

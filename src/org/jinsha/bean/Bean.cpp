@@ -236,23 +236,23 @@ int Bean::appendProperty(pidType id,  const Json::Value& value)
 }
 
 
-// int Bean::resizeProperty(const char* name,  Json::Value::ArrayIndex size)
-// {
-//     pidType pid = m_world_->getPropertyId(name);
-//     return resizeProperty(pid, size);
-// }
+int Bean::resizeProperty(const char* name,  Json::Value::ArrayIndex size)
+{
+    pidType pid = m_world_->getPropertyId(name);
+    return resizeProperty(pid, size);
+}
 
 
-// int Bean::resizeProperty(pidType id,  Json::Value::ArrayIndex size)
-// {
-//     Property* property = (Property*)m_world_->getProperty(id);
-//     if (property == nullptr) return -1;
-//     if (property->getType() != Property::ArrayPrimaryType) return -1;
-//     const auto& pname = property->getName().c_str();
-//     if (!hasArrayProperty(pname)) return -1;
-//     m_propertyValues_[pname].resize(size);
-//     return 0;
-// }
+int Bean::resizeProperty(pidType id,  Json::Value::ArrayIndex size)
+{
+    Property* property = (Property*)m_world_->getProperty(id);
+    if (property == nullptr) return -1;
+    if (property->getType() != Property::ArrayPrimaryType) return -1;
+    const auto& pname = property->getName().c_str();
+    if (!hasArrayProperty(pname)) return -1;
+    m_propertyValues_[pname].resize(size);
+    return 0;
+}
 
 
 bool Bean::hasRelation(const char* name) const

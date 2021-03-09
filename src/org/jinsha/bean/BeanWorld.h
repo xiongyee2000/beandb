@@ -185,15 +185,25 @@ public:
     // Property* getRelation(const char* name);
 
     /**
-     * Find beans which has a certain property (relation).
+     * Find beans which have the given property/relation.
      * 
-     * @param propertyName the name of the property
+     * @param name the name of the property/relation
      * @param beans the results
      * 
-     * Notes:
+     */
+    void findHas(const char* name,  std::list<Bean*>& beans);
+
+    /**
+     * Find beans (as subject) which have given relation (as predicate) 
+     * to the given bean (as object).
+     * 
+     * @param relation the relation property
+     * @param objectId the id of the relation bean
+     * @return a list containing ids of beans
      * 
      */
-    void findHas(const char* propertyName,  std::list<Bean*>& beans);
+    std::list<oidType>&& 
+    findSubjects(Property* relation, oidType objectId);
 
     /**
      * Find beans whose property values are equal to the given one.
@@ -259,6 +269,17 @@ public:
      *     having the same type will be considered. 
      */
     void findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+
+    /**
+     * Create index for a property.
+     * 
+     * Note this is just a wrapper for Property::createIndex().
+     * 
+     * @param id id of the property
+     * @return 0 if success, or error code
+     *                   
+     */
+    int createIndex(pidType id);
 
 private:
     pidType definePropertyCommon_(const char* name, Property::Type type, 

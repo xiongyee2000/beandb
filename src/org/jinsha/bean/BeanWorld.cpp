@@ -278,12 +278,21 @@ void BeanWorld::recreateIndex(Property* property)
 }
 
 
-void BeanWorld::findHas(const char* propertyName,  std::list<Bean*>& beans)
+void BeanWorld::findHas(const char* name,  std::list<Bean*>& beans)
 {
     beans.clear();
-    const Property* property = getProperty(propertyName);
+    const Property* property = getProperty(name);
     if (property == nullptr) return;
     property->findHas(beans);
+}
+
+
+std::list<oidType>&& BeanWorld::findSubjects(Property* relation, oidType objectId)
+{
+    if (relation != nullptr) 
+        return std::move(relation->findSubjects(objectId));
+    else
+        return std::move(std::list<oidType>());
 }
 
 
@@ -376,6 +385,14 @@ void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::V
                 break;
         }
     }
+}
+
+
+int BeanWorld::createIndex(pidType id)
+{
+    Property* property = (Property*)getProperty(id);
+    if (property  == nullptr) return -1;
+    return property->createIndex();
 }
 
 

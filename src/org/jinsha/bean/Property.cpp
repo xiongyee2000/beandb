@@ -27,6 +27,9 @@ Property::~Property()
 int Property::createIndex()
 {
     if (m_indexed_) return -1;
+    if (m_propertyType_ == ArrayPrimaryType ||
+         m_propertyType_ == ArrayRelationType) 
+        return -1;
     m_world_->recreateIndex(this);
     m_indexed_ = true;
     return 0;
@@ -36,6 +39,9 @@ int Property::createIndex()
 int Property::removeIndex()
 {
     if (!m_indexed_) return -1;
+    if (m_propertyType_ == ArrayPrimaryType ||
+         m_propertyType_ == ArrayRelationType) 
+        return -1;
     m_trueValueMap_.clear();
     m_falseValueMap_.clear();
     m_intValueMap_.clear();
@@ -210,6 +216,47 @@ void Property::findHas(std::list<Bean*>& beans) const
     }
 }
 
+
+std::list<oidType>&& Property::findSubjects(oidType objectId)
+{
+    std::list<oidType>&& beans = std::list<oidType>();
+    if (m_propertyType_ == RelationType)
+    {
+        if (m_indexed_)
+        {
+            //todo
+        }
+        else
+        {
+            for (auto& item : m_beanMap_)
+            {
+                auto& bean = item.first;
+                const auto& value = bean->getMemberRef(m_name_.c_str());
+                oidType objectId_ = value.asUInt64();
+                if (objectId_ == objectId)
+                    beans.push_back(bean->getId());
+            }
+        }
+    }
+    else if (m_propertyType_ == ArrayRelationType)
+    {
+        //todo: currently just search all beans
+        //take use of the index in future
+        for (auto& item : m_beanMap_)
+        {
+            auto& bean = item.first;
+            const auto& value = bean->getMemberRef(m_name_.c_str());
+            for (auto index = 0; index < value.size(); index++)
+            {
+                oidType objectId_ = value[index].asUInt64();
+                if (objectId_ == objectId)
+                    beans.push_back(bean->getId());
+            }
+        }
+    }
+    return std::move(beans);
+}
+    
 
 void Property::findCommon_(int opType, const Json::Value& value, std::list<Bean*>& beans) const
 {  

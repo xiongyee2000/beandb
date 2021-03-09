@@ -72,19 +72,21 @@ public:
      * search performance.
      * 
      * Notes
-     * This method will create index entries by checking 
-     * each bean's properties: if it has this property (member) then
-     * create an entry for it in the index, otherwise skip. (This may result 
-     * the time complexity of this method O(n) where n is the number 
-     * of beans in this world.)
-     * And once index is created, the index will be updated each time
-     * when Bean::setProperty() method is called.
-     * You can call this method at any time. However If index is desired 
-     * for a property, It is strongly  sugguested to call this method right 
-     * after the first time this property is set by Bean::setProperty() . 
-     * This can help to achieve the best performance.
+     * - This method will create index entries by checking 
+     *    each bean's properties: if it has this property (member) then
+     *    create an entry for it in the index, otherwise skip. (This may result 
+     *    the time complexity of this method O(n) where n is the number 
+     *    of beans in this world.)
+     *    And once index is created, the index will be updated each time
+     *    when Bean::setProperty() method is called.
+     * - You can call this method at any time. However If index is desired 
+     *    for a property, It is strongly  sugguested to call this method right 
+     *    after the first time this property is set by Bean::setProperty() . 
+     *    This can help to achieve the best performance.
+     * - Currently index is supported only on property of PrimaryType
      * 
-     * @return 0 for success, or -1 if the index already exists
+     * @return 0 if success, or  an error code
+     *                   -1: unable to create index
      */
     int createIndex();
 
@@ -124,6 +126,8 @@ private:
     bool removeIndex(Bean* bean, const Json::Value& value);
 
     void findHas(std::list<Bean*>& beans) const;
+    std::list<oidType>&& findSubjects(oidType objectId);
+
     void findCommon_(int type, const Json::Value& value, std::list<Bean*>& beans) const; 
 
 private:

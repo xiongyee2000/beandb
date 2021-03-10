@@ -129,6 +129,7 @@ private:
     std::list<oidType>&& findSubjects(oidType objectId);
 
     void findCommon_(int type, const Json::Value& value, std::list<Bean*>& beans) const; 
+    void trivialFind(int opType,  const Json::Value& value, std::list<Bean*>& beans) const;
 
 private:
     BeanWorld* m_world_;

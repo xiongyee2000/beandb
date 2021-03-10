@@ -53,6 +53,22 @@ int Property::removeIndex()
 }
 
 
+template<typename ValueT, typename MapT>
+static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map)
+{
+    auto ret = map.equal_range(value);
+    for (auto& it = ret.first; it != ret.second; ++it)
+    {
+        if (it->second == bean) 
+        {
+            map.erase(it);
+            return true;
+        }
+    }
+    return false;
+}
+
+
 void Property::addBean(Bean* bean)
 {
     m_beanMap_[bean] = 0;
@@ -260,77 +276,62 @@ std::list<oidType>&& Property::findSubjects(oidType objectId)
 
 void Property::findCommon_(int opType, const Json::Value& value, std::list<Bean*>& beans) const
 {  
-    switch (value.type()) {
-        case Json::intValue:
-            doFindCommon_<int_t, decltype(m_intValueMap_)>
-                (opType, value.asInt64(), m_intValueMap_, beans);
-            break;
-        case Json::uintValue:
-            doFindCommon_<uint_t, decltype(m_uintValueMap_)>
-                (opType, value.asUInt64(), m_uintValueMap_, beans);
-            break;
-        case Json::realValue:
-            doFindCommon_<double, decltype(m_doubleValueMap_)>
-                (opType, value.asDouble(), m_doubleValueMap_, beans);
-            break;
-        case Json::stringValue:
-            doFindCommon_<const char*, decltype(m_strValueMap_)>
-                (opType, value.asCString(), m_strValueMap_, beans);
-            break;
-        case Json::booleanValue:
-            if (opType == op_has)
-            { //add all beans
-                for (auto& item : m_trueValueMap_)
-                    beans.push_back(item.second);
-                for (auto& item : m_falseValueMap_)
-                    beans.push_back(item.second);
-            }
-            else if (opType == op_eq)
-            {
-                if (value == true)
-                {
+    if (m_indexed_)
+    {     
+        switch (value.type()) {
+            case Json::intValue:
+                doFindCommon_<int_t, decltype(m_intValueMap_)>
+                    (opType, value.asInt64(), m_intValueMap_, beans);
+                break;
+            case Json::uintValue:
+                doFindCommon_<uint_t, decltype(m_uintValueMap_)>
+                    (opType, value.asUInt64(), m_uintValueMap_, beans);
+                break;
+            case Json::realValue:
+                doFindCommon_<double, decltype(m_doubleValueMap_)>
+                    (opType, value.asDouble(), m_doubleValueMap_, beans);
+                break;
+            case Json::stringValue:
+                doFindCommon_<const char*, decltype(m_strValueMap_)>
+                    (opType, value.asCString(), m_strValueMap_, beans);
+                break;
+            case Json::booleanValue:
+                if (opType == op_has)
+                { //add all beans
                     for (auto& item : m_trueValueMap_)
                         beans.push_back(item.second);
-                }
-                else
-                {
                     for (auto& item : m_falseValueMap_)
                         beans.push_back(item.second);
                 }
-            } 
-            else
-            {
-                //other operations don't make sense
-            }
-            break;
-        default:
-            elog("[%s:%d] value type %d not supported" ,  __FILE__, __LINE__, value.type());
-            break;
-    }
-}
-
-
-bool Property::StrComparator::operator()(const char* const & a, const char* const & b) const
-{
-    if (a == b) return false;
-    return strcmp(a, b) < 0;
-}
-
-
-template<typename ValueT, typename MapT>
-static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map)
-{
-    auto ret = map.equal_range(value);
-    for (auto& it = ret.first; it != ret.second; ++it)
-    {
-        if (it->second == bean) 
-        {
-            map.erase(it);
-            return true;
+                else if (opType == op_eq)
+                {
+                    if (value == true)
+                    {
+                        for (auto& item : m_trueValueMap_)
+                            beans.push_back(item.second);
+                    }
+                    else
+                    {
+                        for (auto& item : m_falseValueMap_)
+                            beans.push_back(item.second);
+                    }
+                } 
+                else
+                {
+                    //other operations don't make sense
+                }
+                break;
+            default:
+                elog("[%s:%d] value type %d not supported" ,  __FILE__, __LINE__, value.type());
+                break;
         }
     }
-    return false;
+    else
+    {
+            trivialFind(opType, value, beans);
+    }
 }
+
 
 
 template<typename ValueT, typename MapT>
@@ -380,6 +381,52 @@ static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std:
         }
     }
 }
+
+
+void Property::trivialFind(int opType,  const Json::Value& value, std::list<Bean*>& beans) const
+{
+    beans.clear();
+    if (value.isNull() || value.isArray() || value.isObject()) return;
+    if (getValueType() != (Property::ValueType)value.type()) return;
+    //todo: search on array not supported yet
+    if (getType() == Property::ArrayPrimaryType || 
+         getType() == Property::ArrayRelationType) return; 
+
+    Bean* bean = nullptr;
+    for (auto& item : m_beanMap_)
+    {
+        bean = item.first;
+        const Json::Value& v = bean->getMemberRef(m_name_.c_str());
+        if (v.isNull()) continue; //not found or null
+        switch (opType) {
+            case op_eq:
+                if (v == value) beans.push_back(bean);
+                break;
+            case op_le:
+                if (v <= value) beans.push_back(bean);
+                break;
+            case op_ge:
+                if (v >= value) beans.push_back(bean);
+                break;
+            case op_lt:
+                if (v < value) beans.push_back(bean);
+                break;
+            case op_gt:
+                if (v > value) beans.push_back(bean);
+                break;
+            default:
+                break;
+        }
+    }
+}
+
+
+bool Property::StrComparator::operator()(const char* const & a, const char* const & b) const
+{
+    if (a == b) return false;
+    return strcmp(a, b) < 0;
+}
+
 
 
 }

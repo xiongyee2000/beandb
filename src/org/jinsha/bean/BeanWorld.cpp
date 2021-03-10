@@ -337,55 +337,10 @@ void BeanWorld::findCommon_(int opType, const char* propertyName,  const Json::V
     if (property->getType() == Property::ArrayPrimaryType || 
         property->getType() == Property::ArrayRelationType) return; 
 
-    if (property->indexed())
-    { //indexed by property, use index to improve performance
         property->findCommon_(opType, value, beans);
-    }
-    else
-    { //no index, do trivial find
-        trivialFind(opType, propertyName, value, beans);
-    }
 }
 
 
-void BeanWorld::trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
-{
-    beans.clear();
-    if (value.isNull() || value.isArray() || value.isObject()) return;
-    const Property* property = getProperty(propertyName);
-    if (property == nullptr) return;
-    if (property->getValueType() != (Property::ValueType)value.type()) return;
-    //todo: search on array not supported yet
-    if (property->getType() == Property::ArrayPrimaryType || 
-        property->getType() == Property::ArrayRelationType) return; 
-
-    Bean* bean = nullptr;
-    for (auto& item : m_beans_)
-    {
-        bean = item.second;
-        const Json::Value& v = bean->getMemberRef(propertyName);
-        if (v.isNull()) continue; //not found or null
-        switch (opType) {
-            case op_eq:
-                if (v == value) beans.push_back(bean);
-                break;
-            case op_le:
-                if (v <= value) beans.push_back(bean);
-                break;
-            case op_ge:
-                if (v >= value) beans.push_back(bean);
-                break;
-            case op_lt:
-                if (v < value) beans.push_back(bean);
-                break;
-            case op_gt:
-                if (v > value) beans.push_back(bean);
-                break;
-            default:
-                break;
-        }
-    }
-}
 
 
 int BeanWorld::createIndex(pidType id)

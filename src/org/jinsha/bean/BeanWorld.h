@@ -297,7 +297,6 @@ private:
     void recreateIndex(Property* property);
 
     void findCommon_(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
-    void trivialFind(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
 
     oidType generateBeanId();
 

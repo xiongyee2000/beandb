@@ -11,85 +11,11 @@
 #define protected public
 #include "org/jinsha/bean/BeanWorld.h"
 
+#include "./common.h"
+
 using namespace std;
 using namespace Json;
 using namespace org::jinsha::bean;
-
-pidType pid_int_p = 0;
-pidType pid_uint_p = 0;
-pidType pid_int64_p = 0;
-pidType pid_uint64_p = 0;
-pidType pid_double_p = 0;
-pidType pid_str_p = 0;
-pidType pid_bool_p0 = 0;
-pidType pid_bool_p1 = 0;
-pidType pid_p1 = 0;
-pidType pid_p2 = 0;
-pidType pid_pArray_1 = 0;
-pidType pid_r1 = 0;
-pidType pid_rArray_1 =  0;
-
-Property* double_p_property = nullptr;
-Property* str_p_property = nullptr;
-Property* int_p_property = nullptr;
-Property* uint_p_property = nullptr;
-Property* int64_p_property = nullptr;
-Property* uint64_p_property = nullptr;
-Property* bool_p0_property = nullptr;
-Property* bool_p1_property = nullptr;
-Property* p1_property = nullptr;
-Property* p2_property = nullptr;
-Property* pArray_1 = nullptr;
-Property* r1 = nullptr;
-Property* rArray_1 = nullptr;
-
-void init_world(BeanWorld& world, bool needIndex = false)
-{
-    pid_int_p = world.defineProperty("int_p", Property::IntType);
-    pid_uint_p = world.defineProperty("uint_p", Property::UIntType);
-    pid_int64_p = world.defineProperty("int64_p", Property::IntType);
-    pid_uint64_p = world.defineProperty("uint64_p", Property::UIntType);
-    pid_double_p = world.defineProperty("double_p", Property::RealType);
-    pid_str_p = world.defineProperty("str_p", Property::StringType);
-    pid_bool_p0 = world.defineProperty("bool_p0", Property::BoolType);
-    pid_bool_p1 = world.defineProperty("bool_p1", Property::BoolType);
-
-    pid_p1 = world.defineProperty("p1", Property::IntType);
-    pid_p2 = world.defineProperty("p2", Property::IntType);
-    pid_pArray_1 = world.defineArrayProperty("pArray_1", Property::IntType);
-    pid_r1 = world.defineRelation("r1");
-    pid_rArray_1 =  world.defineArrayRelation("rArray_1");
-
-    double_p_property = world.getProperty("double_p");
-    str_p_property = world.getProperty("str_p");
-    int_p_property = world.getProperty("int_p");
-    uint_p_property = world.getProperty("uint_p");
-    int64_p_property = world.getProperty("int64_p");
-    uint64_p_property = world.getProperty("uint64_p");
-    bool_p0_property = world.getProperty("bool_p0");
-    bool_p1_property = world.getProperty("bool_p1");
-    p1_property = world.getProperty("p1");
-    p2_property = world.getProperty("p2");
-    pArray_1 = world.getProperty("pArray_1");
-    r1 = world.getProperty("r1");;
-    rArray_1 = world.getProperty("rArray_1");
-
-    if (needIndex)
-    {
-        double_p_property->createIndex();
-        str_p_property->createIndex();
-        int_p_property->createIndex();
-        uint_p_property->createIndex();
-        int64_p_property->createIndex();
-        uint64_p_property->createIndex();
-        bool_p0_property->createIndex();
-        bool_p1_property->createIndex();
-        p1_property->createIndex();
-        p2_property->createIndex();
-        pArray_1->createIndex();
-        rArray_1->createIndex();
-    }
-}
 
 void basic()
 {
@@ -197,196 +123,231 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     pidType pid = 0;
     const Property* property = nullptr;
 
-    pid = world.defineProperty(nullptr, Property::IntType);
-    EXPECT_TRUE(pid = -1);
-    pid = world.defineProperty("", Property::IntType);
-    EXPECT_TRUE(pid = -1);
+    property = world.defineProperty(nullptr, Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineProperty("", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
 
-    world.undefineProperty("p1");
-    pid = world.defineProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid >= 0);
-    pid = world.defineProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid = -2);
-    world.undefineProperty("p1");
-    pid = world.defineProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+    property = world.defineArrayProperty(nullptr, Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineArrayProperty("", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
 
-    world.undefineProperty("p1");
-    pid = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid = -2);
-     world.undefineProperty("p1");
-    pid = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+    property = world.defineRelation(nullptr);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineRelation("");
+    EXPECT_TRUE(property == nullptr);
 
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid = -2);
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+    property = world.defineArrayRelation(nullptr);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineArrayRelation("");
+    EXPECT_TRUE(property == nullptr);
 
+    property = world.defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
+    property = world.defineProperty("p1", Property::UIntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
+    property = world.defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineRelation("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineArrayRelation("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
     world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid = -2);
-     world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+    EXPECT_TRUE(nullptr == world.getProperty("p1"));
+
+    property = world.defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
+    property = world.defineArrayProperty("p1", Property::UIntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
+    property = world.defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineRelation("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineArrayRelation("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    world.undefineProperty("p1");
+    EXPECT_TRUE(nullptr == world.getProperty("p1"));
+
+    property = world.defineRelation("p1");
+    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
+    property = world.defineRelation("p1");
+    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
+    property = world.defineProperty("p1", Property::UIntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineArrayRelation("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    world.undefineProperty("p1");
+    EXPECT_TRUE(nullptr == world.getProperty("p1"));
+
+    property = world.defineArrayRelation("p1");
+    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
+    property = world.defineArrayRelation("p1");
+    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
+    property = world.defineProperty("p1", Property::UIntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world.defineRelation("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    world.undefineProperty("p1");
+    EXPECT_TRUE(nullptr == world.getProperty("p1"));
 }
 
 
-TEST(BeanWorld, defineArrayProperty_undefineArrayProperty)
-{
-    BeanWorld world;
-    Value value;
-    pidType pid = 0;
-    const Property* property = nullptr;
+// TEST(BeanWorld, defineArrayProperty_undefineArrayProperty)
+// {
+//     BeanWorld world;
+//     Value value;
+//     pidType pid = 0;
+//     const Property* property = nullptr;
 
-    pid = world.defineArrayProperty(nullptr, Property::IntType);
-    EXPECT_TRUE(pid = -1);
-    pid = world.defineArrayProperty("", Property::IntType);
-    EXPECT_TRUE(pid = -1);
+//     property = world.defineArrayProperty(nullptr, Property::IntType);
+//     EXPECT_TRUE(property == nullptr);
+//     property = world.defineArrayProperty("", Property::IntType);
+//     EXPECT_TRUE(property == nullptr);
 
-    world.undefineProperty("p1");
-    pid = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid = -2);
-    world.undefineProperty("p1");
-    pid = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+//     world.undefineProperty("p1");
+//     property = world.defineArrayProperty("p1", Property::IntType);
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineArrayProperty("p1", Property::IntType);
+//     EXPECT_TRUE(property == nullptr);
+//     world.undefineProperty("p1");
+//     property = world.defineArrayProperty("p1", Property::IntType);
+//     EXPECT_TRUE(property == world.getProperty("p1"));
 
-    world.undefineProperty("p1");
-    pid = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid = -2);
-     world.undefineProperty("p1");
-    pid = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+//     world.undefineProperty("p1");
+//     property = world.defineArrayProperty("p1", Property::IntType);
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineArrayProperty("p1", Property::IntType);
+//     EXPECT_TRUE(property == nullptr);
+//      world.undefineProperty("p1");
+//     property = world.defineArrayProperty("p1", Property::IntType);
+//     EXPECT_TRUE(property == world.getProperty("p1"));
 
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid = -2);
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
 
-    world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid = -2);
-     world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-}
+//     world.undefineProperty("p1");
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//      world.undefineProperty("p1");
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+// }
 
 
-TEST(BeanWorld, defineRelation_undefineRelation)
-{
-    BeanWorld world;
-    Value value;
-    pidType pid = 0;
-    const Property* property = nullptr;
+// TEST(BeanWorld, defineRelation_undefineRelation)
+// {
+//     BeanWorld world;
+//     Value value;
+//     pidType pid = 0;
+//     const Property* property = nullptr;
 
-    pid = world.defineRelation(nullptr);
-    EXPECT_TRUE(pid = -1);
-    pid = world.defineRelation("");
-    EXPECT_TRUE(pid = -1);
+//     property = world.defineRelation(nullptr);
+//     EXPECT_TRUE(property == nullptr);
+//     property = world.defineRelation("");
+//     EXPECT_TRUE(property == nullptr);
 
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid = -2);
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
 
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid = -2);
-     world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//      world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
 
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid = -2);
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
 
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid = -2);
-     world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-}
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//      world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+// }
 
-TEST(BeanWorld, defineArrayRelation_undefineArrayRelation)
-{
-    BeanWorld world;
-    Value value;
-    pidType pid = 0;
-    const Property* property = nullptr;
+// TEST(BeanWorld, defineArrayRelation_undefineArrayRelation)
+// {
+//     BeanWorld world;
+//     Value value;
+//     pidType pid = 0;
+//     const Property* property = nullptr;
 
-    pid = world.defineArrayRelation(nullptr);
-    EXPECT_TRUE(pid = -1);
-    pid = world.defineArrayRelation("");
-    EXPECT_TRUE(pid = -1);
+//     property = world.defineArrayRelation(nullptr);
+//     EXPECT_TRUE(property == nullptr);
+//     property = world.defineArrayRelation("");
+//     EXPECT_TRUE(property == nullptr);
 
-    world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid = -2);
-    world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+//     world.undefineProperty("p1");
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//     world.undefineProperty("p1");
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
 
-    world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid = -2);
-     world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+//     world.undefineProperty("p1");
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//      world.undefineProperty("p1");
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
 
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid = -2);
-    world.undefineProperty("p1");
-    pid = world.defineRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//     world.undefineProperty("p1");
+//     property = world.defineRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
 
-    world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid = -2);
-     world.undefineProperty("p1");
-    pid = world.defineArrayRelation("p1");
-    EXPECT_TRUE(pid >= 0 && pid == world.getPropertyId("p1"));
-}
+//     world.undefineProperty("p1");
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == nullptr);
+//      world.undefineProperty("p1");
+//     property = world.defineArrayRelation("p1");
+//     EXPECT_TRUE(property == world.getProperty("p1"));
+// }
 
 TEST(BeanWorld, getProperty)
 {
@@ -403,7 +364,7 @@ TEST(BeanWorld, getProperty)
     property = world.getProperty("a");
     EXPECT_TRUE(property == nullptr);
 
-    pid = world.defineProperty("p1", Property::IntType);
+    property = world.defineProperty("p1", Property::IntType);
     property = world.getProperty("p1");
     EXPECT_TRUE(property->getName() == "p1");
 
@@ -415,33 +376,33 @@ TEST(BeanWorld, getProperties)
 {
     BeanWorld *world = new BeanWorld();
     Value value;
-    int pid = 0;
+    Property* property;
 
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
 
-    pid = world->defineProperty(nullptr, Property::IntType);
-    EXPECT_TRUE(pid == -1);
+    property = world->defineProperty(nullptr, Property::IntType);
+    EXPECT_TRUE(property == nullptr);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    pid = world->defineProperty("", Property::IntType);
-    EXPECT_TRUE(pid == -1);
+    property = world->defineProperty("", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    pid = world->defineProperty(string("").c_str(),Property::IntType);
-    EXPECT_TRUE(pid == -1);
+    property = world->defineProperty(string("").c_str(),Property::IntType);
+    EXPECT_TRUE(property == nullptr);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    pid = world->defineProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid == world->getPropertyId("p1"));
+    property = world->defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(property == world->getProperty("p1"));
     EXPECT_TRUE(world->getProperties().size() == 1);
 
-    pid = world->defineProperty("p1", Property::IntType);
-    EXPECT_TRUE(pid == -2);
+    property = world->defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(property == world->getProperty("p1"));
     EXPECT_TRUE(world->getProperties().size() == 1);
 
-    pid = world->defineProperty("p2", Property::IntType);
-    EXPECT_TRUE(pid == world->getPropertyId("p2"));
+    property = world->defineProperty("p2", Property::IntType);
+    EXPECT_TRUE(property == world->getProperty("p2"));
     EXPECT_TRUE(world->getProperties().size() == 2);
 
     bean1->setProperty("p1", 1);
@@ -709,14 +670,7 @@ TEST(BeanWorld, findEqual_without_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     Bean &bean1 = *world.createBean();
     Bean& bean2 = *world.createBean();
@@ -787,21 +741,7 @@ TEST(BeanWorld, findEqual_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
-
-    Property* double_p_property = world.getProperty("double_p");
-    Property* str_p_property = world.getProperty("str_p");
-    Property* int_p_property = world.getProperty("int_p");
-    Property* uint_p_property = world.getProperty("uint_p");
-    Property* int64_p_property = world.getProperty("int64_p");
-    Property* uint64_p_property = world.getProperty("uint64_p");
+    init_world(world);
     
     double_p_property->createIndex();
     str_p_property->createIndex();
@@ -883,14 +823,7 @@ TEST(BeanWorld, findLessEqual_without_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -998,14 +931,7 @@ TEST(BeanWorld, findLessEqual_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -1127,14 +1053,7 @@ TEST(BeanWorld, findGreaterEqual_without_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -1170,14 +1089,7 @@ TEST(BeanWorld, findGreaterEqual_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -1299,14 +1211,7 @@ TEST(BeanWorld, findLessThan_without_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -1344,14 +1249,7 @@ TEST(BeanWorld, findLessThan_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -1481,14 +1379,7 @@ TEST(BeanWorld, findGreaterThan_without_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);
@@ -1526,14 +1417,7 @@ TEST(BeanWorld, findGreaterThan_with_index)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     Bean* bean1 = world.createBean();
     bean1->setProperty("double_p", 1.0);

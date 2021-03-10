@@ -71,11 +71,9 @@ public:
      * @param name the name of property
      * @param valueType the value type of property
      * @param needIndex if index is needed
-     * @return the id of the property, or error code:
-     *                   -1: name is null or empty
-     *                  -2: the property is already defined
+     * @return the pointer to the property instance
      */
-    pidType defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
+    Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
 
     /**
      * Define an array property.
@@ -89,11 +87,9 @@ public:
      * @param name the name of property
      * @param valueType the value type of the element of the array property
      * @param needIndex if index is needed
-     * @return the id of the property, or error code:
-     *                   -1: name is null or empty
-     *                  -2: the property is already defined
+     * @return the pointer to the property instance
      */
-    pidType defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
+    Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
 
     /**
      * Define a relation property.
@@ -103,11 +99,9 @@ public:
      * 
      * @param name the name of relation property
      * @param needIndex if index is needed
-     * @return the id of the relation property, or error code:
-     *                   -1: name is null or empty
-     *                  -2: the property is already defined
+     * @return the pointer to the property instance
      */
-    pidType defineRelation(const char* name, bool needIndex = false);
+    Property* defineRelation(const char* name, bool needIndex = false);
 
     /**
      * Define an array relation property.
@@ -116,11 +110,9 @@ public:
      * 
      * @param name the name of array relation property
      * @param needIndex if index is needed
-     * @return the id of the array relation property, or error code:
-     *                   -1: name is null or empty
-     *                  -2: the array relation property is already defined
+     * @return the pointer to the property instance
      */
-    pidType defineArrayRelation(const char* name, bool needIndex = false);
+    Property* defineArrayRelation(const char* name, bool needIndex = false);
 
     /**
      * Undefine a property.
@@ -150,7 +142,7 @@ public:
     pidType getPropertyId(const char* name) const;
 
     /**
-     * Get property by id.
+     * Get property/relation/array property/array relation by id.
      * 
      * @param id property id
      * @return property
@@ -159,7 +151,7 @@ public:
     Property* getProperty(pidType id);
 
     /**
-     * Get property by name.
+     * Get property/relation/array property/array relation by name.
      * 
      * @param name property name
      * @return property
@@ -282,7 +274,7 @@ public:
     int createIndex(pidType id);
 
 private:
-    pidType definePropertyCommon_(const char* name, Property::Type type, 
+    Property* definePropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex = false);
 
     //todo: move these methods to Bean

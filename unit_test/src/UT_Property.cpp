@@ -14,6 +14,8 @@
 #include "org/jinsha/bean/Bean.h"
 #include "org/jinsha/bean/BeanWorld.h"
 
+#include "./common.h"
+
 using namespace std;
 using namespace Json;
 using namespace org::jinsha::bean;
@@ -71,14 +73,7 @@ TEST(BeanWorld, index_more_complicated)
     BeanWorld world;
     std::list<Bean*> beans;
 
-    world.defineProperty("int_p", Property::IntType);
-    world.defineProperty("uint_p", Property::UIntType);
-    world.defineProperty("int64_p", Property::IntType);
-    world.defineProperty("uint64_p", Property::UIntType);
-    world.defineProperty("double_p", Property::RealType);
-    world.defineProperty("str_p", Property::StringType);
-    world.defineProperty("bool_p0", Property::BoolType);
-    world.defineProperty("bool_p1", Property::BoolType);
+    init_world(world);
 
     ///////////////////////////////////////////////////////
     //createIndex()

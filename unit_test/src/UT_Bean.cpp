@@ -12,6 +12,8 @@
 #define protected public
 #include "org/jinsha/bean/BeanWorld.h"
 
+#include "./common.h"
+
 using namespace std;
 using namespace Json;
 using namespace org::jinsha::bean;
@@ -39,13 +41,8 @@ TEST(Bean, isMember)
 {
     BeanWorld world;
     Value value;
-    // pidType pid = 0;
-    
-    world.defineProperty("p1", Property::IntType);
-    world.defineProperty("p2", Property::IntType);
-    world.defineArrayProperty("pArray_1", Property::IntType);
-    world.defineRelation("r1");
-     world.defineArrayRelation("rArray_1");
+
+    init_world(world);
     
     Bean* bean1 = world.createBean();
 
@@ -92,11 +89,7 @@ TEST(Bean, create_has_remove)
     // pidType pid = 0;
     int errCode = 0;
     
-    world.defineProperty("p1", Property::IntType);
-    world.defineProperty("p2", Property::IntType);
-    world.defineArrayProperty("pArray_1", Property::IntType);
-    world.defineRelation("r1");
-     world.defineArrayRelation("rArray_1");
+    init_world(world);
 
     Bean* bean1 = world.createBean();
 
@@ -312,7 +305,7 @@ TEST(Bean, array_property)
 {
     BeanWorld world;
     Json::Value value;
-    pidType pid = 0;
+    Property* property;
     int errCode = 0;
 
     Bean &bean = *world.createBean();
@@ -341,8 +334,8 @@ TEST(Bean, array_property)
     errCode = bean.setArrayProperty("null", 0, 1);
     EXPECT_TRUE(errCode == -2);
 
-    pid = world.defineArrayProperty("pArray_1", Property::IntType);
-    EXPECT_TRUE(pid >= 0);
+    property = world.defineArrayProperty("pArray_1", Property::IntType);
+    EXPECT_TRUE(property == world.getProperty("pArray_1"));
     errCode = bean.appendProperty("pArray_1", 1);
     EXPECT_TRUE(errCode == -4);
     errCode = bean.setArrayProperty("pArray_1", 0, 1);
@@ -421,12 +414,8 @@ TEST(Bean, relation)
     BeanWorld world;
     Value value;
     int errCode = 0;
-    
-    pidType pid_p1 = world.defineProperty("p1", Property::IntType);
-    pidType pid_p2 = world.defineProperty("p2", Property::IntType);
-    pidType pid_array_1 = world.defineArrayProperty("pArray_1", Property::IntType);
-    pidType pid_r1 = world.defineRelation("r1");
-    pidType pid_ra1 =  world.defineArrayRelation("rArray_1");
+
+    init_world(world);
 
     Bean* bean1 = world.createBean();
 
@@ -467,11 +456,7 @@ TEST(Bean, array_relation)
     Value value;
     int errCode = 0;
     
-    pidType pid_p1 = world.defineProperty("p1", Property::IntType);
-    pidType pid_p2 = world.defineProperty("p2", Property::IntType);
-    pidType pid_array_1 = world.defineArrayProperty("pArray_1", Property::IntType);
-    pidType pid_r1 = world.defineRelation("r1");
-    pidType pid_ra1 =  world.defineArrayRelation("rArray_1");
+    init_world(world);
 
     Bean* bean1 = world.createBean();
     Bean* bean2 = world.createBean();

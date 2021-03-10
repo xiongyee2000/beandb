@@ -89,44 +89,53 @@ Bean* BeanWorld::getBean(oidType id)
 }
 
 
-pidType BeanWorld::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
+Property* BeanWorld::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
     return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
 }
 
 
-pidType BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
+Property* BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
     return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
 }
 
 
-pidType BeanWorld::defineRelation(const char* name, bool needIndex)
+Property* BeanWorld::defineRelation(const char* name, bool needIndex)
 {
     return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
 }
 
 
-pidType BeanWorld::defineArrayRelation(const char* name, bool needIndex)
+Property* BeanWorld::defineArrayRelation(const char* name, bool needIndex)
 {
     return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
 }
 
 
-pidType BeanWorld::definePropertyCommon_(const char* name, Property::Type type, 
+Property* BeanWorld::definePropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex)
 {
-    if (name == nullptr) return -1;
-    if (name[0] == 0) return -1;
+    if (name == nullptr) return nullptr;
+    if (name[0] == 0) return nullptr;
+
+    Property* property = nullptr;
     auto iter = m_propertyMap_.find(name);
-    if (iter != m_propertyMap_.end()) return -2; 
-    
-    Property* property = new Property(this, name, type, valueType, needIndex);
-    m_properties_.push_back(property);
-    m_propertyMap_[name] = m_properties_.size() - 1;
-    pidType id = m_properties_.size() - 1;
-    property->m_id_ = id;
-    return id;
+    if (iter != m_propertyMap_.end())
+    {
+        property = m_properties_[iter->second];
+        if (property->getType() != type || property->getValueType() != valueType)
+            property = nullptr; 
+    }
+    else
+    {
+        property = new Property(this, name, type, valueType, needIndex);
+        m_properties_.push_back(property);
+        m_propertyMap_[name] = m_properties_.size() - 1;
+        pidType id = m_properties_.size() - 1;
+        property->m_id_ = id;
+    }
+    return property;
 }
 
 

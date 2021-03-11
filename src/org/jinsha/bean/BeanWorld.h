@@ -129,28 +129,6 @@ public:
     void undefineRelation(const char* name) {undefineProperty(name);};
 
     /**
-     * Get the id of a property. Later the property id 
-     * can be used in other methods.
-     * 
-     * It is highly encouraged to use property id, for it
-     * can reduce a lot of string calculation and achieve 
-     * higher performance.
-     *  
-     * @param property name
-     * @return property id
-     */
-    pidType getPropertyId(const char* name) const;
-
-    /**
-     * Get property/relation/array property/array relation by id.
-     * 
-     * @param id property id
-     * @return property
-     */
-    const Property* getProperty(pidType id) const;
-    Property* getProperty(pidType id);
-
-    /**
      * Get property/relation/array property/array relation by name.
      * 
      * @param name property name
@@ -164,26 +142,17 @@ public:
      * 
      * @return a map containing all properties.
      */
-    const std::unordered_map<std::string, pidType>& getProperties() const 
+    const std::unordered_map<std::string, Property*>& getProperties() const 
      {return m_propertyMap_;};
-
-    // /**
-    //  * Get relation by name.
-    //  * 
-    //  * @param name relation name
-    //  * @return the relation, or null
-    //  */
-    // const Property* getRelation(const char* name) const;
-    // Property* getRelation(const char* name);
 
     /**
      * Find beans which have the given property/relation.
      * 
-     * @param name the name of the property/relation
+     * @param property the property/relation
      * @param beans the results
      * 
      */
-    void findHas(const char* name,  std::list<Bean*>& beans);
+    void findHas(const Property* property,  std::list<Bean*>& beans);
 
     /**
      * Find beans (as subject) which have given relation (as predicate) 
@@ -194,13 +163,13 @@ public:
      * @return a list containing ids of beans
      * 
      */
-    std::list<oidType>&& 
+    std::list<oidType>&&
     findSubjects(Property* relation, oidType objectId);
 
     /**
      * Find beans whose property values are equal to the given one.
      * 
-     * @param propertyName the name of the property
+     * @param property the property
      * @param value the value of the property
      * @param beans the results
      * 
@@ -208,12 +177,12 @@ public:
      * 1. the search is type restricted, i.e. only those beans with the property value
      *     having the same type will be considered. 
      */
-    void findEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
 
     /**
      * Find beans whose property values are less equal to the given one.
      * 
-     * @param propertyName the name of the property
+     * @param property the property
      * @param value the value of the property
      * @param beans the results
      * 
@@ -221,12 +190,12 @@ public:
      * 1. the search is type restricted, i.e. only those beans with the property value
      *     having the same type will be considered. 
      */
-    void findLessEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findLessEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
 
     /**
      * Find beans whose property values are greater equal to the given one.
      * 
-     * @param propertyName the name of the property
+     * @param property the property
      * @param value the value of the property
      * @param beans the results
      * 
@@ -234,12 +203,12 @@ public:
      * 1. the search is type restricted, i.e. only those beans with the property value
      *     having the same type will be considered. 
      */
-    void findGreaterEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findGreaterEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
 
     /**
      * Find beans whose property values are less than the given one.
      * 
-     * @param propertyName the name of the property
+     * @param property the property
      * @param value the value of the property
      * @param beans the results
      * 
@@ -247,12 +216,12 @@ public:
      * 1. the search is type restricted, i.e. only those beans with the property value
      *     having the same type will be considered. 
      */
-    void findLessThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findLessThan(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
 
     /**
      * Find beans whose property values are greater than the given one.
      * 
-     * @param propertyName the name of the property
+     * @param property the property
      * @param value the value of the property
      * @param beans the results
      * 
@@ -260,18 +229,8 @@ public:
      * 1. the search is type restricted, i.e. only those beans with the property value
      *     having the same type will be considered. 
      */
-    void findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findGreaterThan(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
 
-    /**
-     * Create index for a property.
-     * 
-     * Note this is just a wrapper for Property::createIndex().
-     * 
-     * @param id id of the property
-     * @return 0 if success, or error code
-     *                   
-     */
-    int createIndex(pidType id);
 
 private:
     Property* definePropertyCommon_(const char* name, Property::Type type, 
@@ -288,7 +247,7 @@ private:
 
     void recreateIndex(Property* property);
 
-    void findCommon_(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans);
+    void findCommon_(int opType, const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
 
     oidType generateBeanId();
 
@@ -296,9 +255,8 @@ private:
     std::unordered_map<oidType, Bean*> m_beans_;
     oidType m_maxBeanId_ = 0;
 
-    std::vector<Property*> m_properties_;
-    //map from property name to index
-    std::unordered_map<std::string, pidType> m_propertyMap_; 
+    //map from property name to property
+    std::unordered_map<std::string, Property*> m_propertyMap_; 
 
 friend class Bean;
 friend class Property;

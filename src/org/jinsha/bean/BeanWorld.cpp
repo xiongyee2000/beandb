@@ -27,19 +27,12 @@ BeanWorld::~BeanWorld()
 
 void BeanWorld::clear()
 {
-    m_propertyMap_.clear();
-
-    for (auto item : m_properties_)
-    {
-        delete item;
-    }
-    m_properties_.clear();
-
     for (auto item : m_beans_) 
     {
         delete item.second;
     }
     m_beans_.clear();
+    m_propertyMap_.clear();
 }
 
 
@@ -55,6 +48,7 @@ Bean* BeanWorld::createBean()
 
 void BeanWorld::removeBean(oidType id)
 {
+    //todo: need to handle bean relations
     auto iter = m_beans_.find(id);
     if (iter != m_beans_.end())
     {
@@ -121,19 +115,18 @@ Property* BeanWorld::definePropertyCommon_(const char* name, Property::Type type
 
     Property* property = nullptr;
     auto iter = m_propertyMap_.find(name);
-    if (iter != m_propertyMap_.end())
+    if (iter == m_propertyMap_.end())
     {
-        property = m_properties_[iter->second];
-        if (property->getType() != type || property->getValueType() != valueType)
-            property = nullptr; 
+        property = new Property(this, name, type, valueType, needIndex);
+        m_propertyMap_[name] = property;
+        //todo: current set to 0. Generate id in future...
+        property->m_id_ = -1;
     }
     else
     {
-        property = new Property(this, name, type, valueType, needIndex);
-        m_properties_.push_back(property);
-        m_propertyMap_[name] = m_properties_.size() - 1;
-        pidType id = m_properties_.size() - 1;
-        property->m_id_ = id;
+        property = iter->second;
+        if (property->getType() != type || property->getValueType() != valueType)
+            property = nullptr; 
     }
     return property;
 }
@@ -145,69 +138,38 @@ void BeanWorld::undefineProperty(const char* name)
     if (name[0] == 0) return;
     auto iter = m_propertyMap_.find(name);
     if (iter == m_propertyMap_.end()) return;
-    pidType id = -1;
-    id = iter->second;
-    Property* property = m_properties_[id];
-
-    //remove all beans that have this property
-    //todo: can be optimized by checking the property
-    //instance for how many beans have this property 
-    for (auto& iter : m_beans_)
-    {
-        iter.second->removeProperty(property->m_id_);
-    }
-
-    m_properties_[id] = nullptr;
-    m_propertyMap_.erase(iter);
+    Property* property = iter->second;
     delete property;
-}
-
-pidType BeanWorld::getPropertyId(const char* name) const
-{
-    if (name == nullptr) return -1;
-    if (name[0] == 0) return -1;
-    auto iter = m_propertyMap_.find(name);
-    if (iter == m_propertyMap_.end()) return -1; //no such property
-    return (int)(iter->second);
-}
-
-
-const Property* BeanWorld::getProperty(pidType id) const
-{
-    if (id < 0 || (size_t)id >= m_properties_.size())
-        return nullptr;
-    else
-        return m_properties_[id];
-}
-
-
-Property* BeanWorld::getProperty(pidType id)
-{
-    return (Property*)((const BeanWorld*)this)->getProperty(id);
+    m_propertyMap_.erase(iter);
 }
 
 
 const Property* BeanWorld::getProperty(const char* name) const
 {
-    return getProperty(getPropertyId(name));
+    if (name == nullptr) return nullptr;
+    auto iter = m_propertyMap_.find(name);
+    if (iter == m_propertyMap_.end())
+        return nullptr;
+    else
+        return iter->second;
 }
+
 
 Property* BeanWorld::getProperty(const char* name)
 {
-    return getProperty(getPropertyId(name));
+    return const_cast<Property*>(((const BeanWorld*)this)->getProperty(name));
 }
-
 
 void BeanWorld::setProperty( Bean* bean, Property* property, const Json::Value& value)
 {
-    Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property->getName().c_str());
+    Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property);
     setPropertyCommon_(bean, property,  oldValue, value);
 }
 
 
 void BeanWorld::setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value& value)
 {
-    Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property->getName().c_str());
+    Json::Value* oldValue = (Json::Value*)&bean->getMemberRef(property);
     oldValue = &(*oldValue)[index];
     setPropertyCommon_(bean, property,  oldValue, value);
 }
@@ -215,7 +177,7 @@ void BeanWorld::setArrayProperty( Bean* bean, Property* property, Json::Value::A
 
 void BeanWorld::setRelation(Property* property, Bean* from, Bean* to)
 {
-    Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property->getName().c_str());
+    Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property);
     Json::Value newValue(to->getId());
     setPropertyCommon_(from, property, oldValue, newValue);
 }
@@ -223,7 +185,7 @@ void BeanWorld::setRelation(Property* property, Bean* from, Bean* to)
 
 void BeanWorld::setArrayRelation(Property* property, Json::Value::ArrayIndex index, Bean* from, Bean* to)
 {
-    Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property->getName().c_str());
+    Json::Value* oldValue =  (Json::Value*)&from->getMemberRef(property);
     oldValue = &(*oldValue)[index];
     Json::Value newValue(to->getId());
     setPropertyCommon_(from, property, oldValue, newValue);
@@ -264,22 +226,21 @@ void BeanWorld::setPropertyCommon_(Bean* bean,  Property* property,
     // if (property->indexed())
     if (property->getType() != Property::ArrayPrimaryType && 
         property->getType() != Property::ArrayRelationType && 
-            property->indexed())
-    property->addIndex(bean, *oldValue);
+        property->indexed())
+        property->addIndex(bean, *oldValue);
 }
 
 
 void BeanWorld::recreateIndex(Property* property)
 {
     Bean* bean = nullptr;
-    const string& pname = property->getName();
     property->removeIndex();
     for (auto& iter : m_beans_)
     {
         bean = iter.second;
-        if (bean->isMember(pname.c_str()))
+        auto& value = bean->getMemberRef(property);
+        if (!value.isNull())
         {
-                Json::Value& value = bean->m_propertyValues_[pname];
                 property->addIndex(bean, value);
         }
     }
@@ -287,10 +248,9 @@ void BeanWorld::recreateIndex(Property* property)
 }
 
 
-void BeanWorld::findHas(const char* name,  std::list<Bean*>& beans)
+void BeanWorld::findHas(const Property* property,  std::list<Bean*>& beans)
 {
     beans.clear();
-    const Property* property = getProperty(name);
     if (property == nullptr) return;
     property->findHas(beans);
 }
@@ -305,41 +265,40 @@ std::list<oidType>&& BeanWorld::findSubjects(Property* relation, oidType objectI
 }
 
 
-void BeanWorld::findEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
+void BeanWorld::findEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon_(op_eq, propertyName, value, beans);
+    findCommon_(op_eq, property, value, beans);
 }
 
 
-void BeanWorld::findLessEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
+void BeanWorld::findLessEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon_(op_le, propertyName, value, beans);
+    findCommon_(op_le, property, value, beans);
 }
 
 
-void BeanWorld::findGreaterEqual(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
+void BeanWorld::findGreaterEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon_(op_ge, propertyName, value, beans);
+    findCommon_(op_ge, property, value, beans);
 }
 
 
-void BeanWorld::findLessThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
+void BeanWorld::findLessThan(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon_(op_lt, propertyName, value, beans);
+    findCommon_(op_lt, property, value, beans);
 }
 
 
-void BeanWorld::findGreaterThan(const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
+void BeanWorld::findGreaterThan(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
 {
-    findCommon_(op_gt, propertyName, value, beans);
+    findCommon_(op_gt, property, value, beans);
 }
 
 
-void BeanWorld::findCommon_(int opType, const char* propertyName,  const Json::Value& value, std::list<Bean*>& beans)
+void BeanWorld::findCommon_(int opType, const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
 {
     beans.clear();
     if ((value.isNull() && opType != op_has) || value.isArray() || value.isObject()) return;
-    const Property* property = getProperty(propertyName);
     if (property == nullptr) return;
     if (property->getValueType() != (Property::ValueType)value.type()) return;
     //todo: search on array not supported yet
@@ -347,16 +306,6 @@ void BeanWorld::findCommon_(int opType, const char* propertyName,  const Json::V
         property->getType() == Property::ArrayRelationType) return; 
 
         property->findCommon_(opType, value, beans);
-}
-
-
-
-
-int BeanWorld::createIndex(pidType id)
-{
-    Property* property = (Property*)getProperty(id);
-    if (property  == nullptr) return -1;
-    return property->createIndex();
 }
 
 

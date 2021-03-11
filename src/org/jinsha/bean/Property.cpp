@@ -20,6 +20,11 @@ static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
 Property::~Property()
 {
     removeIndex();
+    //remove property from beans that have this property
+    for (auto& iter : m_beanMap_)
+    {
+        iter.first->m_propertyValues_.removeMember(m_name_.c_str());
+    }
     m_beanMap_.clear();
 }
 
@@ -247,7 +252,7 @@ std::list<oidType>&& Property::findSubjects(oidType objectId)
             for (auto& item : m_beanMap_)
             {
                 auto& bean = item.first;
-                const auto& value = bean->getMemberRef(m_name_.c_str());
+                const auto& value = bean->getMemberRef(this);
                 oidType objectId_ = value.asUInt64();
                 if (objectId_ == objectId)
                     beans.push_back(bean->getId());
@@ -261,8 +266,8 @@ std::list<oidType>&& Property::findSubjects(oidType objectId)
         for (auto& item : m_beanMap_)
         {
             auto& bean = item.first;
-            const auto& value = bean->getMemberRef(m_name_.c_str());
-            for (auto index = 0; index < value.size(); index++)
+            const auto& value = bean->getMemberRef(this);
+            for (Json::ArrayIndex index = 0; index < value.size(); index++)
             {
                 oidType objectId_ = value[index].asUInt64();
                 if (objectId_ == objectId)
@@ -396,7 +401,7 @@ void Property::trivialFind(int opType,  const Json::Value& value, std::list<Bean
     for (auto& item : m_beanMap_)
     {
         bean = item.first;
-        const Json::Value& v = bean->getMemberRef(m_name_.c_str());
+        const Json::Value& v = bean->getMemberRef(this);
         if (v.isNull()) continue; //not found or null
         switch (opType) {
             case op_eq:

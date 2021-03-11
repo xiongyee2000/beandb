@@ -79,209 +79,202 @@ TEST(BeanWorld, index_more_complicated)
     //createIndex()
     ///////////////////////////////////////////////////////
     Bean* bean1 = world.createBean();
-    bean1->setProperty("double_p", 1.0);
-    bean1->setProperty("str_p", "hello");
-    bean1->setProperty("bool_p0", false);
-    bean1->setProperty("bool_p1", true);
-    bean1->setProperty("int_p", 1);
-    bean1->setProperty("uint_p", 2U);
+    bean1->setProperty(p_double, 1.0);
+    bean1->setProperty(p_str, "hello");
+    bean1->setProperty(p_bool_0, false);
+    bean1->setProperty(p_bool_1, true);
+    bean1->setProperty(p_int, 1);
+    bean1->setProperty(p_uint, 2U);
 
     Bean* bean2 = world.createBean();
-    bean2->setProperty("double_p", 1.0);
-    bean2->setProperty("str_p", "hello");
-    bean2->setProperty("bool_p0", false);
-    bean2->setProperty("bool_p1", true);
-    bean2->setProperty("int_p", 1);
-    bean2->setProperty("uint_p", 2U);
+    bean2->setProperty(p_double, 1.0);
+    bean2->setProperty(p_str, "hello");
+    bean2->setProperty(p_bool_0, false);
+    bean2->setProperty(p_bool_1, true);
+    bean2->setProperty(p_int, 1);
+    bean2->setProperty(p_uint, 2U);
 
-    Property* double_p_property = world.getProperty("double_p");
-    Property* str_p_property = world.getProperty("str_p");
-    Property* bool_p0_property = world.getProperty("bool_p0");
-    Property* bool_p1_property = world.getProperty("bool_p1");
-    Property* int_p_property = world.getProperty("int_p");
-    Property* uint_p_property = world.getProperty("uint_p");
+    p_double->createIndex();
+    p_str->createIndex();
+    p_bool_0->createIndex();
+    p_bool_1->createIndex();
+    p_int->createIndex();
+    p_uint->createIndex();
 
-    double_p_property->createIndex();
-    str_p_property->createIndex();
-    bool_p0_property->createIndex();
-    bool_p1_property->createIndex();
-    int_p_property->createIndex();
-    uint_p_property->createIndex();
-
-    world.findEqual("double_p", 1.0, beans);
+    world.findEqual(p_double, 1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("double_p") == 1.0);
+        EXPECT_TRUE(bean->getProperty(p_double) == 1.0);
     }
 
-    world.findEqual("bool_p0", false, beans);
+    world.findEqual(p_bool_0, false, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("bool_p0") == false);
+        EXPECT_TRUE(bean->getProperty(p_bool_0) == false);
     }
 
-    world.findEqual("bool_p1", true, beans);
+    world.findEqual(p_bool_1, true, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("bool_p1") == true);
+        EXPECT_TRUE(bean->getProperty(p_bool_1) == true);
     }
 
-    world.findEqual("str_p", "hello", beans);
+    world.findEqual(p_str, "hello", beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("str_p") == "hello");
+        EXPECT_TRUE(bean->getProperty(p_str) == "hello");
     }
 
-   world.findEqual("int_p", (int_t)1, beans);
+   world.findEqual(p_int, (int_t)1, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("int_p") == 1);
+        EXPECT_TRUE(bean->getProperty(p_int) == 1);
     }
 
-    world.findEqual("uint_p", (uint_t)2U, beans);
+    world.findEqual(p_uint, (uint_t)2U, beans);
     EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("uint_p") == 2U);
+        EXPECT_TRUE(bean->getProperty(p_uint) == 2U);
     }
 
     ///////////////////////////////////////////////////////
     //removeIndex()
     ///////////////////////////////////////////////////////
-    double_p_property->removeIndex();
-    str_p_property->removeIndex();
-    bool_p0_property->removeIndex();
-    int_p_property->removeIndex();
-    uint_p_property->removeIndex();
+    p_double->removeIndex();
+    p_str->removeIndex();
+    p_bool_0->removeIndex();
+    p_int->removeIndex();
+    p_uint->removeIndex();
 
-    world.findEqual("double_p", 1.0, beans);
+    world.findEqual(p_double, 1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("double_p") == 1.0);
+        EXPECT_TRUE(bean->getProperty(p_double) == 1.0);
     }
 
-    world.findEqual("bool_p0", false, beans);
+    world.findEqual(p_bool_0, false, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("bool_p0") == false);
+        EXPECT_TRUE(bean->getProperty(p_bool_0) == false);
     }
 
-    world.findEqual("bool_p1", true, beans);
+    world.findEqual(p_bool_1, true, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("bool_p1") == true);
+        EXPECT_TRUE(bean->getProperty(p_bool_1) == true);
     }
 
-    world.findEqual("str_p", "hello", beans);
+    world.findEqual(p_str, "hello", beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("str_p") == "hello");
+        EXPECT_TRUE(bean->getProperty(p_str) == "hello");
     }
 
-   world.findEqual("int_p", (int_t)1, beans);
+   world.findEqual(p_int, (int_t)1, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("int_p") == 1);
+        EXPECT_TRUE(bean->getProperty(p_int) == 1);
     }
 
-    world.findEqual("uint_p", (uint_t)2U, beans);
+    world.findEqual(p_uint, (uint_t)2U, beans);
     EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("uint_p") == 2U);
+        EXPECT_TRUE(bean->getProperty(p_uint) == 2U);
     }
 
     ///////////////////////////////////////////////////////
     //reset property after createIndex()
     ///////////////////////////////////////////////////////
-    double_p_property->createIndex();
-    str_p_property->createIndex();
-    bool_p0_property->createIndex();
-    bool_p1_property->createIndex();
-    int_p_property->createIndex();
-    uint_p_property->createIndex();
+    p_double->createIndex();
+    p_str->createIndex();
+    p_bool_0->createIndex();
+    p_bool_1->createIndex();
+    p_int->createIndex();
+    p_uint->createIndex();
     
-    bean1->setProperty("double_p", 1.0);
-    bean1->setProperty("str_p", "hello");
-    bean1->setProperty("bool_p0", false);
-    bean1->setProperty("bool_p1", true);
-    bean1->setProperty("int_p", 1);
-    bean1->setProperty("uint_p", 2U);
+    bean1->setProperty(p_double, 1.0);
+    bean1->setProperty(p_str, "hello");
+    bean1->setProperty(p_bool_0, false);
+    bean1->setProperty(p_bool_1, true);
+    bean1->setProperty(p_int, 1);
+    bean1->setProperty(p_uint, 2U);
 
-   world.findEqual("double_p", 1.0, beans);
+   world.findEqual(p_double, 1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("double_p") == 1.0);
+        EXPECT_TRUE(bean->getProperty(p_double) == 1.0);
     }
 
-    world.findEqual("bool_p0", false, beans);
+    world.findEqual(p_bool_0, false, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("bool_p0") == false);
+        EXPECT_TRUE(bean->getProperty(p_bool_0) == false);
     }
 
-    world.findEqual("bool_p1", true, beans);
+    world.findEqual(p_bool_1, true, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("bool_p1") == true);
+        EXPECT_TRUE(bean->getProperty(p_bool_1) == true);
     }
 
-    world.findEqual("str_p", "hello", beans);
+    world.findEqual(p_str, "hello", beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("str_p") == "hello");
+        EXPECT_TRUE(bean->getProperty(p_str) == "hello");
     }
 
-   world.findEqual("int_p", (int_t)1, beans);
+   world.findEqual(p_int, (int_t)1, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("int_p") == 1);
+        EXPECT_TRUE(bean->getProperty(p_int) == 1);
     }
 
-    world.findEqual("uint_p", (uint_t)2U, beans);
+    world.findEqual(p_uint, (uint_t)2U, beans);
     EXPECT_TRUE(beans.size() == 2);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("uint_p") == 2U);
+        EXPECT_TRUE(bean->getProperty(p_uint) == 2U);
     }
 
     ///////////////////////////////////////////////////////
     //remove property after createIndex()
     ///////////////////////////////////////////////////////
-    double_p_property->createIndex();
-    str_p_property->createIndex();
-    bool_p0_property->createIndex();
-    int_p_property->createIndex();
-    uint_p_property->createIndex();
+    p_double->createIndex();
+    p_str->createIndex();
+    p_bool_0->createIndex();
+    p_int->createIndex();
+    p_uint->createIndex();
 
-    bean1->removeProperty("double_p");
-    world.findEqual("double_p", 1.0, beans);
+    bean1->removeProperty(p_double);
+    world.findEqual(p_double, 1.0, beans);
    EXPECT_TRUE(beans.size() == 1);
     for (auto& bean : beans)
     {
-        EXPECT_TRUE(bean->getProperty("double_p") == 1.0);
+        EXPECT_TRUE(bean->getProperty(p_double) == 1.0);
     }
 
     ///////////////////////////////////////////////////////
     //remove bean after createIndex()
     ///////////////////////////////////////////////////////
     world.removeBean(bean2->getId());
-    world.findEqual("double_p", 1.0, beans);
+    world.findEqual(p_double, 1.0, beans);
    EXPECT_TRUE(beans.size() == 0);
 
 }

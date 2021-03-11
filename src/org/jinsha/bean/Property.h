@@ -115,7 +115,6 @@ private:
         m_world_(world), m_name_(name), 
         m_propertyType_(type), m_valueType_(valueType), 
         m_indexed_(needIndex) {};
-    // Property(const char* name) : m_name_(name) {};
     virtual ~Property();
 
 private:
@@ -134,7 +133,7 @@ private:
 private:
     BeanWorld* m_world_;
     std::string m_name_;
-    pidType m_id_ = -1;
+    int m_id_ = -1;
     Type m_propertyType_;
     ValueType m_valueType_ ;
     unsigned int m_refCount_ = 0;

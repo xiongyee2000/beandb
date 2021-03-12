@@ -175,7 +175,7 @@ public:
      *                   -4: if the array property is not a member of this bean
      *                   -5: if the index is invalid
      */
-    int setArrayProperty(Property* property, Json::Value::ArrayIndex index,
+    int setProperty(Property* property, Json::Value::ArrayIndex index,
         const Json::Value& value);
 
     //  /**
@@ -352,13 +352,15 @@ private:
 
     bool doHasProperty(const Property* property, Property::Type type) const;
 
-    Json::Value::ArrayIndex getArrayMemberSizeCommon_(const Property* property, 
+    Json::Value::ArrayIndex 
+    getArrayMemberSizeCommon_(const Property* property, 
         bool isProperty_ = true) const;
 
     const Json::Value& getMemberRef(const Property* property);
+    void setPropertyBase_(Property* property, 
+        const Json::Value& oldValue,  const Json::Value&  newValue);
 
-    // void swap(Json::Value &other);
-
+private:
     Json::Value m_propertyValues_;
     BeanWorld* m_world_;
 

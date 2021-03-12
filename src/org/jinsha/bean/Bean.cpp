@@ -77,10 +77,48 @@ int Bean::setProperty(Property* property,  const Json::Value& value)
     if (property == nullptr) return -2;
     if (property->getType() != Property::PrimaryType) return -2;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
-    m_world_->setProperty(this, property, value);
+    const Json::Value &oldValue = getMemberRef(property);
+    setPropertyBase_(property,  oldValue, value);
     return 0;
 }
 
+
+void Bean::setPropertyBase_(Property* property, 
+    const Json::Value& oldValue, const Json::Value&  newValue)
+{
+    if (newValue == oldValue) return;
+    const auto& pname = property->getName();
+    if (oldValue.isNull())
+    { 
+        //no old value, need to increment ref. count
+        // property->m_refCount_++;
+        if (property->getType() != Property::ArrayPrimaryType && 
+            property->getType() != Property::ArrayRelationType)
+            property->addBean(this);
+    }
+    else
+    {
+        //todo: do not index array property/relation for now
+        // if (property->indexed())
+        if (property->getType() != Property::ArrayPrimaryType && 
+            property->getType() != Property::ArrayRelationType && 
+             property->indexed())
+            //remove index for previous value
+            property->removeIndex(this, oldValue);
+    }
+
+    //set value for json object
+    Json::Value& oldValue_ = oldValue.isNull() ? 
+        m_propertyValues_[pname]  : const_cast<Json::Value&>(oldValue);
+    oldValue_  = newValue;
+
+    //todo: do not index array property/relation for now
+    // if (property->indexed())
+    if (property->getType() != Property::ArrayPrimaryType && 
+        property->getType() != Property::ArrayRelationType && 
+        property->indexed())
+        property->addIndex(this, oldValue_);
+}
 
 
 bool Bean::hasArrayProperty(const Property* property) const
@@ -141,7 +179,7 @@ int Bean::createArrayProperty(Property* property)
 }
 
 
-int Bean::setArrayProperty(Property* property,  
+int Bean::setProperty(Property* property,  
     Json::Value::ArrayIndex index, const Json::Value& value)
 {
     if (value.isNull()) return -1;
@@ -151,8 +189,8 @@ int Bean::setArrayProperty(Property* property,
     if (!hasArrayProperty(property)) return -4;
     const auto& pname = property->getName().c_str();
     if (index >= m_propertyValues_[pname].size()) return -5;
-    // m_propertyValues_[pname][index] = value;
-    m_world_->setArrayProperty(this, property, index, value);
+    const Json::Value &oldValue = getMemberRef(property)[index];
+    setPropertyBase_(property,  oldValue, value);
     return 0;
 }
 
@@ -164,10 +202,12 @@ int Bean::appendProperty(Property* property,  const Json::Value& value)
     if (property->getType() != Property::ArrayPrimaryType) return -2;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
     if (!hasArrayProperty(property)) return -4;
-    const auto& pname = property->getName().c_str();
+    const auto& pname = property->getName();
     auto& arrayValue = m_propertyValues_[pname];
-    arrayValue.append(Json::Value(property->getValueType()));
-    m_world_->setArrayProperty(this, property, arrayValue.size() - 1, value);
+    arrayValue.append(value);
+    //todo: do not index array property/relation for now
+    // if (property->indexed())
+    //     property->addIndex(this, value);
     return 0;
 }
 
@@ -228,7 +268,8 @@ int Bean::setRelation(Property* property, Bean* bean)
     if (bean == nullptr) return -1;
     if (property == nullptr) return -2;
     if (property->getType() != Property::RelationType) return -2;
-    m_world_->setRelation(property, this, bean);
+    const Json::Value &oldValue =  getMemberRef(property);
+    setPropertyBase_(property, oldValue, bean->getId());
     return 0;
 }
 
@@ -254,7 +295,9 @@ int Bean::appendRelation(Property* property,  Bean* bean)
     const auto& pname = property->getName().c_str();
     auto& arrayValue = m_propertyValues_[pname];
     arrayValue.append(bean->getId());
-    m_world_->setArrayRelation(property, arrayValue.size() - 1, this, bean);
+    //todo: do not index array property/relation for now
+    // if (property->indexed())
+    //     property->addIndex(this, value);
     return 0;
 }
 
@@ -268,9 +311,8 @@ int Bean::setRelation(Property* property,
     if (!hasArrayRelation(property)) return -4;
     const auto& pname = property->getName().c_str();
     if (index >= m_propertyValues_[pname].size()) return -5;
-    // Json::Value &oldValue = m_propertyValues_[pname][index];
-    // m_propertyValues_[pname][index] = bean.getId();
-    m_world_->setArrayRelation(property, index, this, bean);
+    const Json::Value &oldValue =  getMemberRef(property)[index];
+    setPropertyBase_(property, oldValue, bean->getId());
     return 0;
 }
 
@@ -278,7 +320,7 @@ int Bean::setRelation(Property* property,
 Json::Value Bean::removeProperty(Property* property)
 {
     if (property == nullptr) return Json::Value();
-    Json::Value& value = const_cast<Json::Value&>(getMemberRef(property));
+    const Json::Value& value = getMemberRef(property);
     if (value.isNull()) return Json::Value();
     property->removeBean(this);
     if (property->indexed())

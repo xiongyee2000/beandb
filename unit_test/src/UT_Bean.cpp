@@ -296,16 +296,16 @@ TEST(Bean, array_property)
     errCode = bean.appendProperty(nullptr, 0);
     EXPECT_TRUE(errCode == -2);
 
-    errCode = bean.setArrayProperty(pArray_1, 0, Value::null);
+    errCode = bean.setProperty(pArray_1, 0, Value::null);
     EXPECT_TRUE(errCode == -1);
-    errCode = bean.setArrayProperty(nullptr, 0, 1);
+    errCode = bean.setProperty(nullptr, 0, 1);
     EXPECT_TRUE(errCode == -2);
 
     property = world.defineArrayProperty("pArray_1", Property::IntType);
     EXPECT_TRUE(property == world.getProperty("pArray_1"));
     errCode = bean.appendProperty(pArray_1, 1);
     EXPECT_TRUE(errCode == -4);
-    errCode = bean.setArrayProperty(pArray_1, 0, 1);
+    errCode = bean.setProperty(pArray_1, 0, 1);
     EXPECT_TRUE(errCode == -4);
 
     //create empty array
@@ -333,14 +333,14 @@ TEST(Bean, array_property)
     EXPECT_TRUE(value == 1);
 
     //setArrayProperty
-    errCode = bean.setArrayProperty(pArray_1, 99, 99);
+    errCode = bean.setProperty(pArray_1, 99, 99);
     EXPECT_TRUE(errCode == -5);
-    errCode = bean.setArrayProperty(pArray_1, 0, 99);
+    errCode = bean.setProperty(pArray_1, 0, 99);
     EXPECT_TRUE(errCode == 0);
     EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 2);
     value = bean.getArrayProperty(pArray_1, 0);
     EXPECT_TRUE(value == 99);
-    errCode = bean.setArrayProperty(pArray_1, 1, 999);
+    errCode = bean.setProperty(pArray_1, 1, 999);
     EXPECT_TRUE(errCode == 0);
     EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 2);
     value = bean.getArrayProperty(pArray_1, 1);

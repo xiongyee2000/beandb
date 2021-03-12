@@ -384,6 +384,7 @@ void test_findHas_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<B
     world.findHas(p_double, beans);
     EXPECT_TRUE(beans.size() == 1);
     world.findHas(p_str, beans);
+    auto s = beans.size();
     EXPECT_TRUE(beans.size() == 1);
     world.findHas(p_bool_0, beans);
     EXPECT_TRUE(beans.size() == 1);

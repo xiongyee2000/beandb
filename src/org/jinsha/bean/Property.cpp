@@ -35,7 +35,14 @@ int Property::createIndex()
     if (m_propertyType_ == ArrayPrimaryType ||
          m_propertyType_ == ArrayRelationType) 
         return -1;
-    m_world_->recreateIndex(this);
+    Bean* bean = nullptr;
+    for (auto& iter : m_beanMap_)
+    {
+        bean = iter.first;
+        auto& value = bean->getMemberRef(this);
+        if (!value.isNull())
+                addIndex(bean, value);
+    }
     m_indexed_ = true;
     return 0;
 }

@@ -236,17 +236,6 @@ private:
     Property* definePropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex = false);
 
-    //todo: move these methods to Bean
-    void setProperty( Bean* bean, Property* property, const Json::Value&  value);
-    void setArrayProperty( Bean* bean, Property* property, Json::Value::ArrayIndex index, const Json::Value&  value);
-    void setPropertyCommon_(Bean* bean, Property* property, Json::Value* oldValue,  const Json::Value&  newValue);
-
-    //todo: move these methods to Bean
-    void setRelation(Property* property, Bean* from, Bean* to);
-    void setArrayRelation(Property* property, Json::Value::ArrayIndex index, Bean* from, Bean* to);
-
-    void recreateIndex(Property* property);
-
     void findCommon_(int opType, const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
 
     oidType generateBeanId();

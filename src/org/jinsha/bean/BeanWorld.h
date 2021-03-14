@@ -145,98 +145,10 @@ public:
     const std::unordered_map<std::string, Property*>& getProperties() const 
      {return m_propertyMap_;};
 
-    /**
-     * Find beans which have the given property/relation.
-     * 
-     * @param property the property/relation
-     * @param beans the results
-     * 
-     */
-    void findHas(const Property* property,  std::list<Bean*>& beans);
-
-    /**
-     * Find beans (as subject) which have given relation (as predicate) 
-     * to the given bean (as object).
-     * 
-     * @param relation the relation property
-     * @param objectId the id of the relation bean
-     * @return a list containing ids of beans
-     * 
-     */
-    std::list<oidType>&&
-    findSubjects(Property* relation, oidType objectId);
-
-    /**
-     * Find beans whose property values are equal to the given one.
-     * 
-     * @param property the property
-     * @param value the value of the property
-     * @param beans the results
-     * 
-     * Notes:
-     * 1. the search is type restricted, i.e. only those beans with the property value
-     *     having the same type will be considered. 
-     */
-    void findEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
-
-    /**
-     * Find beans whose property values are less equal to the given one.
-     * 
-     * @param property the property
-     * @param value the value of the property
-     * @param beans the results
-     * 
-     * Notes:
-     * 1. the search is type restricted, i.e. only those beans with the property value
-     *     having the same type will be considered. 
-     */
-    void findLessEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
-
-    /**
-     * Find beans whose property values are greater equal to the given one.
-     * 
-     * @param property the property
-     * @param value the value of the property
-     * @param beans the results
-     * 
-     * Notes:
-     * 1. the search is type restricted, i.e. only those beans with the property value
-     *     having the same type will be considered. 
-     */
-    void findGreaterEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
-
-    /**
-     * Find beans whose property values are less than the given one.
-     * 
-     * @param property the property
-     * @param value the value of the property
-     * @param beans the results
-     * 
-     * Notes:
-     * 1. the search is type restricted, i.e. only those beans with the property value
-     *     having the same type will be considered. 
-     */
-    void findLessThan(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
-
-    /**
-     * Find beans whose property values are greater than the given one.
-     * 
-     * @param property the property
-     * @param value the value of the property
-     * @param beans the results
-     * 
-     * Notes:
-     * 1. the search is type restricted, i.e. only those beans with the property value
-     *     having the same type will be considered. 
-     */
-    void findGreaterThan(const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
-
 
 private:
     Property* definePropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex = false);
-
-    void findCommon_(int opType, const Property* property,  const Json::Value& value, std::list<Bean*>& beans);
 
     oidType generateBeanId();
 

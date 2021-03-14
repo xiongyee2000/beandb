@@ -161,66 +161,6 @@ Property* BeanWorld::getProperty(const char* name)
 }
 
 
-void BeanWorld::findHas(const Property* property,  std::list<Bean*>& beans)
-{
-    beans.clear();
-    if (property == nullptr) return;
-    property->findHas(beans);
-}
-
-
-std::list<oidType>&& BeanWorld::findSubjects(Property* relation, oidType objectId)
-{
-    if (relation != nullptr) 
-        return std::move(relation->findSubjects(objectId));
-    else
-        return std::move(std::list<oidType>());
-}
-
-
-void BeanWorld::findEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
-{
-    findCommon_(op_eq, property, value, beans);
-}
-
-
-void BeanWorld::findLessEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
-{
-    findCommon_(op_le, property, value, beans);
-}
-
-
-void BeanWorld::findGreaterEqual(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
-{
-    findCommon_(op_ge, property, value, beans);
-}
-
-
-void BeanWorld::findLessThan(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
-{
-    findCommon_(op_lt, property, value, beans);
-}
-
-
-void BeanWorld::findGreaterThan(const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
-{
-    findCommon_(op_gt, property, value, beans);
-}
-
-
-void BeanWorld::findCommon_(int opType, const Property* property,  const Json::Value& value, std::list<Bean*>& beans)
-{
-    beans.clear();
-    if ((value.isNull() && opType != op_has) || value.isArray() || value.isObject()) return;
-    if (property == nullptr) return;
-    if (property->getValueType() != (Property::ValueType)value.type()) return;
-    //todo: search on array not supported yet
-    if (property->getType() == Property::ArrayPrimaryType || 
-        property->getType() == Property::ArrayRelationType) return; 
-
-        property->findCommon_(opType, value, beans);
-}
-
 
 oidType BeanWorld::generateBeanId()
 {

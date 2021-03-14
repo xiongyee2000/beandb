@@ -2,7 +2,7 @@
 #include <wchar.h>
 #include "./Property.h"
 #include "./Bean.h"
-#include "./BeanWorld.h"
+#include "./Property.h"
 #include "./internal_common.hxx"
 
 using namespace Json;
@@ -195,6 +195,36 @@ bool Property::removeIndex(Bean* bean, const Json::Value& value)
 }
 
 
+void Property::findEqual(const Json::Value& value, std::list<Bean*>& beans) const
+{
+    findCommon_(op_eq, value, beans);
+}
+
+
+void Property::findLessEqual(const Json::Value& value, std::list<Bean*>& beans) const
+{
+    findCommon_(op_le, value, beans);
+}
+
+
+void Property::findGreaterEqual(const Json::Value& value, std::list<Bean*>& beans) const
+{
+    findCommon_(op_ge, value, beans);
+}
+
+
+void Property::findLessThan(const Json::Value& value, std::list<Bean*>& beans) const
+{
+    findCommon_(op_lt, value, beans);
+}
+
+
+void Property::findGreaterThan(const Json::Value& value, std::list<Bean*>& beans) const
+{
+    findCommon_(op_gt, value, beans);
+}
+
+
 void Property::findHas(std::list<Bean*>& beans) const
 {
     beans.clear();
@@ -245,7 +275,7 @@ void Property::findHas(std::list<Bean*>& beans) const
 }
 
 
-std::list<oidType>&& Property::findSubjects(oidType objectId)
+std::list<oidType>&& Property::findSubjects(oidType objectId) const
 {
     std::list<oidType>&& beans = std::list<oidType>();
     if (m_propertyType_ == RelationType)
@@ -288,6 +318,13 @@ std::list<oidType>&& Property::findSubjects(oidType objectId)
 
 void Property::findCommon_(int opType, const Json::Value& value, std::list<Bean*>& beans) const
 {  
+    beans.clear();
+    if ((value.isNull() && opType != op_has) || value.isArray() || value.isObject()) return;
+    if (getValueType() != (Property::ValueType)value.type()) return;
+    //todo: search on array not supported yet
+    if (getType() == Property::ArrayPrimaryType || 
+        getType() == Property::ArrayRelationType) return; 
+
     if (m_indexed_)
     {     
         switch (value.type()) {

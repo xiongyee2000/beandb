@@ -108,6 +108,86 @@ public:
      */
     bool indexed() const {return m_indexed_;};
 
+    /**
+     * Find beans which have the given property/relation.
+     * 
+     * @param beans the results
+     * 
+     */
+    void findHas(std::list<Bean*>& beans) const;
+
+    /**
+     * Find beans (as subject) which have given relation (as predicate) 
+     * to the given bean (as object).
+     * 
+     * @param objectId the id of the relation bean
+     * @return a list containing ids of beans
+     * 
+     */
+    std::list<oidType>&&
+    findSubjects(oidType objectId) const;
+
+    /**
+     * Find beans whose property values are equal to the given one.
+     * 
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
+    void findEqual(const Json::Value& value, std::list<Bean*>& beans) const;
+
+    /**
+     * Find beans whose property values are less equal to the given one.
+     * 
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
+    void findLessEqual(const Json::Value& value, std::list<Bean*>& beans) const;
+
+    /**
+     * Find beans whose property values are greater equal to the given one.
+     * 
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
+    void findGreaterEqual(const Json::Value& value, std::list<Bean*>& beans) const;
+
+    /**
+     * Find beans whose property values are less than the given one.
+     * 
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
+    void findLessThan(const Json::Value& value, std::list<Bean*>& beans) const;
+
+    /**
+     * Find beans whose property values are greater than the given one.
+     * 
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
+    void findGreaterThan(const Json::Value& value, std::list<Bean*>& beans) const;
+
+
 private:
     Property(BeanWorld* world, const char* name, 
         Type type, ValueType valueType, 
@@ -123,9 +203,6 @@ private:
 
     void addIndex(Bean* bean, const Json::Value& value);
     bool removeIndex(Bean* bean, const Json::Value& value);
-
-    void findHas(std::list<Bean*>& beans) const;
-    std::list<oidType>&& findSubjects(oidType objectId);
 
     void findCommon_(int type, const Json::Value& value, std::list<Bean*>& beans) const; 
     void trivialFind(int opType,  const Json::Value& value, std::list<Bean*>& beans) const;

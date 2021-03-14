@@ -49,6 +49,7 @@ void init_world(BeanWorld& world, bool needIndex)
         p1->createIndex();
         p2->createIndex();
         pArray_1->createIndex();
+        r1->createIndex();
         rArray_1->createIndex();
     }
 }

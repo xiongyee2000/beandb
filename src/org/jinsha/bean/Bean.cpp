@@ -77,27 +77,29 @@ int Bean::setProperty(Property* property,  const Json::Value& value)
     if (property == nullptr) return -2;
     if (property->getType() != Property::PrimaryType) return -2;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
-    const Json::Value &oldValue = getMemberRef(property);
+    Json::Value *oldValue = getMemberRef(property);
     setPropertyBase_(property,  oldValue, value);
     return 0;
 }
 
 
 void Bean::setPropertyBase_(Property* property, 
-    const Json::Value& oldValue, const Json::Value&  newValue)
+    Json::Value *oldValue, const Json::Value&  newValue)
 {
-    if (newValue == oldValue) return;
     const auto& pname = property->getName();
-    if (oldValue.isNull())
-    { 
+    if (oldValue == nullptr)
+    {  //property has not been set before
+        //set the property (regardless of value)
+        oldValue = &m_json_[pname];
         //no old value, need to increment ref. count
         // property->m_refCount_++;
         if (property->getType() != Property::ArrayPrimaryType && 
             property->getType() != Property::ArrayRelationType)
-            property->addBean(this);
+            property->addSubject(m_id_);
     }
     else
     {
+        if (*oldValue == newValue) return; 
         //todo: do not index array property/relation for now
         // if (property->indexed())
         if (property->getType() != Property::ArrayPrimaryType && 
@@ -108,16 +110,14 @@ void Bean::setPropertyBase_(Property* property,
     }
 
     //set value for json object
-    Json::Value& oldValue_ = oldValue.isNull() ? 
-        m_json_[pname]  : const_cast<Json::Value&>(oldValue);
-    oldValue_  = newValue;
+    *oldValue  = newValue;
 
     //todo: do not index array property/relation for now
     // if (property->indexed())
     if (property->getType() != Property::ArrayPrimaryType && 
         property->getType() != Property::ArrayRelationType && 
         property->indexed())
-        property->addIndex(this, oldValue_);
+        property->addIndex(this, *oldValue);
 }
 
 
@@ -174,7 +174,7 @@ int Bean::createArrayProperty(Property* property)
     if (isMember(property)) return 0;
     const char* pname = property->getName().c_str();
     m_json_[pname] = Json::Value(Json::arrayValue);
-    property->addBean(this);
+    property->addSubject(m_id_);
     return 0;
 }
 
@@ -186,10 +186,11 @@ int Bean::setProperty(Property* property,
     if (property == nullptr) return -2;
     if (property->getType() != Property::ArrayPrimaryType) return -2;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
-    if (!hasArrayProperty(property)) return -4;
     const auto& pname = property->getName().c_str();
-    if (index >= m_json_[pname].size()) return -5;
-    const Json::Value &oldValue = getMemberRef(property)[index];
+    if (!m_json_.isMember(pname)) return -4;
+    auto& array = m_json_[pname]; 
+    if (index >= array.size()) return -5;
+    Json::Value *oldValue = &array[index];
     setPropertyBase_(property,  oldValue, value);
     return 0;
 }
@@ -268,8 +269,9 @@ int Bean::setRelation(Property* property, Bean* bean)
     if (bean == nullptr) return -1;
     if (property == nullptr) return -2;
     if (property->getType() != Property::RelationType) return -2;
-    const Json::Value &oldValue =  getMemberRef(property);
+    Json::Value *oldValue =  getMemberRef(property);
     setPropertyBase_(property, oldValue, bean->getId());
+    property->addObject(bean->getId());
     return 0;
 }
 
@@ -281,7 +283,7 @@ int Bean::createArrayRelation(Property* property)
     if (hasArrayRelation(property)) return 0;
     const char* pname = property->getName().c_str();
     m_json_[pname] = Json::Value(Json::arrayValue);
-    property->addBean(this);
+    property->addSubject(m_id_);
     return 0;
 }
 
@@ -295,6 +297,7 @@ int Bean::appendRelation(Property* property,  Bean* bean)
     const auto& pname = property->getName().c_str();
     auto& arrayValue = m_json_[pname];
     arrayValue.append(bean->getId());
+    property->addObject(bean->getId());
     //todo: do not index array property/relation for now
     // if (property->indexed())
     //     property->addIndex(this, value);
@@ -308,11 +311,13 @@ int Bean::setRelation(Property* property,
     if (bean == nullptr) return -1;
     if (property == nullptr) return -2;
     if (property->getType() != Property::ArrayRelationType) return -2;
-    if (!hasArrayRelation(property)) return -4;
     const auto& pname = property->getName().c_str();
-    if (index >= m_json_[pname].size()) return -5;
-    const Json::Value &oldValue =  getMemberRef(property)[index];
+    if (!m_json_.isMember(pname)) return -4;
+    auto& array = m_json_[pname]; 
+    if (index >= array.size()) return -5;
+    Json::Value *oldValue = &array[index];
     setPropertyBase_(property, oldValue, bean->getId());
+    property->addObject(bean->getId());
     return 0;
 }
 
@@ -320,15 +325,15 @@ int Bean::setRelation(Property* property,
 Json::Value Bean::removeProperty(Property* property)
 {
     if (property == nullptr) return Json::Value();
-    const Json::Value& value = getMemberRef(property);
-    if (value.isNull()) return Json::Value();
-    property->removeBean(this);
+    Json::Value* value = getMemberRef(property);
+    if (value == nullptr) return Json::Value();
+    property->removeSubject(m_id_);
     if (property->indexed())
     { //remove index first
         if (property->getType() == Property::ArrayPrimaryType ||
             property->getType() == Property::ArrayRelationType) 
         {
-            auto& array = value;
+            Json::Value& array = *value;
             for (Json::ArrayIndex i = 0; i< array.size(); i++)
             {
                 property->removeIndex(this, array[i]);
@@ -336,13 +341,29 @@ Json::Value Bean::removeProperty(Property* property)
         }
         else
         {
-            property->removeIndex(this, value);
+            property->removeIndex(this, *value);
         }
     }
 
+    const auto& pname = property->getName();
+
+    //remove object record if the property is relation
+    if (property->getType() == Property::RelationType)
+    {
+            property->removeObject(m_json_[pname].asUInt64());
+    }
+    else if (property->getType() == Property::ArrayRelationType)
+    {
+        auto& array = m_json_[pname];
+        for (Json::ArrayIndex index = 0; index < array.size(); index++)
+        {
+            property->removeObject(array[index].asUInt64());
+        }
+    }
+    
     //remove member of json object
     return this->m_json_.
-        removeMember(property->getName().c_str());
+        removeMember(pname);
 }
 
 
@@ -352,14 +373,10 @@ void Bean::removeRelation( Property* property)
 }
 
 
-const Json::Value& Bean::getMemberRef(const Property* property)
+Json::Value* Bean::getMemberRef(const Property* property)
 {
-    // return (isMember(key)) ? m_propertyValues_[key] :
-    // Json::Value::null;
-    const char* pname = property->getName().c_str();
-    if (m_json_.isMember(pname))
-        return m_json_[pname];
-    return Json::Value::null;
+    const auto& pname = property->getName();
+    return (m_json_.isMember(pname)) ? &m_json_[pname] : nullptr;
 }
 
 

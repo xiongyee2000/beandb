@@ -2,7 +2,7 @@
 #include <wchar.h>
 #include "./Property.h"
 #include "./Bean.h"
-#include "./Property.h"
+#include "./BeanWorld.h"
 #include "./internal_common.hxx"
 
 using namespace Json;
@@ -12,7 +12,7 @@ namespace jinsha {
 namespace bean {
 
 template<typename ValueT, typename MapT>
-static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std::list<Bean*>& beans);
+static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std::list<oidType>& beans);
 
 template<typename ValueT, typename MapT>
 static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
@@ -20,12 +20,14 @@ static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
 Property::~Property()
 {
     removeIndex();
+    Bean* bean = nullptr;
     //remove property from beans that have this property
-    for (auto& iter : m_beanMap_)
+    for (auto& iter : m_subjectMap_)
     {
-        iter.first->m_json_.removeMember(m_name_.c_str());
+        bean = m_world_->getBean(iter.first);
+        bean->m_json_.removeMember(m_name_.c_str());
     }
-    m_beanMap_.clear();
+    m_subjectMap_.clear();
 }
 
 
@@ -36,12 +38,12 @@ int Property::createIndex()
          m_propertyType_ == ArrayRelationType) 
         return -1;
     Bean* bean = nullptr;
-    for (auto& iter : m_beanMap_)
+    Json::Value* value = nullptr;
+    for (auto& iter : m_subjectMap_)
     {
-        bean = iter.first;
-        auto& value = bean->getMemberRef(this);
-        if (!value.isNull())
-                addIndex(bean, value);
+        bean = m_world_->getBean(iter.first);
+        value = bean->getMemberRef(this);
+        addIndex(bean, *value);
     }
     m_indexed_ = true;
     return 0;
@@ -58,7 +60,7 @@ int Property::removeIndex()
     m_falseValueMap_.clear();
     m_intValueMap_.clear();
     m_uintValueMap_.clear();
-    m_doubleValueMap_.clear();
+    m_realValueMap_.clear();
     m_strValueMap_.clear();
     m_indexed_ = false;
     return 0;
@@ -81,17 +83,75 @@ static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map)
 }
 
 
-void Property::addBean(Bean* bean)
+size_t Property::getNumOfSubjects()
 {
-    m_beanMap_[bean] = 0;
+    return m_subjectMap_.size();
 }
 
 
-void Property::removeBean(Bean* bean)
+size_t Property::getNumOfObjects()
 {
-        auto iter = m_beanMap_.find(bean);
-        if (iter != m_beanMap_.end())
-            m_beanMap_.erase(iter);
+    size_t size = 0;
+    if (m_propertyType_ == PrimaryType)
+    { //todo: do we need to consider PrimaryType?
+        // switch (m_valueType_)
+        // {
+        // case IntType:
+        //     return m_intValueMap_.size();
+        // case UIntType:
+        //     return m_uintValueMap_.size();
+        // case RealType:
+        //     return m_realValueMap_.size();
+        // case BoolType:
+        //     return m_trueValueMap_.size() + m_falseValueMap_.size();
+        // case StringType:
+        //     return m_strValueMap_.size();
+        // default:
+        //     return 0;
+        // }
+    }
+    else if (m_propertyType_ == RelationType || m_propertyType_ == ArrayRelationType)
+    {
+        size = m_objectMap_.size();
+    }
+    
+    return size;
+}
+
+
+void Property::addSubject(oidType id)
+{
+    m_subjectMap_[id] = 0;
+}
+
+
+void Property::removeSubject(oidType id)
+{
+        auto iter = m_subjectMap_.find(id);
+        if (iter != m_subjectMap_.end())
+            m_subjectMap_.erase(iter);
+}
+
+
+void Property::addObject(oidType id)
+{
+    auto iter = m_objectMap_.find(id);
+    if (iter == m_objectMap_.end())
+        m_objectMap_[id] = 1;
+    else
+        iter->second++;
+}
+
+
+void Property::removeObject(oidType id)
+{
+    auto iter = m_objectMap_.find(id);
+    if (iter != m_objectMap_.end())
+    {
+        iter->second--;
+        if (iter->second == 0)
+            m_objectMap_.erase(iter);
+    }
 }
 
 
@@ -115,7 +175,7 @@ void Property::addIndex(Bean* bean, const Json::Value& value)
             m_uintValueMap_.insert(std::pair<int_t, Bean*>((int_t)value.asUInt64(), bean));
             break;
         case Json::realValue:
-            m_doubleValueMap_.insert(std::pair<double, Bean*>(value.asDouble(), bean));
+            m_realValueMap_.insert(std::pair<double, Bean*>(value.asDouble(), bean));
             break;
         case Json::booleanValue:
             if (value == true)
@@ -161,8 +221,8 @@ bool Property::removeIndex(Bean* bean, const Json::Value& value)
                 (bean, (uint_t)value.asUInt64(), m_uintValueMap_);
             break;
         case Json::realValue:
-             rtn = doRemoveIndex<double, decltype(m_doubleValueMap_)>
-                (bean, value.asDouble(), m_doubleValueMap_);
+             rtn = doRemoveIndex<double, decltype(m_realValueMap_)>
+                (bean, value.asDouble(), m_realValueMap_);
             break;
         case Json::stringValue:
              rtn = doRemoveIndex<const char*, decltype(m_strValueMap_)>
@@ -195,43 +255,43 @@ bool Property::removeIndex(Bean* bean, const Json::Value& value)
 }
 
 
-void Property::findEqual(const Json::Value& value, std::list<Bean*>& beans) const
+void Property::findEqual(const Json::Value& value, std::list<oidType>& beans) const
 {
     findCommon_(op_eq, value, beans);
 }
 
 
-void Property::findLessEqual(const Json::Value& value, std::list<Bean*>& beans) const
+void Property::findLessEqual(const Json::Value& value, std::list<oidType>& beans) const
 {
     findCommon_(op_le, value, beans);
 }
 
 
-void Property::findGreaterEqual(const Json::Value& value, std::list<Bean*>& beans) const
+void Property::findGreaterEqual(const Json::Value& value, std::list<oidType>& beans) const
 {
     findCommon_(op_ge, value, beans);
 }
 
 
-void Property::findLessThan(const Json::Value& value, std::list<Bean*>& beans) const
+void Property::findLessThan(const Json::Value& value, std::list<oidType>& beans) const
 {
     findCommon_(op_lt, value, beans);
 }
 
 
-void Property::findGreaterThan(const Json::Value& value, std::list<Bean*>& beans) const
+void Property::findGreaterThan(const Json::Value& value, std::list<oidType>& beans) const
 {
     findCommon_(op_gt, value, beans);
 }
 
 
-void Property::findHas(std::list<Bean*>& beans) const
+void Property::getSubjects(std::list<oidType>& beans) const
 {
     beans.clear();
     if (m_propertyType_ == ArrayPrimaryType || 
         m_propertyType_ == ArrayRelationType)
     {
-            for (auto& item : m_beanMap_)
+            for (auto& item : m_subjectMap_)
             {
                 beans.push_back(item.first);
             }
@@ -266,7 +326,7 @@ void Property::findHas(std::list<Bean*>& beans) const
         }
         else
         {
-            for (auto& item : m_beanMap_)
+            for (auto& item : m_subjectMap_)
             {
                 beans.push_back(item.first);
             } 
@@ -275,22 +335,38 @@ void Property::findHas(std::list<Bean*>& beans) const
 }
 
 
-std::list<oidType>&& Property::findSubjects(oidType objectId) const
+void Property::getObjects(std::list<oidType>& beans) const
 {
-    std::list<oidType>&& beans = std::list<oidType>();
+    beans.clear();
+    for (auto& item : m_objectMap_)
+    {
+        beans.push_back(item.first);
+    } 
+}
+
+
+void Property::findSubjects(oidType objectId, std::list<oidType>& beans) const
+{
+    Bean* bean = nullptr;
+    Json::Value* value = nullptr;
+    oidType objectId_ = 0;
+
+    beans.clear();
+
     if (m_propertyType_ == RelationType)
     {
         if (m_indexed_)
         {
-            //todo
+            findCommon_(op_eq, objectId, beans);
         }
         else
         {
-            for (auto& item : m_beanMap_)
+            for (auto& item : m_subjectMap_)
             {
-                auto& bean = item.first;
-                const auto& value = bean->getMemberRef(this);
-                oidType objectId_ = value.asUInt64();
+                bean = m_world_->getBean(item.first);
+                if (bean == nullptr) continue;
+                value = bean->getMemberRef(this);
+                objectId_ = value->asUInt64();
                 if (objectId_ == objectId)
                     beans.push_back(bean->getId());
             }
@@ -300,23 +376,23 @@ std::list<oidType>&& Property::findSubjects(oidType objectId) const
     {
         //todo: currently just search all beans
         //take use of the index in future
-        for (auto& item : m_beanMap_)
+        for (auto& item : m_subjectMap_)
         {
-            auto& bean = item.first;
-            const auto& value = bean->getMemberRef(this);
-            for (Json::ArrayIndex index = 0; index < value.size(); index++)
+            bean = m_world_->getBean(item.first);
+            if (bean == nullptr) continue;
+            value = bean->getMemberRef(this);
+            for (Json::ArrayIndex index = 0; index < value->size(); index++)
             {
-                oidType objectId_ = value[index].asUInt64();
+                objectId_ = (*value)[index].asUInt64();
                 if (objectId_ == objectId)
                     beans.push_back(bean->getId());
             }
         }
     }
-    return std::move(beans);
 }
-    
 
-void Property::findCommon_(int opType, const Json::Value& value, std::list<Bean*>& beans) const
+
+void Property::findCommon_(int opType, const Json::Value& value, std::list<oidType>& beans) const
 {  
     beans.clear();
     if ((value.isNull() && opType != op_has) || value.isArray() || value.isObject()) return;
@@ -337,8 +413,8 @@ void Property::findCommon_(int opType, const Json::Value& value, std::list<Bean*
                     (opType, value.asUInt64(), m_uintValueMap_, beans);
                 break;
             case Json::realValue:
-                doFindCommon_<double, decltype(m_doubleValueMap_)>
-                    (opType, value.asDouble(), m_doubleValueMap_, beans);
+                doFindCommon_<double, decltype(m_realValueMap_)>
+                    (opType, value.asDouble(), m_realValueMap_, beans);
                 break;
             case Json::stringValue:
                 doFindCommon_<const char*, decltype(m_strValueMap_)>
@@ -348,21 +424,21 @@ void Property::findCommon_(int opType, const Json::Value& value, std::list<Bean*
                 if (opType == op_has)
                 { //add all beans
                     for (auto& item : m_trueValueMap_)
-                        beans.push_back(item.second);
+                        beans.push_back(item.second->getId());
                     for (auto& item : m_falseValueMap_)
-                        beans.push_back(item.second);
+                        beans.push_back(item.second->getId());
                 }
                 else if (opType == op_eq)
                 {
                     if (value == true)
                     {
                         for (auto& item : m_trueValueMap_)
-                            beans.push_back(item.second);
+                            beans.push_back(item.second->getId());
                     }
                     else
                     {
                         for (auto& item : m_falseValueMap_)
-                            beans.push_back(item.second);
+                            beans.push_back(item.second->getId());
                     }
                 } 
                 else
@@ -384,7 +460,7 @@ void Property::findCommon_(int opType, const Json::Value& value, std::list<Bean*
 
 
 template<typename ValueT, typename MapT>
-static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std::list<Bean*>& beans) 
+static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std::list<oidType>& beans) 
 {
     beans.clear();
     auto lowerBound = map.begin();
@@ -422,17 +498,17 @@ static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std:
             if (keyComparator(iter->first, value) ||
                 keyComparator(value, iter->first) ) 
                 //skip equal ones
-                beans.push_back(iter->second);
+                beans.push_back(iter->second->getId());
         }
         else
         {
-            beans.push_back(iter->second);
+            beans.push_back(iter->second->getId());
         }
     }
 }
 
 
-void Property::trivialFind(int opType,  const Json::Value& value, std::list<Bean*>& beans) const
+void Property::trivialFind(int opType,  const Json::Value& value, std::list<oidType>& beans) const
 {
     beans.clear();
     if (value.isNull() || value.isArray() || value.isObject()) return;
@@ -442,26 +518,28 @@ void Property::trivialFind(int opType,  const Json::Value& value, std::list<Bean
          getType() == Property::ArrayRelationType) return; 
 
     Bean* bean = nullptr;
-    for (auto& item : m_beanMap_)
+    Json::Value* v = nullptr;
+    for (auto& item : m_subjectMap_)
     {
-        bean = item.first;
-        const Json::Value& v = bean->getMemberRef(this);
-        if (v.isNull()) continue; //not found or null
+        bean = m_world_->getBean(item.first);
+        if (bean == nullptr) continue;
+        v = bean->getMemberRef(this);
+        if (v == nullptr) continue; //not found or null
         switch (opType) {
             case op_eq:
-                if (v == value) beans.push_back(bean);
+                if (*v == value) beans.push_back(bean->getId());
                 break;
             case op_le:
-                if (v <= value) beans.push_back(bean);
+                if (*v <= value) beans.push_back(bean->getId());
                 break;
             case op_ge:
-                if (v >= value) beans.push_back(bean);
+                if (*v >= value) beans.push_back(bean->getId());
                 break;
             case op_lt:
-                if (v < value) beans.push_back(bean);
+                if (*v < value) beans.push_back(bean->getId());
                 break;
             case op_gt:
-                if (v > value) beans.push_back(bean);
+                if (*v > value) beans.push_back(bean->getId());
                 break;
             default:
                 break;

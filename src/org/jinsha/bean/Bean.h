@@ -356,9 +356,9 @@ private:
     getArrayMemberSizeCommon_(const Property* property, 
         bool isProperty_ = true) const;
 
-    const Json::Value& getMemberRef(const Property* property);
+    Json::Value* getMemberRef(const Property* property);
     void setPropertyBase_(Property* property, 
-        const Json::Value& oldValue,  const Json::Value&  newValue);
+        Json::Value *oldValue,  const Json::Value&  newValue);
 
 private:
     Json::Value m_json_;

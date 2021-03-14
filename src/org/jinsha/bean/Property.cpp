@@ -23,7 +23,7 @@ Property::~Property()
     //remove property from beans that have this property
     for (auto& iter : m_beanMap_)
     {
-        iter.first->m_propertyValues_.removeMember(m_name_.c_str());
+        iter.first->m_json_.removeMember(m_name_.c_str());
     }
     m_beanMap_.clear();
 }

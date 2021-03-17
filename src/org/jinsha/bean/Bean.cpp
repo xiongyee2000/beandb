@@ -77,7 +77,7 @@ int Bean::setProperty(Property* property,  const Json::Value& value)
     if (property == nullptr) return -2;
     if (property->getType() != Property::PrimaryType) return -2;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
-    Json::Value *oldValue = getMemberRef(property);
+    Json::Value *oldValue = getMemberPtr(property);
     setPropertyBase_(property,  oldValue, value);
     return 0;
 }
@@ -213,50 +213,39 @@ int Bean::appendProperty(Property* property,  const Json::Value& value)
 }
 
 
-int Bean::resizeProperty(Property* property,  Json::Value::ArrayIndex size)
+bool Bean::hasRelation(const Property* relation) const
 {
-    if (property == nullptr) return -1;
-    if (property->getType() != Property::ArrayPrimaryType) return -1;
-    if (!hasArrayProperty(property)) return -1;
-    const auto& pname = property->getName().c_str();
-    m_json_[pname].resize(size);
-    return 0;
+    return doHasProperty(relation, Property::RelationType);
 }
 
 
-bool Bean::hasRelation(const Property* property) const
+bool Bean::hasArrayRelation(const Property* relation) const
 {
-    return doHasProperty(property, Property::RelationType);
+    return doHasProperty(relation, Property::ArrayRelationType);
 }
 
 
-bool Bean::hasArrayRelation(const Property* property) const
+Json::Value::ArrayIndex Bean::getArrayRelationSize(const Property* relation) const
 {
-    return doHasProperty(property, Property::ArrayRelationType);
+    return getArrayMemberSizeCommon_(relation, false);
 }
 
 
-Json::Value::ArrayIndex Bean::getArrayRelationSize(const Property* property) const
+oidType Bean::getRelationBeanId(const Property* relation) const
 {
-    return getArrayMemberSizeCommon_(property, false);
-}
-
-
-oidType Bean::getRelationBeanId(const Property* property) const
-{
-    if (!hasRelation(property)) return 0;
-    auto pname = property->getName().c_str();
+    if (!hasRelation(relation)) return 0;
+    auto pname = relation->getName().c_str();
     auto& value = m_json_[pname];
     return value.asUInt64();
     
 }
 
 
-oidType Bean::getRelationBeanId(const Property* property,  
+oidType Bean::getRelationBeanId(const Property* relation,  
     Json::Value::ArrayIndex index) const
 {
-    if (!hasArrayRelation(property)) return 0;
-    auto pname = property->getName().c_str();
+    if (!hasArrayRelation(relation)) return 0;
+    auto pname = relation->getName().c_str();
     auto& value = m_json_[pname];
     if (!value.isArray()) return 0;
     if (index >= value.size()) return 0;
@@ -264,40 +253,40 @@ oidType Bean::getRelationBeanId(const Property* property,
 }
 
 
-int Bean::setRelation(Property* property, Bean* bean)
+int Bean::setRelation(Property* relation, Bean* bean)
 {
     if (bean == nullptr) return -1;
-    if (property == nullptr) return -2;
-    if (property->getType() != Property::RelationType) return -2;
-    Json::Value *oldValue =  getMemberRef(property);
-    setPropertyBase_(property, oldValue, bean->getId());
-    property->addObject(bean->getId());
+    if (relation == nullptr) return -2;
+    if (relation->getType() != Property::RelationType) return -2;
+    Json::Value *oldValue =  getMemberPtr(relation);
+    setPropertyBase_(relation, oldValue, bean->getId());
+    relation->addObject(bean->getId());
     return 0;
 }
 
 
-int Bean::createArrayRelation(Property* property)
+int Bean::createArrayRelation(Property* relation)
 {
-    if (property == nullptr) return -2;
-    if (property->getType() != Property::ArrayRelationType) return -2;
-    if (hasArrayRelation(property)) return 0;
-    const char* pname = property->getName().c_str();
+    if (relation == nullptr) return -2;
+    if (relation->getType() != Property::ArrayRelationType) return -2;
+    if (hasArrayRelation(relation)) return 0;
+    const char* pname = relation->getName().c_str();
     m_json_[pname] = Json::Value(Json::arrayValue);
-    property->addSubject(m_id_);
+    relation->addSubject(m_id_);
     return 0;
 }
 
 
-int Bean::appendRelation(Property* property,  Bean* bean)
+int Bean::appendRelation(Property* relation,  Bean* bean)
 {
     if (bean == nullptr) return -1;
-    if (property == nullptr) return -2;
-    if (property->getType() != Property::ArrayRelationType) return -2;
-    if (!hasArrayRelation(property)) return -4;
-    const auto& pname = property->getName().c_str();
+    if (relation == nullptr) return -2;
+    if (relation->getType() != Property::ArrayRelationType) return -2;
+    if (!hasArrayRelation(relation)) return -4;
+    const auto& pname = relation->getName().c_str();
     auto& arrayValue = m_json_[pname];
     arrayValue.append(bean->getId());
-    property->addObject(bean->getId());
+    relation->addObject(bean->getId());
     //todo: do not index array property/relation for now
     // if (property->indexed())
     //     property->addIndex(this, value);
@@ -305,19 +294,19 @@ int Bean::appendRelation(Property* property,  Bean* bean)
 }
 
 
-int Bean::setRelation(Property* property,  
+int Bean::setRelation(Property* relation,  
     Json::Value::ArrayIndex index, Bean* bean)
 {
     if (bean == nullptr) return -1;
-    if (property == nullptr) return -2;
-    if (property->getType() != Property::ArrayRelationType) return -2;
-    const auto& pname = property->getName().c_str();
+    if (relation == nullptr) return -2;
+    if (relation->getType() != Property::ArrayRelationType) return -2;
+    const auto& pname = relation->getName().c_str();
     if (!m_json_.isMember(pname)) return -4;
     auto& array = m_json_[pname]; 
     if (index >= array.size()) return -5;
     Json::Value *oldValue = &array[index];
-    setPropertyBase_(property, oldValue, bean->getId());
-    property->addObject(bean->getId());
+    setPropertyBase_(relation, oldValue, bean->getId());
+    relation->addObject(bean->getId());
     return 0;
 }
 
@@ -325,7 +314,7 @@ int Bean::setRelation(Property* property,
 Json::Value Bean::removeProperty(Property* property)
 {
     if (property == nullptr) return Json::Value();
-    Json::Value* value = getMemberRef(property);
+    Json::Value* value = getMemberPtr(property);
     if (value == nullptr) return Json::Value();
     property->removeSubject(m_id_);
     if (property->indexed())
@@ -333,11 +322,12 @@ Json::Value Bean::removeProperty(Property* property)
         if (property->getType() == Property::ArrayPrimaryType ||
             property->getType() == Property::ArrayRelationType) 
         {
-            Json::Value& array = *value;
-            for (Json::ArrayIndex i = 0; i< array.size(); i++)
-            {
-                property->removeIndex(this, array[i]);
-            }
+            //todo: index not supported for array currently
+            // Json::Value& array = *value;
+            // for (Json::ArrayIndex i = 0; i< array.size(); i++)
+            // {
+            //     property->removeIndex(this, array[i]);
+            // }
         }
         else
         {
@@ -367,13 +357,47 @@ Json::Value Bean::removeProperty(Property* property)
 }
 
 
-void Bean::removeRelation( Property* property)
+Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex index)
 {
-    removeProperty(property);
+    Json::Value rtn; //null
+    if (property == nullptr) return rtn;
+    Json::Value* array = getMemberPtr(property);
+    if (array == nullptr) return rtn; 
+    if (!array->isArray()) return rtn; //if property is array, array->isArray() shall be true
+    if (index >= array->size()) return rtn;
+    rtn = (*array)[index];
+
+    //todo: index not supported for array currently
+    // if (property->indexed())
+    // { //remove index first
+    //     property->removeIndex(this, array[index]);
+    // }
+
+    const auto& pname = property->getName();
+
+    //remove object record if the property is array relation
+    if (property->getType() == Property::ArrayRelationType)
+    {
+        property->removeObject(array[index].asUInt64());
+    }
+    
+    //create a new array and replace the old
+    Json::Value newArray(Json::arrayValue);
+    for (Json::ArrayIndex i = 0; i < array->size(); i++)
+        if (i != index) newArray.append((*array)[i]);
+
+    (*array) = newArray;
+    return rtn;
 }
 
 
-Json::Value* Bean::getMemberRef(const Property* property)
+void Bean::removeRelation( Property* relation)
+{
+    removeProperty(relation);
+}
+
+
+Json::Value* Bean::getMemberPtr(const Property* property)
 {
     const auto& pname = property->getName();
     return (m_json_.isMember(pname)) ? &m_json_[pname] : nullptr;

@@ -42,7 +42,7 @@ int Property::createIndex()
     for (auto& iter : m_subjectMap_)
     {
         bean = m_world_->getBean(iter.first);
-        value = bean->getMemberRef(this);
+        value = bean->getMemberPtr(this);
         addIndex(bean, *value);
     }
     m_indexed_ = true;
@@ -365,7 +365,7 @@ void Property::findSubjects(oidType objectId, std::list<oidType>& beans) const
             {
                 bean = m_world_->getBean(item.first);
                 if (bean == nullptr) continue;
-                value = bean->getMemberRef(this);
+                value = bean->getMemberPtr(this);
                 objectId_ = value->asUInt64();
                 if (objectId_ == objectId)
                     beans.push_back(bean->getId());
@@ -380,7 +380,7 @@ void Property::findSubjects(oidType objectId, std::list<oidType>& beans) const
         {
             bean = m_world_->getBean(item.first);
             if (bean == nullptr) continue;
-            value = bean->getMemberRef(this);
+            value = bean->getMemberPtr(this);
             for (Json::ArrayIndex index = 0; index < value->size(); index++)
             {
                 objectId_ = (*value)[index].asUInt64();
@@ -523,7 +523,7 @@ void Property::trivialFind(int opType,  const Json::Value& value, std::list<oidT
     {
         bean = m_world_->getBean(item.first);
         if (bean == nullptr) continue;
-        v = bean->getMemberRef(this);
+        v = bean->getMemberPtr(this);
         if (v == nullptr) continue; //not found or null
         switch (opType) {
             case op_eq:

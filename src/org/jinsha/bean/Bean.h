@@ -190,79 +190,67 @@ public:
     //  */
     // int removeArrayProperty(Property* property, Json::Value::ArrayIndex index); 
 
-     /**
-     * Resize an array property. 
-     * 
-     * @param property the property
-     * @param value value to be added
-     * @return 0 if success, or an error code
-     *                   error code:
-     *                   -1: if property is null
-     *                   -4: if the array property is not a member of this bean
-     */
-    int resizeProperty(Property* property, Json::Value::ArrayIndex size);
-
     /**
      * Check the bean has the given relation.
      * 
-     * @param property the relation property
+     * @param relation the relation
      * @return true if it has such a relation, false otherwise
      * 
      */
-    bool hasRelation(const Property* property) const;
+    bool hasRelation(const Property* relation) const;
 
     /**
      * Check the bean has the array relation.
      * 
-     * @param property the array relation property
+     * @param relation the array relation
      * @return true if it has such an array relation, false otherwise
      * 
      */
-    bool hasArrayRelation(const Property* property) const;
+    bool hasArrayRelation(const Property* relation) const;
 
     /**
      * Get size of an array relation.
      * 
-     * @param property the relation property
+     * @param relation the array relation
      * @return the size
      * 
      * Note:
      * If this bean does not have the named array relation,
      * 0 will be returned;
      */
-    Json::Value::ArrayIndex getArrayRelationSize(const Property* property) const;
+    Json::Value::ArrayIndex getArrayRelationSize(const Property* relation) const;
 
     /**
      * Get relation bean.
      * 
-     * @param property the relation property
+     * @param relation the relation
      * @return the bean id, or 0 if it does not exist.
      * 
      */
-    oidType getRelationBeanId(const Property* property) const;
+    oidType getRelationBeanId(const Property* relation) const;
 
     /**
      * Get relation bean of an array relation at specified index.
      * 
-     * @param property the relation property
+     * @param relation the relation property
      * @param index the index in the array
      * @return the bean id, or 0 if it does not exist.
      * 
      */
-    oidType getRelationBeanId(const Property* property, 
+    oidType getRelationBeanId(const Property* relation, 
         Json::Value::ArrayIndex index) const;
 
     /**
-     * This method is used to set a one-to-one relationship between two beans, e.g.
+     * This method is used to set relation between two beans, e.g.
      * father/mather, etc. 
      * 
-     * @param property the relation property
+     * @param relation the relation
      * @param bean the counter part bean of the relation
      * @return 0 if success, or an error code:
      *                   -1: if bean is null
      *                   -2: if property is null
      */
-    int setRelation(Property* property, Bean* bean);
+    int setRelation(Property* relation, Bean* bean);
    
      /**
      * Create an empty array relation for this bean.
@@ -270,21 +258,21 @@ public:
      * This method must be called before items can be added into 
      * the array relation.
      * 
-     * @param property the array relation property
+     * @param relation the array relation
      * @return 0 if success, or an error code
      *                   error code:
      *                   -2: if property is null
      */
-    int createArrayRelation(Property* property);
+    int createArrayRelation(Property* relation);
 
     /**
-     * This method is used to append an item to a one-to-many relationship.
+     * This method is used to append an item to an array relation.
      * 
      * Notes:
      * - This method will internally add the counter part bean's id to the 
      *    json array property created by setRelation(Property* property).
      * 
-     * @param property the array relation property property
+     * @param relation the array relation
      * @param bean the counter part bean of the relation to be added
      * @return 0 if success, or an error code
      *                   error code:
@@ -292,14 +280,14 @@ public:
      *                   -2: if property is null
      *                   -4: if the array relation is not a member of this bean
      */
-    int appendRelation(Property* property, Bean* bean);
+    int appendRelation(Property* relation, Bean* bean);
  
      /**
      * Set the relation of an array relation at specified index. 
      * 
      * This method must be called after createArrayRelation();
      * 
-     * @param property the array relation property
+     * @param relation the array relation
      * @param index the index in the array
      * @param bean the counter part bean of the relation
      * @return 0 if success, or an error code
@@ -309,24 +297,8 @@ public:
      *                   -4: if the array relation is not a member of this bean
      *                   -5: if the index is invalid
      */
-    int setRelation(Property* property, Json::Value::ArrayIndex index,
+    int setRelation(Property* relation, Json::Value::ArrayIndex index,
         Bean* bean);
-
-    /**
-     * This method is used to add an item to a one-to-many relationship.
-     * 
-     * Notes:
-     * - This method will internally add the counter part bean's id to 
-     *   the json array property created by setRelation(Property* property).
-     * 
-     * @param property the relation property
-     * @param size the size to be resized
-     * @return 0 if success, or an error code
-     *                   error code:
-     *                   -1: if property is null
-     *                   -2: if bean is null
-     */
-    int resizeRelation(Property* property, Json::Value::ArrayIndex size);
 
     /**
      * Remove property from this bean.
@@ -337,12 +309,21 @@ public:
     Json::Value removeProperty( Property* property);
 
     /**
+     * Remove the item at given index from this bean's array property.
+     * 
+     * @param property the array property
+     * @param index the index
+     * @return the removed item as json value
+     */
+    Json::Value removeProperty( Property* property, Json::Value::ArrayIndex index);
+
+    /**
      * Remove relation from this bean.
      * 
-     * @param property the relation property
+     * @param relation the relation
      * @return
      */
-    void removeRelation( Property* property);
+    void removeRelation( Property* relation);
 
 private:
     Bean(BeanWorld* world);
@@ -356,7 +337,7 @@ private:
     getArrayMemberSizeCommon_(const Property* property, 
         bool isProperty_ = true) const;
 
-    Json::Value* getMemberRef(const Property* property);
+    Json::Value* getMemberPtr(const Property* property);
     void setPropertyBase_(Property* property, 
         Json::Value *oldValue,  const Json::Value&  newValue);
 

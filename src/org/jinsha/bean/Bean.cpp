@@ -127,30 +127,11 @@ bool Bean::hasArrayProperty(const Property* property) const
 }
 
 
-Json::Value::ArrayIndex Bean::getArrayPropertySize(const Property* property) const
+Json::Value::ArrayIndex Bean::getArraySize(const Property* property) const
 {
-    return getArrayMemberSizeCommon_(property, true);
-}
-
-
-Json::Value::ArrayIndex Bean::getArrayMemberSizeCommon_(const Property* property, 
-        bool isProperty_) const
-{
-    const char* pname = nullptr;
-    const Json::Value* value = nullptr;
-    if (isProperty_)
-    {
-        if (!hasArrayProperty(property)) return 0;
-        pname = property->getName().c_str();
-        value = &m_json_[pname];
-    }
-    else
-    {
-        if (!hasArrayRelation(property)) return 0;
-        pname = property->getName().c_str();
-        value = &m_json_[pname];
-    }
-    
+    if (property == nullptr) return 0;
+    Json::Value* value = ((Bean*)this)->getMemberPtr(property);
+    if (value == nullptr) return 0;
     if (!value->isArray()) return 0;
     return value->size();
 }
@@ -222,12 +203,6 @@ bool Bean::hasRelation(const Property* relation) const
 bool Bean::hasArrayRelation(const Property* relation) const
 {
     return doHasProperty(relation, Property::ArrayRelationType);
-}
-
-
-Json::Value::ArrayIndex Bean::getArrayRelationSize(const Property* relation) const
-{
-    return getArrayMemberSizeCommon_(relation, false);
 }
 
 
@@ -361,11 +336,12 @@ Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex ind
 {
     Json::Value rtn; //null
     if (property == nullptr) return rtn;
-    Json::Value* array = getMemberPtr(property);
-    if (array == nullptr) return rtn; 
-    if (!array->isArray()) return rtn; //if property is array, array->isArray() shall be true
-    if (index >= array->size()) return rtn;
-    rtn = (*array)[index];
+    Json::Value* arrayPtr = getMemberPtr(property);
+    if (arrayPtr == nullptr) return rtn; 
+    Json::Value& array = *arrayPtr;
+    if (!array.isArray()) return rtn; //if property is array, array.isArray() shall be true
+    if (index >= array.size()) return rtn;
+    rtn = array[index];
 
     //todo: index not supported for array currently
     // if (property->indexed())
@@ -383,18 +359,18 @@ Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex ind
     
     //create a new array and replace the old
     Json::Value newArray(Json::arrayValue);
-    for (Json::ArrayIndex i = 0; i < array->size(); i++)
-        if (i != index) newArray.append((*array)[i]);
+    for (Json::ArrayIndex i = 0; i < array.size(); i++)
+        if (i != index) newArray.append(array[i]);
 
-    (*array) = newArray;
+    array = newArray;
     return rtn;
 }
 
 
-void Bean::removeRelation( Property* relation)
-{
-    removeProperty(relation);
-}
+// void Bean::removeRelation( Property* relation)
+// {
+//     removeProperty(relation);
+// }
 
 
 Json::Value* Bean::getMemberPtr(const Property* property)

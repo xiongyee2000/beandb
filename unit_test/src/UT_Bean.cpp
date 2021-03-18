@@ -146,18 +146,18 @@ TEST(Bean, create_has_remove)
     EXPECT_TRUE(bean1->hasArrayProperty(p1) == false);
 
     auto memberSize = bean1->getMemberNames().size();
-    bean1->removeRelation(nullptr);
+    bean1->removeProperty(nullptr);
     EXPECT_TRUE(memberSize == bean1->getMemberNames().size());
 
     bean1->setRelation(r1, bean2);
     EXPECT_TRUE(bean1->hasRelation(r1) == true);
-    bean1->removeRelation(r1);
+    bean1->removeProperty(r1);
     EXPECT_TRUE(bean1->hasRelation(r1) == false);
 
     bean1->createArrayRelation(rArray_1);
     bean1->appendRelation(rArray_1, bean2);
     EXPECT_TRUE(bean1->hasArrayRelation(rArray_1) == true);
-    bean1->removeRelation(rArray_1);
+    bean1->removeProperty(rArray_1);
     EXPECT_TRUE(bean1->hasArrayRelation(rArray_1) == false);
 }
 
@@ -287,7 +287,7 @@ TEST(Bean, array_property)
 
     Bean &bean = *world.createBean();
     EXPECT_TRUE(bean.hasArrayProperty(pArray_1) == false);
-    EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 0);
+    EXPECT_TRUE(bean.getArraySize(pArray_1) == 0);
     Value value2 = bean.getArrayProperty(pArray_1, 0);
     EXPECT_TRUE(value2.isNull());
 
@@ -312,7 +312,7 @@ TEST(Bean, array_property)
     errCode = bean.createArrayProperty(pArray_1);
     EXPECT_TRUE(errCode == 0);
     EXPECT_TRUE(bean.hasArrayProperty(pArray_1) == true);
-    EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 0);
+    EXPECT_TRUE(bean.getArraySize(pArray_1) == 0);
     value = bean.getArrayProperty(pArray_1, 0);
     EXPECT_TRUE(value.isNull());
 
@@ -321,59 +321,47 @@ TEST(Bean, array_property)
     EXPECT_TRUE(errCode == -3);
     errCode = bean.appendProperty(pArray_1, 0);
     EXPECT_TRUE(errCode == 0);
-    EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 1);
+    EXPECT_TRUE(bean.getArraySize(pArray_1) == 1);
     value = bean.getArrayProperty(pArray_1, 0);
     EXPECT_TRUE(value == 0);
     value = bean.getArrayProperty(pArray_1, 1);
     EXPECT_TRUE(value.isNull());
     errCode = bean.appendProperty(pArray_1, 1);
     EXPECT_TRUE(errCode == 0);
-    EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 2);
+    EXPECT_TRUE(bean.getArraySize(pArray_1) == 2);
     value = bean.getArrayProperty(pArray_1, 1);
     EXPECT_TRUE(value == 1);
 
-    //setArrayProperty
+    //setProperty()
     errCode = bean.setProperty(pArray_1, 99, 99);
     EXPECT_TRUE(errCode == -5);
     errCode = bean.setProperty(pArray_1, 0, 99);
     EXPECT_TRUE(errCode == 0);
-    EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 2);
+    EXPECT_TRUE(bean.getArraySize(pArray_1) == 2);
     value = bean.getArrayProperty(pArray_1, 0);
     EXPECT_TRUE(value == 99);
     errCode = bean.setProperty(pArray_1, 1, 999);
     EXPECT_TRUE(errCode == 0);
-    EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 2);
+    EXPECT_TRUE(bean.getArraySize(pArray_1) == 2);
     value = bean.getArrayProperty(pArray_1, 1);
     EXPECT_TRUE(value == 999);
 
-    // //resize
-    // result = bean.resizeProperty(nullptr, 1);
-    // EXPECT_TRUE(result == -1);
-    // result = bean.resizeProperty("", 1);
-    // EXPECT_TRUE(result == -1);
-    // result = bean.resizeProperty("a", 1);
-    // EXPECT_TRUE(result == -1);
-    // result = bean.resizeProperty(pArray_1, 1);
-    // EXPECT_TRUE(result == 0);
-    // EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 1);
-    // result = bean.resizeProperty(pArray_1, 1);
-    // EXPECT_TRUE(result == 0);
-    // EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 1);
-    // value = bean.getArrayProperty(pArray_1, 0);
-    // EXPECT_TRUE(value == 99);
-    // result = bean.resizeProperty(pArray_1, 2);
-    // EXPECT_TRUE(result == 0);
-    // EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 2);
-    // value = bean.getArrayProperty(pArray_1, 0);
-    // EXPECT_TRUE(value == 99);
-    // value = bean.getArrayProperty(pArray_1, 1);
-    // EXPECT_TRUE(value.isNull());
-    // result = bean.resizeProperty(pArray_1, 1);
-    // EXPECT_TRUE(result == 0);
-    // EXPECT_TRUE(bean.getArrayPropertySize(pArray_1) == 1);
-    // value = bean.getArrayProperty(pArray_1, 0);
-    // EXPECT_TRUE(value == 99);
-
+    //removeProperty()
+    value = bean.removeProperty(nullptr, 0);
+    EXPECT_TRUE(value.isNull());
+    value = bean.removeProperty(p1, 0);
+    EXPECT_TRUE(value.isNull());
+    bean.setProperty(p1, 1);
+    value = bean.removeProperty(p1, 0);
+    EXPECT_TRUE(value.isNull());
+    value = bean.removeProperty(pArray_1, 3);
+    EXPECT_TRUE(value.isNull());
+    value = bean.removeProperty(pArray_1, 0);
+    EXPECT_TRUE(value == 99);
+    EXPECT_TRUE(bean.getArraySize(pArray_1) == 1);
+    value = bean.removeProperty(pArray_1, 0);
+    EXPECT_TRUE(value == 999);
+    EXPECT_TRUE(bean.getArraySize(pArray_1) == 0);
 }
 
 TEST(Bean, relation)
@@ -449,11 +437,11 @@ TEST(Bean, array_relation)
     EXPECT_TRUE(errCode == -2);
     errCode = bean1->createArrayRelation(rArray_1);
     EXPECT_TRUE(errCode == 0);
-    EXPECT_TRUE(bean1->getArrayRelationSize(rArray_1) == 0);
+    EXPECT_TRUE(bean1->getArraySize(rArray_1) == 0);
 
     errCode = bean1->appendRelation(rArray_1, bean2);
     EXPECT_TRUE(errCode == 0);
-    EXPECT_TRUE(bean1->getArrayRelationSize(rArray_1) == 1);
+    EXPECT_TRUE(bean1->getArraySize(rArray_1) == 1);
 
     errCode = bean1->setRelation(rArray_1, 1, bean2);
     EXPECT_TRUE(errCode == -5);
@@ -463,14 +451,36 @@ TEST(Bean, array_relation)
     errCode = bean1->setRelation(rArray_1, 0, bean3);
     EXPECT_TRUE(errCode == 0);
     EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == bean3->getId());
-
     bean1->setProperty(p1, 1);
     EXPECT_TRUE(!bean1->getRelationBeanId(p1, 0));
     EXPECT_TRUE(!bean1->getRelationBeanId(rArray_1, 1));
 
-    //getArrayRelationSize()
-    EXPECT_TRUE(bean1->getArrayRelationSize(nullptr) == 0);
-    EXPECT_TRUE(bean1->getArrayRelationSize(p1) == 0);
+    //getArraySize()
+    EXPECT_TRUE(bean1->getArraySize(nullptr) == 0);
+    EXPECT_TRUE(bean1->getArraySize(p1) == 0);
+
+    //removeProperty()
+    value = bean3->removeProperty(nullptr, 0);
+    EXPECT_TRUE(value.isNull());
+    value = bean3->removeProperty(p1, 0);
+    EXPECT_TRUE(value.isNull());
+    bean3->setProperty(p1, 1);
+    value = bean3->removeProperty(p1, 0);
+    EXPECT_TRUE(value.isNull());
+    value = bean3->removeProperty(pArray_1, 3);
+    EXPECT_TRUE(value.isNull());
+
+    errCode = bean3->createArrayRelation(rArray_1);
+    errCode = bean3->appendRelation(rArray_1, bean1);
+    errCode = bean3->appendRelation(rArray_1, bean2);
+    EXPECT_TRUE(bean3->getArraySize(rArray_1) == 2);
+
+    value = bean3->removeProperty(rArray_1, 0);
+    EXPECT_TRUE(value == bean1->getId());
+    EXPECT_TRUE(bean3->getArraySize(rArray_1) == 1);
+    value = bean3->removeProperty(rArray_1, 0);
+    EXPECT_TRUE(value == bean2->getId());
+    EXPECT_TRUE(bean3->getArraySize(rArray_1) == 0);
 }
 
 

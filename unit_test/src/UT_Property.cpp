@@ -159,7 +159,7 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     bean2.removeProperty(p_uint);
     bean2.removeProperty(p_int64);
     bean2.removeProperty(p_uint64);
-    bean2.removeRelation(r1);
+    bean2.removeProperty(r1);
 
     p_int->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
@@ -212,7 +212,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
     bean1.createArrayRelation(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    bean1.removeRelation(rArray_1);
+    bean1.removeProperty(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
     bean1.createArrayRelation(rArray_1);
@@ -308,11 +308,11 @@ void test_findSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, Bean& 
     r1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 2);
 
-    bean1.removeRelation(r1);
+    bean1.removeProperty(r1);
     r1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 1);
 
-    bean2.removeRelation(r1);
+    bean2.removeProperty(r1);
     r1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 0);
 
@@ -334,10 +334,10 @@ void test_findSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, Bean& 
     rArray_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 4);
 
-    bean1.removeRelation(rArray_1);
+    bean1.removeProperty(rArray_1);
     rArray_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 2);
-    bean2.removeRelation(rArray_1);
+    bean2.removeProperty(rArray_1);
     rArray_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 0);
 }
@@ -407,11 +407,11 @@ void test_findObjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, Bean& b
     r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 1);
 
-    bean1.removeRelation(r1);
+    bean1.removeProperty(r1);
     r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 1);
 
-    bean2.removeRelation(r1);
+    bean2.removeProperty(r1);
     r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
@@ -440,10 +440,10 @@ void test_findObjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, Bean& b
     EXPECT_TRUE(beans.size() == 3);
     EXPECT_TRUE(rArray_1->getNumOfObjects() == 3);
 
-    bean1.removeRelation(rArray_1);
+    bean1.removeProperty(rArray_1);
     rArray_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 2);
-    bean2.removeRelation(rArray_1);
+    bean2.removeProperty(rArray_1);
     rArray_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 }

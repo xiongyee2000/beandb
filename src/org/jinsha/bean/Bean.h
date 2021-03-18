@@ -106,6 +106,9 @@ public:
     /**
      * Get size of an array property.
      * 
+     * Notes:
+     * - Use this method to get array size for both primary and relation. 
+     * 
      * @param property the property
      * @return the size
      * 
@@ -113,7 +116,7 @@ public:
      * If this bean does not have the named array property,
      * 0 will be returned;
      */
-    Json::Value::ArrayIndex getArrayPropertySize(const Property* property) const;
+    Json::Value::ArrayIndex getArraySize(const Property* property) const;
 
     /**
      * Get value of an array property at specified index.
@@ -208,17 +211,6 @@ public:
      */
     bool hasArrayRelation(const Property* relation) const;
 
-    /**
-     * Get size of an array relation.
-     * 
-     * @param relation the array relation
-     * @return the size
-     * 
-     * Note:
-     * If this bean does not have the named array relation,
-     * 0 will be returned;
-     */
-    Json::Value::ArrayIndex getArrayRelationSize(const Property* relation) const;
 
     /**
      * Get relation bean.
@@ -303,13 +295,19 @@ public:
     /**
      * Remove property from this bean.
      * 
+     * Notes:
+     * - Use this method to remove both property and relation.
+     * 
      * @param property the property
      * @return the removed item as json value
      */
     Json::Value removeProperty( Property* property);
 
     /**
-     * Remove the item at given index from this bean's array property.
+     * Remove the item at given index from this bean's array property/relation.
+     * 
+     * Notes:
+     * - Use this method to remove an array item for both property and relation.
      * 
      * @param property the array property
      * @param index the index
@@ -317,13 +315,13 @@ public:
      */
     Json::Value removeProperty( Property* property, Json::Value::ArrayIndex index);
 
-    /**
-     * Remove relation from this bean.
-     * 
-     * @param relation the relation
-     * @return
-     */
-    void removeRelation( Property* relation);
+    // /**
+    //  * Remove relation from this bean.
+    //  * 
+    //  * @param relation the relation
+    //  * @return
+    //  */
+    // void removeRelation( Property* relation);
 
 private:
     Bean(BeanWorld* world);
@@ -332,10 +330,6 @@ private:
     virtual ~Bean();
 
     bool doHasProperty(const Property* property, Property::Type type) const;
-
-    Json::Value::ArrayIndex 
-    getArrayMemberSizeCommon_(const Property* property, 
-        bool isProperty_ = true) const;
 
     Json::Value* getMemberPtr(const Property* property);
     void setPropertyBase_(Property* property, 

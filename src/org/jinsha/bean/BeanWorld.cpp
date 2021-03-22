@@ -27,11 +27,17 @@ BeanWorld::~BeanWorld()
 
 void BeanWorld::clear()
 {
-    for (auto item : m_beans_) 
+    for (auto& item : m_beans_) 
+    {
+        delete item.second;
+        item.second = nullptr;
+    }
+    m_beans_.clear();
+
+    for (auto& item : m_propertyMap_) 
     {
         delete item.second;
     }
-    m_beans_.clear();
     m_propertyMap_.clear();
 }
 

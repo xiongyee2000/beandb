@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
+#include <map>
 #include <vector>
 
 #include "./common.h"
@@ -59,7 +59,7 @@ public:
     /**
      * Remove all properties/relations of this bean.
      */
-    void clear();
+    void removeAllProperties();
 
     /**
      * Check the bean has the given property.
@@ -335,6 +335,12 @@ private:
     void setPropertyBase_(Property* property, 
         Json::Value *oldValue,  const Json::Value&  newValue);
 
+    Json::Value doRemoveProperty( Property* property, bool internal = false);
+    Json::Value doRemoveProperty( Property* property, Json::Value::ArrayIndex index,  bool internal = false);
+
+    void addSubject(Bean* subject, Property* relation);
+    void removeSubject(Bean* subject, Property* relation);
+
 private:
     Json::Value m_json_;
     BeanWorld* m_world_;
@@ -346,6 +352,8 @@ private:
     oidType m_id_ = 0;
     // std::string m_name_;
     // std::string uri_;
+
+    std::multimap<oidType, Property*> m_subjectMap_;
 
 friend class BeanWorld;
 friend class Property;

@@ -20,7 +20,9 @@ extern Property* p1;
 extern Property* p2;
 extern Property* pArray_1;
 extern Property* r1;
+extern Property* r2;
 extern Property* rArray_1;
+extern Property* rArray_2;
 
 
 void init_world(BeanWorld& world, bool needIndex = false);

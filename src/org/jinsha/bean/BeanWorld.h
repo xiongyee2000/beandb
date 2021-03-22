@@ -154,7 +154,7 @@ private:
 
 private:
     std::unordered_map<oidType, Bean*> m_beans_;
-    oidType m_maxBeanId_ = 0;
+    oidType m_maxBeanId_ = 1;
 
     //map from property name to property
     std::unordered_map<std::string, Property*> m_propertyMap_; 

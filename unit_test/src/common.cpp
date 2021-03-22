@@ -16,8 +16,9 @@ Property* p1 = nullptr;
 Property* p2 = nullptr;
 Property* pArray_1 = nullptr;
 Property* r1 = nullptr;
+Property* r2 = nullptr;
 Property* rArray_1 = nullptr;
-
+Property* rArray_2 = nullptr;
 
 void init_world(BeanWorld& world, bool needIndex)
 {
@@ -34,7 +35,9 @@ void init_world(BeanWorld& world, bool needIndex)
     p2 = world.defineProperty("p2", Property::IntType);
     pArray_1 = world.defineArrayProperty("pArray_1", Property::IntType);
     r1 = world.defineRelation("r1");
+    r2 = world.defineRelation("r2");
     rArray_1 =  world.defineArrayRelation("rArray_1");
+    rArray_2 =  world.defineArrayRelation("rArray_2");
 
     if (needIndex)
     {
@@ -50,6 +53,8 @@ void init_world(BeanWorld& world, bool needIndex)
         p2->createIndex();
         pArray_1->createIndex();
         r1->createIndex();
+        r2->createIndex();
         rArray_1->createIndex();
+        rArray_2->createIndex();
     }
 }

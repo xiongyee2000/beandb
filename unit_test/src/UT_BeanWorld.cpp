@@ -276,8 +276,89 @@ TEST(BeanWorld, removeBean)
     BeanWorld world;
     Value value;
     oidType oid = 0;
-    Bean* bean = world.createBean();
-    oid = bean->getId();
-    world.removeBean(bean->getId());
+
+    init_world(world);
+
+    Bean* bean1 = world.createBean();
+    Bean* bean2 = world.createBean();
+    Bean* bean3 = world.createBean();
+    Bean* bean4 = world.createBean();
+
+    oid = bean1->getId();
+    world.removeBean(bean1->getId());
     EXPECT_TRUE(world.getBean(oid) == nullptr);
+    bean1 = world.createBean();
+
+    bean1->setRelation(r1, bean2);
+    EXPECT_TRUE(bean1->getRelationBeanId(r1) == bean2->getId());
+    world.removeBean(bean2->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(r1) == 0);
+    bean2 = world.createBean();
+
+    bean1->setRelation(r1, bean3);
+    bean1->setRelation(r2, bean3);
+    bean2->setRelation(r1, bean3);
+    bean2->setRelation(r2, bean3);
+    EXPECT_TRUE(bean1->getRelationBeanId(r1) == bean3->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(r2) == bean3->getId());
+    EXPECT_TRUE(bean2->getRelationBeanId(r1) == bean3->getId());
+    EXPECT_TRUE(bean2->getRelationBeanId(r2) == bean3->getId());
+    world.removeBean(bean3->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(r1) == 0);
+    EXPECT_TRUE(bean1->getRelationBeanId(r2) == 0);
+    EXPECT_TRUE(bean2->getRelationBeanId(r1) == 0);
+    EXPECT_TRUE(bean2->getRelationBeanId(r2) == 0);
+    bean3 = world.createBean();
+
+    bean1->setRelation(r1, bean2);
+    bean2->setRelation(r1, bean3);
+    EXPECT_TRUE(bean1->getRelationBeanId(r1) == bean2->getId());
+    EXPECT_TRUE(bean2->getRelationBeanId(r1) == bean3->getId());
+    EXPECT_TRUE(bean3->m_subjectMap_.size() == 1);
+    world.removeBean(bean2->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(r1) == 0);
+    EXPECT_TRUE(bean3->m_subjectMap_.size() == 0);
+    bean2 = world.createBean();
+
+    //array
+    bean1->createArrayRelation(rArray_1);
+    bean1->createArrayRelation(rArray_2);
+    bean1->appendRelation(rArray_1, bean3);
+    bean1->appendRelation(rArray_1, bean4);
+    bean1->appendRelation(rArray_2, bean3);
+    bean1->appendRelation(rArray_2, bean4);
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == bean3->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 1) == bean4->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_2, 0) == bean3->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_2, 1) == bean4->getId());
+    world.removeBean(bean3->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == bean4->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_2, 0) == bean4->getId());
+    bean3 = world.createBean();
+
+    bean2->createArrayRelation(rArray_1);
+    bean2->createArrayRelation(rArray_2);    
+    bean2->appendRelation(rArray_1, bean4);
+    bean2->appendRelation(rArray_2, bean4);
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == bean4->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_2, 0) == bean4->getId());
+    EXPECT_TRUE(bean2->getRelationBeanId(rArray_1, 0) == bean4->getId());
+    EXPECT_TRUE(bean2->getRelationBeanId(rArray_2, 0) == bean4->getId());
+    world.removeBean(bean4->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == 0);
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_2, 0) == 0);
+    EXPECT_TRUE(bean2->getRelationBeanId(rArray_1, 0) == 0);
+    EXPECT_TRUE(bean2->getRelationBeanId(rArray_2, 0) == 0);
+    bean4 = world.createBean();
+
+    bean1->appendRelation(rArray_1, bean2);
+    bean2->appendRelation(rArray_1, bean3);
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == bean2->getId());
+    EXPECT_TRUE(bean2->getRelationBeanId(rArray_1, 0) == bean3->getId());
+        EXPECT_TRUE(bean3->m_subjectMap_.size() == 1);
+    world.removeBean(bean2->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == 0);
+    EXPECT_TRUE(bean3->m_subjectMap_.size() == 0);
+    bean2 = world.createBean();
+
 }

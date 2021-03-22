@@ -20,7 +20,43 @@ m_world_(world)
 
 Bean::~Bean()
 {
-    clear();
+    removeAllProperties();
+
+    //handle relations: remove relation from subject that has
+    //relation to this bean (as object)
+    Bean* subject = nullptr;
+    Property* property = nullptr;
+    Json::ArrayIndex index = 0;
+    Json::Value* value = nullptr;
+    auto iter = m_subjectMap_.begin();
+    while (iter != m_subjectMap_.end())
+    {
+        subject = m_world_->getBean(iter->first);
+        if (subject == nullptr) {
+            iter = m_subjectMap_.erase(iter);
+            continue;
+        }
+        property = iter->second;
+        if (property->getType() == Property::RelationType)  {
+            //use doRemoveProperty(property, true) to keep
+            //m_subjectMap_ unchanged
+            subject->doRemoveProperty(property, true);
+        } else if (property->getType() == Property::ArrayRelationType) {
+            value = subject->getMemberPtr(property);
+            if (value == nullptr) {
+                iter++;
+                continue; //shall not be null
+            }
+            size_t size = value->size();
+            //todo: O(n*n) complexity! How to improve performance?
+            for (Json::ArrayIndex i = size; i > 0; i--)
+                if (subject->getRelationBeanId(property, i - 1) == m_id_) {
+                    subject->doRemoveProperty(property, i - 1, true); 
+                }
+        }
+        iter++;
+    }
+    m_subjectMap_.clear();
 }
 
 
@@ -52,7 +88,7 @@ bool Bean::doHasProperty(const Property* property, Property::Type type) const
 }
 
 
-void Bean::clear()
+void Bean::removeAllProperties()
 {
     for (auto& memberName : m_json_.getMemberNames())
     {
@@ -79,6 +115,9 @@ int Bean::setProperty(Property* property,  const Json::Value& value)
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
     Json::Value *oldValue = getMemberPtr(property);
     setPropertyBase_(property,  oldValue, value);
+
+    //handle subject tracking
+    property->addSubject(m_id_);
     return 0;
 }
 
@@ -93,9 +132,6 @@ void Bean::setPropertyBase_(Property* property,
         oldValue = &m_json_[pname];
         //no old value, need to increment ref. count
         // property->m_refCount_++;
-        if (property->getType() != Property::ArrayPrimaryType && 
-            property->getType() != Property::ArrayRelationType)
-            property->addSubject(m_id_);
     }
     else
     {
@@ -235,7 +271,23 @@ int Bean::setRelation(Property* relation, Bean* bean)
     if (relation->getType() != Property::RelationType) return -2;
     Json::Value *oldValue =  getMemberPtr(relation);
     setPropertyBase_(relation, oldValue, bean->getId());
+
+    //handle object tracking
+    if (oldValue != nullptr) {
+        oidType objectId = (*oldValue).asUInt64();
+        if (objectId == bean->m_id_) return 0; //the same bean, do nothing
+        Bean* object = m_world_->getBean(objectId);
+        if (object != nullptr) {
+            object->removeSubject(this, relation);
+        }
+        relation->removeObject(objectId);
+    }
     relation->addObject(bean->getId());
+
+    //handle subject tracking
+    bean->addSubject(this, relation);
+    relation->addSubject(m_id_);
+    
     return 0;
 }
 
@@ -265,6 +317,7 @@ int Bean::appendRelation(Property* relation,  Bean* bean)
     //todo: do not index array property/relation for now
     // if (property->indexed())
     //     property->addIndex(this, value);
+    bean->addSubject(this, relation);
     return 0;
 }
 
@@ -281,16 +334,38 @@ int Bean::setRelation(Property* relation,
     if (index >= array.size()) return -5;
     Json::Value *oldValue = &array[index];
     setPropertyBase_(relation, oldValue, bean->getId());
+
+    //handle object tracking
+    if (oldValue != nullptr) {
+        oidType objectId = (*oldValue).asUInt64();
+        if (objectId == bean->m_id_) return 0; //the same bean, do nothing
+        Bean* object = m_world_->getBean(objectId);
+        if (object != nullptr) {
+            object->removeSubject(this, relation);
+        }
+        relation->removeObject(objectId);
+    }
     relation->addObject(bean->getId());
+
+    //handle subject tracking
+    bean->addSubject(this, relation);
+
     return 0;
 }
 
 
 Json::Value Bean::removeProperty(Property* property)
 {
+    return doRemoveProperty(property);
+}
+
+
+Json::Value Bean::doRemoveProperty(Property* property, bool internal)
+{
     if (property == nullptr) return Json::Value();
-    Json::Value* value = getMemberPtr(property);
-    if (value == nullptr) return Json::Value();
+    Json::Value* valuePtr = getMemberPtr(property);
+    if (valuePtr == nullptr) return Json::Value();
+    Json::Value& value = *valuePtr;
     property->removeSubject(m_id_);
     if (property->indexed())
     { //remove index first
@@ -306,7 +381,7 @@ Json::Value Bean::removeProperty(Property* property)
         }
         else
         {
-            property->removeIndex(this, *value);
+            property->removeIndex(this, value);
         }
     }
 
@@ -315,14 +390,29 @@ Json::Value Bean::removeProperty(Property* property)
     //remove object record if the property is relation
     if (property->getType() == Property::RelationType)
     {
-            property->removeObject(m_json_[pname].asUInt64());
+            oidType oid = value.asUInt64();
+            property->removeObject(oid);
+
+            if (!internal) {
+                Bean* objectBean = m_world_->getBean(oid);
+                if (objectBean != nullptr)
+                    objectBean->removeSubject(this, property);
+            }
     }
     else if (property->getType() == Property::ArrayRelationType)
     {
-        auto& array = m_json_[pname];
+        auto& array = value;
+        oidType oid = 0;
         for (Json::ArrayIndex index = 0; index < array.size(); index++)
         {
-            property->removeObject(array[index].asUInt64());
+            oid = array[index].asUInt64();
+            property->removeObject(oid);
+
+            if (!internal) {
+                Bean* objectBean = m_world_->getBean(oid);
+                if (objectBean == nullptr) continue;
+                objectBean->removeSubject(this, property);
+            }
         }
     }
     
@@ -333,6 +423,11 @@ Json::Value Bean::removeProperty(Property* property)
 
 
 Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex index)
+{
+    return doRemoveProperty(property, index);
+}
+
+Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex index, bool internal)
 {
     Json::Value rtn; //null
     if (property == nullptr) return rtn;
@@ -350,17 +445,27 @@ Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex ind
     // }
 
     const auto& pname = property->getName();
-
+    oidType oid = 0;
+    Bean* objectBean = nullptr;
     //remove object record if the property is array relation
     if (property->getType() == Property::ArrayRelationType)
     {
-        property->removeObject(array[index].asUInt64());
+        oid = array[index].asUInt64();
+        property->removeObject(oid);
+        if (!internal) {
+            objectBean = m_world_->getBean(oid);
+            if (objectBean != nullptr)
+                objectBean->removeSubject(this, property);
+        }
     }
     
     //create a new array and replace the old
     Json::Value newArray(Json::arrayValue);
-    for (Json::ArrayIndex i = 0; i < array.size(); i++)
-        if (i != index) newArray.append(array[i]);
+    for (Json::ArrayIndex i = 0; i < array.size(); i++) {
+        if (i != index) {
+            newArray.append(array[i]);
+        }
+    }
 
     array = newArray;
     return rtn;
@@ -371,6 +476,23 @@ Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex ind
 // {
 //     removeProperty(relation);
 // }
+
+void Bean::addSubject(Bean* subject, Property* relation)
+{
+    m_subjectMap_.insert(std::pair<oidType, Property*>(subject->getId(), relation));
+}
+
+
+void Bean::removeSubject(Bean* subject, Property* relation)
+{
+    auto range = m_subjectMap_.equal_range(subject->getId());
+    for (auto it = range.first; it != range.second;) {
+        if (it->second == relation)
+            it = m_subjectMap_.erase(it);
+        else
+            it++;
+    }
+}
 
 
 Json::Value* Bean::getMemberPtr(const Property* property)

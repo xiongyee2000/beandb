@@ -8,6 +8,7 @@
 #include "./common.h"
 #include "./Property.h"
 #include "./Bean.h"
+#include "./BeanDB.h"
 
 namespace org {
 namespace jinsha {
@@ -144,6 +145,8 @@ public:
      */
     const std::unordered_map<std::string, Property*>& getProperties() const 
      {return m_propertyMap_;};
+
+    //  int loadAll(BeanDB& persistent) {return 0;};
 
 
 private:

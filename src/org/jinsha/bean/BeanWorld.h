@@ -8,7 +8,7 @@
 #include "./common.h"
 #include "./Property.h"
 #include "./Bean.h"
-#include "./BeanDB.h"
+#include "./AbstractBeanDB.h"
 
 namespace org {
 namespace jinsha {

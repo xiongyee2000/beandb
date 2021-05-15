@@ -39,6 +39,7 @@ public:
      */
     virtual int loadAll() = 0;
 
+
     /**
      * Save all data, including all beans, properties in the world, 
      * to the persistent storage.
@@ -77,9 +78,8 @@ public:
      * Load all properties from the storage into the world.
      * 
      * Notes:
-     * - This method must be implemented for properties
-     *    are supposed to be loaded all to world (memory) 
-     *    before it can be used.
+     * -  In out design, all properties must be loaded into world (memory) 
+     *    before the world is useful.
      * 
      * @return 0 for success, or an error code
      */

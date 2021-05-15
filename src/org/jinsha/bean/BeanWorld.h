@@ -14,43 +14,65 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
+class Bean;
 class Property;
+class AbstractBeanDB;
 
 class BeanWorld
 {
 public:
-    BeanWorld();
+    /**
+     * Constructor
+     * 
+     * @param db the database attached with this world
+     * 
+     * Notes:
+     * Parameter db can be NULL, in which case no data persistency 
+     * will be available.
+     *  
+     */
+    BeanWorld(AbstractBeanDB *db = nullptr);
+
+    /**
+     * Destructor
+     */
     virtual ~BeanWorld();
 
-    void clear();
+    /**
+     * Delete all means/properties from the world.
+     * 
+     * CAUTION: If this world is attached with a database, 
+     * all data will be erased from the attached database.
+     */
+    virtual void clear();
 
     /**
      *  Create a bean.
      * 
      * @return the created bean
      */
-    Bean *createBean();
+    virtual Bean *createBean();
 
     /**
      * Remove a bean.
      * 
      * @param id the id of the bean
      */
-    void removeBean(oidType id);
+    virtual void removeBean(oidType id);
 
     /**
      * Get total number of beans.
      * 
      * @return the total number of beans
      */
-    int getNumOfBeans();
+    virtual int getNumOfBeans();
 
     /**
      * Get all beans.
      * 
      * @return a map containing all beans
      */
-    const std::unordered_map<oidType, Bean*>& getBeans();
+    virtual const std::unordered_map<oidType, Bean*>& getBeans();
 
     /**
      * Get bean by id.
@@ -58,7 +80,7 @@ public:
      * @param id the bean id
      * @return the bean, or nullptr
      */
-    Bean* getBean(oidType id);
+    virtual Bean* getBean(oidType id);
 
     /**
      * Define a property.
@@ -74,7 +96,7 @@ public:
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
+    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
 
     /**
      * Define an array property.
@@ -90,7 +112,7 @@ public:
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
+    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
 
     /**
      * Define a relation property.
@@ -102,7 +124,7 @@ public:
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    Property* defineRelation(const char* name, bool needIndex = false);
+    virtual Property* defineRelation(const char* name, bool needIndex = false);
 
     /**
      * Define an array relation property.
@@ -113,7 +135,7 @@ public:
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    Property* defineArrayRelation(const char* name, bool needIndex = false);
+    virtual Property* defineArrayRelation(const char* name, bool needIndex = false);
 
     /**
      * Undefine a property.
@@ -126,8 +148,8 @@ public:
      * @param name the name of property
      * @return 
      */
-    void undefineProperty(const char* name);
-    void undefineRelation(const char* name) {undefineProperty(name);};
+    virtual void undefineProperty(const char* name);
+    virtual void undefineRelation(const char* name) {undefineProperty(name);};
 
     /**
      * Get property/relation/array property/array relation by name.
@@ -135,32 +157,57 @@ public:
      * @param name property name
      * @return property
      */
-    const Property* getProperty(const char* name) const;
-    Property* getProperty(const char* name);
+    virtual const Property* getProperty(const char* name) const;
+    virtual Property* getProperty(const char* name);
 
     /**
      * Get all properties.
      * 
      * @return a map containing all properties.
      */
-    const std::unordered_map<std::string, Property*>& getProperties() const 
+    virtual const std::unordered_map<std::string, Property*>& getProperties() const 
      {return m_propertyMap_;};
 
-    //  int loadAll(BeanDB& persistent) {return 0;};
+public:
+    /**
+     * See AbstractBeanDB::loadAll().
+     */
+    int loadAll();
 
+    /**
+     * Remove all beans/properties from this world.
+     */
+    int unloadAll();
 
-private:
+    /**
+     * See AbstractBeanDB::loadProperties().
+     */
+    int loadProperties();
+
+    /**
+     * See AbstractBeanDB::loadBean().
+     */
+    Bean* loadBean(oidType id);
+
+    /**
+     * Remove all beans from this world.
+     */
+    int unloadBean(oidType id);
+
+protected:
     Property* definePropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex = false);
 
     oidType generateBeanId();
 
-private:
+protected:
     std::unordered_map<oidType, Bean*> m_beans_;
     oidType m_maxBeanId_ = 1;
 
     //map from property name to property
     std::unordered_map<std::string, Property*> m_propertyMap_; 
+
+    AbstractBeanDB *m_db;
 
 friend class Bean;
 friend class Property;

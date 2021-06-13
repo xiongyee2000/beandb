@@ -2,6 +2,8 @@
 
 #include "./AbstractBeanDB.h"
 
+#include <sqlite3.h>
+
 namespace org {
 namespace jinsha {
 namespace bean {
@@ -9,8 +11,22 @@ namespace bean {
 class SqliteBeanDB : public AbstractBeanDB
 {
 public:
-    SqliteBeanDB(BeanWorld& world, const char* dir);
+    // enum status_t {
+    //     INIT = 0,
+    //     CREATED,
+    //     OPENED
+    // };
+
+    static const char* DB_PATH;
+    static const char* PTABLE_NAME;
+    static const char* OTABLE_NAME;
+
+    SqliteBeanDB(const char* dir);
     ~SqliteBeanDB() override;
+
+    int open();
+    int close();
+    int checkDB();
 
     int loadAll() override;
     int saveAll() override;
@@ -23,8 +39,23 @@ public:
     int saveProperty(Property* property) override;
     int removeProperty(Property* property) override;
 
+public:
+    const char* getDir()  {return m_dir;};
+
 private:
-    std::string m_dir_;
+    int init() override;
+
+
+private:
+    int openDB();
+    int closeDB();
+
+private:
+    const char* m_dir;
+    std::string m_dbFullPath;
+    sqlite3* m_db;
+    // int m_status = INIT;
+    bool m_initialized;
 };
 
 }

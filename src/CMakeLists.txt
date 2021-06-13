@@ -23,6 +23,7 @@ ADD_LIBRARY(bean SHARED ${BEAN_SRC_FILES})
 #link libraries
 set (BEAN_LINK_LIBRARY
     pthread
+    sqlite3
 )
 
 set (BEAN_SRV_LINK_LIBRARY

@@ -26,7 +26,6 @@ Bean::~Bean()
     //relation to this bean (as object)
     Bean* subject = nullptr;
     Property* property = nullptr;
-    Json::ArrayIndex index = 0;
     Json::Value* value = nullptr;
     auto iter = m_subjectMap_.begin();
     while (iter != m_subjectMap_.end())
@@ -444,7 +443,6 @@ Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex i
     //     property->removeIndex(this, array[index]);
     // }
 
-    const auto& pname = property->getName();
     oidType oid = 0;
     Bean* objectBean = nullptr;
     //remove object record if the property is array relation

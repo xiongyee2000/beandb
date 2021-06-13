@@ -17,6 +17,11 @@ BeanWorld::BeanWorld(AbstractBeanDB *db)
     : m_db(db)
 {
     setlocale(LC_ALL, "");
+    if (m_db != nullptr)
+    {
+        m_db->m_world = this;
+        m_db->init();
+    }
 }
 
 
@@ -173,7 +178,7 @@ int BeanWorld::loadAll()
     if (m_db != nullptr) {
         return m_db->loadAll();
     } else {
-        return 0;
+        return -1;
     }
 }
 

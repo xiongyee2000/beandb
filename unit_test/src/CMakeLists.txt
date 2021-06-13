@@ -37,6 +37,7 @@ ADD_EXECUTABLE(bean_ut ${UT_SRC} ${BEAN_SRC})
 set (MY_LINK_LIBRARY
 pthread
 jsoncpp
+sqlite3
 )
 
 TARGET_LINK_LIBRARIES(bean_ut ${GTEST} ${GMOCK} ${CMAKE_THREAD_LIBS_INIT} ${MY_LINK_LIBRARY} )

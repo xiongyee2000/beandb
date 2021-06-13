@@ -14,7 +14,7 @@ public:
      * 
      * @param world the world attached to this storage
      */
-    AbstractBeanDB(BeanWorld& world) : m_world_(&world) {};
+    AbstractBeanDB() : m_world(nullptr) {};
 
     /**
      * Destructor
@@ -26,7 +26,10 @@ public:
      * 
      * @return the world
      */
-    BeanWorld& getWorld() {return *m_world_;};
+    BeanWorld* getWorld() {return m_world;};
+
+protected:
+    virtual int init() = 0;
 
     /**
      * Load all data, including all beans, properties, from the storage 
@@ -102,7 +105,9 @@ public:
     virtual int removeProperty(Property* property) = 0;
 
 private:
-    BeanWorld *m_world_;
+    BeanWorld *m_world;
+
+friend class BeanWorld;
 };
 
 }

@@ -68,7 +68,7 @@ TEST(BeanWorld, getNumOfBeans)
 TEST(BeanWorld, getBeans)
 {
     BeanWorld *world = new BeanWorld();
-
+    
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
     Bean *bean3 = world->createBean();
@@ -203,12 +203,10 @@ TEST(BeanWorld, getProperty)
 {
     BeanWorld world;
     Value value;
-    int pid = 0;
     const Property* property = nullptr;
 
     init_world(world);
 
-    Bean *bean = world.createBean();
     property = world.getProperty(nullptr);
     EXPECT_TRUE(property == nullptr);
     property = world.getProperty("");

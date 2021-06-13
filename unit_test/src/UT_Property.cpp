@@ -23,7 +23,6 @@ using namespace org::jinsha::bean;
 TEST(Property, getName)
 {
     BeanWorld world;
-    Bean* bean = world.createBean();
     world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
     EXPECT_TRUE(property != nullptr);
@@ -34,7 +33,6 @@ TEST(Property, indexed)
 {
     BeanWorld world;
 
-    Bean *bean = world.createBean();
     world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
     EXPECT_TRUE(property->indexed() == false);
@@ -46,7 +44,6 @@ TEST(Property, create_index)
 {
     BeanWorld world;
 
-    Bean *bean = world.createBean();
     world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
     EXPECT_TRUE(property->indexed() == false);
@@ -58,7 +55,6 @@ TEST(Property, remove_index)
 {
     BeanWorld world;
 
-    Bean *bean = world.createBean();
     world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
     EXPECT_TRUE(property->indexed() == false);
@@ -172,7 +168,6 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     p_double->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
     p_str->getSubjects(beans);
-    auto s = beans.size();
     EXPECT_TRUE(beans.size() == 1);
     p_bool_0->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
@@ -399,7 +394,6 @@ void test_findObjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, Bean& b
     rArray_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    auto bean3_id = bean3.getId();
     bean1.setRelation(r1, &bean3);
     r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 1);

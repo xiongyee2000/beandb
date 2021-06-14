@@ -50,3 +50,33 @@ TEST(SqliteBeanDB, constuctor)
     delete testdb;
 }
 
+
+TEST(SqliteBeanDB, saveProperty)
+{
+    BeanWorld world;
+    Property *property;
+    const char* testdbDir = "./unit_test/data/db_dir";
+    SqliteBeanDB testdb(testdbDir);
+
+    testdb.reInit();
+
+    testdb.connect();
+
+    property = world.defineProperty("p1", Property::IntType);
+    testdb.saveProperty(property);
+
+    property = world.defineProperty("p2", Property::UIntType);
+    testdb.saveProperty(property);
+
+    property = world.defineProperty("p3", Property::RealType);
+    testdb.saveProperty(property);
+
+    property = world.defineProperty("p4", Property::StringType);
+    testdb.saveProperty(property);
+
+    property = world.defineProperty("p5", Property::BoolType);
+    testdb.saveProperty(property);
+
+    testdb.disconnect();
+
+}

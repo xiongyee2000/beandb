@@ -3,16 +3,8 @@
 #include "./internal_common.hxx"
 
 #include <unistd.h>
+#include <string.h>
 #include <sqlite3.h>
-
- static int callback_select_ptable(void *data, int argc, char **argv, char **azColName){
-    int i;
-    for(i=0; i<argc; i++){
-        printf("%s = %s\n", azColName[i], argv[i] ? argv[i] : "NULL");
-    }
-    printf("\n");
-    return 0;
-}
 
 namespace org {
 namespace jinsha {
@@ -24,17 +16,24 @@ const char* SqliteBeanDB::OTABLE_NAME = "otable";
 
 static const char* CREATE_PTABLE =  
  "CREATE TABLE PTABLE ( \
-ID INT PRIMARY KEY NOT NULL, \
-NAME VARCHAR(64) NOT NULL \
+ID INTEGER PRIMARY KEY NOT NULL, \
+NAME VARCHAR(64) NOT NULL, \
+PTYPE INT NOT NULL, \
+VTYPE INT NOT NULL \
 ); ";
 
 static const char* CREATE_OTABLE =  
- "CREATE TABLE OTABLE \
-ID INT PRIMARY KEY NOT NULL, \
-PROPERTY INT NOT NULL, \
-VALUE INT NOT NULL \
+ "CREATE TABLE OTABLE ( \
+ID INTEGER PRIMARY KEY NOT NULL, \
+PROPERTY UNSIGNED BIG INT NOT NULL, \
+VALUE UNSIGNED BIG INT NOT NULL \
 ); ";
 
+static const char* CREATE_STABLE =  
+ "CREATE TABLE STABLE ( \
+ID INTEGER PRIMARY KEY NOT NULL, \
+VALUE TEXT NOT NULL \
+); ";
 
 SqliteBeanDB::SqliteBeanDB( const char* dir) : 
     AbstractBeanDB()
@@ -44,25 +43,25 @@ SqliteBeanDB::SqliteBeanDB( const char* dir) :
 {
     if (dir == nullptr ||  dir[0] == 0) return;
     m_dbFullPath.append(m_dir).append("/").append(DB_PATH);
-    if (checkDB() == -3) 
+    if (checkDB() == -3)
         m_initialized = init() == 0 ? true : false;
 }
 
 
 SqliteBeanDB::~SqliteBeanDB()
 {
-    close();
+    disconnect();
 }
 
 
-int SqliteBeanDB::open()
+int SqliteBeanDB::connect()
 {
     if (!m_initialized) return -1;
     return openDB();
 }
 
 
-int SqliteBeanDB::close()
+int SqliteBeanDB::disconnect()
 {
     if (!m_initialized) return -1;
     return closeDB();
@@ -91,29 +90,84 @@ int SqliteBeanDB::init()
 
     if (openDB()  !=  0) {
         elog("Failed to create database %s.\n", m_dbFullPath.c_str());
-        errCode =  -2;
-    } else {
-        char *zErrMsg = 0;
-        int  rc;
-        const char *sql;
+        return -1;
+    } 
 
-        /* Create SQL statement */
-        sql = CREATE_PTABLE;
+    char *zErrMsg = nullptr;
+    const char *sql = nullptr;
 
-        /* Execute SQL statement */
-        rc = sqlite3_exec(m_db, sql, nullptr, 0, &zErrMsg);
-        if( rc != SQLITE_OK ){
-            elog("SQL error: %s\n", zErrMsg);
-            sqlite3_free(zErrMsg);
-            errCode = -3;
-        }else{
-            ilog("%s", "PTABLE created successfully\n");
-        }
-        closeDB();
+    sql = CREATE_PTABLE;
+    errCode = sqlite3_exec(m_db, sql, nullptr, 0, &zErrMsg);
+    if( errCode != SQLITE_OK ){
+        elog("SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+        return errCode;
+    } 
+    ilog("%s", "PTABLE created successfully\n");
+
+    sql = CREATE_OTABLE;
+    errCode = sqlite3_exec(m_db, sql, nullptr, 0, &zErrMsg);
+    if( errCode != SQLITE_OK ){
+        elog("SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+        return errCode;
     }
+    ilog("%s", "OTABLE created successfully\n");
+    
+    sql = CREATE_STABLE;
+    errCode = sqlite3_exec(m_db, sql, nullptr, 0, &zErrMsg);
+    if( errCode != SQLITE_OK ){
+        elog("SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+        return errCode;
+    }
+    ilog("%s", "STABLE created successfully\n");
+    
+    closeDB();
+    return 0;
+}
 
+
+int SqliteBeanDB::reInit()
+{
+    if (m_dir == nullptr || m_dir[0] == 0) return -1;
+    char buff[256] = {0};
+    snprintf(buff, 255, "rm -rf %s/*", m_dir );
+    //todo: check if command is executed successfully
+    system(buff);
+    int errCode = init();
+    m_initialized = errCode == 0 ? true : false;
     return errCode;
 }
+
+
+int SqliteBeanDB::openDB()
+{
+    int errCode = 0;
+    if (m_db == nullptr)  {
+        errCode = sqlite3_open(m_dbFullPath.c_str(), &m_db);
+        if( errCode )  {
+            elog("Failed to open database: %s\n", sqlite3_errmsg(m_db));
+            m_db = nullptr;
+        }
+    }
+    return errCode;
+}
+
+int SqliteBeanDB::closeDB()
+{
+    int errCode = 0;
+    if (m_db != nullptr) {
+        errCode = sqlite3_close(m_db);
+        if( errCode )  {
+            elog("Failed to close database: %s\n", sqlite3_errmsg(m_db));
+        } else {
+            m_db = nullptr;
+        }
+    }
+    return errCode;
+}
+
 
 int SqliteBeanDB::loadAll()
 {
@@ -145,17 +199,98 @@ int SqliteBeanDB::removeBean(Bean* bean)
     return 0;
 }
 
+
+//  static int loadPropertiesCallback(void *param, int columnCount, char **columnValue, char **columnName)
+//  {
+//      SqliteBeanDB *sqliteBeanDB = (SqliteBeanDB*)param;
+//      BeanWorld *world = sqliteBeanDB->getWorld();
+//      if (world == nullptr) return -1;
+//      Property *property;
+//     for (int i = 0; i < columnCount; i++) {
+//         printf("%s = %s\n", columnName[i], columnValue[i]);
+//     }
+
+//      return 0;
+//  }
+
 int SqliteBeanDB::loadProperties()
 {
-    if (openDB() != 0) return -1;
+    if (m_db == nullptr) return -1;
 
-    closeDB();
+    static const char sql[] = "SELECT ID, NAME, TYPE, VTYPE FROM PTABLE;";
+    sqlite3_stmt *pstmt = nullptr;
+    const char* pzTail = nullptr;
+    int nCol = 0;
+    int errCode = 0;
+
+	errCode = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+ 
+	// while(sqlite3_step( pstmt ) == SQLITE_ROW) {
+	// 	nCol = 0;
+	// 	pTmp = sqlite3_column_(pstmt, nCol++);
+	// 	printf("%s|", pTmp);
+ 
+	// 	age = sqlite3_column_int(pstmt, nCol++);
+	// 	printf("%d|", age);
+ 
+	// 	pTmp = sqlite3_column_text(pstmt, nCol++);
+	// 	printf("%s\n", pTmp);
+ 
+	// 	//注意，这里就不能够运行 sqlite3_reset(pstmt); 因为查询命令会循环返回所有的数据，
+    //     //每次返回一次 SQLITE_ROW,
+	// 	//如果我们重置pstmt，相当于终止了查询结果。
+	// }
+ 
+	sqlite3_finalize(pstmt);
+
+
+
+    // char *zErrMsg = nullptr;
+    // int errCode = sqlite3_exec(m_db, stmt, loadPropertiesCallback, this, &zErrMsg);
+    // if( errCode != SQLITE_OK ){
+    //     elog("SQL error: %s\n", zErrMsg);
+    //     sqlite3_free(zErrMsg);
+    //     return errCode;
+    // }
+
     return 0;
 }
 
+
+
 int SqliteBeanDB::saveProperty(Property* property)
 {
-    return 0;
+    if (m_db == nullptr) return -1;
+    if (property == nullptr) return -2;
+
+    static const char sql[] = "INSERT INTO PTABLE VALUES(?, ?, ?, ?) ;";
+    sqlite3_stmt *pstmt = nullptr;
+    const char* pzTail = nullptr;
+    int nCol = 0;
+    int errCode = 0;
+
+	errCode = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+    if (errCode != SQLITE_OK) return errCode;
+
+    errCode = sqlite3_bind_null(pstmt, 1);
+    if (errCode != SQLITE_OK) goto out;
+    errCode = sqlite3_bind_text(pstmt, 2, property->getName().c_str(), -1, nullptr);
+    if (errCode != SQLITE_OK) goto out;
+    errCode = sqlite3_bind_int(pstmt, 3, (int)property->getType());
+    if (errCode != SQLITE_OK) goto out;
+    errCode = sqlite3_bind_int(pstmt, 4, (int)property->getValueType());
+    if (errCode != SQLITE_OK) goto out;
+    
+    errCode = sqlite3_step(pstmt);
+
+out:
+    if (errCode != SQLITE_OK && errCode != SQLITE_DONE)
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+
+    return errCode;
 }
 
 
@@ -165,32 +300,6 @@ int SqliteBeanDB::removeProperty(Property* property)
 }
 
 
-int SqliteBeanDB::openDB()
-{
-    int errCode = 0;
-    if (m_db == nullptr)  {
-        errCode = sqlite3_open(m_dbFullPath.c_str(), &m_db);
-        if( errCode )  {
-            elog("Failed to open database: %s\n", sqlite3_errmsg(m_db));
-            m_db = nullptr;
-        }
-    }
-    return errCode;
-}
-
-int SqliteBeanDB::closeDB()
-{
-    int errCode = 0;
-    if (m_db != nullptr) {
-        errCode = sqlite3_close(m_db);
-        if( errCode )  {
-            elog("Failed to close database: %s\n", sqlite3_errmsg(m_db));
-        } else {
-            m_db = nullptr;
-        }
-    }
-    return errCode;
-}
 
 }
 }

@@ -24,9 +24,8 @@ public:
     SqliteBeanDB(const char* dir);
     ~SqliteBeanDB() override;
 
-    int open();
-    int close();
-    int checkDB();
+    int connect() override;
+    int disconnect() override;
 
     int loadAll() override;
     int saveAll() override;
@@ -39,16 +38,17 @@ public:
     int saveProperty(Property* property) override;
     int removeProperty(Property* property) override;
 
-public:
-    const char* getDir()  {return m_dir;};
-
 private:
     int init() override;
 
-
 private:
+    const char* getDir()  {return m_dir;};
+    int reInit(); //for test
+    int checkDB();
     int openDB();
     int closeDB();
+
+private:
 
 private:
     const char* m_dir;

@@ -26,7 +26,21 @@ public:
      * 
      * @return the world
      */
-    BeanWorld* getWorld() {return m_world;};
+    virtual BeanWorld* getWorld() {return m_world;};
+
+    /**
+     * Connect to the database. 
+     * 
+     * @return 0 for success, or an error code
+     */
+    virtual int connect() = 0;
+
+    /**
+     * Disonnect to the database. 
+     * 
+     * @return 0 for success, or an error code
+     */
+    virtual int disconnect() = 0;
 
 protected:
     virtual int init() = 0;

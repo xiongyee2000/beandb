@@ -215,45 +215,54 @@ int SqliteBeanDB::removeBean(Bean* bean)
 
 int SqliteBeanDB::loadProperties()
 {
-    if (m_db == nullptr) return -1;
-
-    static const char sql[] = "SELECT ID, NAME, TYPE, VTYPE FROM PTABLE;";
+    static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE FROM PTABLE;";
+    BeanWorld *world = nullptr;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int nCol = 0;
     int errCode = 0;
+    int type = 0;
+    int valueType = 0;
+    const char *name = nullptr;
+    int64_t id = 0;
+
+    if (m_db == nullptr) return -1;
+    if ((world = getWorld()) == nullptr) return -2;
 
 	errCode = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+    if (errCode != SQLITE_OK) return errCode;
+
+	while((errCode = sqlite3_step( pstmt )) == SQLITE_ROW) {
+        nCol = 0;
+        id = sqlite3_column_int64(pstmt, nCol++);
+        name = (const char*)sqlite3_column_text(pstmt, nCol++);
+        type = sqlite3_column_int(pstmt, nCol++);
+        valueType = sqlite3_column_int(pstmt, nCol++);
+        switch (type) {
+            case Property::PrimaryType:
+                world->defineProperty(name, (Property::ValueType)valueType);
+                break;
+            case Property::RelationType:
+                world->defineRelation(name);
+                break;
+            case Property::ArrayPrimaryType:
+                world->defineArrayProperty(name, (Property::ValueType)valueType);
+                break;
+            case Property::ArrayRelationType:
+                world->defineArrayRelation(name);
+                break;
+            default:
+                wlog("ignore invalid property of type: %d", type);
+                break;
+        }
+	}
+    if (errCode != SQLITE_DONE) {
+        elog("error occurred in %s, errCode=%d", __func__, errCode);
+    }
  
-	// while(sqlite3_step( pstmt ) == SQLITE_ROW) {
-	// 	nCol = 0;
-	// 	pTmp = sqlite3_column_(pstmt, nCol++);
-	// 	printf("%s|", pTmp);
- 
-	// 	age = sqlite3_column_int(pstmt, nCol++);
-	// 	printf("%d|", age);
- 
-	// 	pTmp = sqlite3_column_text(pstmt, nCol++);
-	// 	printf("%s\n", pTmp);
- 
-	// 	//注意，这里就不能够运行 sqlite3_reset(pstmt); 因为查询命令会循环返回所有的数据，
-    //     //每次返回一次 SQLITE_ROW,
-	// 	//如果我们重置pstmt，相当于终止了查询结果。
-	// }
- 
+    sqlite3_reset(pstmt);
 	sqlite3_finalize(pstmt);
-
-
-
-    // char *zErrMsg = nullptr;
-    // int errCode = sqlite3_exec(m_db, stmt, loadPropertiesCallback, this, &zErrMsg);
-    // if( errCode != SQLITE_OK ){
-    //     elog("SQL error: %s\n", zErrMsg);
-    //     sqlite3_free(zErrMsg);
-    //     return errCode;
-    // }
-
-    return 0;
+    return errCode == SQLITE_DONE ? 0 : errCode;
 }
 
 

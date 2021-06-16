@@ -43,7 +43,7 @@ TEST(SqliteBeanDB, constuctor)
     EXPECT_TRUE(testdb->checkDB() != 0);
     delete testdb;
 
-    testdbDir = "./unit_test/data/db_dir";
+    testdbDir = "./unit_test/data/sqlite_db_dir";
     testdb = new SqliteBeanDB(testdbDir);
     EXPECT_TRUE(testdb->getDir() == testdbDir);
     EXPECT_TRUE(testdb->checkDB() == 0);
@@ -53,10 +53,10 @@ TEST(SqliteBeanDB, constuctor)
 
 TEST(SqliteBeanDB, saveProperty)
 {
-    BeanWorld world;
     Property *property;
-    const char* testdbDir = "./unit_test/data/db_dir";
+    const char* testdbDir = "./unit_test/data/sqlite_db_dir";
     SqliteBeanDB testdb(testdbDir);
+    BeanWorld world(&testdb);
 
     testdb.reInit();
 
@@ -76,6 +76,24 @@ TEST(SqliteBeanDB, saveProperty)
 
     property = world.defineProperty("p5", Property::BoolType);
     testdb.saveProperty(property);
+
+    world.clear();
+    testdb.loadProperties();
+    EXPECT_TRUE(world.getProperty("p1")->getName() == "p1" && 
+        world.getProperty("p1")->getType() == Property::PrimaryType && 
+        world.getProperty("p1")->getValueType() == Property::IntType);
+    EXPECT_TRUE(world.getProperty("p2")->getName() == "p2" && 
+        world.getProperty("p2")->getType() == Property::PrimaryType && 
+        world.getProperty("p2")->getValueType() == Property::UIntType);
+    EXPECT_TRUE(world.getProperty("p3")->getName() == "p3" && 
+        world.getProperty("p3")->getType() == Property::PrimaryType && 
+        world.getProperty("p3")->getValueType() == Property::RealType);
+    EXPECT_TRUE(world.getProperty("p4")->getName() == "p4" && 
+        world.getProperty("p4")->getType() == Property::PrimaryType && 
+        world.getProperty("p4")->getValueType() == Property::StringType);
+    EXPECT_TRUE(world.getProperty("p5")->getName() == "p5" && 
+        world.getProperty("p5")->getType() == Property::PrimaryType && 
+        world.getProperty("p5")->getValueType() == Property::BoolType);
 
     testdb.disconnect();
 

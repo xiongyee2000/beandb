@@ -38,13 +38,13 @@ VALUE TEXT NOT NULL \
 SqliteBeanDB::SqliteBeanDB( const char* dir) : 
     AbstractBeanDB()
     , m_dir(dir)
-    ,m_initialized(false)
     ,m_db(nullptr)
+    ,m_initialized(false)
 {
     if (dir == nullptr ||  dir[0] == 0) return;
     m_dbFullPath.append(m_dir).append("/").append(DB_PATH);
     if (checkDB() == -3)
-        m_initialized = init() == 0 ? true : false;
+        m_initialized = internalInit() == 0 ? true : false;
 }
 
 
@@ -67,6 +67,11 @@ int SqliteBeanDB::disconnect()
     return closeDB();
 }
 
+int SqliteBeanDB::clear()
+{
+    return reInit();
+}
+
 
 int SqliteBeanDB::checkDB()
 {
@@ -82,7 +87,7 @@ int SqliteBeanDB::checkDB()
 }
 
 
-int SqliteBeanDB::init()
+int SqliteBeanDB::internalInit()
 {
     int errCode = 0;
 
@@ -135,7 +140,7 @@ int SqliteBeanDB::reInit()
     snprintf(buff, 255, "rm -rf %s/*", m_dir );
     //todo: check if command is executed successfully
     system(buff);
-    int errCode = init();
+    int errCode = internalInit();
     m_initialized = errCode == 0 ? true : false;
     return errCode;
 }
@@ -224,7 +229,7 @@ int SqliteBeanDB::loadProperties()
     int type = 0;
     int valueType = 0;
     const char *name = nullptr;
-    int64_t id = 0;
+    // int64_t id = 0;
 
     if (m_db == nullptr) return -1;
     if ((world = getWorld()) == nullptr) return -2;
@@ -233,8 +238,10 @@ int SqliteBeanDB::loadProperties()
     if (errCode != SQLITE_OK) return errCode;
 
 	while((errCode = sqlite3_step( pstmt )) == SQLITE_ROW) {
-        nCol = 0;
-        id = sqlite3_column_int64(pstmt, nCol++);
+        //todo: set id for the property in future
+        // nCol = 0;
+        // id = sqlite3_column_int64(pstmt, nCol++);
+        nCol = 1;
         name = (const char*)sqlite3_column_text(pstmt, nCol++);
         type = sqlite3_column_int(pstmt, nCol++);
         valueType = sqlite3_column_int(pstmt, nCol++);
@@ -275,7 +282,6 @@ int SqliteBeanDB::saveProperty(Property* property)
     static const char sql[] = "INSERT INTO PTABLE VALUES(?, ?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
-    int nCol = 0;
     int errCode = 0;
 
 	errCode = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);

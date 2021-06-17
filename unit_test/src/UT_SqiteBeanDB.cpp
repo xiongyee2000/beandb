@@ -51,13 +51,13 @@ TEST(SqliteBeanDB, constuctor)
     delete testdb;
 }
 
-
-TEST(SqliteBeanDB, saveProperty_loadProperty)
+TEST(SqliteBeanDB, saveProperty_loadProperty_clear)
 {
     Property *property;
     const char* testdbDir = g_testdbDir;
     SqliteBeanDB testdb(testdbDir);
     BeanWorld world(&testdb);
+    int errCode = 0;
 
     testdb.reInit();
 
@@ -126,7 +126,9 @@ TEST(SqliteBeanDB, saveProperty_loadProperty)
     world.clear();
     // EXPECT_TRUE(world.getProperty("p1") == nullptr);
 
-    testdb.loadProperties();
+    errCode = testdb.loadProperties();
+    EXPECT_TRUE(errCode == 0);
+
     EXPECT_TRUE(world.getProperty("p1")->getName() == "p1" && 
         world.getProperty("p1")->getType() == Property::PrimaryType && 
         world.getProperty("p1")->getValueType() == Property::IntType);
@@ -180,6 +182,16 @@ TEST(SqliteBeanDB, saveProperty_loadProperty)
         world.getProperty("ar4")->getType() == Property::ArrayRelationType);
     EXPECT_TRUE(world.getProperty("ar5")->getName() == "ar5" && 
         world.getProperty("ar5")->getType() == Property::ArrayRelationType);
+
+    world.clear();
+    testdb.clear();
+    world.loadProperties();
+    EXPECT_TRUE(world.getProperties().size() == 0);
+    
     testdb.disconnect();
+
+
+
+    // testdb.clear();
 
 }

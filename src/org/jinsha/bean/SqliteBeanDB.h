@@ -26,6 +26,7 @@ public:
 
     int connect() override;
     int disconnect() override;
+    int clear() override;
 
     int loadAll() override;
     int saveAll() override;
@@ -39,16 +40,14 @@ public:
     int removeProperty(Property* property) override;
 
 private:
-    int init() override;
+    int internalInit();
 
 private:
     const char* getDir()  {return m_dir;};
-    int reInit(); //for test
+    int reInit(); //todo: tmp solution
     int checkDB();
     int openDB();
     int closeDB();
-
-private:
 
 private:
     const char* m_dir;

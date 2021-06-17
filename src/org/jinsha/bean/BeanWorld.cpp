@@ -131,7 +131,7 @@ Property* BeanWorld::definePropertyCommon_(const char* name, Property::Type type
     {
         property = new Property(this, name, type, valueType, needIndex);
         m_propertyMap_[name] = property;
-        //todo: current set to 0. Generate id in future...
+        //todo: current set to -1. Generate id in future...
         property->m_id_ = -1;
     }
     else

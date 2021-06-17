@@ -42,8 +42,21 @@ public:
      */
     virtual int disconnect() = 0;
 
+    /**
+     * Clear the database, i.e. remove all data.
+     * 
+     * @return 0 for success, or an error code
+     */
+    virtual int clear() = 0;
+
 protected:
-    virtual int init() = 0;
+    /**
+     * This method will be called in BeanWorld::BeanWold().
+     * You can customize your initialization here.
+     * 
+     * @return void
+     */
+    virtual void init() {};
 
     /**
      * Load all data, including all beans, properties, from the storage 
@@ -51,6 +64,8 @@ protected:
      * 
      * Notes:
      * - This method shall apply only to small scaled data storage.
+     * 
+     * This method is supposed to be called from class BeanWorld.
      * 
      * @return 0 for success, or an error code
      */
@@ -61,6 +76,8 @@ protected:
      * Save all data, including all beans, properties in the world, 
      * to the persistent storage.
      * 
+     * This method is supposed to be called from class BeanWorld.
+     * 
      * @return 0 for success, or an error code
      */
     virtual int saveAll() = 0;
@@ -68,6 +85,8 @@ protected:
     /**
      * Load a single bean, including all its properties, from the storage 
      * into the world.
+     * 
+     * This method is supposed to be called from class BeanWorld.
      * 
      * @param id the id of the bean
      * @return the pointer pointing to the bean, or null if no such
@@ -78,6 +97,8 @@ protected:
     /**
      * Save a single bean into the storage.
      * 
+     * This method is supposed to be called from class BeanWorld.
+     * 
      * @param bean the bean to be saved
      * @return 0 for success, or an error code
      */
@@ -86,6 +107,8 @@ protected:
     /**
      * Remove a single bean from the storage.
      * 
+     * This method is supposed to be called from class BeanWorld.
+     * 
      * @param bean the bean to be removed
      * @return 0 for success, or an error code
      */
@@ -93,6 +116,8 @@ protected:
 
     /**
      * Load all properties from the storage into the world.
+     * 
+     * This method is supposed to be called from class BeanWorld.
      * 
      * Notes:
      * -  In out design, all properties must be loaded into world (memory) 
@@ -105,6 +130,8 @@ protected:
     /**
      * Save a property into the storage.
      * 
+     * This method is supposed to be called from class BeanWorld.
+     * 
      * @param property the property
      * @return 0 for success, or an error code
      */
@@ -112,6 +139,8 @@ protected:
 
     /**
      * Remove a property from the storage.
+     * 
+     * This method is supposed to be called from class BeanWorld.
      * 
      * @param property the property
      * @return 0 for success, or an error code

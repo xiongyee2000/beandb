@@ -43,7 +43,7 @@ SqliteBeanDB::SqliteBeanDB( const char* dir) :
 {
     if (dir == nullptr ||  dir[0] == 0) return;
     m_dbFullPath.append(m_dir).append("/").append(DB_PATH);
-    if (checkDB() == -3)
+    if (checkDB() >= 0)
         m_initialized = internalInit() == 0 ? true : false;
 }
 
@@ -79,8 +79,8 @@ int SqliteBeanDB::checkDB()
     if (access(m_dir, 0) != 0) return -1; //dir does not exist
     if (access(m_dir, 7)) return -2; //not enough permission on this dir
 
-    if (access(m_dbFullPath.c_str(), 0) != 0) return -3; //db file does not exist
-    if (access(m_dbFullPath.c_str(), 6)) return -4; //not enough permission on the db file
+    if (access(m_dbFullPath.c_str(), 0) != 0) return 1; //db file does not exist
+    if (access(m_dbFullPath.c_str(), 6)) return 2; //not enough permission on the db file
 
     //todo: check database schema, data consistency etc. in future
     return 0;

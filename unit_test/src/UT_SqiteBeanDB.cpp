@@ -19,7 +19,8 @@ using namespace std;
 using namespace Json;
 using namespace org::jinsha::bean;
 
-static const char* g_testdbDir = "./unit_test/data/sqlite_db_dir";
+static const char* g_tmpDBDir = "./unit_test/data/sqlite_tmp_db";
+static const char* g_sqlite_db_1 = "./unit_test/data/sqlite_db_1";
 
 TEST(SqliteBeanDB, constuctor)
 {
@@ -44,17 +45,32 @@ TEST(SqliteBeanDB, constuctor)
     EXPECT_TRUE(testdb->checkDB() != 0);
     delete testdb;
 
-    testdbDir = g_testdbDir;
+    testdbDir = g_tmpDBDir;
     testdb = new SqliteBeanDB(testdbDir);
     EXPECT_TRUE(testdb->getDir() == testdbDir);
     EXPECT_TRUE(testdb->checkDB() == 0);
     delete testdb;
 }
 
+
+TEST(SqliteBeanDB, connect_disconnect)
+{
+    Property *property;
+    const char* testdbDir = g_sqlite_db_1;
+    SqliteBeanDB testdb(testdbDir);
+    BeanWorld world(&testdb);
+    int errCode = 0;
+
+    errCode = testdb.connect();
+    EXPECT_TRUE(errCode == 0);
+    errCode = testdb.disconnect();
+    EXPECT_TRUE(errCode == 0);
+}
+
 TEST(SqliteBeanDB, saveProperty_loadProperty_clear)
 {
     Property *property;
-    const char* testdbDir = g_testdbDir;
+    const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
     BeanWorld world(&testdb);
     int errCode = 0;
@@ -183,10 +199,10 @@ TEST(SqliteBeanDB, saveProperty_loadProperty_clear)
     EXPECT_TRUE(world.getProperty("ar5")->getName() == "ar5" && 
         world.getProperty("ar5")->getType() == Property::ArrayRelationType);
 
-    world.clear();
-    testdb.clear();
-    world.loadProperties();
-    EXPECT_TRUE(world.getProperties().size() == 0);
+    // world.clear();
+    // testdb.clear();
+    // world.loadProperties();
+    // EXPECT_TRUE(world.getProperties().size() == 0);
     
     testdb.disconnect();
 

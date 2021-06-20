@@ -51,39 +51,39 @@ public:
 
 
     /**
-     * Define a property.
+     * Create a property.
      * 
-     * Property must be defined before it can be used.
+     * Property must be created before it can be used.
      * 
      * Notes:
      * - Property is type sensitive: i.e. setting the property with a value of type other
-     *    than the one defined here will fail.
+     *    than the one created here will fail.
      * 
      * @param name the name of property
      * @param valueType the value type of property
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
+    virtual Property* createProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
 
     /**
-     * Define an array property.
+     * Create an array property.
      * 
-     * Array property must be defined before it can be used.
+     * Array property must be created before it can be used.
      * 
      * Notes:
      * - Array property is type sensitive: i.e. adding to the array property 
-     *   with a value of type other than the one defined here will fail.
+     *   with a value of type other than the one created here will fail.
      * 
      * @param name the name of property
      * @param valueType the value type of the element of the array property
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
+    virtual Property* createArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
 
     /**
-     * Define a relation property.
+     * Create a relation property.
      * 
      * Relation is a special kind of property, which represents relationship between
      * two beans, e.g. father/mother etc.
@@ -92,32 +92,32 @@ public:
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* defineRelation(const char* name, bool needIndex = false) = 0;
+    virtual Property* createRelation(const char* name, bool needIndex = false) = 0;
 
     /**
-     * Define an array relation property.
+     * Create an array relation property.
      * 
-     * Array relation property must be defined before it can be used.
+     * Array relation property must be created before it can be used.
      * 
      * @param name the name of array relation property
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) = 0;
+    virtual Property* createArrayRelation(const char* name, bool needIndex = false) = 0;
 
     /**
-     * Undefine a property.
+     * Delete a property.
      * 
      * Notes:
-     * - This method can be used to undefine either a property, an array property,
+     * - This method can be used to delete either a property, an array property,
      *    a relation, or an array relation;
      * - All beans that have this property will remove the property with this id.
      * 
      * @param name the name of property
      * @return 0 on success, or an error code
      */
-    virtual int undefineProperty(const char* name) = 0;
-    virtual int undefineRelation(const char* name) {return undefineProperty(name);};
+    virtual int deleteProperty(const char* name) = 0;
+    virtual int deleteRelation(const char* name) {return deleteProperty(name);};
 
     /**
      * Get property/relation/array property/array relation by name.

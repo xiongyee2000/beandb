@@ -138,7 +138,7 @@ int SqliteBeanDB::reInit()
 {
     if (m_dir == nullptr || m_dir[0] == 0) return -1;
     char buff[256] = {0};
-    snprintf(buff, 255, "rm -rf %s/*", m_dir );
+    snprintf(buff, 255, "rm -rf %s/*.db", m_dir );
     //todo: check if command is executed successfully
     system(buff);
     int errCode = internalInit();
@@ -273,7 +273,7 @@ int SqliteBeanDB::loadProperties()
 }
 
 
-int SqliteBeanDB::undefineProperty(const char* name)
+int SqliteBeanDB::deleteProperty(const char* name)
 {
     if (name == nullptr || name[0] == 0) return 0;
     if (m_db == nullptr) return -1;
@@ -299,31 +299,31 @@ int SqliteBeanDB::undefineProperty(const char* name)
 }
 
 
-Property* SqliteBeanDB::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
+Property* SqliteBeanDB::createProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
+    return createPropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
 }
 
 
-Property* SqliteBeanDB::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
+Property* SqliteBeanDB::createArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
+    return createPropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
 }
 
 
-Property* SqliteBeanDB::defineRelation(const char* name, bool needIndex)
+Property* SqliteBeanDB::createRelation(const char* name, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
+    return createPropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
 }
 
 
-Property* SqliteBeanDB::defineArrayRelation(const char* name, bool needIndex)
+Property* SqliteBeanDB::createArrayRelation(const char* name, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
+    return createPropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
 }
 
 
-Property* SqliteBeanDB::definePropertyCommon_(const char* name, Property::Type type, 
+Property* SqliteBeanDB::createPropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex)
 {
     if (name == nullptr) return nullptr;

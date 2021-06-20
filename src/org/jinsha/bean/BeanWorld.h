@@ -51,7 +51,7 @@ public:
      * 
      * @return the created bean
      */
-    virtual Bean *createBean();
+    virtual Bean *createBean(oidType id = 0);
 
     /**
      * Remove a bean.

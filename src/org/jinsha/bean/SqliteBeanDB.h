@@ -28,13 +28,6 @@ public:
     int disconnect() override;
     int clear() override;
 
-    int loadAll() override;
-    int saveAll() override;
-
-    Bean* loadBean(oidType id) override;
-    int saveBean(Bean* bean) override;
-    int removeBean(Bean* bean) override;
-
     virtual Property* createProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
     virtual Property* createArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
     virtual Property* createRelation(const char* name, bool needIndex = false) override;
@@ -42,8 +35,17 @@ public:
     virtual int deleteProperty(const char* name) override;
     virtual const Property* getProperty(const char* name) const override;
     virtual Property* getProperty(const char* name) override;
-
     int loadProperties() override;
+
+    virtual Bean* createBean();
+    virtual Bean* getBean(oidType id);
+
+    int loadAll() override;
+    int saveAll() override;
+
+    Bean* loadBean(oidType id) override;
+    int updateBean(Bean* bean) override;
+    int deleteBean(Bean* bean) override;
 
 private:
     int internalInit();

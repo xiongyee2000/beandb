@@ -151,7 +151,7 @@ TEST(SqliteBeanDB, loadProperties)
 
 }
 
-TEST(SqliteBeanDB, defineProperty_undefineProperty)
+TEST(SqliteBeanDB,createProperty_deleteProperty)
 {
     Property *property = nullptr;
     const char* testdbDir = g_tmpDBDir;
@@ -248,9 +248,52 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
 
     evaluate_testdb_empty_property(testdb);
 
+    errCode = testdb.deleteProperty(nullptr);
+    EXPECT_TRUE(errCode == 0);
+    errCode = testdb.deleteProperty("");
+    EXPECT_TRUE(errCode == 0);
+
     testdb.clear();
     testdb.disconnect();
 
+}
+
+
+TEST(SqliteBeanDB,createBean_deleteBean)
+{
+    Bean *bean = nullptr;
+    const char* testdbDir = g_tmpDBDir;
+    SqliteBeanDB testdb(testdbDir);
+    BeanWorld world(&testdb);
+    int errCode = 0;
+
+    testdb.reInit();
+    testdb.connect();
+
+    bean = testdb.createBean();
+    EXPECT_TRUE(bean != nullptr);
+    
+    errCode = testdb.deleteBean(bean);
+    EXPECT_TRUE(errCode == 0);
+
+    bean = testdb.createBean();
+    EXPECT_TRUE(bean != nullptr);
+    
+    errCode = testdb.deleteBean(bean);
+    EXPECT_TRUE(errCode == 0);
+
+    bean = testdb.createBean();
+    EXPECT_TRUE(bean != nullptr);
+    
+    errCode = testdb.deleteBean(bean);
+    EXPECT_TRUE(errCode == 0);
+
+    errCode = testdb.deleteBean(nullptr);
+    EXPECT_TRUE(errCode == 0);
+
+
+    testdb.clear();
+    testdb.disconnect();
 }
 
 
@@ -353,10 +396,8 @@ static void validate_testdb_1(SqliteBeanDB& testdb)
 
 void evaluate_testdb_empty_property(SqliteBeanDB& testdb)
 {
-    BeanWorld world(&testdb);
-
     testdb.connect();
-    world.loadProperties();
-    EXPECT_TRUE(world.getProperties().size() == 0);
+    testdb.getWorld()->loadProperties();
+    EXPECT_TRUE(testdb.getWorld()->getProperties().size() == 0);
     testdb.disconnect();
 }

@@ -162,6 +162,22 @@ protected:
     virtual int saveAll() = 0;
 
     /**
+     * Creat an empty bean.
+     * 
+     * @return the pointer pointing to the bean, or nullptr if exception occurs.
+     */
+    virtual Bean* createBean() = 0;
+
+    /**
+     * Get bean by id.
+     * 
+     * @param id the id of the bean
+     * @return the pointer pointing to the bean, or null if no such
+     *                   bean exist in the storage
+     */
+    virtual Bean* getBean(oidType id) = 0;
+
+    /**
      * Load a single bean, including all its properties, from the storage 
      * into the world.
      * 
@@ -181,7 +197,7 @@ protected:
      * @param bean the bean to be saved
      * @return 0 for success, or an error code
      */
-    virtual int saveBean(Bean* bean) = 0;
+    virtual int updateBean(Bean* bean) = 0;
 
     /**
      * Remove a single bean from the storage.
@@ -191,7 +207,7 @@ protected:
      * @param bean the bean to be removed
      * @return 0 for success, or an error code
      */
-    virtual int removeBean(Bean* bean) = 0;
+    virtual int deleteBean(Bean* bean) = 0;
 
     /**
      * Load all properties from the storage into the world.

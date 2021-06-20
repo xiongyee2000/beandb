@@ -17,7 +17,7 @@ const char* SqliteBeanDB::OTABLE_NAME = "otable";
 static const char* CREATE_PTABLE =  
  "CREATE TABLE PTABLE ( \
 ID INTEGER PRIMARY KEY NOT NULL, \
-NAME VARCHAR(64) NOT NULL, \
+NAME VARCHAR(64) NOT NULL UNIQUE, \
 PTYPE INT NOT NULL, \
 VTYPE INT NOT NULL \
 ); ";
@@ -57,13 +57,14 @@ SqliteBeanDB::~SqliteBeanDB()
 int SqliteBeanDB::connect()
 {
     if (!m_initialized) return -1;
+    if (m_db != nullptr) return 0;
     return openDB();
 }
 
 
 int SqliteBeanDB::disconnect()
 {
-    if (!m_initialized) return -1;
+    if (!m_initialized) return 0;
     return closeDB();
 }
 
@@ -162,13 +163,12 @@ int SqliteBeanDB::openDB()
 int SqliteBeanDB::closeDB()
 {
     int errCode = 0;
-    if (m_db != nullptr) {
-        errCode = sqlite3_close(m_db);
-        if( errCode )  {
-            elog("Failed to close database: %s\n", sqlite3_errmsg(m_db));
-        } else {
-            m_db = nullptr;
-        }
+    if (m_db == nullptr) return 0;
+    errCode = sqlite3_close(m_db);
+    if( errCode )  {
+        elog("Failed to close database: %s\n", sqlite3_errmsg(m_db));
+    } else {
+        m_db = nullptr;
     }
     return errCode;
 }
@@ -273,11 +273,61 @@ int SqliteBeanDB::loadProperties()
 }
 
 
-
-int SqliteBeanDB::saveProperty(Property* property)
+int SqliteBeanDB::undefineProperty(const char* name)
 {
+    if (name == nullptr || name[0] == 0) return 0;
     if (m_db == nullptr) return -1;
-    if (property == nullptr) return -2;
+
+    int errCode = 0;
+    sqlite3_stmt *pstmt = nullptr;
+    const char* pzTail = nullptr;
+    static const char *sql = "DELETE FROM  PTABLE WHERE NAME = ?;";
+    
+	errCode = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+    if (errCode != SQLITE_OK) return errCode;
+    errCode = sqlite3_bind_text(pstmt, 1, name, -1, nullptr);
+    if (errCode != SQLITE_OK) return errCode;
+
+	errCode = sqlite3_step( pstmt );
+    if (errCode != SQLITE_DONE) {
+        elog("error occurred in %s, errCode=%d", __func__, errCode);
+    } else {
+        errCode = 0;
+    }
+	sqlite3_finalize(pstmt);
+    return errCode;
+}
+
+
+Property* SqliteBeanDB::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
+{
+    return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
+}
+
+
+Property* SqliteBeanDB::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
+{
+    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
+}
+
+
+Property* SqliteBeanDB::defineRelation(const char* name, bool needIndex)
+{
+    return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
+}
+
+
+Property* SqliteBeanDB::defineArrayRelation(const char* name, bool needIndex)
+{
+    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
+}
+
+
+Property* SqliteBeanDB::definePropertyCommon_(const char* name, Property::Type type, 
+    Property::ValueType valueType, bool needIndex)
+{
+    if (name == nullptr) return nullptr;
+    if (name[0] == 0) return nullptr;
 
     static const char sql[] = "INSERT INTO PTABLE VALUES(?, ?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
@@ -285,35 +335,94 @@ int SqliteBeanDB::saveProperty(Property* property)
     int errCode = 0;
 
 	errCode = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
-    if (errCode != SQLITE_OK) return errCode;
+    if (errCode != SQLITE_OK) return nullptr;
 
     errCode = sqlite3_bind_null(pstmt, 1);
     if (errCode != SQLITE_OK) goto out;
-    errCode = sqlite3_bind_text(pstmt, 2, property->getName().c_str(), -1, nullptr);
+    errCode = sqlite3_bind_text(pstmt, 2, name, -1, nullptr);
     if (errCode != SQLITE_OK) goto out;
-    errCode = sqlite3_bind_int(pstmt, 3, (int)property->getType());
+    errCode = sqlite3_bind_int(pstmt, 3, (int)type);
     if (errCode != SQLITE_OK) goto out;
-    errCode = sqlite3_bind_int(pstmt, 4, (int)property->getValueType());
+    errCode = sqlite3_bind_int(pstmt, 4, (int)valueType);
     if (errCode != SQLITE_OK) goto out;
     
     errCode = sqlite3_step(pstmt);
 
 out:
-    if (errCode != SQLITE_OK && errCode != SQLITE_DONE)
+    if (errCode != SQLITE_OK && errCode != SQLITE_DONE) {
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+    }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
 
-    return errCode;
+    return getProperty(name);
 }
 
 
-int SqliteBeanDB::removeProperty(Property* property)
+const Property* SqliteBeanDB::getProperty(const char* name) const
 {
-    return 0;
+    return (const Property*) ((SqliteBeanDB*)this)->getProperty(name);
 }
 
+
+Property* SqliteBeanDB::getProperty(const char* name)
+{
+    if (name == nullptr || name[0] == 0) return nullptr;
+    if (m_db == nullptr) return nullptr;
+    
+    BeanWorld *world = nullptr;
+    if ((world = getWorld()) == nullptr) return nullptr;
+
+    Property *property = nullptr;
+    sqlite3_stmt *pstmt = nullptr;
+    const char* pzTail = nullptr;
+    int nCol = 0;
+    int errCode = 0;
+    int type = 0;
+    int valueType = 0;
+    // int64_t id = 0;
+   static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE FROM PTABLE WHERE NAME = ?;";
+
+	errCode = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+    if (errCode != SQLITE_OK) goto out;
+    errCode = sqlite3_bind_text(pstmt, 1, name, -1, nullptr);
+    if (errCode != SQLITE_OK) goto out;
+
+	while((errCode = sqlite3_step( pstmt )) == SQLITE_ROW) {
+        nCol = 1;
+        name = (const char*)sqlite3_column_text(pstmt, nCol++);
+        type = sqlite3_column_int(pstmt, nCol++);
+        valueType = sqlite3_column_int(pstmt, nCol++);
+        switch (type) {
+            case Property::PrimaryType:
+                property = world->defineProperty(name, (Property::ValueType)valueType);
+                break;
+            case Property::RelationType:
+                property = world->defineRelation(name);
+                break;
+            case Property::ArrayPrimaryType:
+                property = world->defineArrayProperty(name, (Property::ValueType)valueType);
+                break;
+            case Property::ArrayRelationType:
+                property = world->defineArrayRelation(name);
+                break;
+            default:
+                wlog("ignore invalid property of type: %d", type);
+                break;
+        }
+        break;
+	}
+    if (errCode != SQLITE_ROW) {
+        elog("error occurred in %s, errCode=%d", __func__, errCode);
+    }
+ 
+out:
+    sqlite3_reset(pstmt);
+	sqlite3_finalize(pstmt);
+
+    return property;
+}
 
 
 }

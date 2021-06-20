@@ -35,12 +35,20 @@ public:
     int saveBean(Bean* bean) override;
     int removeBean(Bean* bean) override;
 
+    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
+    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
+    virtual Property* defineRelation(const char* name, bool needIndex = false) override;
+    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) override;
+    virtual int undefineProperty(const char* name) override;
+    virtual const Property* getProperty(const char* name) const override;
+    virtual Property* getProperty(const char* name) override;
+
     int loadProperties() override;
-    int saveProperty(Property* property) override;
-    int removeProperty(Property* property) override;
 
 private:
     int internalInit();
+    Property* definePropertyCommon_(const char* name, Property::Type type, 
+    Property::ValueType valueType, bool needIndex = false);
 
 private:
     const char* getDir()  {return m_dir;};

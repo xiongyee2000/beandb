@@ -263,6 +263,36 @@ oidType Bean::getRelationBeanId(const Property* relation,
 }
 
 
+int Bean::setRelation(Property* relation, oidType objectId)
+{
+    if (relation == nullptr) return -2;
+    if (relation->getType() != Property::RelationType) return -2;
+    Json::Value *oldValue =  getMemberPtr(relation);
+    setPropertyBase_(relation, oldValue, objectId);
+
+    //handle object tracking
+    if (oldValue != nullptr) {
+        oidType oldObjectId = (*oldValue).asUInt64();
+        if (oldObjectId == objectId) return 0; //the same bean, do nothing
+        Bean* object = m_world_->getBean(oldObjectId);
+        if (object != nullptr) {
+            object->removeSubject(this, relation);
+        }
+        relation->removeObject(oldObjectId);
+    }
+    relation->addObject(objectId);
+
+    //handle subject tracking
+    Bean* objectBean = m_world_->getBean(objectId);
+    if (objectBean != nullptr)
+        objectBean->addSubject(this, relation);
+    relation->addSubject(m_id_);
+    
+    return 0;
+
+}
+
+
 int Bean::setRelation(Property* relation, Bean* bean)
 {
     if (bean == nullptr) return -1;
@@ -299,6 +329,25 @@ int Bean::createArrayRelation(Property* relation)
     const char* pname = relation->getName().c_str();
     m_json_[pname] = Json::Value(Json::arrayValue);
     relation->addSubject(m_id_);
+    return 0;
+}
+
+
+int Bean::appendRelation(Property* relation,  oidType objectBeanId)
+{
+    if (relation == nullptr) return -2;
+    if (relation->getType() != Property::ArrayRelationType) return -2;
+    if (!hasArrayRelation(relation)) return -4;
+    const auto& pname = relation->getName().c_str();
+    auto& arrayValue = m_json_[pname];
+    arrayValue.append(objectBeanId);
+    relation->addObject(objectBeanId);
+    //todo: do not index array property/relation for now
+    // if (property->indexed())
+    //     property->addIndex(this, value);
+    Bean* objectBean = m_world_->getBean(objectBeanId);
+    if (objectBean != nullptr) 
+        objectBean->addSubject(this, relation);
     return 0;
 }
 

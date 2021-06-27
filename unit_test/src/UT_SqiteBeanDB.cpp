@@ -60,12 +60,12 @@ TEST(SqliteBeanDB, connect_disconnect)
 {
     const char* testdbDir = g_sqlite_db_1;
     SqliteBeanDB testdb(testdbDir);
-    int errCode = 0;
+    int err = 0;
 
-    errCode = testdb.connect();
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.disconnect();
-    EXPECT_TRUE(errCode == 0);
+    err = testdb.connect();
+    EXPECT_TRUE(err == 0);
+    err = testdb.disconnect();
+    EXPECT_TRUE(err == 0);
 }
 
 TEST(SqliteBeanDB, getProperty)
@@ -84,14 +84,14 @@ TEST(SqliteBeanDB, loadProperties)
     const char* testdbDir = g_sqlite_db_1;
     SqliteBeanDB testdb(testdbDir);
     BeanWorld world(&testdb);
-    int errCode = 0;
+    int err = 0;
 
     world.clear();
 
     testdb.connect();
 
-    errCode = testdb.loadProperties();
-    EXPECT_TRUE(errCode == 0);
+    err = testdb.loadProperties();
+    EXPECT_TRUE(err == 0);
 
     EXPECT_TRUE(world.getProperty("p1")->getName() == "p1" && 
         world.getProperty("p1")->getType() == Property::PrimaryType && 
@@ -157,7 +157,7 @@ TEST(SqliteBeanDB,createProperty_deleteProperty)
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
     BeanWorld world(&testdb);
-    int errCode = 0;
+    int err = 0;
 
     testdb.reInit();
     testdb.connect();
@@ -205,53 +205,53 @@ TEST(SqliteBeanDB,createProperty_deleteProperty)
 
     validate_testdb_1(testdb);
 
-    errCode = testdb.deleteProperty("p1");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("p2");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("p3");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("p4");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("p5");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ap1");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ap2");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ap3");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ap4");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ap5");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("r1");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("r2");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("r3");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("r4");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("r5");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ar1");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ar2");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ar3");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ar4");
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("ar5");
-    EXPECT_TRUE(errCode == 0);
+    err = testdb.deleteProperty("p1");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("p2");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("p3");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("p4");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("p5");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ap1");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ap2");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ap3");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ap4");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ap5");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("r1");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("r2");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("r3");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("r4");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("r5");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ar1");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ar2");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ar3");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ar4");
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("ar5");
+    EXPECT_TRUE(err == 0);
 
     evaluate_testdb_empty_property(testdb);
 
-    errCode = testdb.deleteProperty(nullptr);
-    EXPECT_TRUE(errCode == 0);
-    errCode = testdb.deleteProperty("");
-    EXPECT_TRUE(errCode == 0);
+    err = testdb.deleteProperty(nullptr);
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteProperty("");
+    EXPECT_TRUE(err == 0);
 
     testdb.clear();
     testdb.disconnect();
@@ -265,7 +265,7 @@ TEST(SqliteBeanDB,createBean_deleteBean)
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
     BeanWorld world(&testdb);
-    int errCode = 0;
+    int err = 0;
 
     testdb.reInit();
     testdb.connect();
@@ -273,23 +273,23 @@ TEST(SqliteBeanDB,createBean_deleteBean)
     bean = testdb.createBean();
     EXPECT_TRUE(bean != nullptr);
     
-    errCode = testdb.deleteBean(bean);
-    EXPECT_TRUE(errCode == 0);
+    err = testdb.deleteBean(bean);
+    EXPECT_TRUE(err == 0);
 
     bean = testdb.createBean();
     EXPECT_TRUE(bean != nullptr);
     
-    errCode = testdb.deleteBean(bean);
-    EXPECT_TRUE(errCode == 0);
+    err = testdb.deleteBean(bean);
+    EXPECT_TRUE(err == 0);
 
     bean = testdb.createBean();
     EXPECT_TRUE(bean != nullptr);
     
-    errCode = testdb.deleteBean(bean);
-    EXPECT_TRUE(errCode == 0);
+    err = testdb.deleteBean(bean);
+    EXPECT_TRUE(err == 0);
 
-    errCode = testdb.deleteBean(nullptr);
-    EXPECT_TRUE(errCode == 0);
+    err = testdb.deleteBean(nullptr);
+    EXPECT_TRUE(err == 0);
 
 
     testdb.clear();

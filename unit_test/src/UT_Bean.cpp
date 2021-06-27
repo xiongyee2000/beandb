@@ -83,14 +83,14 @@ TEST(Bean, create_has_remove)
 {
     BeanWorld world;
     Value value;
-    int errCode = 0;
+    int err = 0;
     
     init_world(world);
 
     Bean* bean1 = world.createBean();
 
-    errCode = bean1->createArrayProperty(nullptr);
-    EXPECT_TRUE(errCode == -2);
+    err = bean1->createArrayProperty(nullptr);
+    EXPECT_TRUE(err == -2);
 
     EXPECT_TRUE(!bean1->hasProperty(nullptr));
     EXPECT_TRUE(!bean1->hasArrayProperty(nullptr));
@@ -105,8 +105,8 @@ TEST(Bean, create_has_remove)
     EXPECT_TRUE(!bean1->hasArrayRelation(p1));
 
     EXPECT_TRUE(!bean1->hasArrayProperty(pArray_1));
-    errCode = bean1->createArrayProperty(pArray_1);
-    EXPECT_TRUE(errCode == 0);
+    err = bean1->createArrayProperty(pArray_1);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(!bean1->hasProperty(pArray_1));
     EXPECT_TRUE(bean1->hasArrayProperty(pArray_1));
     EXPECT_TRUE(!bean1->hasRelation(pArray_1));
@@ -125,7 +125,7 @@ TEST(Bean, create_has_remove)
 
     EXPECT_TRUE(!bean1->hasArrayRelation(rArray_1));
     bean1->createArrayRelation(rArray_1);
-    EXPECT_TRUE(errCode == 0);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(!bean1->hasProperty(rArray_1));
     EXPECT_TRUE(!bean1->hasArrayProperty(rArray_1));
     EXPECT_TRUE(!bean1->hasRelation(rArray_1));
@@ -165,7 +165,7 @@ TEST(Bean, property)
 {
     BeanWorld world;
     Value value;
-    int errCode = 0;
+    int err = 0;
 
     init_world(world);
 
@@ -173,22 +173,22 @@ TEST(Bean, property)
 
     Bean &bean = *world.createBean();
 
-    errCode = bean.setProperty(p1, Json::Value());
-    EXPECT_TRUE(errCode == -1);
-    errCode = bean.setProperty(nullptr, 1);
-    EXPECT_TRUE(errCode == -2);
-    errCode = bean.setProperty(p1, 1.0);
-    EXPECT_TRUE(errCode == -3);
+    err = bean.setProperty(p1, Json::Value());
+    EXPECT_TRUE(err == -1);
+    err = bean.setProperty(nullptr, 1);
+    EXPECT_TRUE(err == -2);
+    err = bean.setProperty(p1, 1.0);
+    EXPECT_TRUE(err == -3);
 
-    errCode = bean.setProperty(p1, Json::Value::minInt);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(p1, Json::Value::minInt);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getProperty(p1) == Json::Value::minInt);
     value = bean.removeProperty(p1);
     EXPECT_TRUE(bean.hasProperty(p1) == false);
     EXPECT_TRUE(value == Json::Value::minInt);
 
-    errCode = bean.setProperty(p1, Json::Value::minInt64);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(p1, Json::Value::minInt64);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getProperty(p1) == Json::Value::minInt64);
     value = bean.removeProperty(p1);
     EXPECT_TRUE(bean.hasProperty(p1) == false);
@@ -196,15 +196,15 @@ TEST(Bean, property)
 
     world.undefineProperty("p1");
     world.defineProperty("p1", Property::UIntType);
-    errCode = bean.setProperty(p1, Json::Value::maxUInt);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(p1, Json::Value::maxUInt);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getProperty(p1) == Json::Value::maxUInt);
     value = bean.removeProperty(p1);
     EXPECT_TRUE(bean.hasProperty(p1) == false);
     EXPECT_TRUE(value == Json::Value::maxUInt);
 
-    errCode = bean.setProperty(p1, Json::Value::maxUInt64);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(p1, Json::Value::maxUInt64);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getProperty(p1) == Json::Value::maxUInt64);
     value = bean.removeProperty(p1);
     EXPECT_TRUE(bean.hasProperty(p1) == false);
@@ -212,15 +212,15 @@ TEST(Bean, property)
 
     world.undefineProperty("p1");
     world.defineProperty("p1", Property::RealType);
-    errCode = bean.setProperty(p1, 8.8f);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(p1, 8.8f);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getProperty(p1) == 8.8f);
     value = bean.removeProperty(p1);
     EXPECT_TRUE(bean.hasProperty(p1) == false);
     EXPECT_TRUE(value == 8.8f);
 
-    errCode = bean.setProperty(p1, 8.8);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(p1, 8.8);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getProperty(p1) == 8.8);
     value = bean.removeProperty(p1);
     EXPECT_TRUE(bean.hasProperty(p1) == false);
@@ -238,8 +238,8 @@ TEST(Bean, property)
     bean.setProperty(p1, "v1");
     world.undefineProperty("p2");
     world.defineProperty("p2", Property::StringType);
-    errCode = bean.setProperty(p2, "v2");
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(p2, "v2");
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 2);
     EXPECT_TRUE(bean.getProperty(p2) == "v2");
 
@@ -255,8 +255,8 @@ TEST(Bean, property)
 
     world.undefineProperty("p1");
     world.defineProperty("p1", Property::BoolType);
-    errCode = bean.setProperty(p1, true);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(p1, true);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
     EXPECT_TRUE(bean.getProperty(p1) == true);
     value = bean.removeProperty(p1);
@@ -264,8 +264,8 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.hasProperty(p1) == false);
     EXPECT_TRUE(value == true);
 
-    errCode = bean.setProperty(p1, false);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(p1, false);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
     EXPECT_TRUE(bean.getProperty(p1) == false);
     value = bean.removeProperty(p1);
@@ -281,7 +281,7 @@ TEST(Bean, array_property)
     BeanWorld world;
     Json::Value value;
     Property* property;
-    int errCode = 0;
+    int err = 0;
 
     init_world(world);
 
@@ -291,57 +291,57 @@ TEST(Bean, array_property)
     Value value2 = bean.getArrayProperty(pArray_1, 0);
     EXPECT_TRUE(value2.isNull());
 
-    errCode = bean.appendProperty(pArray_1, Value::null);
-    EXPECT_TRUE(errCode == -1);
-    errCode = bean.appendProperty(nullptr, 0);
-    EXPECT_TRUE(errCode == -2);
+    err = bean.appendProperty(pArray_1, Value::null);
+    EXPECT_TRUE(err == -1);
+    err = bean.appendProperty(nullptr, 0);
+    EXPECT_TRUE(err == -2);
 
-    errCode = bean.setProperty(pArray_1, 0, Value::null);
-    EXPECT_TRUE(errCode == -1);
-    errCode = bean.setProperty(nullptr, 0, 1);
-    EXPECT_TRUE(errCode == -2);
+    err = bean.setProperty(pArray_1, 0, Value::null);
+    EXPECT_TRUE(err == -1);
+    err = bean.setProperty(nullptr, 0, 1);
+    EXPECT_TRUE(err == -2);
 
     property = world.defineArrayProperty("pArray_1", Property::IntType);
     EXPECT_TRUE(property == world.getProperty("pArray_1"));
-    errCode = bean.appendProperty(pArray_1, 1);
-    EXPECT_TRUE(errCode == -4);
-    errCode = bean.setProperty(pArray_1, 0, 1);
-    EXPECT_TRUE(errCode == -4);
+    err = bean.appendProperty(pArray_1, 1);
+    EXPECT_TRUE(err == -4);
+    err = bean.setProperty(pArray_1, 0, 1);
+    EXPECT_TRUE(err == -4);
 
     //create empty array
-    errCode = bean.createArrayProperty(pArray_1);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.createArrayProperty(pArray_1);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.hasArrayProperty(pArray_1) == true);
     EXPECT_TRUE(bean.getArraySize(pArray_1) == 0);
     value = bean.getArrayProperty(pArray_1, 0);
     EXPECT_TRUE(value.isNull());
 
     //append
-    errCode = bean.appendProperty(pArray_1, "0");
-    EXPECT_TRUE(errCode == -3);
-    errCode = bean.appendProperty(pArray_1, 0);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.appendProperty(pArray_1, "0");
+    EXPECT_TRUE(err == -3);
+    err = bean.appendProperty(pArray_1, 0);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getArraySize(pArray_1) == 1);
     value = bean.getArrayProperty(pArray_1, 0);
     EXPECT_TRUE(value == 0);
     value = bean.getArrayProperty(pArray_1, 1);
     EXPECT_TRUE(value.isNull());
-    errCode = bean.appendProperty(pArray_1, 1);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.appendProperty(pArray_1, 1);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getArraySize(pArray_1) == 2);
     value = bean.getArrayProperty(pArray_1, 1);
     EXPECT_TRUE(value == 1);
 
     //setProperty()
-    errCode = bean.setProperty(pArray_1, 99, 99);
-    EXPECT_TRUE(errCode == -5);
-    errCode = bean.setProperty(pArray_1, 0, 99);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(pArray_1, 99, 99);
+    EXPECT_TRUE(err == -5);
+    err = bean.setProperty(pArray_1, 0, 99);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getArraySize(pArray_1) == 2);
     value = bean.getArrayProperty(pArray_1, 0);
     EXPECT_TRUE(value == 99);
-    errCode = bean.setProperty(pArray_1, 1, 999);
-    EXPECT_TRUE(errCode == 0);
+    err = bean.setProperty(pArray_1, 1, 999);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getArraySize(pArray_1) == 2);
     value = bean.getArrayProperty(pArray_1, 1);
     EXPECT_TRUE(value == 999);
@@ -368,7 +368,7 @@ TEST(Bean, relation)
 {
     BeanWorld world;
     Value value;
-    int errCode = 0;
+    int err = 0;
 
     init_world(world);
 
@@ -386,16 +386,16 @@ TEST(Bean, relation)
 
     Bean* bean2 = world.createBean();
 
-    errCode = bean1->setRelation(r1, nullptr);
-    EXPECT_TRUE(errCode == -1);
-    errCode = bean1->setRelation(nullptr, bean2);
-    EXPECT_TRUE(errCode == -2);
-    errCode = bean1->setRelation(p1, bean2);
-    EXPECT_TRUE(errCode == -2);
+    err = bean1->setRelation(r1, nullptr);
+    EXPECT_TRUE(err == -1);
+    err = bean1->setRelation(nullptr, bean2);
+    EXPECT_TRUE(err == -2);
+    err = bean1->setRelation(p1, bean2);
+    EXPECT_TRUE(err == -2);
 
     EXPECT_TRUE(!bean1->getRelationBeanId(r1));
-    errCode = bean1->setRelation(r1, bean2);
-    EXPECT_TRUE(errCode == 0);
+    err = bean1->setRelation(r1, bean2);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getRelationBeanId(r1) == bean2->getId());
 
 }
@@ -404,7 +404,7 @@ TEST(Bean, array_relation)
 {
     BeanWorld world;
     Value value;
-    int errCode = 0;
+    int err = 0;
     
     init_world(world);
 
@@ -412,44 +412,44 @@ TEST(Bean, array_relation)
     Bean* bean2 = world.createBean();
     Bean* bean3 = world.createBean();
 
-    errCode = bean1->appendRelation(rArray_1, nullptr);
-    EXPECT_TRUE(errCode == -1);
-    errCode = bean1->appendRelation(nullptr, bean2);
-    EXPECT_TRUE(errCode == -2);
-    errCode = bean1->appendRelation(p1, bean2);
-    EXPECT_TRUE(errCode == -2);
-    errCode = bean1->appendRelation(rArray_1, bean2);
-    EXPECT_TRUE(errCode == -4);
+    err = bean1->appendRelation(rArray_1, nullptr);
+    EXPECT_TRUE(err == -1);
+    err = bean1->appendRelation(nullptr, bean2);
+    EXPECT_TRUE(err == -2);
+    err = bean1->appendRelation(p1, bean2);
+    EXPECT_TRUE(err == -2);
+    err = bean1->appendRelation(rArray_1, bean2);
+    EXPECT_TRUE(err == -4);
 
-    errCode = bean1->setRelation(rArray_1, 0, nullptr);
-    EXPECT_TRUE(errCode == -1);
-    errCode = bean1->setRelation(nullptr, 0, bean2);
-    EXPECT_TRUE(errCode == -2);
-    errCode = bean1->setRelation(p1, 0, bean2);
-    EXPECT_TRUE(errCode == -2);
-    errCode = bean1->setRelation(rArray_1, 0, bean2);
-    EXPECT_TRUE(errCode == -4);
+    err = bean1->setRelation(rArray_1, 0, nullptr);
+    EXPECT_TRUE(err == -1);
+    err = bean1->setRelation(nullptr, 0, bean2);
+    EXPECT_TRUE(err == -2);
+    err = bean1->setRelation(p1, 0, bean2);
+    EXPECT_TRUE(err == -2);
+    err = bean1->setRelation(rArray_1, 0, bean2);
+    EXPECT_TRUE(err == -4);
 
     EXPECT_TRUE(!bean1->getRelationBeanId(rArray_1, 0));
-    errCode = bean1->createArrayRelation(nullptr);
-    EXPECT_TRUE(errCode == -2);
-    errCode = bean1->createArrayRelation(p1);
-    EXPECT_TRUE(errCode == -2);
-    errCode = bean1->createArrayRelation(rArray_1);
-    EXPECT_TRUE(errCode == 0);
+    err = bean1->createArrayRelation(nullptr);
+    EXPECT_TRUE(err == -2);
+    err = bean1->createArrayRelation(p1);
+    EXPECT_TRUE(err == -2);
+    err = bean1->createArrayRelation(rArray_1);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getArraySize(rArray_1) == 0);
 
-    errCode = bean1->appendRelation(rArray_1, bean2);
-    EXPECT_TRUE(errCode == 0);
+    err = bean1->appendRelation(rArray_1, bean2);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getArraySize(rArray_1) == 1);
 
-    errCode = bean1->setRelation(rArray_1, 1, bean2);
-    EXPECT_TRUE(errCode == -5);
-    errCode = bean1->setRelation(rArray_1, 0, bean2);
-    EXPECT_TRUE(errCode == 0);
+    err = bean1->setRelation(rArray_1, 1, bean2);
+    EXPECT_TRUE(err == -5);
+    err = bean1->setRelation(rArray_1, 0, bean2);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == bean2->getId());
-    errCode = bean1->setRelation(rArray_1, 0, bean3);
-    EXPECT_TRUE(errCode == 0);
+    err = bean1->setRelation(rArray_1, 0, bean3);
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == bean3->getId());
     bean1->setProperty(p1, 1);
     EXPECT_TRUE(!bean1->getRelationBeanId(p1, 0));
@@ -470,9 +470,9 @@ TEST(Bean, array_relation)
     value = bean3->removeProperty(pArray_1, 3);
     EXPECT_TRUE(value.isNull());
 
-    errCode = bean3->createArrayRelation(rArray_1);
-    errCode = bean3->appendRelation(rArray_1, bean1);
-    errCode = bean3->appendRelation(rArray_1, bean2);
+    err = bean3->createArrayRelation(rArray_1);
+    err = bean3->appendRelation(rArray_1, bean1);
+    err = bean3->appendRelation(rArray_1, bean2);
     EXPECT_TRUE(bean3->getArraySize(rArray_1) == 2);
 
     value = bean3->removeProperty(rArray_1, 0);

@@ -58,13 +58,24 @@ int SqliteBeanDB::connect()
 {
     if (!m_initialized) return -1;
     if (m_db != nullptr) return 0;
-    return openDB();
+    int err = 0;
+    err = openDB();
+    if (err) {
+        elog("Failed to connect to db. err=%d", err);
+        return err;
+    }
+    err = loadProperties();
+    if (err) {
+        elog("Failed to load properties. err=%d", err);
+        return err;
+    }
+    return 0;
 }
 
 
 int SqliteBeanDB::disconnect()
 {
-    if (!m_initialized) return 0;
+    if (!m_db) return 0;
     return closeDB();
 }
 

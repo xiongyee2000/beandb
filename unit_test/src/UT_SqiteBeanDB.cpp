@@ -63,6 +63,12 @@ TEST(SqliteBeanDB, connect_disconnect)
     int err = 0;
 
     err = testdb.connect();
+    EXPECT_TRUE(err == -2);
+    err = testdb.disconnect();
+    EXPECT_TRUE(err == 0);
+
+    BeanWorld world(&testdb);
+    err = testdb.connect();
     EXPECT_TRUE(err == 0);
     err = testdb.disconnect();
     EXPECT_TRUE(err == 0);

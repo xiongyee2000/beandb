@@ -28,11 +28,11 @@ public:
     int disconnect() override;
     int clear() override;
 
-    virtual Property* createProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
-    virtual Property* createArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
-    virtual Property* createRelation(const char* name, bool needIndex = false) override;
-    virtual Property* createArrayRelation(const char* name, bool needIndex = false) override;
-    virtual int deleteProperty(const char* name) override;
+    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
+    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
+    virtual Property* defineRelation(const char* name, bool needIndex = false) override;
+    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) override;
+    virtual int undefineProperty(const char* name) override;
     virtual const Property* getProperty(const char* name) const override;
     virtual Property* getProperty(const char* name) override;
     int loadProperties() override;
@@ -49,7 +49,7 @@ public:
 
 private:
     int internalInit();
-    Property* createPropertyCommon_(const char* name, Property::Type type, 
+    Property* definePropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex = false);
 
 private:

@@ -11,22 +11,24 @@ namespace jinsha {
 namespace bean {
 
 const char* SqliteBeanDB::DB_PATH  =  "beandb.db";
-const char* SqliteBeanDB::PTABLE_NAME = "ptable";
-const char* SqliteBeanDB::OTABLE_NAME = "PTABLE";
+// const char* SqliteBeanDB::PTABLE_NAME = "PTABLE";
+// const char* SqliteBeanDB::OTABLE_NAME = "OTABLE";
 
 static const char* CREATE_PTABLE =  
- "CREATE TABLE PTABLE ( \
+ "CREATE TABLE META_PTABLE ( \
 ID INTEGER PRIMARY KEY NOT NULL, \
-NAME VARCHAR(64) NOT NULL UNIQUE, \
+NAME VARCHAR(64) UNIQUE NOT NULL, \
 PTYPE INT NOT NULL, \
-VTYPE INT NOT NULL \
+VTYPE INT NOT NULL, \
+INDEXED INT8 NOT NULL \
 ); ";
 
 static const char* CREATE_OTABLE =  
  "CREATE TABLE OTABLE ( \
 ID INTEGER PRIMARY KEY NOT NULL, \
-PROPERTY INT NOT NULL, \
-VALUE UNSIGNED BIG INT NOT NULL \
+CLASS INT NOT NULL, \
+PROPERTIES TEXT, \
+VALUE  NOT NULL \
 ); ";
 
 static const char* CREATE_STABLE =  
@@ -120,7 +122,7 @@ int SqliteBeanDB::internalInit()
         sqlite3_free(zErrMsg);
         return err;
     } 
-    ilog("%s", "PTABLE created successfully\n");
+    ilog("%s", "META_PTABLE created successfully\n");
 
     sql = CREATE_OTABLE;
     err = sqlite3_exec(m_db, sql, nullptr, 0, &zErrMsg);
@@ -214,7 +216,7 @@ Bean* SqliteBeanDB::createBean()
     const char* pzTail = nullptr;
     int err = 0;
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) return nullptr;
 
     err = sqlite3_bind_null(pstmt, 1);
@@ -262,11 +264,11 @@ Bean* SqliteBeanDB::getBean(oidType id)
     Property* property = nullptr;
     sqlite3_int64 value = 0;
    static const char sql[] = "SELECT objects.VALUE \
-        , PTABLE.NAME, PTABLE.PTYPE, PTABLE.VTYPE \
+        , META_PTABLE.NAME, META_PTABLE.PTYPE, META_PTABLE.VTYPE \
         FROM (SELECT * from OTABLE WHERE ID = ?) as objects \
-        JOIN PTABLE on objects.PROPERTY=PTABLE.ID;";
+        JOIN META_PTABLE on objects.PROPERTY=META_PTABLE.ID;";
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int64(pstmt, 1, id);
     if (err != SQLITE_OK) goto _out;
@@ -338,7 +340,7 @@ int SqliteBeanDB::deleteBean(Bean* bean)
     const char* pzTail = nullptr;
     static const char *sql = "DELETE FROM  OTABLE WHERE ID = ?;";
     
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) return err;
     err = sqlite3_bind_int64(pstmt, 1, (sqlite3_int64)bean->getId());
     if (err != SQLITE_OK) return err;
@@ -369,7 +371,7 @@ int SqliteBeanDB::deleteBean(Bean* bean)
 
 int SqliteBeanDB::loadProperties()
 {
-    static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE FROM PTABLE;";
+    static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM META_PTABLE;";
     BeanWorld *world = nullptr;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
@@ -383,7 +385,7 @@ int SqliteBeanDB::loadProperties()
     if (m_db == nullptr) return -1;
     if ((world = getWorld()) == nullptr) return -2;
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) return err;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
@@ -422,7 +424,7 @@ int SqliteBeanDB::loadProperties()
 }
 
 
-int SqliteBeanDB::deleteProperty(const char* name)
+int SqliteBeanDB::undefineProperty(const char* name)
 {
     if (name == nullptr || name[0] == 0) return 0;
 
@@ -438,103 +440,172 @@ int SqliteBeanDB::deleteProperty(const char* name)
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
-    static const char *sql = "DELETE FROM  PTABLE WHERE NAME = ?;";
-    
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
-    if (err != SQLITE_OK) return err;
-    err = sqlite3_bind_text(pstmt, 1, name, -1, nullptr);
-    if (err != SQLITE_OK) return err;
+    char* errMsg = nullptr;
+    char buff[128]{0};
+    int buffSize = sizeof(buff);
+    static const char *sql = "DELETE FROM  META_PTABLE WHERE NAME = ?;";
+    static const char drop_table[] =   "DROP TABLE p_%s; ";
 
+    sqlite3_exec(m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_text(pstmt, 1, name, -1, nullptr);
+    if (err != SQLITE_OK) goto _out;
 	err = sqlite3_step( pstmt );
-    if (err != SQLITE_DONE) {
+    if (err != SQLITE_DONE) goto _out;
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+
+    if (property->indexed() 
+        || property->getValueType() == Property::StringType) {
+        snprintf(buff, buffSize, drop_table, name);
+        err = sqlite3_exec(m_db, buff, nullptr , nullptr , &errMsg );
+        if (err != SQLITE_OK) goto _out;
+    }
+
+_out:
+    if (err != SQLITE_OK && err != SQLITE_DONE) {
+        err = sqlite3_exec ( m_db , "ROLLBACK  TRANSACTION" , nullptr , nullptr , &errMsg ) ;
         elog("error occurred in %s, err=%d", __func__, err);
     } else {
-        if (world != nullptr) {
-            world->undefineProperty(name);
+        err = sqlite3_exec ( m_db , "COMMIT TRANSACTION" , nullptr , nullptr , &errMsg ) ;
+        if (err != SQLITE_OK && err != SQLITE_DONE) {
+            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        } else {
+            if (world != nullptr) {
+                world->undefineProperty(name);
+            }
+            err = 0;
         }
-        err = 0;
     }
-	sqlite3_finalize(pstmt);
+
+    if (errMsg  != nullptr) sqlite3_free(errMsg);
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
     return err;
 }
 
 
-Property* SqliteBeanDB::createProperty(const char* name, Property::ValueType valueType, bool needIndex)
+Property* SqliteBeanDB::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return createPropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
+    return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
 }
 
 
-Property* SqliteBeanDB::createArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
+Property* SqliteBeanDB::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return createPropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
+    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
 }
 
 
-Property* SqliteBeanDB::createRelation(const char* name, bool needIndex)
+Property* SqliteBeanDB::defineRelation(const char* name, bool needIndex)
 {
-    return createPropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
+    return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
 }
 
 
-Property* SqliteBeanDB::createArrayRelation(const char* name, bool needIndex)
+Property* SqliteBeanDB::defineArrayRelation(const char* name, bool needIndex)
 {
-    return createPropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
+    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
 }
 
 
-Property* SqliteBeanDB::createPropertyCommon_(const char* name, Property::Type type, 
+Property* SqliteBeanDB::definePropertyCommon_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex)
 {
     if (name == nullptr || name[0] == 0) return nullptr;
 
-    Property *property = nullptr;
     BeanWorld *world = getWorld();
-    if (world != nullptr) {
-        property = world->getProperty(name);
-        if (property != nullptr) return property;
-    } else {
-         return nullptr; //todo: currently world is required
+    if (world == nullptr) return nullptr; //todo: currently world is required
+
+    Property *property = nullptr;
+    property = world->getProperty(name);
+    if (property != nullptr) {
+        if (property->getType() == type && property->getValueType() == valueType) {
+            return property;
+        } else {
+            wlog("property with name %s already exists but with different type or value type.", name);
+            return nullptr;
+        }
     }
 
+     //now let's create it in db
     if (m_db == nullptr) return nullptr;
 
-    static const char sql[] = "INSERT INTO PTABLE VALUES(?, ?, ?, ?) ;";
+    const char* sql = nullptr;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int err = 0;
+    char* errMsg = nullptr;
+    char  buff[128] {0};
+    int sizeOfBuff = sizeof(buff);
+    static const char create_property_table[] =   
+    "CREATE TABLE p_%s ( \
+    SUBJECT_ID BIGINT %s NOT NULL, \
+    VALUE  %s NOT NULL \
+    ); ";
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+    sqlite3_exec(m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+
+    static const char sql_insert_ptable[] = "INSERT INTO META_PTABLE VALUES(?, ?, ?, ?, ?) ;";
+    sql = sql_insert_ptable;
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) return nullptr;
 
     err = sqlite3_bind_null(pstmt, 1);
-    if (err != SQLITE_OK) goto out;
+    if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_text(pstmt, 2, name, -1, nullptr);
-    if (err != SQLITE_OK) goto out;
+    if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int(pstmt, 3, (int)type);
-    if (err != SQLITE_OK) goto out;
+    if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int(pstmt, 4, (int)valueType);
-    if (err != SQLITE_OK) goto out;
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int(pstmt, 5, needIndex ? 1 : 0);
+    if (err != SQLITE_OK) goto _out;
     
     err = sqlite3_step(pstmt);
+    if (err != SQLITE_DONE) goto _out;
 
-out:
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+
+    if (needIndex
+        || valueType ==  Property::StringType) {  
+    //create a table for index or string reference
+        snprintf(buff, sizeOfBuff - 1, "p_%s", name);
+        
+        snprintf(buff, sizeOfBuff - 1, create_property_table, 
+        name,
+        (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) ? "UNIQUE" : "",
+        (valueType == Property::StringType) ? "TEXT" : "BIGINT" );
+        sql = buff;
+        err = sqlite3_exec ( m_db , sql , nullptr , nullptr , &errMsg ) ;
+         if (err != SQLITE_OK)  goto _out;
+    }
+
+_out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
+        err = sqlite3_exec ( m_db , "ROLLBACK  TRANSACTION" , nullptr , nullptr , &errMsg ) ;
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
-    } else {
-        if (world != nullptr) { 
+    }  else {
+        err = sqlite3_exec ( m_db , "COMMIT TRANSACTION" , nullptr , nullptr , &errMsg ) ;
+        if (err != SQLITE_OK && err != SQLITE_DONE) {
+            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        } else {
             switch (type) {
                 case Property::PrimaryType:
-                    property = world->defineProperty(name, (Property::ValueType)valueType);
+                    property = world->defineProperty(name, (Property::ValueType)valueType, needIndex);
                     break;
                 case Property::RelationType:
-                    property = world->defineRelation(name);
+                    property = world->defineRelation(name, needIndex);
                     break;
                 case Property::ArrayPrimaryType:
-                    property = world->defineArrayProperty(name, (Property::ValueType)valueType);
+                    property = world->defineArrayProperty(name, (Property::ValueType)valueType, needIndex);
                     break;
                 case Property::ArrayRelationType:
-                    property = world->defineArrayRelation(name);
+                    property = world->defineArrayRelation(name, needIndex);
                     break;
                 default:
                     wlog("ignore invalid property of type: %d", type);
@@ -542,9 +613,11 @@ out:
             }
         }
     }
+
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
+    if (errMsg  != nullptr) sqlite3_free(errMsg);
 
     return property;
 }
@@ -577,10 +650,11 @@ Property* SqliteBeanDB::getProperty(const char* name)
     int err = 0;
     int type = 0;
     int valueType = 0;
+    bool needIndex = false;
     // int64_t id = 0;
-   static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE FROM PTABLE WHERE NAME = ?;";
+   static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM META_PTABLE WHERE NAME = ?;";
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, &pzTail);
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_text(pstmt, 1, name, -1, nullptr);
     if (err != SQLITE_OK) goto out;
@@ -590,18 +664,19 @@ Property* SqliteBeanDB::getProperty(const char* name)
         name = (const char*)sqlite3_column_text(pstmt, nCol++);
         type = sqlite3_column_int(pstmt, nCol++);
         valueType = sqlite3_column_int(pstmt, nCol++);
+        needIndex = sqlite3_column_int(pstmt, nCol++) == 1 ? true : false;
         switch (type) {
             case Property::PrimaryType:
-                property = world->defineProperty(name, (Property::ValueType)valueType);
+                property = world->defineProperty(name, (Property::ValueType)valueType, needIndex);
                 break;
             case Property::RelationType:
-                property = world->defineRelation(name);
+                property = world->defineRelation(name, needIndex);
                 break;
             case Property::ArrayPrimaryType:
-                property = world->defineArrayProperty(name, (Property::ValueType)valueType);
+                property = world->defineArrayProperty(name, (Property::ValueType)valueType, needIndex);
                 break;
             case Property::ArrayRelationType:
-                property = world->defineArrayRelation(name);
+                property = world->defineArrayRelation(name, needIndex);
                 break;
             default:
                 wlog("ignore invalid property of type: %d", type);

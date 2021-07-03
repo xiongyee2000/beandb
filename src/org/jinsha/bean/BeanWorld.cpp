@@ -196,7 +196,7 @@ int BeanWorld::unloadAll()
 int BeanWorld::loadProperties()
 {
     if (m_db != nullptr) {
-        return m_db->loadAll();
+        return m_db->loadProperties();
     } else {
         return 0;
     }

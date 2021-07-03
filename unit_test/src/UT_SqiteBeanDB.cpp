@@ -74,6 +74,114 @@ TEST(SqliteBeanDB, connect_disconnect)
     EXPECT_TRUE(err == 0);
 }
 
+TEST(SqliteBeanDB, defineProperty_undefineProperty)
+{
+    Property *property = nullptr;
+    const char* testdbDir = g_tmpDBDir;
+    SqliteBeanDB testdb(testdbDir);
+    BeanWorld world(&testdb);
+    int err = 0;
+
+    testdb.reInit();
+    testdb.connect();
+
+    property = testdb.defineProperty("p1", Property::IntType, true);
+    EXPECT_TRUE(property->getName() == "p1");
+    property = testdb.defineProperty("p2", Property::UIntType, true);
+    EXPECT_TRUE(property->getName() == "p2");
+    property = testdb.defineProperty("p3", Property::RealType, true);
+    EXPECT_TRUE(property->getName() == "p3");
+    property = testdb.defineProperty("p4", Property::StringType, true);
+    EXPECT_TRUE(property->getName() == "p4");
+    property = testdb.defineProperty("p5", Property::BoolType, true);
+    EXPECT_TRUE(property->getName() == "p5");
+    property = testdb.defineArrayProperty("ap1", Property::IntType, true);
+    EXPECT_TRUE(property->getName() == "ap1");
+    property = testdb.defineArrayProperty("ap2", Property::UIntType, true);
+    EXPECT_TRUE(property->getName() == "ap2");
+    property = testdb.defineArrayProperty("ap3", Property::RealType, true);
+    EXPECT_TRUE(property->getName() == "ap3");
+    property = testdb.defineArrayProperty("ap4", Property::StringType, true);
+    EXPECT_TRUE(property->getName() == "ap4");
+    property = testdb.defineArrayProperty("ap5", Property::BoolType, true);
+    EXPECT_TRUE(property->getName() == "ap5");
+    property = testdb.defineRelation("r1", true);
+    EXPECT_TRUE(property->getName() == "r1");
+    property = testdb.defineRelation("r2", true);
+    EXPECT_TRUE(property->getName() == "r2");
+    property = testdb.defineRelation("r3", true);
+    EXPECT_TRUE(property->getName() == "r3");
+    property = testdb.defineRelation("r4", true);
+    EXPECT_TRUE(property->getName() == "r4");
+    property = testdb.defineRelation("r5", true);
+    EXPECT_TRUE(property->getName() == "r5");
+    property = testdb.defineArrayRelation("ar1", true);
+    EXPECT_TRUE(property->getName() == "ar1");
+    property = testdb.defineArrayRelation("ar2", true);
+    EXPECT_TRUE(property->getName() == "ar2");
+    property = testdb.defineArrayRelation("ar3", true);
+    EXPECT_TRUE(property->getName() == "ar3");
+    property = testdb.defineArrayRelation("ar4", true);
+    EXPECT_TRUE(property->getName() == "ar4");
+    property = testdb.defineArrayRelation("ar5", true);
+    EXPECT_TRUE(property->getName() == "ar5");
+
+    validate_testdb_1(testdb);
+
+    err = testdb.undefineProperty("p1");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("p2");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("p3");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("p4");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("p5");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ap1");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ap2");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ap3");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ap4");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ap5");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("r1");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("r2");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("r3");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("r4");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("r5");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ar1");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ar2");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ar3");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ar4");
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("ar5");
+    EXPECT_TRUE(err == 0);
+
+    evaluate_testdb_empty_property(testdb);
+
+    err = testdb.undefineProperty(nullptr);
+    EXPECT_TRUE(err == 0);
+    err = testdb.undefineProperty("");
+    EXPECT_TRUE(err == 0);
+
+    testdb.clear();
+    testdb.disconnect();
+
+}
+
+
 TEST(SqliteBeanDB, getProperty)
 {
     const char* testdbDir = g_sqlite_db_1;
@@ -156,114 +264,6 @@ TEST(SqliteBeanDB, loadProperties)
     testdb.disconnect();
 
 }
-
-TEST(SqliteBeanDB,createProperty_deleteProperty)
-{
-    Property *property = nullptr;
-    const char* testdbDir = g_tmpDBDir;
-    SqliteBeanDB testdb(testdbDir);
-    BeanWorld world(&testdb);
-    int err = 0;
-
-    testdb.reInit();
-    testdb.connect();
-
-    property = testdb.createProperty("p1", Property::IntType);
-    EXPECT_TRUE(property->getName() == "p1");
-    property = testdb.createProperty("p2", Property::UIntType);
-    EXPECT_TRUE(property->getName() == "p2");
-    property = testdb.createProperty("p3", Property::RealType);
-    EXPECT_TRUE(property->getName() == "p3");
-    property = testdb.createProperty("p4", Property::StringType);
-    EXPECT_TRUE(property->getName() == "p4");
-    property = testdb.createProperty("p5", Property::BoolType);
-    EXPECT_TRUE(property->getName() == "p5");
-    property = testdb.createArrayProperty("ap1", Property::IntType);
-    EXPECT_TRUE(property->getName() == "ap1");
-    property = testdb.createArrayProperty("ap2", Property::UIntType);
-    EXPECT_TRUE(property->getName() == "ap2");
-    property = testdb.createArrayProperty("ap3", Property::RealType);
-    EXPECT_TRUE(property->getName() == "ap3");
-    property = testdb.createArrayProperty("ap4", Property::StringType);
-    EXPECT_TRUE(property->getName() == "ap4");
-    property = testdb.createArrayProperty("ap5", Property::BoolType);
-    EXPECT_TRUE(property->getName() == "ap5");
-    property = testdb.createRelation("r1");
-    EXPECT_TRUE(property->getName() == "r1");
-    property = testdb.createRelation("r2");
-    EXPECT_TRUE(property->getName() == "r2");
-    property = testdb.createRelation("r3");
-    EXPECT_TRUE(property->getName() == "r3");
-    property = testdb.createRelation("r4");
-    EXPECT_TRUE(property->getName() == "r4");
-    property = testdb.createRelation("r5");
-    EXPECT_TRUE(property->getName() == "r5");
-    property = testdb.createArrayRelation("ar1");
-    EXPECT_TRUE(property->getName() == "ar1");
-    property = testdb.createArrayRelation("ar2");
-    EXPECT_TRUE(property->getName() == "ar2");
-    property = testdb.createArrayRelation("ar3");
-    EXPECT_TRUE(property->getName() == "ar3");
-    property = testdb.createArrayRelation("ar4");
-    EXPECT_TRUE(property->getName() == "ar4");
-    property = testdb.createArrayRelation("ar5");
-    EXPECT_TRUE(property->getName() == "ar5");
-
-    validate_testdb_1(testdb);
-
-    err = testdb.deleteProperty("p1");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("p2");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("p3");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("p4");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("p5");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ap1");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ap2");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ap3");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ap4");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ap5");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("r1");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("r2");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("r3");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("r4");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("r5");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ar1");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ar2");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ar3");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ar4");
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("ar5");
-    EXPECT_TRUE(err == 0);
-
-    evaluate_testdb_empty_property(testdb);
-
-    err = testdb.deleteProperty(nullptr);
-    EXPECT_TRUE(err == 0);
-    err = testdb.deleteProperty("");
-    EXPECT_TRUE(err == 0);
-
-    testdb.clear();
-    testdb.disconnect();
-
-}
-
 
 TEST(SqliteBeanDB,createBean_deleteBean)
 {

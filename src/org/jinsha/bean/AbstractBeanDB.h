@@ -64,7 +64,7 @@ public:
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* createProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
+    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
 
     /**
      * Create an array property.
@@ -80,7 +80,7 @@ public:
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* createArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
+    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
 
     /**
      * Create a relation property.
@@ -92,7 +92,7 @@ public:
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* createRelation(const char* name, bool needIndex = false) = 0;
+    virtual Property* defineRelation(const char* name, bool needIndex = false) = 0;
 
     /**
      * Create an array relation property.
@@ -103,7 +103,7 @@ public:
      * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* createArrayRelation(const char* name, bool needIndex = false) = 0;
+    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) = 0;
 
     /**
      * Delete a property.
@@ -116,8 +116,8 @@ public:
      * @param name the name of property
      * @return 0 on success, or an error code
      */
-    virtual int deleteProperty(const char* name) = 0;
-    virtual int deleteRelation(const char* name) {return deleteProperty(name);};
+    virtual int undefineProperty(const char* name) = 0;
+    virtual int deleteRelation(const char* name) {return undefineProperty(name);};
 
     /**
      * Get property/relation/array property/array relation by name.

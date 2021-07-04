@@ -5,6 +5,9 @@
 #include <unistd.h>
 #include <string.h>
 #include <sqlite3.h>
+#include "jsoncpp/json/value.h"
+#include "jsoncpp/json/reader.h"
+#include "jsoncpp/json/writer.h"
 
 namespace org {
 namespace jinsha {
@@ -26,9 +29,7 @@ INDEXED INT8 NOT NULL \
 static const char* CREATE_OTABLE =  
  "CREATE TABLE OTABLE ( \
 ID INTEGER PRIMARY KEY NOT NULL, \
-CLASS INT NOT NULL, \
-PROPERTIES TEXT, \
-VALUE  NOT NULL \
+VALUE TEXT \
 ); ";
 
 static const char* CREATE_STABLE =  
@@ -211,7 +212,7 @@ Bean* SqliteBeanDB::createBean()
     BeanWorld *world = getWorld();
     if (world == nullptr) return nullptr;
 
-    static const char sql[] = "INSERT INTO OTABLE VALUES(?, ?, ?) ;";
+    static const char sql[] = "INSERT INTO OTABLE VALUES(?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int err = 0;
@@ -221,9 +222,7 @@ Bean* SqliteBeanDB::createBean()
 
     err = sqlite3_bind_null(pstmt, 1);
     if (err != SQLITE_OK) goto out;
-    err = sqlite3_bind_text(pstmt, 2, "_", -1, nullptr);
-    if (err != SQLITE_OK) goto out;
-    err = sqlite3_bind_int(pstmt, 3, 0);
+    err = sqlite3_bind_null(pstmt, 2);
     if (err != SQLITE_OK) goto out;
     
     err = sqlite3_step(pstmt);
@@ -255,18 +254,17 @@ Bean* SqliteBeanDB::getBean(oidType id)
 
     const char* pname = nullptr;
     sqlite3_stmt *pstmt = nullptr;
-    const char* pzTail = nullptr;
+    // const char* pzTail = nullptr;
     int nCol = 0;
     int err = 0;
-    int ptype = 0;
-    int vtype = 0;
+    int size = 0;
     bool notCreated = false;
     Property* property = nullptr;
     sqlite3_int64 value = 0;
-   static const char sql[] = "SELECT objects.VALUE \
-        , META_PTABLE.NAME, META_PTABLE.PTYPE, META_PTABLE.VTYPE \
-        FROM (SELECT * from OTABLE WHERE ID = ?) as objects \
-        JOIN META_PTABLE on objects.PROPERTY=META_PTABLE.ID;";
+    const char* valueStr = nullptr;
+    static const char sql[] = "SELECT VALUE from OTABLE WHERE ID = ?;";
+    Json::Reader reader; 
+    Json::Value jsonBean;  
 
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
@@ -276,36 +274,54 @@ Bean* SqliteBeanDB::getBean(oidType id)
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
         bean = world->createBean((oidType)id);
         nCol = 0;
-        value = sqlite3_column_int64(pstmt, nCol++);
-        pname = (const char*)sqlite3_column_text(pstmt, nCol++);
-        ptype = sqlite3_column_int(pstmt, nCol++);
-        vtype = sqlite3_column_int(pstmt, nCol++);
+        if (sqlite3_column_type(pstmt, nCol++) != SQLITE_NULL) {
+            valueStr = (const char*)sqlite3_column_text(pstmt, nCol++);
+            if (!reader.parse(valueStr, jsonBean))
+            {
+                // err = -1;
+                break;
+            }
 
-        property = getProperty(pname);
-    
-        switch (ptype) {
-            case Property::PrimaryType:
-                bean->setProperty(property, value);
-                break;
-            case Property::RelationType:
-                bean->setRelation(property, value);
-                break;
-            case Property::ArrayPrimaryType:
-                bean->createArrayProperty(property);
-                bean->appendProperty(property, value);
-                break;
-            case Property::ArrayRelationType:
-                bean->createArrayRelation(property);
-                bean->appendRelation(property, value);
-                break;
-            default: 
-                //shall not reach here
-                wlog("ignore invalid property of type: %d", ptype);
-                break;
+            for (auto& item : jsonBean.getMemberNames()) {
+                pname = item.c_str();
+                property = world->getProperty(pname);
+                if (property != nullptr) { //it's a defined property
+                    switch (property->getType()) {
+                        case Property::PrimaryType:
+                            bean->setProperty(property, jsonBean[pname]);
+                            break;
+                        case Property::RelationType:
+                            bean->setRelation(property, jsonBean[pname].asUInt64());
+                            break;
+                        case Property::ArrayPrimaryType:
+                            bean->createArrayProperty(property);
+                            size = jsonBean[pname].size();
+                            for (int i = 0; i < size; i++) {
+                                bean->appendProperty(property,  jsonBean[pname][i]);
+                            }
+                            break;
+                        case Property::ArrayRelationType:
+                            bean->createArrayRelation(property);
+                            size = jsonBean[pname].size();
+                            for (int i = 0; i < size; i++) {
+                                bean->appendRelation(property,  jsonBean[pname][i].asUInt64());
+                            }            
+                            break;
+                        default: 
+                            //shall not reach here
+                            wlog("ignore invalid property of type: %d", property->getType());
+                            break;
+                    }
+                } else { //unmanaged json value
+                    bean->setUnmanagedValue(pname, jsonBean[pname]);
+                }
+            }
         }
 	}
-    if (err != SQLITE_ROW) {
+    if (err != SQLITE_DONE) {
         elog("error occurred in %s, err=%d", __func__, err);
+        world->removeBean(id);
+        bean = nullptr;
         goto _out;
     }
 

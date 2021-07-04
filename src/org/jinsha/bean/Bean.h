@@ -355,6 +355,11 @@ public:
     //  */
     // void removeRelation( Property* relation);
 
+
+    Json::Value getUnmanagedValue(const char* name);
+    Json::Value getUnmanagedValue(const char* name) const;
+    void setUnmanagedValue(const char* name, Json::Value& value);
+
 private:
     Bean(BeanWorld* world);
     Bean(const Bean& bean) = delete;
@@ -373,8 +378,10 @@ private:
     void addSubject(Bean* subject, Property* relation);
     void removeSubject(Bean* subject, Property* relation);
 
+
 private:
     Json::Value m_json_;
+    Json::Value m_unmanaged_json_;
     BeanWorld* m_world_;
 
     // otype classId_ = 0;

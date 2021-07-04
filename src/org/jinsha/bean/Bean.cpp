@@ -548,6 +548,23 @@ Json::Value* Bean::getMemberPtr(const Property* property)
     return (m_json_.isMember(pname)) ? &m_json_[pname] : nullptr;
 }
 
+Json::Value Bean::getUnmanagedValue(const char* name)
+{
+    if (name == nullptr || name[0] == 0) return Json::Value(nullptr);
+    return m_unmanaged_json_[name];
+}
+
+Json::Value Bean::getUnmanagedValue(const char* name) const
+{
+    return ((Bean*)this)->getUnmanagedValue(name);
+}
+
+void Bean::setUnmanagedValue(const char* name, Json::Value& value)
+{
+    if (name == nullptr || name[0] == 0) return;
+    m_unmanaged_json_[name] = value;
+}
+
 
 // class Iterator
 // {

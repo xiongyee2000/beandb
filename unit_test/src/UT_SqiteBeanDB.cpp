@@ -265,7 +265,7 @@ TEST(SqliteBeanDB, loadProperties)
 
 }
 
-TEST(SqliteBeanDB,createBean_deleteBean)
+TEST(SqliteBeanDB, createBean_deleteBean)
 {
     Bean *bean = nullptr;
     const char* testdbDir = g_tmpDBDir;
@@ -297,7 +297,25 @@ TEST(SqliteBeanDB,createBean_deleteBean)
     err = testdb.deleteBean(nullptr);
     EXPECT_TRUE(err == 0);
 
+    testdb.clear();
+    testdb.disconnect();
+}
 
+
+TEST(SqliteBeanDB, updateBean)
+{
+    Bean *bean = nullptr;
+    const char* testdbDir = g_tmpDBDir;
+    SqliteBeanDB testdb(testdbDir);
+    BeanWorld world(&testdb);
+    int err = 0;
+
+    testdb.reInit();
+    testdb.connect();
+
+    bean = testdb.createBean();
+    
+    
     testdb.clear();
     testdb.disconnect();
 }

@@ -319,16 +319,18 @@ Bean* SqliteBeanDB::getBean(oidType id)
         }
 	}
     if (err != SQLITE_DONE) {
-        elog("error occurred in %s, err=%d", __func__, err);
         world->removeBean(id);
         bean = nullptr;
         goto _out;
     }
 
 _out:
+    if (err != SQLITE_OK && err != SQLITE_DONE) {
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+    }
+    sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
-	sqlite3_finalize(pstmt);
-
+    sqlite3_finalize(pstmt);
     return bean;
 }
 
@@ -345,6 +347,13 @@ int SqliteBeanDB::updateBean(Bean* bean)
     return 0;
 }
 
+int SqliteBeanDB::updateBean(Bean* bean, Property* property)
+{
+    if (bean == nullptr) return -1;
+    if (property == nullptr) return -1;
+    if (m_db == nullptr) return -1;
+    return -1; //todo
+}
 
 int SqliteBeanDB::deleteBean(Bean* bean)
 {
@@ -357,17 +366,22 @@ int SqliteBeanDB::deleteBean(Bean* bean)
     static const char *sql = "DELETE FROM  OTABLE WHERE ID = ?;";
     
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
-    if (err != SQLITE_OK) return err;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int64(pstmt, 1, (sqlite3_int64)bean->getId());
-    if (err != SQLITE_OK) return err;
+    if (err != SQLITE_OK) goto out;
 
 	err = sqlite3_step( pstmt );
-    if (err != SQLITE_DONE) {
-        elog("error occurred in %s, err=%d", __func__, err);
-    } else {
+    if (err == SQLITE_DONE) {
         err = 0;
     }
-	sqlite3_finalize(pstmt);
+
+out:
+    if (err != SQLITE_OK && err != SQLITE_DONE) {
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+    }
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
     return err;
 }
 
@@ -402,7 +416,7 @@ int SqliteBeanDB::loadProperties()
     if ((world = getWorld()) == nullptr) return -2;
 
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
-    if (err != SQLITE_OK) return err;
+    if (err != SQLITE_OK) goto out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
         //todo: set id for the property in future
@@ -430,13 +444,16 @@ int SqliteBeanDB::loadProperties()
                 break;
         }
 	}
-    if (err != SQLITE_DONE) {
-        elog("error occurred in %s, err=%d", __func__, err);
-    }
+    if (err == SQLITE_DONE) err = SQLITE_OK; 
  
+ out:
+    if (err != SQLITE_OK && err != SQLITE_DONE) {
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+    }
+    sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
-	sqlite3_finalize(pstmt);
-    return err == SQLITE_DONE ? 0 : err;
+    sqlite3_finalize(pstmt);
+    return err;
 }
 
 

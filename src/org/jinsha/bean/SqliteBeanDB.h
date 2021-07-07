@@ -45,6 +45,7 @@ public:
 
     Bean* loadBean(oidType id) override;
     int updateBean(Bean* bean) override;
+    int updateBean(Bean* bean, Property* property);
     int deleteBean(Bean* bean) override;
 
 private:

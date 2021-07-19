@@ -26,6 +26,7 @@ public:
 
     int connect() override;
     int disconnect() override;
+    bool connected() const {return m_connected;};
     int clear() override;
 
     virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
@@ -39,14 +40,30 @@ public:
 
     virtual Bean* createBean();
     virtual Bean* getBean(oidType id);
+    virtual std::list<std::string> getBeanProperties(oidType id) const override;
 
     int loadAll() override;
     int saveAll() override;
 
-    Bean* loadBean(oidType id) override;
     int updateBean(Bean* bean) override;
     int updateBean(Bean* bean, Property* property);
     int deleteBean(Bean* bean) override;
+    Json::Value getBeanProperty(const Bean* bean, const Property* property) const override;
+    virtual int insertBeanProperty(const Bean* bean, 
+        const Property* property, 
+        const Json::Value& value) override;
+    virtual int updateBeanProperty(const Bean* bean, 
+        const Property* property, 
+        const Json::Value& value) override;
+    virtual int updateBeanProperty(const Bean* bean, 
+        const Property* property, 
+        Json::Value::ArrayIndex  index,
+        const Json::Value& value) override;
+    virtual int deleteBeanProperty(const Bean* bean, 
+        const Property* property) override;
+    virtual int deleteBeanProperty(const Bean* bean, 
+        const Property* property, 
+        Json::Value::ArrayIndex index) override;
 
 private:
     int internalInit();
@@ -59,6 +76,7 @@ private:
     int checkDB();
     int openDB();
     int closeDB();
+    int getIdByPropertyIndex(const char* pname, Json::ArrayIndex index, sqlite3_int64& id);
 
 private:
     const char* m_dir;
@@ -66,6 +84,8 @@ private:
     sqlite3* m_db;
     // int m_status = INIT;
     bool m_initialized;
+    bool m_connected;
+
 };
 
 }

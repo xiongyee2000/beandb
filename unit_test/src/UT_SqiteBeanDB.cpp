@@ -305,17 +305,48 @@ TEST(SqliteBeanDB, createBean_deleteBean)
 TEST(SqliteBeanDB, updateBean)
 {
     Bean *bean = nullptr;
+    char buff[128] = {0};
+    char* cmd = &buff[0];
+    sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
+    system(cmd);
+
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
     BeanWorld world(&testdb);
     int err = 0;
 
-    testdb.reInit();
     testdb.connect();
+    testdb.loadProperties();
 
-    bean = testdb.createBean();
-    
-    
+    Property* p1 = testdb.getProperty("p1");
+    Property* p2 = testdb.getProperty("p2");
+    Property* p3 = testdb.getProperty("p3");
+    Property* p4 = testdb.getProperty("p4");
+    Property* p5 = testdb.getProperty("p5");
+    Property* ap1 = testdb.getProperty("ap1");
+    Property* ap2 = testdb.getProperty("ap2");
+    Property* ap3 = testdb.getProperty("ap3");
+    Property* ap4 = testdb.getProperty("ap4");
+    Property* ap5 = testdb.getProperty("ap5");
+    Property* r1 = testdb.getProperty("r1");
+    Property* r2 = testdb.getProperty("r2");
+    Property* r3 = testdb.getProperty("r3");
+    Property* r4 = testdb.getProperty("r4");
+    Property* r5 = testdb.getProperty("r5");
+    Property* ar1 = testdb.getProperty("ar1");
+    Property* ar2= testdb.getProperty("ar2");
+    Property* ar3 = testdb.getProperty("ar3");
+    Property* ar4 = testdb.getProperty("ar4");
+    Property* ar5 = testdb.getProperty("ar5");
+
+    // bean = testdb.getBean(1);
+    // EXPECTE_TRUE(bean->getProperty(p1) == 1);
+    // bean->setProperty(p1, 101);
+    // testdb.updateBean(bean, p1);
+    // world.clear();
+    // bean = testdb.getBean(1);
+    //  EXPECTE_TRUE(bean->getProperty(p1) == 1);
+
     testdb.clear();
     testdb.disconnect();
 }

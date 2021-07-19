@@ -206,7 +206,7 @@ int BeanWorld::loadProperties()
 Bean* BeanWorld::loadBean(oidType id)
 {
     if (m_db != nullptr) {
-        return m_db->loadBean(id);
+        return m_db->getBean(id);
     } else {
         return nullptr;
     }

@@ -252,6 +252,9 @@ private:
     unsigned int m_refCount_ = 0;
     bool m_indexed_ = false;
 
+    //used for AbstractDB
+    bool m_delay_load = false;
+    
     //keep all subject beans for better performance
     std::map<oidType, unsigned int> m_subjectMap_; 
 
@@ -286,6 +289,7 @@ private:
 
 friend class BeanWorld;
 friend class Bean;
+friend class SqliteBeanDB;
 };
 
 }

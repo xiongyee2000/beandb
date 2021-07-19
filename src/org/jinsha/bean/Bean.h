@@ -25,7 +25,7 @@ public:
      * 
      * @return the bean id
      */
-    inline oidType getId() {return m_id_;};
+    inline oidType getId() const {return m_id_;} ;
     // std::string &getName() {return m_name_;};
     // std::string &getUri() {return uri_;};
 
@@ -360,6 +360,8 @@ public:
     Json::Value getUnmanagedValue(const char* name) const;
     void setUnmanagedValue(const char* name, Json::Value& value);
 
+    int save();
+
 private:
     Bean(BeanWorld* world);
     Bean(const Bean& bean) = delete;
@@ -370,18 +372,41 @@ private:
 
     Json::Value* getMemberPtr(const Property* property);
     void setPropertyBase_(Property* property, 
-        Json::Value *oldValue,  const Json::Value&  newValue);
+        Json::Value *oldValue,  
+        const Json::Value&  newValue, 
+        Json::Value::ArrayIndex index = (Json::Value::ArrayIndex)-1);
 
     Json::Value doRemoveProperty( Property* property, bool internal = false);
     Json::Value doRemoveProperty( Property* property, Json::Value::ArrayIndex index,  bool internal = false);
 
     void addSubject(Bean* subject, Property* relation);
     void removeSubject(Bean* subject, Property* relation);
+    void setPst(Property* property, int status);
 
+    ////////////////////////////////////////////////////////////////
+    //DB related methods
+    ////////////////////////////////////////////////////////////////
+private:
+    int load();
+    int unload();
+    Json::Value* delayLoad(const Property* property);
+    int loadProperty(Property* property, const Json::Value& value);
+
+private:
+    typedef enum {
+        PST_NSY = 0,
+        PST_SYN,
+        PST_NEW,
+        PST_MOD,
+        PST_RMD,
+        PST_MAX /*guard*/
+    } pst_t;
 
 private:
     Json::Value m_json_;
     Json::Value m_unmanaged_json_;
+    Json::Value m_delay_load_json_;
+    Json::Value m_pst_json_;
     BeanWorld* m_world_;
 
     // otype classId_ = 0;
@@ -396,6 +421,7 @@ private:
 
 friend class BeanWorld;
 friend class Property;
+friend class SqliteBeanDB;
 };
 
 }

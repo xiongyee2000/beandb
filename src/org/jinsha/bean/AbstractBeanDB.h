@@ -42,6 +42,8 @@ public:
      */
     virtual int disconnect() = 0;
 
+    virtual bool connected() const = 0;
+
     /**
      * Clear the database, i.e. remove all data.
      * 
@@ -178,16 +180,22 @@ protected:
     virtual Bean* getBean(oidType id) = 0;
 
     /**
-     * Load a single bean, including all its properties, from the storage 
-     * into the world.
-     * 
-     * This method is supposed to be called from class BeanWorld.
+     * Load bean properties. 
      * 
      * @param id the id of the bean
-     * @return the pointer pointing to the bean, or null if no such
-     *                   bean exist in the storage
+     * @return A list containing bean's property names
      */
-    virtual Bean* loadBean(oidType id) = 0;
+    virtual std::list<std::string> getBeanProperties(oidType id) const = 0;
+
+    /**
+     * Load bean property. This method is used in case "late-loading"
+     * is needed.
+     * 
+     * @param bean the bean
+     * @param property the property to be loaded
+     * @return 0 on success, or an error code
+     */
+    virtual Json::Value getBeanProperty(const Bean* bean, const Property* property) const = 0;
 
     /**
      * Save a single bean into the storage.
@@ -222,10 +230,28 @@ protected:
      */
     virtual int loadProperties() = 0;
 
+    virtual int insertBeanProperty(const Bean* bean, 
+        const Property* property, 
+        const Json::Value& value) = 0;
+    virtual int updateBeanProperty(const Bean* bean, 
+        const Property* property, 
+        const Json::Value& value) = 0;
+    virtual int updateBeanProperty(const Bean* bean, 
+        const Property* property, 
+        Json::Value::ArrayIndex  index,
+        const Json::Value& value) = 0;
+    virtual int deleteBeanProperty(const Bean* bean, 
+        const Property* property) = 0;
+    virtual int deleteBeanProperty(const Bean* bean, 
+        const Property* property, 
+        Json::Value::ArrayIndex index) = 0;
+
 private:
     BeanWorld *m_world;
 
 friend class BeanWorld;
+friend class Bean;
+friend class Property;
 };
 
 }

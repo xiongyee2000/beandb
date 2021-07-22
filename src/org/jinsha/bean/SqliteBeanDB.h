@@ -65,6 +65,10 @@ public:
         const Property* property, 
         Json::Value::ArrayIndex index) override;
 
+    virtual int beginTransaction() override;
+    virtual int commitTransaction() override;
+    virtual int rollbackTransaction() override;
+
 private:
     int internalInit();
     Property* definePropertyCommon_(const char* name, Property::Type type, 
@@ -85,6 +89,7 @@ private:
     // int m_status = INIT;
     bool m_initialized;
     bool m_connected;
+    bool m_inTransaction;
 
 };
 

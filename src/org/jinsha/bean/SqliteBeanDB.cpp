@@ -45,6 +45,7 @@ SqliteBeanDB::SqliteBeanDB( const char* dir) :
     ,m_db(nullptr)
     ,m_initialized(false)
     ,m_connected(false)
+    ,m_inTransaction(false)
 {
     if (dir == nullptr ||  dir[0] == 0) return;
     m_dbFullPath.append(m_dir).append("/").append(DB_PATH);
@@ -1117,6 +1118,46 @@ out:
     return property;
 }
 
+int SqliteBeanDB::beginTransaction() 
+{
+    if (m_db == nullptr) return -1;
+    if (m_inTransaction) return 0;
+    int err = 0;
+    char* errmsg = nullptr;
+    err = sqlite3_exec(m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+    if (err != SQLITE_OK) 
+        elog("sqlite3 errormsg: %s \n", errmsg);
+    m_inTransaction = true;
+    return err;
+}
+
+
+int SqliteBeanDB::commitTransaction() 
+{
+    if (m_db == nullptr) return -1;
+    if (!m_inTransaction) return -1;
+    int err = 0;
+    char* errmsg = nullptr;
+    err = sqlite3_exec(m_db, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
+    if (err != SQLITE_OK) 
+        elog("sqlite3 errormsg: %s \n", errmsg);
+    m_inTransaction = false;
+    return err;
+}
+
+
+int SqliteBeanDB::rollbackTransaction() 
+{
+    if (m_db == nullptr) return -1;
+    if (!m_inTransaction) return -1;
+    int err = 0;
+    char* errmsg = nullptr;
+    err = sqlite3_exec(m_db, "ROLLBACK TRANSACTION", nullptr, nullptr, &errmsg);
+    if (err != SQLITE_OK) 
+        elog("sqlite3 errormsg: %s \n", errmsg);
+    m_inTransaction = false;
+    return err;
+}
 
 }
 }

@@ -130,6 +130,27 @@ public:
     virtual const Property* getProperty(const char* name) const = 0;
     virtual Property* getProperty(const char* name) = 0;
 
+    /**
+     * Begin a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    virtual int beginTransaction() = 0;
+
+    /**
+     * Commit a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    virtual int commitTransaction() = 0;
+
+    /**
+     * Rollback a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    virtual int rollbackTransaction() = 0;
+
 protected:
     /**
      * This method will be called in BeanWorld::BeanWold().
@@ -245,6 +266,7 @@ protected:
     virtual int deleteBeanProperty(const Bean* bean, 
         const Property* property, 
         Json::Value::ArrayIndex index) = 0;
+
 
 private:
     BeanWorld *m_world;

@@ -556,7 +556,7 @@ int SqliteBeanDB::updateBeanProperty(const Bean* bean,
     BeanWorld *world = getWorld();
     if (world == nullptr) return -1;
 
-    bool isArray = true;
+    bool isArray = false;
     if (property->getType() == Property::ArrayPrimaryType ||
         property->getType() == Property::ArrayRelationType) 
         isArray = true;
@@ -616,7 +616,7 @@ out:
 int SqliteBeanDB::deleteBeanProperty(const Bean* bean, 
     const Property* property) 
 {
-    return -1;
+    return deleteBeanProperty(bean, property, (Json::Value::ArrayIndex)-1);
 }
 
 int SqliteBeanDB::deleteBeanProperty(const Bean* bean, 
@@ -625,9 +625,63 @@ int SqliteBeanDB::deleteBeanProperty(const Bean* bean,
 {
     if (bean == nullptr) return -1;
     if (property == nullptr) return -1;
-    if (!bean->hasProperty(property)) return -1;
     if (m_db == nullptr) return -1;
-    return -1;
+
+     //no need to do anything here for non-indexed
+     //and non-string-valued property
+    if (!property->indexed() && 
+        property->getValueType() != Property::StringType) 
+    return 0; 
+
+    BeanWorld *world = getWorld();
+    if (world == nullptr) return -1;
+
+    bool isArray = false;
+    if (property->getType() == Property::ArrayPrimaryType ||
+        property->getType() == Property::ArrayRelationType) 
+        isArray = true;
+
+    if (!isArray && (index != (Json::Value::ArrayIndex)-1)) return -1;
+
+    static const char sql[] = "DELETE FROM p_? WHERE ? = ? ;";
+    sqlite3_stmt *pstmt = nullptr;
+    const char* pzTail = nullptr;
+    int err = 0;
+    int nCol = 0;
+    const char* pname = property->getName().c_str();
+    oidType sid = bean->getId();
+    sqlite3_int64 id = 0;
+    std::list<const Json::Value*> vlist;
+    const Json::Value* v = nullptr;
+    
+    if (isArray) {
+        err = getIdByPropertyIndex(pname, index, id);
+        if (err) return -12;
+    } 
+
+    err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+    if (err != SQLITE_OK) return -2;
+    nCol = 0;
+    err = sqlite3_bind_text(pstmt, nCol++, pname, -1, nullptr);
+    if (err != SQLITE_OK) goto out;
+    err = sqlite3_bind_text(pstmt, nCol++, isArray ? "ID" : "SID", -1, nullptr);
+    if (err != SQLITE_OK) goto out;
+    err = sqlite3_bind_int64(pstmt, nCol++, isArray ? (sqlite3_int64)id : (sqlite3_int64)sid);
+    if (err != SQLITE_OK) goto out;
+
+    err = sqlite3_step(pstmt);
+        if (err != SQLITE_OK) goto out;
+    sqlite3_clear_bindings(pstmt);
+
+out:
+    if (err != SQLITE_OK && err != SQLITE_DONE) {
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+    }
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+
+    return err;
 }
 
 int SqliteBeanDB::updateBean(Bean* bean)

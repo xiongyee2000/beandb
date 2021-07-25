@@ -173,7 +173,7 @@ public:
      * @return the pointer pointing to the bean, or null if no such
      *                   bean exist in the storage
      */
-    virtual Bean* loadBean(oidType id) = 0;
+    virtual Bean* getBean(oidType id) = 0;
 
     /**
      * Save a single bean into the storage.
@@ -259,6 +259,7 @@ protected:
      */
     virtual int loadProperties() = 0;
 
+    virtual int loadBean(Bean* bean) = 0 ;
     virtual int loadBeanProperty(Bean* bean, const Property* property) = 0;
     virtual int saveBeanBase(const Bean* bean) = 0;
     virtual int insertBeanProperty(oidType beanId, 

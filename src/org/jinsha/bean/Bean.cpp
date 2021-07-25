@@ -776,6 +776,21 @@ int Bean::save()
 }
 
 
+void Bean::clear()
+{
+    if (!m_json_.isNull()) {
+        m_json_ = Json::nullValue;
+    }
+    if (!m_pst_json_.isNull()) {
+        m_pst_json_ = Json::nullValue;
+    }
+    if (!m_delay_load_json_.isNull()) {
+        m_delay_load_json_ = Json::nullValue;
+    }
+    m_subjectMap_.clear();
+}
+
+
 }
 }
 }

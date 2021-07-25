@@ -251,7 +251,7 @@ out:
 }
 
 
-Bean* SqliteBeanDB::loadBean(oidType id)
+Bean* SqliteBeanDB::getBean(oidType id)
 {
     if (m_db == nullptr) return nullptr;
     
@@ -349,6 +349,107 @@ _out:
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
     return bean;
+}
+
+int SqliteBeanDB::loadBean(Bean* bean)
+{
+    if (m_db == nullptr) return -1;
+    if (bean == nullptr) return -1;
+    
+    BeanWorld *world = nullptr;
+    const char* pname = nullptr;
+    sqlite3_stmt *pstmt = nullptr;
+    // const char* pzTail = nullptr;
+    int nCol = 0;
+    int err = 0;
+    int size = 0;
+    bool notCreated = false;
+    Property* property = nullptr;
+    sqlite3_int64 value = 0;
+    const char* valueStr = nullptr;
+    static const char sql[] = "SELECT VALUE, UNMANAGED_VALUE from OTABLE WHERE ID = ?;";
+    Json::Reader reader; 
+    Json::Value jsonBean;  
+    oidType id = bean->getId();
+
+    bean->clear();
+
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int64(pstmt, 1, id);
+    if (err != SQLITE_OK) goto _out;
+
+	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+        bean = world->createBean((oidType)id);
+        nCol = 0;
+        if (sqlite3_column_type(pstmt, nCol++) != SQLITE_NULL) {
+            valueStr = (const char*)sqlite3_column_text(pstmt, nCol++);
+            if (!reader.parse(valueStr, jsonBean))
+            {
+                // err = -1;
+                break;
+            }
+
+            for (auto& item : jsonBean.getMemberNames()) {
+                pname = item.c_str();
+                property = world->getProperty(pname);
+                if (property != nullptr) { //it's a defined property
+                    switch (property->getType()) {
+                        case Property::PrimaryType:
+                            bean->setProperty(property, jsonBean[pname]);
+                            bean->m_pst_json_[pname] = 
+                                property->m_delay_load? Bean::PST_NSY : Bean::PST_SYN;
+                            break;
+                        case Property::RelationType:
+                            bean->setRelation(property, jsonBean[pname].asUInt64());
+                            bean->m_pst_json_[pname] = Bean::PST_SYN;                            
+                            break;
+                        case Property::ArrayPrimaryType:
+                            bean->createArrayProperty(property);
+                            bean->m_pst_json_[pname] = Json::arrayValue;
+                            size = jsonBean[pname].size();
+                            for (int i = 0; i < size; i++) {
+                                bean->appendProperty(property,  jsonBean[pname][i]);
+                                bean->m_pst_json_[pname][i] = 
+                                    property->m_delay_load?Bean:: PST_NSY : Bean::PST_SYN;
+                            }
+                            break;
+                        case Property::ArrayRelationType:
+                            bean->createArrayRelation(property);
+                            bean->m_pst_json_[pname] = Json::arrayValue;;
+                            size = jsonBean[pname].size();
+                            for (int i = 0; i < size; i++) {
+                                bean->appendRelation(property,  jsonBean[pname][i].asUInt64());
+                                bean->m_pst_json_[pname][i] = Bean::PST_SYN;
+                            }            
+                            break;
+                        default: 
+                            //shall not reach here
+                            wlog("ignore invalid property of type: %d", property->getType());
+                            break;
+                    }
+                } else { //unmanaged json value
+                    bean->setUnmanagedValue(pname, jsonBean[pname]);
+                }
+            }
+        }
+	}
+    if (err != SQLITE_DONE) {
+        world->removeBean(id);
+        bean = nullptr;
+        goto _out;
+    }
+
+_out:
+    if (err != SQLITE_OK && err != SQLITE_DONE) {
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+    } else {
+        err = 0;
+    }
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+    return err;
 }
 
 
@@ -709,6 +810,48 @@ out:
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
+
+    ////
+    //todo
+    ////
+    // bean->removeAllProperties();
+
+    // //handle relations: remove relation from subject that has
+    // //relation to this bean (as object)
+    // Bean* subject = nullptr;
+    // Property* property = nullptr;
+    // Json::Value* value = nullptr;
+    // auto iter = bean->m_subjectMap_.begin();
+    // while (iter != bean->m_subjectMap_.end())
+    // {
+    //     subject = bean->m_world_->getBean(iter->first);
+    //     if (subject == nullptr) {
+    //         iter = bean->m_subjectMap_.erase(iter);
+    //         continue;
+    //     }
+    //     property = iter->second;
+    //     if (property->getType() == Property::RelationType)  {
+    //         //use doRemoveProperty(property, true) to keep
+    //         //m_subjectMap_ unchanged
+    //         subject->doRemoveProperty(property, true);
+    //     } else if (property->getType() == Property::ArrayRelationType) {
+    //         value = subject->getMemberPtr(property);
+    //         if (value == nullptr) {
+    //             iter++;
+    //             continue; //shall not be null
+    //         }
+    //         size_t size = value->size();
+    //         //todo: O(n*n) complexity! How to improve performance?
+    //         for (Json::ArrayIndex i = size; i > 0; i--)
+    //             if (subject->getRelationBeanId(property, i - 1) == bean->m_id_) {
+    //                 subject->doRemoveProperty(property, i - 1, true); 
+    //             }
+    //     }
+    //     iter++;
+    // }
+    // bean->m_subjectMap_.clear();
+
+
     return err;
 }
 
@@ -1092,7 +1235,8 @@ int SqliteBeanDB::doRollbackTransaction()
 
 int SqliteBeanDB::loadBeanProperty(Bean* bean, const Property* property) 
 {
-
+    int err = 0;
+    return err;
 }
 
 

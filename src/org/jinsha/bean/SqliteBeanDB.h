@@ -39,12 +39,13 @@ public:
     int loadProperties() override;
 
     virtual Bean* createBean();
-    virtual Bean* loadBean(oidType id);
     virtual std::list<std::string> getBeanProperties(oidType id) const override;
 
     int loadAll() override;
     int saveAll() override;
 
+    virtual Bean* getBean(oidType id) override;
+    virtual int loadBean(Bean* bean) override;
     virtual int loadBeanProperty(Bean* bean, const Property* property) override;
     virtual int saveBeanBase(const Bean* bean) override;
     virtual int deleteBean(Bean* bean) override;

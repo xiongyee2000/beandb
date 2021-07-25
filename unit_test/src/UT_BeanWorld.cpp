@@ -357,6 +357,5 @@ TEST(BeanWorld, removeBean)
     world.removeBean(bean2->getId());
     EXPECT_TRUE(bean1->getRelationBeanId(rArray_1, 0) == 0);
     EXPECT_TRUE(bean3->m_subjectMap_.size() == 0);
-    bean2 = world.createBean();
 
 }

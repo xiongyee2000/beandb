@@ -421,6 +421,7 @@ private:
 
 friend class BeanWorld;
 friend class Property;
+friend class AbstractBeanDB;
 friend class SqliteBeanDB;
 };
 

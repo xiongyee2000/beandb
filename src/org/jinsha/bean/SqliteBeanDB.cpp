@@ -30,7 +30,8 @@ INDEXED INT8 NOT NULL \
 static const char* CREATE_OTABLE =  
  "CREATE TABLE OTABLE ( \
 ID INTEGER PRIMARY KEY NOT NULL, \
-VALUE TEXT \
+VALUE TEXT DEFALT NULL,  \
+UNMANAGED_VALUE DEFALT NULL \
 ); ";
 
 static const char* CREATE_STABLE =  
@@ -39,13 +40,12 @@ ID INTEGER PRIMARY KEY NOT NULL, \
 VALUE TEXT NOT NULL \
 ); ";
 
-SqliteBeanDB::SqliteBeanDB( const char* dir) : 
-    AbstractBeanDB()
+SqliteBeanDB::SqliteBeanDB( const char* dir) 
+    : AbstractBeanDB()
     , m_dir(dir)
     ,m_db(nullptr)
     ,m_initialized(false)
     ,m_connected(false)
-    ,m_inTransaction(false)
 {
     if (dir == nullptr ||  dir[0] == 0) return;
     m_dbFullPath.append(m_dir).append("/").append(DB_PATH);
@@ -219,7 +219,7 @@ Bean* SqliteBeanDB::createBean()
     BeanWorld *world = getWorld();
     if (world == nullptr) return nullptr;
 
-    static const char sql[] = "INSERT INTO OTABLE VALUES(?, ?) ;";
+    static const char sql[] = "INSERT INTO OTABLE VALUES(?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int err = 0;
@@ -231,7 +231,9 @@ Bean* SqliteBeanDB::createBean()
     if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_null(pstmt, 2);
     if (err != SQLITE_OK) goto out;
-    
+    err = sqlite3_bind_null(pstmt, 3);
+    if (err != SQLITE_OK) goto out;
+
     err = sqlite3_step(pstmt);
 
 out:
@@ -249,7 +251,7 @@ out:
 }
 
 
-Bean* SqliteBeanDB::getBean(oidType id)
+Bean* SqliteBeanDB::loadBean(oidType id)
 {
     if (m_db == nullptr) return nullptr;
     
@@ -269,7 +271,7 @@ Bean* SqliteBeanDB::getBean(oidType id)
     Property* property = nullptr;
     sqlite3_int64 value = 0;
     const char* valueStr = nullptr;
-    static const char sql[] = "SELECT VALUE from OTABLE WHERE ID = ?;";
+    static const char sql[] = "SELECT VALUE, UNMANAGED_VALUE from OTABLE WHERE ID = ?;";
     Json::Reader reader; 
     Json::Value jsonBean;  
 
@@ -359,7 +361,7 @@ _out:
     const char* valueStr = nullptr;
     static const char sql[] = "SELECT VALUE from OTABLE WHERE ID = ?;";
     Json::Reader reader; 
-    Json::Value jsonBean;  
+    Json::Value jsonBean;
     int err = 0;
 
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
@@ -432,13 +434,11 @@ out:
 }
 
 
-int SqliteBeanDB::insertBeanProperty(const Bean* bean, 
+int SqliteBeanDB::insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) 
 {
-    if (bean == nullptr) return -1;
     if (property == nullptr) return -1;
-    if (!bean->hasProperty(property)) return -1;
     if (m_db == nullptr) return -1;
      //no need to do anything here for non-indexed
      //and non-string-valued property
@@ -455,7 +455,7 @@ int SqliteBeanDB::insertBeanProperty(const Bean* bean,
     int err = 0;
     int nCol = 0;
     const char* pname = property->getName().c_str();
-    oidType sid = bean->getId();
+    oidType sid = beanId;
     std::list<const Json::Value*> vlist;
     
     if (value.isArray()) {
@@ -500,11 +500,11 @@ out:
 }
 
 
-int SqliteBeanDB::updateBeanProperty(const Bean* bean, 
+int SqliteBeanDB::updateBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) 
 {
-    return updateBeanProperty(bean, property, (Json::ArrayIndex)-1, value);
+    return updateBeanProperty(beanId, property, (Json::ArrayIndex)-1, value);
 }
 
 
@@ -538,15 +538,13 @@ out:
 }
 
 
-int SqliteBeanDB::updateBeanProperty(const Bean* bean, 
+int SqliteBeanDB::updateBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) 
 {
-    if (bean == nullptr) return -1;
     if (property == nullptr) return -1;
     if (m_db == nullptr) return -1;
-    if (!bean->hasProperty(property)) return -1;
      //no need to do anything here for non-indexed
      //and non-string-valued property
     if (!property->indexed() && 
@@ -569,7 +567,7 @@ int SqliteBeanDB::updateBeanProperty(const Bean* bean,
     int err = 0;
     int nCol = 0;
     const char* pname = property->getName().c_str();
-    oidType sid = bean->getId();
+    oidType sid = beanId;
     sqlite3_int64 id = 0;
     std::list<const Json::Value*> vlist;
     const Json::Value* v = nullptr;
@@ -613,17 +611,16 @@ out:
     return err;
 }
 
-int SqliteBeanDB::deleteBeanProperty(const Bean* bean, 
+int SqliteBeanDB::deleteBeanProperty(oidType beanId, 
     const Property* property) 
 {
-    return deleteBeanProperty(bean, property, (Json::Value::ArrayIndex)-1);
+    return deleteBeanProperty(beanId, property, (Json::Value::ArrayIndex)-1);
 }
 
-int SqliteBeanDB::deleteBeanProperty(const Bean* bean, 
+int SqliteBeanDB::deleteBeanProperty(oidType beanId, 
     const Property* property, 
     Json::Value::ArrayIndex index) 
 {
-    if (bean == nullptr) return -1;
     if (property == nullptr) return -1;
     if (m_db == nullptr) return -1;
 
@@ -649,7 +646,7 @@ int SqliteBeanDB::deleteBeanProperty(const Bean* bean,
     int err = 0;
     int nCol = 0;
     const char* pname = property->getName().c_str();
-    oidType sid = bean->getId();
+    oidType sid = beanId;
     sqlite3_int64 id = 0;
     std::list<const Json::Value*> vlist;
     const Json::Value* v = nullptr;
@@ -684,121 +681,6 @@ out:
     return err;
 }
 
-int SqliteBeanDB::updateBean(Bean* bean)
-{
-    if (bean == nullptr) return -1;
-    if (m_db == nullptr) return -1;
-
-    int err = 0;
-    char* errMsg = nullptr;
-    Json::FastWriter jsonWriter;
-    Json::Value value;
-    Json::Value pstValue;
-    sqlite3_stmt *pstmt = nullptr;
-    const char* pzTail = nullptr;
-    const char* pname = nullptr;
-    Property* property = nullptr;
-    Json::ArrayIndex arraySize = 0;
-
-    sqlite3_exec(m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
-
-    for (const auto& pname : bean->m_json_.getMemberNames()) {
-        property = getWorld()->getProperty(pname.c_str());
-        if (property == nullptr) return -1;
-        if (!bean->m_pst_json_.isMember(pname)) continue;
-        if (property->getType() == Property::ArrayPrimaryType ||
-            property->getType() == Property::ArrayRelationType) {
-                arraySize = bean->m_pst_json_.size();
-                pstValue = Json::arrayValue;
-                for (int i = 0; i < arraySize; i++) {
-                pstValue.append(bean->m_pst_json_[pname][i]);
-            }                               
-        } else {
-            arraySize = 1;
-            pstValue = Json::arrayValue;
-            pstValue.append(bean->m_pst_json_[pname]);
-        }
-
-        for (int i = 0; i < arraySize; i++) {
-            switch (pstValue[i].asInt()) {
-                case Bean::PST_NSY:
-                case Bean::PST_SYN:
-                    break; //no need to update
-                case Bean::PST_NEW:
-                    if (0 != insertBeanProperty(bean, property, bean->m_json_[pname]))
-                        goto _out;
-                    break;
-                case Bean::PST_MOD:
-                    if (0 != updateBeanProperty(bean, property, i, bean->m_json_[pname]))
-                        goto _out;
-                    break;
-                case Bean::PST_RMD:
-                    if ( 0 != deleteBeanProperty(bean, property, i))
-                        goto _out;
-                    break;
-                default:
-                break;
-            } 
-        }
-    }
-
-_out:
-   if (err != SQLITE_OK && err != SQLITE_DONE) {
-        err = sqlite3_exec ( m_db , "ROLLBACK  TRANSACTION" , nullptr , nullptr , &errMsg ) ;
-        elog("error occurred in %s, err=%d", __func__, err);
-    } else {
-        err = sqlite3_exec ( m_db , "COMMIT TRANSACTION" , nullptr , nullptr , &errMsg ) ;
-        if (err != SQLITE_OK && err != SQLITE_DONE) {
-            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
-        } else {
-            err = 0;
-        }
-    }
-    return err; 
-}
-
-int SqliteBeanDB::updateBean(Bean* bean, Property* property)
-{
-    if (bean == nullptr) return -1;
-    if (property == nullptr) return -1;
-    if (!bean->hasProperty(property)) return -1;
-    if (m_db == nullptr) return -1;
-
-    int err = 0;
-    char* errMsg = nullptr;
-    Json::Reader reader;
-    Json::FastWriter jsonWriter;
-    Json::Value tmpValue;
-    sqlite3_stmt *pstmt = nullptr;
-    const char* pzTail = nullptr;
-    const char* pname = property->getName().c_str();
-    static const char *sql = "UPDATE OTABLE SET  VALUE = ? WHERE ID = ?;";
-    sqlite3_exec(m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
-
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
-    if (err != SQLITE_OK) goto _out;
-
-    err = sqlite3_bind_text(pstmt, 1, pname, -1, nullptr);
-    if (err != SQLITE_OK) goto _out;
-
-
-_out:
-   if (err != SQLITE_OK && err != SQLITE_DONE) {
-        err = sqlite3_exec ( m_db , "ROLLBACK  TRANSACTION" , nullptr , nullptr , &errMsg ) ;
-        elog("error occurred in %s, err=%d", __func__, err);
-    } else {
-        err = sqlite3_exec ( m_db , "COMMIT TRANSACTION" , nullptr , nullptr , &errMsg ) ;
-        if (err != SQLITE_OK && err != SQLITE_DONE) {
-            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
-        } else {
-            err = 0;
-        }
-    }
-    sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
-    return err; 
-}
 
 int SqliteBeanDB::deleteBean(Bean* bean)
 {
@@ -1172,45 +1054,110 @@ out:
     return property;
 }
 
-int SqliteBeanDB::beginTransaction() 
+int SqliteBeanDB::doBeginTransaction() 
 {
     if (m_db == nullptr) return -1;
-    if (m_inTransaction) return 0;
     int err = 0;
     char* errmsg = nullptr;
     err = sqlite3_exec(m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
     if (err != SQLITE_OK) 
         elog("sqlite3 errormsg: %s \n", errmsg);
-    m_inTransaction = true;
     return err;
 }
 
 
-int SqliteBeanDB::commitTransaction() 
+int SqliteBeanDB::doCommitTransaction() 
 {
     if (m_db == nullptr) return -1;
-    if (!m_inTransaction) return -1;
     int err = 0;
     char* errmsg = nullptr;
     err = sqlite3_exec(m_db, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
     if (err != SQLITE_OK) 
         elog("sqlite3 errormsg: %s \n", errmsg);
-    m_inTransaction = false;
     return err;
 }
 
 
-int SqliteBeanDB::rollbackTransaction() 
+int SqliteBeanDB::doRollbackTransaction() 
 {
     if (m_db == nullptr) return -1;
-    if (!m_inTransaction) return -1;
     int err = 0;
     char* errmsg = nullptr;
     err = sqlite3_exec(m_db, "ROLLBACK TRANSACTION", nullptr, nullptr, &errmsg);
     if (err != SQLITE_OK) 
         elog("sqlite3 errormsg: %s \n", errmsg);
-    m_inTransaction = false;
     return err;
+}
+
+
+int SqliteBeanDB::loadBeanProperty(Bean* bean, const Property* property) 
+{
+
+}
+
+
+int SqliteBeanDB::saveBeanBase(const Bean* bean)
+{
+   if (bean == nullptr) return -1;
+    if (m_db == nullptr) return -1;
+
+    int err = 0;
+    char* errMsg = nullptr;
+    Json::Reader reader;
+    Json::FastWriter jsonWriter;
+    Json::Value tmpValue;
+    sqlite3_stmt *pstmt = nullptr;
+    const char* pzTail = nullptr;
+    static const char *sql = "UPDATE OTABLE SET  VALUE = ?, UNMANAGED_VALUE = ? WHERE ID = ?;";
+
+    bool alreadyInTransaction = inTransaction();
+    if (!alreadyInTransaction)
+        if (beginTransaction() != 0) return -1;
+
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+    if (err != SQLITE_OK) goto _out;
+
+    if (bean->m_json_.isNull()) {
+        err = sqlite3_bind_null(pstmt, 1);
+    }  else {
+        std::string valueStr = jsonWriter.write(bean->m_json_);
+        err = sqlite3_bind_text(pstmt, 1, valueStr.c_str() , -1, nullptr);
+    }
+    if (err != SQLITE_OK) goto _out;
+
+    if (bean->m_unmanaged_json_.isNull()) {
+        err = sqlite3_bind_null(pstmt, 2);
+    }  else {
+        std::string unmanagedValueStr = jsonWriter.write(bean->m_unmanaged_json_);
+        err = sqlite3_bind_text(pstmt, 2, unmanagedValueStr.c_str() , -1, nullptr);
+    }
+    if (err != SQLITE_OK) goto _out;
+
+    err = sqlite3_bind_int64(pstmt, 3, bean->getId());
+    if (err != SQLITE_OK) goto _out;
+
+_out:
+
+   if (err) {
+       if (!alreadyInTransaction)
+            rollbackTransaction();
+    } else {
+        if (!alreadyInTransaction)
+            err = commitTransaction();
+    }
+
+   if (err != SQLITE_OK && err != SQLITE_DONE) {
+       if (!alreadyInTransaction)
+            rollbackTransaction();
+    } else {
+        err = 0;
+        if (!alreadyInTransaction)
+            err = commitTransaction();
+    }
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+    return err; 
 }
 
 }

@@ -770,8 +770,9 @@ int Bean::save()
 {
     int err = 0;
     if (m_world_->m_db != nullptr) {
-        m_world_->m_db->updateBean(this);
+        err = m_world_->m_db->saveBean(this);
     }
+    return err;
 }
 
 

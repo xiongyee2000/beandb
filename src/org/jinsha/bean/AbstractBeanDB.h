@@ -14,12 +14,12 @@ public:
      * 
      * @param world the world attached to this storage
      */
-    AbstractBeanDB() : m_world(nullptr) {};
+    AbstractBeanDB();
 
     /**
      * Destructor
      */
-    virtual ~AbstractBeanDB() {};
+    virtual ~AbstractBeanDB();
 
     /**
      * Get the attached world.
@@ -119,7 +119,7 @@ public:
      * @return 0 on success, or an error code
      */
     virtual int undefineProperty(const char* name) = 0;
-    virtual int deleteRelation(const char* name) {return undefineProperty(name);};
+    virtual int undefineRelation(const char* name) {return undefineProperty(name);};
 
     /**
      * Get property/relation/array property/array relation by name.
@@ -135,21 +135,66 @@ public:
      * 
      * @return 0 on success, or an error code
      */
-    virtual int beginTransaction() = 0;
+    virtual int beginTransaction();
 
     /**
      * Commit a transaction.
      * 
      * @return 0 on success, or an error code
      */
-    virtual int commitTransaction() = 0;
+    virtual int commitTransaction();
 
     /**
      * Rollback a transaction.
      * 
      * @return 0 on success, or an error code
      */
-    virtual int rollbackTransaction() = 0;
+    virtual int rollbackTransaction();
+
+    /**
+     * Check if it is in a transaction
+     * 
+     * @return true if in a transaction, or false if not
+     */
+    virtual bool inTransaction() {return m_inTransaction;};
+
+
+    /**
+     * Creat an empty bean.
+     * 
+     * @return the pointer pointing to the bean, or nullptr if exception occurs.
+     */
+    virtual Bean* createBean() = 0;
+
+    /**
+     * Get bean by id.
+     * 
+     * @param id the id of the bean
+     * @return the pointer pointing to the bean, or null if no such
+     *                   bean exist in the storage
+     */
+    virtual Bean* loadBean(oidType id) = 0;
+
+    /**
+     * Save a single bean into the storage.
+     * 
+     * This method is supposed to be called from class BeanWorld.
+     * 
+     * @param bean the bean to be saved
+     * @return 0 for success, or an error code
+     */
+    virtual int saveBean(Bean* bean);
+
+    /**
+     * Remove a single bean from the storage.
+     * 
+     * This method is supposed to be called from class BeanWorld.
+     * 
+     * @param bean the bean to be removed
+     * @return 0 for success, or an error code
+     */
+    virtual int deleteBean(Bean* bean) = 0;
+
 
 protected:
     /**
@@ -173,7 +218,6 @@ protected:
      */
     virtual int loadAll() = 0;
 
-
     /**
      * Save all data, including all beans, properties in the world, 
      * to the persistent storage.
@@ -183,22 +227,6 @@ protected:
      * @return 0 for success, or an error code
      */
     virtual int saveAll() = 0;
-
-    /**
-     * Creat an empty bean.
-     * 
-     * @return the pointer pointing to the bean, or nullptr if exception occurs.
-     */
-    virtual Bean* createBean() = 0;
-
-    /**
-     * Get bean by id.
-     * 
-     * @param id the id of the bean
-     * @return the pointer pointing to the bean, or null if no such
-     *                   bean exist in the storage
-     */
-    virtual Bean* getBean(oidType id) = 0;
 
     /**
      * Load bean properties. 
@@ -219,26 +247,6 @@ protected:
     virtual Json::Value getBeanProperty(const Bean* bean, const Property* property) const = 0;
 
     /**
-     * Save a single bean into the storage.
-     * 
-     * This method is supposed to be called from class BeanWorld.
-     * 
-     * @param bean the bean to be saved
-     * @return 0 for success, or an error code
-     */
-    virtual int updateBean(Bean* bean) = 0;
-
-    /**
-     * Remove a single bean from the storage.
-     * 
-     * This method is supposed to be called from class BeanWorld.
-     * 
-     * @param bean the bean to be removed
-     * @return 0 for success, or an error code
-     */
-    virtual int deleteBean(Bean* bean) = 0;
-
-    /**
      * Load all properties from the storage into the world.
      * 
      * This method is supposed to be called from class BeanWorld.
@@ -251,25 +259,49 @@ protected:
      */
     virtual int loadProperties() = 0;
 
-    virtual int insertBeanProperty(const Bean* bean, 
+    virtual int loadBeanProperty(Bean* bean, const Property* property) = 0;
+    virtual int saveBeanBase(const Bean* bean) = 0;
+    virtual int insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) = 0;
-    virtual int updateBeanProperty(const Bean* bean, 
+    virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) = 0;
-    virtual int updateBeanProperty(const Bean* bean, 
+    virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) = 0;
-    virtual int deleteBeanProperty(const Bean* bean, 
+    virtual int deleteBeanProperty(oidType beanId, 
         const Property* property) = 0;
-    virtual int deleteBeanProperty(const Bean* bean, 
+    virtual int deleteBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) = 0;
 
 
-private:
+    /**
+     * Begin a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    virtual int doBeginTransaction() = 0;
+
+    /**
+     * Commit a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    virtual int doCommitTransaction() = 0;
+
+    /**
+     * Rollback a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    virtual int doRollbackTransaction() = 0;
+
+protected:
     BeanWorld *m_world;
+    bool m_inTransaction = false;
 
 friend class BeanWorld;
 friend class Bean;

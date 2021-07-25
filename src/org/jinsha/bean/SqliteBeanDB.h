@@ -39,35 +39,35 @@ public:
     int loadProperties() override;
 
     virtual Bean* createBean();
-    virtual Bean* getBean(oidType id);
+    virtual Bean* loadBean(oidType id);
     virtual std::list<std::string> getBeanProperties(oidType id) const override;
 
     int loadAll() override;
     int saveAll() override;
 
-    int updateBean(Bean* bean) override;
-    int updateBean(Bean* bean, Property* property);
-    int deleteBean(Bean* bean) override;
-    Json::Value getBeanProperty(const Bean* bean, const Property* property) const override;
-    virtual int insertBeanProperty(const Bean* bean, 
+    virtual int loadBeanProperty(Bean* bean, const Property* property) override;
+    virtual int saveBeanBase(const Bean* bean) override;
+    virtual int deleteBean(Bean* bean) override;
+    virtual Json::Value getBeanProperty(const Bean* bean, const Property* property) const override;
+    virtual int insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
-    virtual int updateBeanProperty(const Bean* bean, 
+    virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
-    virtual int updateBeanProperty(const Bean* bean, 
+    virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) override;
-    virtual int deleteBeanProperty(const Bean* bean, 
+    virtual int deleteBeanProperty(oidType beanId, 
         const Property* property) override;
-    virtual int deleteBeanProperty(const Bean* bean, 
+    virtual int deleteBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) override;
 
-    virtual int beginTransaction() override;
-    virtual int commitTransaction() override;
-    virtual int rollbackTransaction() override;
+    virtual int doBeginTransaction() override;
+    virtual int doCommitTransaction() override;
+    virtual int doRollbackTransaction() override;
 
 private:
     int internalInit();
@@ -82,6 +82,7 @@ private:
     int closeDB();
     int getIdByPropertyIndex(const char* pname, Json::ArrayIndex index, sqlite3_int64& id);
 
+
 private:
     const char* m_dir;
     std::string m_dbFullPath;
@@ -89,7 +90,6 @@ private:
     // int m_status = INIT;
     bool m_initialized;
     bool m_connected;
-    bool m_inTransaction;
 
 };
 

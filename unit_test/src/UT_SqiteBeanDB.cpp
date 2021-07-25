@@ -302,7 +302,7 @@ TEST(SqliteBeanDB, createBean_deleteBean)
 }
 
 
-TEST(SqliteBeanDB, updateBean)
+TEST(SqliteBeanDB, saveBean)
 {
     Bean *bean = nullptr;
     char buff[128] = {0};
@@ -342,7 +342,7 @@ TEST(SqliteBeanDB, updateBean)
     // bean = testdb.getBean(1);
     // EXPECTE_TRUE(bean->getProperty(p1) == 1);
     // bean->setProperty(p1, 101);
-    // testdb.updateBean(bean, p1);
+    // testdb.saveBean(bean, p1);
     // world.clear();
     // bean = testdb.getBean(1);
     //  EXPECTE_TRUE(bean->getProperty(p1) == 1);

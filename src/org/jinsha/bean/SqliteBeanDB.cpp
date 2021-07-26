@@ -253,108 +253,28 @@ out:
 
 Bean* SqliteBeanDB::getBean(oidType id)
 {
-    if (m_db == nullptr) return nullptr;
-    
     BeanWorld *world = nullptr;
     if ((world = getWorld()) == nullptr) return nullptr;
 
-    Bean* bean = world->getBean(id);
-    if (bean != nullptr) return bean;
-
-    const char* pname = nullptr;
-    sqlite3_stmt *pstmt = nullptr;
-    // const char* pzTail = nullptr;
-    int nCol = 0;
     int err = 0;
-    int size = 0;
-    bool notCreated = false;
-    Property* property = nullptr;
-    sqlite3_int64 value = 0;
-    const char* valueStr = nullptr;
-    static const char sql[] = "SELECT VALUE, UNMANAGED_VALUE from OTABLE WHERE ID = ?;";
-    Json::Reader reader; 
-    Json::Value jsonBean;  
-
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto _out;
-    err = sqlite3_bind_int64(pstmt, 1, id);
-    if (err != SQLITE_OK) goto _out;
-
-	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+    Bean* bean = world->getBean(id);
+    if (bean == nullptr) {
+        if (m_db == nullptr) return nullptr;
         bean = world->createBean((oidType)id);
-        nCol = 0;
-        if (sqlite3_column_type(pstmt, nCol++) != SQLITE_NULL) {
-            valueStr = (const char*)sqlite3_column_text(pstmt, nCol++);
-            if (!reader.parse(valueStr, jsonBean))
-            {
-                // err = -1;
-                break;
-            }
-
-            for (auto& item : jsonBean.getMemberNames()) {
-                pname = item.c_str();
-                property = world->getProperty(pname);
-                if (property != nullptr) { //it's a defined property
-                    switch (property->getType()) {
-                        case Property::PrimaryType:
-                            bean->setProperty(property, jsonBean[pname]);
-                            bean->m_pst_json_[pname] = 
-                                property->m_delay_load? Bean::PST_NSY : Bean::PST_SYN;
-                            break;
-                        case Property::RelationType:
-                            bean->setRelation(property, jsonBean[pname].asUInt64());
-                            bean->m_pst_json_[pname] = Bean::PST_SYN;                            
-                            break;
-                        case Property::ArrayPrimaryType:
-                            bean->createArrayProperty(property);
-                            bean->m_pst_json_[pname] = Json::arrayValue;
-                            size = jsonBean[pname].size();
-                            for (int i = 0; i < size; i++) {
-                                bean->appendProperty(property,  jsonBean[pname][i]);
-                                bean->m_pst_json_[pname][i] = 
-                                    property->m_delay_load?Bean:: PST_NSY : Bean::PST_SYN;
-                            }
-                            break;
-                        case Property::ArrayRelationType:
-                            bean->createArrayRelation(property);
-                            bean->m_pst_json_[pname] = Json::arrayValue;;
-                            size = jsonBean[pname].size();
-                            for (int i = 0; i < size; i++) {
-                                bean->appendRelation(property,  jsonBean[pname][i].asUInt64());
-                                bean->m_pst_json_[pname][i] = Bean::PST_SYN;
-                            }            
-                            break;
-                        default: 
-                            //shall not reach here
-                            wlog("ignore invalid property of type: %d", property->getType());
-                            break;
-                    }
-                } else { //unmanaged json value
-                    bean->setUnmanagedValue(pname, jsonBean[pname]);
-                }
-            }
+        err = loadBean(bean);
+        if (err) {
+            world->removeBean(bean->getId());
+            return nullptr;
         }
-	}
-    if (err != SQLITE_DONE) {
-        world->removeBean(id);
-        bean = nullptr;
-        goto _out;
-    }
-
-_out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
-    }
-    sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    } 
     return bean;
 }
 
 int SqliteBeanDB::loadBean(Bean* bean)
 {
-    if (m_db == nullptr) return -1;
     if (bean == nullptr) return -1;
+    bean->clear();
+    if (m_db == nullptr) return -1;
     
     BeanWorld *world = nullptr;
     const char* pname = nullptr;
@@ -370,9 +290,8 @@ int SqliteBeanDB::loadBean(Bean* bean)
     static const char sql[] = "SELECT VALUE, UNMANAGED_VALUE from OTABLE WHERE ID = ?;";
     Json::Reader reader; 
     Json::Value jsonBean;  
+    bool found = false;
     oidType id = bean->getId();
-
-    bean->clear();
 
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
@@ -380,13 +299,12 @@ int SqliteBeanDB::loadBean(Bean* bean)
     if (err != SQLITE_OK) goto _out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
-        bean = world->createBean((oidType)id);
-        nCol = 0;
-        if (sqlite3_column_type(pstmt, nCol++) != SQLITE_NULL) {
-            valueStr = (const char*)sqlite3_column_text(pstmt, nCol++);
+        //retrieve properties
+        if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
+            valueStr = (const char*)sqlite3_column_text(pstmt, 0);
             if (!reader.parse(valueStr, jsonBean))
             {
-                // err = -1;
+                err = -1;
                 break;
             }
 
@@ -394,6 +312,7 @@ int SqliteBeanDB::loadBean(Bean* bean)
                 pname = item.c_str();
                 property = world->getProperty(pname);
                 if (property != nullptr) { //it's a defined property
+                    
                     switch (property->getType()) {
                         case Property::PrimaryType:
                             bean->setProperty(property, jsonBean[pname]);
@@ -410,8 +329,8 @@ int SqliteBeanDB::loadBean(Bean* bean)
                             size = jsonBean[pname].size();
                             for (int i = 0; i < size; i++) {
                                 bean->appendProperty(property,  jsonBean[pname][i]);
-                                bean->m_pst_json_[pname][i] = 
-                                    property->m_delay_load?Bean:: PST_NSY : Bean::PST_SYN;
+                                bean->m_pst_json_[pname].append( 
+                                    property->m_delay_load?Bean:: PST_NSY : Bean::PST_SYN);
                             }
                             break;
                         case Property::ArrayRelationType:
@@ -420,31 +339,42 @@ int SqliteBeanDB::loadBean(Bean* bean)
                             size = jsonBean[pname].size();
                             for (int i = 0; i < size; i++) {
                                 bean->appendRelation(property,  jsonBean[pname][i].asUInt64());
-                                bean->m_pst_json_[pname][i] = Bean::PST_SYN;
+                                bean->m_pst_json_[pname].append(Bean::PST_SYN);
                             }            
                             break;
                         default: 
                             //shall not reach here
-                            wlog("ignore invalid property of type: %d", property->getType());
+                            elog("invalid property of type found when loading  bean (id=%llu, pname=%s)  \n", bean->getId(), property->getType());
                             break;
                     }
-                } else { //unmanaged json value
-                    bean->setUnmanagedValue(pname, jsonBean[pname]);
+                } else { 
+                    //shall not reach here
+                    elog("non-existent property found when loading bean (id=%llu, pname=%s) \n", bean->getId(), pname);
                 }
             }
         }
+
+        //retrieve unmanaged value
+        if (sqlite3_column_type(pstmt, 1) != SQLITE_NULL) {
+            valueStr = (const char*)sqlite3_column_text(pstmt, 1);
+            if (!reader.parse(valueStr, jsonBean))
+            {
+                err = -2;
+                break;
+            }
+            bean->setUnmanagedValue(pname, jsonBean);
+        }
+        
+        found = true;
+        break;
 	}
-    if (err != SQLITE_DONE) {
-        world->removeBean(id);
-        bean = nullptr;
-        goto _out;
-    }
 
 _out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
-    } else {
+    if (found) {
         err = 0;
+    } else {
+        bean->clear();
+        elog("Error in %s: %d \n", __func__, err);
     }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);

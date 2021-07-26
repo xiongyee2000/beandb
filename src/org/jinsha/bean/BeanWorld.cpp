@@ -63,10 +63,43 @@ Bean* BeanWorld::createBean(oidType id)
 
 void BeanWorld::removeBean(oidType id)
 {
-    //todo: need to handle bean relations
     auto iter = m_beans_.find(id);
     if (iter != m_beans_.end())
     {
+        //handle relations: remove relation from subject that has
+        Bean* bean = iter->second;
+        //relation to this bean (as object)
+        Bean* subject = nullptr;
+        Property* property = nullptr;
+        Json::Value* value = nullptr;
+        auto iter2 = bean->m_subjectMap_.begin();
+        while (iter2 != bean->m_subjectMap_.end())
+        {
+            subject = getBean(iter2->first);
+            if (subject == nullptr) {
+                iter2 = bean->m_subjectMap_.erase(iter2);
+                continue;
+            }
+            property = iter2->second;
+            if (property->getType() == Property::RelationType)  {
+                //use doRemoveProperty(property, true) to keep
+                //m_subjectMap_ unchanged
+                subject->doRemoveProperty(property, true);
+            } else if (property->getType() == Property::ArrayRelationType) {
+                value = subject->getMemberPtr(property);
+                if (value == nullptr) {
+                    iter2++;
+                    continue; //shall not be null
+                }
+                size_t size = value->size();
+                //todo: O(n*n) complexity! How to improve performance?
+                for (Json::ArrayIndex i = size; i > 0; i--)
+                    if (subject->getRelationBeanId(property, i - 1) == bean->m_id_) {
+                        subject->doRemoveProperty(property, i - 1, true); 
+                    }
+            }
+            iter2++;
+        }
        delete iter->second;
         m_beans_.erase(iter);
     }

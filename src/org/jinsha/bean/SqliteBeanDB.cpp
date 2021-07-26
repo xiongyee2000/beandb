@@ -273,19 +273,15 @@ Bean* SqliteBeanDB::getBean(oidType id)
 int SqliteBeanDB::loadBean(Bean* bean)
 {
     if (bean == nullptr) return -1;
-    bean->clear();
+    bean->unload();
     if (m_db == nullptr) return -1;
     
     BeanWorld *world = nullptr;
     const char* pname = nullptr;
     sqlite3_stmt *pstmt = nullptr;
-    // const char* pzTail = nullptr;
-    int nCol = 0;
     int err = 0;
     int size = 0;
-    bool notCreated = false;
     Property* property = nullptr;
-    sqlite3_int64 value = 0;
     const char* valueStr = nullptr;
     static const char sql[] = "SELECT VALUE, UNMANAGED_VALUE from OTABLE WHERE ID = ?;";
     Json::Reader reader; 
@@ -373,7 +369,7 @@ _out:
     if (found) {
         err = 0;
     } else {
-        bean->clear();
+        bean->unload();
         elog("Error in %s: %d \n", __func__, err);
     }
     sqlite3_clear_bindings(pstmt);

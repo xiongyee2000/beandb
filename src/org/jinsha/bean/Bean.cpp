@@ -20,42 +20,7 @@ m_world_(world)
 
 Bean::~Bean()
 {
-    removeAllProperties();
-
-    //handle relations: remove relation from subject that has
-    //relation to this bean (as object)
-    Bean* subject = nullptr;
-    Property* property = nullptr;
-    Json::Value* value = nullptr;
-    auto iter = m_subjectMap_.begin();
-    while (iter != m_subjectMap_.end())
-    {
-        subject = m_world_->getBean(iter->first);
-        if (subject == nullptr) {
-            iter = m_subjectMap_.erase(iter);
-            continue;
-        }
-        property = iter->second;
-        if (property->getType() == Property::RelationType)  {
-            //use doRemoveProperty(property, true) to keep
-            //m_subjectMap_ unchanged
-            subject->doRemoveProperty(property, true);
-        } else if (property->getType() == Property::ArrayRelationType) {
-            value = subject->getMemberPtr(property);
-            if (value == nullptr) {
-                iter++;
-                continue; //shall not be null
-            }
-            size_t size = value->size();
-            //todo: O(n*n) complexity! How to improve performance?
-            for (Json::ArrayIndex i = size; i > 0; i--)
-                if (subject->getRelationBeanId(property, i - 1) == m_id_) {
-                    subject->doRemoveProperty(property, i - 1, true); 
-                }
-        }
-        iter++;
-    }
-    m_subjectMap_.clear();
+    unload();
 }
 
 
@@ -740,20 +705,29 @@ int Bean::load()
 {
     int err = 0;
     if (m_world_->m_db == nullptr) return -1;
-    unload();
-    for (auto& pname : m_json_.getMemberNames()) {
-        // m_world_->m_db->getBeanProperty(this, m_world_->getProperty(pname.c_str()));
-    }
-    return err;
+    return m_world_->m_db->loadBean(this);
 }
 
 
 int Bean::unload()
 {
     int err = 0;
-    if (m_world_->m_db == nullptr) return -1;
+   removeAllProperties();
+   m_unmanaged_json_ = Json::nullValue;
+   m_delay_load_json_ = Json::nullValue;
+   for (auto& pname : m_pst_json_.getMemberNames()) {
+       if (m_pst_json_[pname].isNull()) {
+           m_pst_json_.removeMember(pname);
+       } else {
+           if (m_pst_json_[pname].asInt() == PST_NEW ) {
+               m_pst_json_.removeMember(pname);
+               auto iter = m_subjectMap_.find(m_id_);
+           } else {
+               m_pst_json_[pname] = PST_NSY;
+           }
+       }
+   }
     return err;
-
 }
 
 
@@ -773,21 +747,6 @@ int Bean::save()
         err = m_world_->m_db->saveBean(this);
     }
     return err;
-}
-
-
-void Bean::clear()
-{
-    if (!m_json_.isNull()) {
-        m_json_ = Json::nullValue;
-    }
-    if (!m_pst_json_.isNull()) {
-        m_pst_json_ = Json::nullValue;
-    }
-    if (!m_delay_load_json_.isNull()) {
-        m_delay_load_json_ = Json::nullValue;
-    }
-    m_subjectMap_.clear();
 }
 
 

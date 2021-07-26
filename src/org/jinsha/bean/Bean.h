@@ -391,7 +391,6 @@ private:
     int unload();
     Json::Value* delayLoad(const Property* property);
     int loadProperty(Property* property, const Json::Value& value);
-    void clear();
 
 private:
     typedef enum {

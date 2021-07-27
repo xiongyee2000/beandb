@@ -371,7 +371,7 @@ private:
     bool doHasProperty(const Property* property, Property::Type type) const;
 
     Json::Value* getMemberPtr(const Property* property);
-    void setPropertyBase_(Property* property, 
+    int setPropertyBase_(Property* property, 
         Json::Value *oldValue,  
         const Json::Value&  newValue, 
         Json::Value::ArrayIndex index = (Json::Value::ArrayIndex)-1);
@@ -381,7 +381,7 @@ private:
 
     void addSubject(Bean* subject, Property* relation);
     void removeSubject(Bean* subject, Property* relation);
-    void setPst(Property* property, int status);
+    int pstTransition(int currentPst, int desiredPst);
 
     ////////////////////////////////////////////////////////////////
     //DB related methods

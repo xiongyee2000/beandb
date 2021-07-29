@@ -340,12 +340,12 @@ int SqliteBeanDB::loadBean(Bean* bean)
                             break;
                         default: 
                             //shall not reach here
-                            elog("invalid property of type found when loading  bean (id=%llu, pname=%s)  \n", bean->getId(), property->getType());
+                            // elog("invalid property of type found when loading  bean (id=%llu, pname=%s)  \n", bean->getId(), property->getType());
                             break;
                     }
                 } else { 
                     //shall not reach here
-                    elog("non-existent property found when loading bean (id=%llu, pname=%s) \n", bean->getId(), pname);
+                    // elog("non-existent property found when loading bean (id=%llu, pname=%s) \n", bean->getId(), pname);
                 }
             }
         }
@@ -418,7 +418,7 @@ _out:
 }
 
 
-Json::Value  SqliteBeanDB::getBeanProperty(const Bean* bean, const Property* property) const
+int  SqliteBeanDB::getBeanProperty(const Bean* bean, const Property* property, Json::Value& value) const
 {
     if (bean == nullptr) return -1;
     if (property == nullptr) return -1;
@@ -1155,13 +1155,6 @@ int SqliteBeanDB::doRollbackTransaction()
     err = sqlite3_exec(m_db, "ROLLBACK TRANSACTION", nullptr, nullptr, &errmsg);
     if (err != SQLITE_OK) 
         elog("sqlite3 errormsg: %s \n", errmsg);
-    return err;
-}
-
-
-int SqliteBeanDB::loadBeanProperty(Bean* bean, const Property* property) 
-{
-    int err = 0;
     return err;
 }
 

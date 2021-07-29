@@ -50,6 +50,24 @@ int AbstractBeanDB::rollbackTransaction()
     return err;
 }
 
+Bean* AbstractBeanDB::getBean(oidType id)
+{
+    BeanWorld *world = nullptr;
+    if ((world = getWorld()) == nullptr) return nullptr;
+
+    int err = 0;
+    Bean* bean = world->getBean(id);
+    if (bean == nullptr) {
+        bean = world->createBean((oidType)id);
+        err = loadBean(bean);
+        if (err) {
+            world->removeBean(bean->getId());
+            return nullptr;
+        }
+    } 
+    return bean;
+}
+
 
 int AbstractBeanDB::saveBean(Bean* bean)
 {
@@ -139,6 +157,28 @@ _out:
         }
     }
     return err; 
+}
+
+
+int AbstractBeanDB::loadBeanProperty(Bean* bean, Property* property)
+{
+    if (bean == nullptr) return -1;
+    if (property == nullptr) return -1;
+    int err = 0;
+    const auto& pname = property->getName();
+    if (!bean->m_pst_json_.isMember(pname)) return -2;
+    if (bean->m_pst_json_[pname].asInt() == Bean::PST_SYN) return 0;
+    err = getBeanProperty(bean, property, bean->m_json_[pname]);
+    return err;
+}
+
+
+int AbstractBeanDB::loadBeanProperty(Bean* bean, Property* property, Json::Value::ArrayIndex index)
+{
+    if (bean == nullptr) return -1;
+    if (property == nullptr) return -1;
+    int err = 0;
+    return err;
 }
 
 }

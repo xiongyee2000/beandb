@@ -405,7 +405,6 @@ private:
 private:
     Json::Value m_json_;
     Json::Value m_unmanaged_json_;
-    Json::Value m_delay_load_json_;
     Json::Value m_pst_json_;
     BeanWorld* m_world_;
 

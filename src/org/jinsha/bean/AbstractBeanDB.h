@@ -169,11 +169,14 @@ public:
     /**
      * Get bean by id.
      * 
+     * The method will firstly try to get the bean by calling BeanWorld::getBean(),
+     * if it fails, it will then try to call loadBean().
+     * 
      * @param id the id of the bean
      * @return the pointer pointing to the bean, or null if no such
-     *                   bean exist in the storage
+     *                   bean exist.
      */
-    virtual Bean* getBean(oidType id) = 0;
+    virtual Bean* getBean(oidType id);
 
     /**
      * Save a single bean into the storage.
@@ -237,14 +240,15 @@ protected:
     virtual std::list<std::string> getBeanProperties(oidType id) const = 0;
 
     /**
-     * Load bean property. This method is used in case "late-loading"
+     * Load bean property. This method is used in case "delay-load"
      * is needed.
      * 
      * @param bean the bean
      * @param property the property to be loaded
+     * @param value the value loaded to
      * @return 0 on success, or an error code
      */
-    virtual Json::Value getBeanProperty(const Bean* bean, const Property* property) const = 0;
+    virtual int getBeanProperty(const Bean* bean, const Property* property, Json::Value& value) const = 0;
 
     /**
      * Load all properties from the storage into the world.
@@ -253,27 +257,57 @@ protected:
      * 
      * Notes:
      * -  In out design, all properties must be loaded into world (memory) 
-     *    before the world is useful.
+     *    before the world is usable.
      * 
      * @return 0 for success, or an error code
      */
     virtual int loadProperties() = 0;
 
-    virtual int loadBean(Bean* bean) = 0 ;
-    virtual int loadBeanProperty(Bean* bean, const Property* property) = 0;
+    /**
+     * Load bean into memory.
+     * 
+     * @param bean the bean
+     * @return 0 on success, or an error code
+     */
+    virtual int loadBean(Bean* bean) = 0;
+
+    /**
+     * Load a bean property into memory.
+     * @param bean the bean
+     * @param property the property to be loaded
+     * @return 0 on success, or an error code
+     */
+    virtual int loadBeanProperty(Bean* bean, 
+        Property* property);
+
+    /**
+     * Load a bean array property into memory.
+     * @param bean the bean
+     * @param property the property to be loaded
+     * @return 0 on success, or an error code
+     */
+    virtual int loadBeanProperty(Bean* bean, 
+        Property* property,
+        Json::Value::ArrayIndex index);
+
     virtual int saveBeanBase(const Bean* bean) = 0;
+
     virtual int insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) = 0;
+
     virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) = 0;
+
     virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) = 0;
+
     virtual int deleteBeanProperty(oidType beanId, 
         const Property* property) = 0;
+
     virtual int deleteBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) = 0;

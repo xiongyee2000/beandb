@@ -63,29 +63,23 @@ void Bean::removeAllProperties()
 Json::Value Bean::getProperty(const Property* property) const
 {
     Json::Value value(Json::nullValue);
-    if (property == nullptr) return Json::nullValue;
-    if (property->getType() != Property::PrimaryType) return Json::nullValue;
+    if (!hasProperty(property)) return Json::nullValue;
 
     const char* pname = property->getName().c_str();
-    if (!m_json_.isMember(pname)) return Json::nullValue; //no such property
 
     if (property->m_delay_load) {
-        if (m_delay_load_json_.isMember(pname)) {
-            //already loaded
-            return m_delay_load_json_[pname];
-        } else {
+        if (m_pst_json_[pname].asInt() == PST_NSY) {
             //not loaded, load it
             Json::Value* v = ((Bean*)this)->delayLoad(property);
             if (v != nullptr) {
+                (Json::Value&)m_pst_json_[pname] = *v;
                 return *v;
             } else {
                 return Json::nullValue;
             }
-        }
-    } else {
-            value = m_json_.get(pname, value);
-    }
-    return value;
+        } 
+    } 
+    return m_json_[pname];
 }
 
 
@@ -125,6 +119,7 @@ int Bean::setPropertyBase_(Property* property,
         //set the property (regardless of value)
         oldValue = &m_json_[pname];
         //no old value, need to increment ref. count
+
         // property->m_refCount_++;
     }
     else
@@ -139,7 +134,7 @@ int Bean::setPropertyBase_(Property* property,
             } else {
                 err = m_world_->m_db->updateBeanProperty(m_id_, property, index, newValue);
                 if (err)
-                    return err;                
+                    return err;
             }
         }
 
@@ -188,31 +183,29 @@ Json::Value Bean::getArrayProperty(const Property* property,
     Json::Value value(Json::nullValue);
     if (!hasArrayProperty(property)) return Json::nullValue;
     const char* pname = property->getName().c_str();
-    if (index >= m_json_[pname].size()) return Json::nullValue;
 
     if (property->m_delay_load) {
-        if (m_delay_load_json_.isMember(pname)) {
-            //already loaded
-             if (index < m_delay_load_json_[pname].size()) {
-                return m_delay_load_json_[pname][index];
-             }
-        } else {
+        if (m_pst_json_[pname].asInt() == PST_NSY) {
             //not loaded, load it
             Json::Value* v = ((Bean*)this)->delayLoad(property);
             if (v != nullptr && v->isArray()) {
                     if (index < v->size()) {
                         return (*v)[index];
                     } else {
-                        value = Json::nullValue;
+                        return Json::nullValue;
                     }
             } else {
-                value = Json::nullValue;
+                return Json::nullValue;
             }
         }
     } else {
-        return m_json_[pname][index];
+        if (index < m_json_[pname].size()) {
+            return m_json_[pname][index];
+        }
+        else {
+            return Json::nullValue;
+        }
     }
-    return value;
 }
 
 
@@ -463,11 +456,11 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal)
     Json::Value* valuePtr = getMemberPtr(property);
     if (valuePtr == nullptr) return Json::nullValue;
 
-    // //delete from db first
-    // if (m_world_->m_db != nullptr) {
-    //     if (0 != m_world_->m_db->deleteBeanProperty(this, property))
-    //         return Json::nullValue;
-    // }
+    //delete from db first
+    if (m_world_->m_db != nullptr) {
+        if (0 != m_world_->m_db->deleteBeanProperty(m_id_, property))
+            return Json::nullValue;
+    }
 
     Json::Value& value = *valuePtr;
     property->removeSubject(m_id_);
@@ -521,15 +514,8 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal)
     }
     
     //remove member of json object
-    if (property->m_delay_load) {
-        this->m_json_.
-        removeMember(pname);
-        return this->m_delay_load_json_.
-            removeMember(pname);
-    } else {
-        return this->m_json_.
-            removeMember(pname);
-    }
+    return m_json_.
+    removeMember(pname);
 }
 
 
@@ -616,14 +602,15 @@ Json::Value* Bean::getMemberPtr(const Property* property)
 {
     const auto& pname = property->getName();
     if (property->m_delay_load) {
-        if (m_delay_load_json_.isMember(pname)) {
-            return &m_delay_load_json_[pname];
-        } else {
-            return delayLoad(property);
-        }
-    } else {
-        return (m_json_.isMember(pname)) ? &m_json_[pname] : nullptr;
+        if (m_pst_json_[pname].asInt() == PST_NSY) {
+            //not loaded, load it now
+            Json::Value* v = ((Bean*)this)->delayLoad(property);
+            if (v != nullptr) {
+                m_json_[pname] = *v;
+            } 
+        } 
     }
+    return (m_json_.isMember(pname)) ? &m_json_[pname] : nullptr;
 }
 
 Json::Value Bean::getUnmanagedValue(const char* name)
@@ -655,11 +642,15 @@ Json::Value* Bean::delayLoad(const Property* property)
     }
 
     Json::Value* rtn = nullptr;
-    Json::Value value = m_world_->m_db->getBeanProperty(this, property);
-    if (!value.isNull()) { 
+    const auto& pname = property->getName();
+    ((Bean*)this)->m_json_[pname] = Json::nullValue;
+    int err = m_world_->m_db->getBeanProperty(this, property, ((Bean*)this)->m_json_[pname]);
+    if (err) { 
+         ((Bean*)this)->m_json_.removeMember(pname);
+    } else {
         //loaded, and then set the value
-        ((Bean*)this)->m_delay_load_json_[property->getName()] = value;
-        rtn = &m_delay_load_json_[property->getName()];
+        rtn = &m_json_[pname];
+        m_pst_json_[pname] = PST_SYN;
     } 
     if (!connected) { 
         //if previously not connected, resume it to disconnected
@@ -712,7 +703,6 @@ int Bean::unload()
     int err = 0;
    removeAllProperties();
    m_unmanaged_json_ = Json::nullValue;
-   m_delay_load_json_ = Json::nullValue;
    for (auto& pname : m_pst_json_.getMemberNames()) {
        if (m_pst_json_[pname].isNull()) {
            m_pst_json_.removeMember(pname);

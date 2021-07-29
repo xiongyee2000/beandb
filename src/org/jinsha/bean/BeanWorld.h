@@ -54,7 +54,7 @@ public:
     virtual Bean *createBean(oidType id = 0);
 
     /**
-     * Remove a bean.
+     * Remove a bean from this world. 
      * 
      * @param id the id of the bean
      */

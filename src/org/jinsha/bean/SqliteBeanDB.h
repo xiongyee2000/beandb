@@ -46,10 +46,9 @@ public:
 
     virtual Bean* getBean(oidType id) override;
     virtual int loadBean(Bean* bean) override;
-    virtual int loadBeanProperty(Bean* bean, const Property* property) override;
     virtual int saveBeanBase(const Bean* bean) override;
     virtual int deleteBean(Bean* bean) override;
-    virtual Json::Value getBeanProperty(const Bean* bean, const Property* property) const override;
+    virtual int getBeanProperty(const Bean* bean, const Property* property, Json::Value& value) const override;
     virtual int insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;

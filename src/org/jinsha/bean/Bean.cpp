@@ -47,7 +47,7 @@ bool Bean::doHasProperty(const Property* property, Property::Type type) const
 {
     if (property == nullptr) return false;
     if (property->getType() != type) return false;
-    return m_json_.isMember(property->getName());
+    return m_pst_json_.isMember(property->getName());
 }
 
 
@@ -63,21 +63,12 @@ void Bean::removeAllProperties()
 Json::Value Bean::getProperty(const Property* property) const
 {
     Json::Value value(Json::nullValue);
-    if (!hasProperty(property)) return Json::nullValue;
+    if (!hasProperty(property)) return Json::Value::null;
 
-    const char* pname = property->getName().c_str();
-
-    if (property->m_delay_load) {
-        if (m_pst_json_[pname].asInt() == PST_NSY) {
-            //not loaded, load it
-            Json::Value* v = ((Bean*)this)->delayLoad(property);
-            if (v != nullptr) {
-                (Json::Value&)m_pst_json_[pname] = *v;
-                return *v;
-            } else {
-                return Json::nullValue;
-            }
-        } 
+    const auto& pname = property->getName();
+    if (m_pst_json_[pname].asInt() == PST_NSY) {
+        //not loaded, load it
+        if (0 != ((Bean*)this)->loadProperty(property)) return Json::Value::null;
     } 
     return m_json_[pname];
 }
@@ -87,15 +78,22 @@ int Bean::setProperty(Property* property,  const Json::Value& value)
 {
     if (value.isNull()) return -1;
     if (property == nullptr) return -2;
-    if (property->getType() != Property::PrimaryType) return -2;
+    if (property->getType() != Property::PrimaryType) return -3;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
     int err = 0;
     const auto& pname = property->getName();
-    Json::Value *oldValue = getMemberPtr(property);
+    Json::Value *oldValue = nullptr;
+    if (m_pst_json_.isMember(pname)) {
+        oldValue = getMemberPtr(property);
+    }
     // if (oldValue != nullptr && (*oldValue) == value) return 0;
 
     err = setPropertyBase_(property,  oldValue, value);
-    if (err) return err;
+    if (err) {
+        return err;
+    } else {
+        m_pst_json_[pname] = PST_SYN;
+    }
     
     //handle subject tracking
     property->addSubject(m_id_);
@@ -181,30 +179,18 @@ Json::Value Bean::getArrayProperty(const Property* property,
     Json::Value::ArrayIndex index) const
 {
     Json::Value value(Json::nullValue);
-    if (!hasArrayProperty(property)) return Json::nullValue;
-    const char* pname = property->getName().c_str();
+    if (!hasArrayProperty(property)) return Json::Value::null;
+    const auto& pname = property->getName();
 
-    if (property->m_delay_load) {
-        if (m_pst_json_[pname].asInt() == PST_NSY) {
-            //not loaded, load it
-            Json::Value* v = ((Bean*)this)->delayLoad(property);
-            if (v != nullptr && v->isArray()) {
-                    if (index < v->size()) {
-                        return (*v)[index];
-                    } else {
-                        return Json::nullValue;
-                    }
-            } else {
-                return Json::nullValue;
-            }
-        }
-    } else {
-        if (index < m_json_[pname].size()) {
-            return m_json_[pname][index];
-        }
-        else {
-            return Json::nullValue;
-        }
+    if (!m_pst_json_[pname].isArray()) { 
+        //not loaded, load it
+        if (0 != ((Bean*)this)->loadProperty(property)) return Json::Value::null;
+    }
+    if (index < m_json_[pname].size()) {
+        return m_json_[pname][index];
+    }
+    else {
+        return Json::Value::null;
     }
 }
 
@@ -214,8 +200,11 @@ int Bean::createArrayProperty(Property* property)
     if (property == nullptr) return -2;
     if (property->getType() != Property::ArrayPrimaryType) return -2;
     if (isMember(property)) return 0;
-    const char* pname = property->getName().c_str();
+    const auto& pname = property->getName();
+    //todo: save to db first
+    //...
     m_json_[pname] = Json::Value(Json::arrayValue);
+    m_pst_json_[pname] = PST_NEW;
     property->addSubject(m_id_);
     return 0;
 }
@@ -226,16 +215,23 @@ int Bean::setProperty(Property* property,
 {
     if (value.isNull()) return -1;
     if (property == nullptr) return -2;
-    if (property->getType() != Property::ArrayPrimaryType) return -2;
+    if (property->getType() != Property::ArrayPrimaryType) return -3;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
     const auto& pname = property->getName();
-    if (!m_json_.isMember(pname)) return -4;
+    if (!m_pst_json_.isMember(pname)) return -4;
+    if (m_pst_json_[pname] == PST_NEW) return -4;
+    if (!m_pst_json_[pname].isArray()) { 
+        //delay load
+        if (0 != loadProperty(property)) {
+            return -11;
+        }
+    }
     Json::Value* array = getMemberPtr(property);
-    if (array == nullptr) return -4; 
     if (index >= array->size()) return -5;
     Json::Value *oldValue = &((*array)[index]);
-    setPropertyBase_(property,  oldValue, value, index);
-    return 0;
+    int err = setPropertyBase_(property,  oldValue, value, index);
+    if (!err) m_pst_json_[pname][index] = PST_SYN;
+    return err;
 }
 
 
@@ -245,15 +241,32 @@ int Bean::appendProperty(Property* property,  const Json::Value& value)
     if (property == nullptr) return -2;
     if (property->getType() != Property::ArrayPrimaryType) return -2;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
-    if (!hasArrayProperty(property)) return -4;
+    const auto& pname = property->getName();
+    if (!m_pst_json_.isMember(pname)) return -4;
+    int err = 0;
+    if (!m_pst_json_[pname].isArray()) {
+        if (m_pst_json_[pname].asInt() == PST_NEW) {
+            //new created array and first time append
+            m_pst_json_[pname] = Json::Value(Json::arrayValue);
+        } else {
+            //delay load
+            err = loadProperty(property);
+            if (err) return -11;
+        }
+    } else {
+        //already loaded
+    }
     Json::Value * array =  getMemberPtr(property);
-    if (array == nullptr) return -4; 
     //insert property record first
     if (m_world_->m_db != nullptr) {
-        if (0 != m_world_->m_db->insertBeanProperty(m_id_, property, value))
-            return -11;
+        if (0 != m_world_->m_db->insertBeanProperty(m_id_, property, value)) {
+            if (m_pst_json_[pname].size() == 0)
+                m_pst_json_[pname] = PST_NEW;
+                return -11;
+        }
     }
     array->append(value);
+    m_pst_json_[pname].append(PST_SYN);
     //todo: do not index array property/relation for now
     // if (property->indexed())
     //     property->addIndex(this, value);
@@ -299,8 +312,17 @@ int Bean::setRelation(Property* relation, oidType objectId)
 {
     if (relation == nullptr) return -2;
     if (relation->getType() != Property::RelationType) return -2;
-    Json::Value *oldValue =  getMemberPtr(relation);
-    setPropertyBase_(relation, oldValue, objectId);
+    Json::Value *oldValue = nullptr;
+    const auto& pname = relation->getName();
+    if (m_pst_json_.isMember(pname)) {
+        oldValue = getMemberPtr(relation);
+    }
+    int err =setPropertyBase_(relation, oldValue, objectId);
+    if (err) {
+        return err;
+    } else {
+        m_pst_json_[pname] = PST_SYN;
+    }
 
     //handle object tracking
     if (oldValue != nullptr) {
@@ -321,7 +343,6 @@ int Bean::setRelation(Property* relation, oidType objectId)
     relation->addSubject(m_id_);
     
     return 0;
-
 }
 
 
@@ -329,9 +350,18 @@ int Bean::setRelation(Property* relation, Bean* bean)
 {
     if (bean == nullptr) return -1;
     if (relation == nullptr) return -2;
-    if (relation->getType() != Property::RelationType) return -2;
-    Json::Value *oldValue =  getMemberPtr(relation);
-    setPropertyBase_(relation, oldValue, bean->getId());
+    if (relation->getType() != Property::RelationType) return -3;
+    Json::Value *oldValue = nullptr;
+    const auto& pname = relation->getName();
+    if (m_pst_json_.isMember(pname)) {
+        oldValue = getMemberPtr(relation);
+    }
+    int err = setPropertyBase_(relation, oldValue, bean->getId());
+    if (err) {
+        return err;
+    } else {
+        m_pst_json_[pname] = PST_SYN;
+    }
 
     //handle object tracking
     if (oldValue != nullptr) {
@@ -360,6 +390,7 @@ int Bean::createArrayRelation(Property* relation)
     if (hasArrayRelation(relation)) return 0;
     const char* pname = relation->getName().c_str();
     m_json_[pname] = Json::Value(Json::arrayValue);
+    m_pst_json_[pname] = PST_NEW;
     relation->addSubject(m_id_);
     return 0;
 }
@@ -371,12 +402,29 @@ int Bean::appendRelation(Property* relation,  oidType objectBeanId)
     if (relation->getType() != Property::ArrayRelationType) return -2;
     if (!hasArrayRelation(relation)) return -4;
     const auto& pname = relation->getName();
-    auto& arrayValue = m_json_[pname];
+
+    // if (!m_pst_json_.isMember(pname)) return -4;
+    int err = 0;
+    if (!m_pst_json_[pname].isArray()) {
+        if (m_pst_json_[pname].asInt() == PST_NEW) {
+            //new created array and first time append
+            m_pst_json_[pname] = Json::Value(Json::arrayValue);
+        } else {
+            //delay load
+            err = loadProperty(relation);
+            if (err) return -11;
+        }
+    } else {
+        //already loaded
+    }
+
     //insert property record first
     if (m_world_->m_db != nullptr) {
         if (0 != m_world_->m_db->insertBeanProperty(m_id_, relation, Json::Value(objectBeanId)))
             return -11;
     }
+
+    auto& arrayValue = m_json_[pname];
     arrayValue.append(objectBeanId);
     relation->addObject(objectBeanId);
     //todo: do not index array property/relation for now
@@ -395,12 +443,29 @@ int Bean::appendRelation(Property* relation,  Bean* bean)
     if (relation == nullptr) return -2;
     if (relation->getType() != Property::ArrayRelationType) return -2;
     if (!hasArrayRelation(relation)) return -4;
+
+    const auto& pname = relation->getName();
+    // if (!m_pst_json_.isMember(pname)) return -4;
+    int err = 0;
+    if (!m_pst_json_[pname].isArray()) {
+        if (m_pst_json_[pname].asInt() == PST_NEW) {
+            //new created array and first time append
+            m_pst_json_[pname] = Json::Value(Json::arrayValue);
+        } else {
+            //delay load
+            err = loadProperty(relation);
+            if (err) return -11;
+        }
+    } else {
+        //already loaded
+    }
+
     //insert property record first
     if (m_world_->m_db != nullptr) {
         if (0 != m_world_->m_db->insertBeanProperty(m_id_, relation, Json::Value(bean->m_id_)))
             return -11;
     }
-    const auto& pname = relation->getName();
+
     auto& arrayValue = m_json_[pname];
     arrayValue.append(bean->getId());
     relation->addObject(bean->getId());
@@ -417,13 +482,25 @@ int Bean::setRelation(Property* relation,
 {
     if (bean == nullptr) return -1;
     if (relation == nullptr) return -2;
-    if (relation->getType() != Property::ArrayRelationType) return -2;
-    const auto& pname = relation->getName().c_str();
-    if (!m_json_.isMember(pname)) return -4;
+    if (relation->getType() != Property::ArrayRelationType) return -3;
+    const auto& pname = relation->getName();
+    if (!m_pst_json_.isMember(pname)) return -4;
+    if (m_pst_json_[pname] == PST_NEW) return -4;
+    if (!m_pst_json_[pname].isArray()) { 
+        //delay load
+        if (0 != loadProperty(relation)) {
+            return -11;
+        }
+    }
     auto& array = m_json_[pname]; 
     if (index >= array.size()) return -5;
     Json::Value *oldValue = &array[index];
-    setPropertyBase_(relation, oldValue, bean->getId(), index);
+    int err = setPropertyBase_(relation, oldValue, bean->getId(), index);
+    if (err) {
+        return err;
+    } else {
+        m_pst_json_[pname][index] = PST_SYN;
+    }
 
     //handle object tracking
     if (oldValue != nullptr) {
@@ -446,7 +523,7 @@ int Bean::setRelation(Property* relation,
 
 Json::Value Bean::removeProperty(Property* property)
 {
-    if (property == nullptr) return Json::nullValue;
+    if (property == nullptr) return Json::Value::null;
     return doRemoveProperty(property);
 }
 
@@ -454,12 +531,12 @@ Json::Value Bean::removeProperty(Property* property)
 Json::Value Bean::doRemoveProperty(Property* property, bool internal)
 {
     Json::Value* valuePtr = getMemberPtr(property);
-    if (valuePtr == nullptr) return Json::nullValue;
+    if (valuePtr == nullptr) return Json::Value::null;
 
     //delete from db first
     if (m_world_->m_db != nullptr) {
         if (0 != m_world_->m_db->deleteBeanProperty(m_id_, property))
-            return Json::nullValue;
+            return Json::Value::null;
     }
 
     Json::Value& value = *valuePtr;
@@ -514,6 +591,7 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal)
     }
     
     //remove member of json object
+    m_pst_json_.removeMember(pname);
     return m_json_.
     removeMember(pname);
 }
@@ -521,7 +599,7 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal)
 
 Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex index)
 {
-    if (property == nullptr) return Json::nullValue;
+    if (property == nullptr) return Json::Value::null;
     return doRemoveProperty(property, index);
 }
 
@@ -537,7 +615,7 @@ Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex i
     // //delete from db first
     // if (m_world_->m_db != nullptr) {
     //     if (0 != m_world_->m_db->deleteBeanProperty(this, property, index))
-    //         return Json::nullValue;
+    //         return Json::Value::null;
     // }
 
     rtn = array[index];
@@ -601,22 +679,20 @@ void Bean::removeSubject(Bean* subject, Property* relation)
 Json::Value* Bean::getMemberPtr(const Property* property)
 {
     const auto& pname = property->getName();
-    if (property->m_delay_load) {
-        if (m_pst_json_[pname].asInt() == PST_NSY) {
-            //not loaded, load it now
-            Json::Value* v = ((Bean*)this)->delayLoad(property);
-            if (v != nullptr) {
-                m_json_[pname] = *v;
-            } 
-        } 
-    }
     return (m_json_.isMember(pname)) ? &m_json_[pname] : nullptr;
 }
 
 Json::Value Bean::getUnmanagedValue(const char* name)
 {
     if (name == nullptr || name[0] == 0) return Json::Value(nullptr);
-    return m_unmanaged_json_[name];
+    if (m_unmanaged_pst_json_.isMember(name)) {
+        if (m_unmanaged_pst_json_[name].asInt() == PST_NSY) {
+            //todo: delay load
+        } else {
+            return m_unmanaged_json_[name];
+        }
+    }
+    return Json::Value::null;
 }
 
 Json::Value Bean::getUnmanagedValue(const char* name) const
@@ -627,7 +703,10 @@ Json::Value Bean::getUnmanagedValue(const char* name) const
 void Bean::setUnmanagedValue(const char* name, Json::Value& value)
 {
     if (name == nullptr || name[0] == 0) return;
+    //todo: save to db
+    //...
     m_unmanaged_json_[name] = value;
+    m_unmanaged_pst_json_[name] = PST_SYN;
 }
 
 Json::Value* Bean::delayLoad(const Property* property)
@@ -643,7 +722,7 @@ Json::Value* Bean::delayLoad(const Property* property)
 
     Json::Value* rtn = nullptr;
     const auto& pname = property->getName();
-    ((Bean*)this)->m_json_[pname] = Json::nullValue;
+    ((Bean*)this)->m_json_[pname] = Json::Value::null;
     int err = m_world_->m_db->getBeanProperty(this, property, ((Bean*)this)->m_json_[pname]);
     if (err) { 
          ((Bean*)this)->m_json_.removeMember(pname);
@@ -702,16 +781,19 @@ int Bean::unload()
 {
     int err = 0;
    removeAllProperties();
-   m_unmanaged_json_ = Json::nullValue;
+   m_unmanaged_json_ = Json::Value::null;
    for (auto& pname : m_pst_json_.getMemberNames()) {
        if (m_pst_json_[pname].isNull()) {
            m_pst_json_.removeMember(pname);
        } else {
-           if (m_pst_json_[pname].asInt() == PST_NEW ) {
-               m_pst_json_.removeMember(pname);
-               auto iter = m_subjectMap_.find(m_id_);
-           } else {
-               m_pst_json_[pname] = PST_NSY;
+            if (m_pst_json_[pname].isArray()) {
+                m_pst_json_[pname] = PST_NSY;
+            } else {
+                if (m_pst_json_[pname].asInt() == PST_NEW ) {
+                    m_pst_json_.removeMember(pname);
+                } else {
+                    m_pst_json_[pname] = PST_NSY;
+                }
            }
        }
    }
@@ -719,13 +801,34 @@ int Bean::unload()
 }
 
 
-int Bean::loadProperty(Property* property, const Json::Value& value)
+int Bean::loadProperty(const Property* property)
 {
     int err = 0;
-    err = setProperty(property, value);
-    if (err) return err;
+    const auto& pname = property->getName();
+    if (m_world_->m_db == nullptr) return -1;
 
-    return 0;
+    if (property->m_propertyType_ == Property::ArrayPrimaryType ||
+         property->m_propertyType_ == Property::ArrayRelationType) {
+        err = m_world_->m_db->getBeanProperty(this, property, (Json::Value&)m_json_[pname]);
+        if (err) {
+            (Json::Value&)m_json_[pname] = Json::Value::null; //reset to null
+        } else {
+            (Json::Value&)m_pst_json_[pname] = Json::Value(Json::arrayValue);
+            auto& v = (Json::Value&)m_pst_json_[pname];
+            for (int i = 0; i < m_json_.size(); i++) {
+                v.append(PST_SYN);
+            }
+        }
+    } else {
+        err = m_world_->m_db->getBeanProperty(this, property, (Json::Value&)m_json_[pname]);
+        if (err) {
+            (Json::Value&)m_json_[pname] = Json::Value::null; //reset to null
+        } else {
+            (Json::Value&)m_pst_json_[pname] = PST_SYN;
+        }
+    }
+
+    return err;
 }
 
 int Bean::save()

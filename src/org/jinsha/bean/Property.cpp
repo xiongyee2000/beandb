@@ -25,8 +25,10 @@ Property::~Property()
     for (auto& iter : m_subjectMap_)
     {
         bean = m_world_->getBean(iter.first);
-        if (bean != nullptr)
+        if (bean != nullptr) {
             bean->m_json_.removeMember(m_name_);
+            bean->m_pst_json_.removeMember(m_name_);
+        }
     }
     m_subjectMap_.clear();
 }

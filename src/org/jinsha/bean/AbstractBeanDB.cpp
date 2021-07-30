@@ -169,6 +169,10 @@ int AbstractBeanDB::loadBeanProperty(Bean* bean, Property* property)
     if (!bean->m_pst_json_.isMember(pname)) return -2;
     if (bean->m_pst_json_[pname].asInt() == Bean::PST_SYN) return 0;
     err = getBeanProperty(bean, property, bean->m_json_[pname]);
+    
+    if (!err) {
+        bean->m_pst_json_[pname] = Bean::PST_SYN;
+    }
     return err;
 }
 

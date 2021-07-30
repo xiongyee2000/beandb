@@ -313,7 +313,7 @@ int SqliteBeanDB::loadBean(Bean* bean)
                         case Property::PrimaryType:
                             bean->setProperty(property, jsonBean[pname]);
                             bean->m_pst_json_[pname] = 
-                                property->m_delay_load? Bean::PST_NSY : Bean::PST_SYN;
+                                property->getValueType() == Property::StringType ? Bean::PST_NSY : Bean::PST_SYN;
                             break;
                         case Property::RelationType:
                             bean->setRelation(property, jsonBean[pname].asUInt64());
@@ -326,7 +326,7 @@ int SqliteBeanDB::loadBean(Bean* bean)
                             for (int i = 0; i < size; i++) {
                                 bean->appendProperty(property,  jsonBean[pname][i]);
                                 bean->m_pst_json_[pname].append( 
-                                    property->m_delay_load?Bean:: PST_NSY : Bean::PST_SYN);
+                                    property->getValueType() == Property::StringType ? Bean:: PST_NSY : Bean::PST_SYN);
                             }
                             break;
                         case Property::ArrayRelationType:

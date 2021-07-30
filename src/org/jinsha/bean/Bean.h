@@ -91,7 +91,7 @@ public:
      *                   error code:
      *                   -1: if value is null
      *                   -2: if property is null
-     *                   -3: if he value is of invalid type
+     *                   -3: if the property or value is of invalid type
      */
     int setProperty(Property* property, const Json::Value& value);
 
@@ -174,7 +174,7 @@ public:
      *                   error code:
      *                   -1: if value is null
      *                   -2: if property is null
-     *                   -3: if the value is of invalid type
+     *                   -3: if the property or value is of invalid type
      *                   -4: if the array property is not a member of this bean
      *                   -5: if the index is invalid
      */
@@ -240,7 +240,8 @@ public:
      * @param objectBeanId the id of the counter part bean of the relation
      * @return 0 if success, or an error code:
      *                   -1: if bean is null
-     *                   -2: if property is null
+     *                   -2: if relation is null
+     *                   -3: if the relation is not of Property::RelationType
      */
     int setRelation(Property* relation, oidType objectBeanId);
 
@@ -253,6 +254,7 @@ public:
      * @return 0 if success, or an error code:
      *                   -1: if bean is null
      *                   -2: if property is null
+     *                   -3: if the relation is not of Property::ArrayRelationType
      */
     int setRelation(Property* relation, Bean* bean);
 
@@ -390,7 +392,7 @@ private:
     int load();
     int unload();
     Json::Value* delayLoad(const Property* property);
-    int loadProperty(Property* property, const Json::Value& value);
+    int loadProperty(const Property* property);
 
 private:
     typedef enum {
@@ -406,6 +408,7 @@ private:
     Json::Value m_json_;
     Json::Value m_unmanaged_json_;
     Json::Value m_pst_json_;
+    Json::Value m_unmanaged_pst_json_;
     BeanWorld* m_world_;
 
     // otype classId_ = 0;

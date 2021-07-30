@@ -391,7 +391,7 @@ TEST(Bean, relation)
     err = bean1->setRelation(nullptr, bean2);
     EXPECT_TRUE(err == -2);
     err = bean1->setRelation(p1, bean2);
-    EXPECT_TRUE(err == -2);
+    EXPECT_TRUE(err == -3);
 
     EXPECT_TRUE(!bean1->getRelationBeanId(r1));
     err = bean1->setRelation(r1, bean2);
@@ -426,7 +426,7 @@ TEST(Bean, array_relation)
     err = bean1->setRelation(nullptr, 0, bean2);
     EXPECT_TRUE(err == -2);
     err = bean1->setRelation(p1, 0, bean2);
-    EXPECT_TRUE(err == -2);
+    EXPECT_TRUE(err == -3);
     err = bean1->setRelation(rArray_1, 0, bean2);
     EXPECT_TRUE(err == -4);
 

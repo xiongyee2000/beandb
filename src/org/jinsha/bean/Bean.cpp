@@ -261,7 +261,7 @@ int Bean::appendProperty(Property* property,  const Json::Value& value)
     if (m_world_->m_db != nullptr) {
         if (0 != m_world_->m_db->insertBeanProperty(m_id_, property, value)) {
             if (m_pst_json_[pname].size() == 0)
-                m_pst_json_[pname] = PST_NEW;
+                m_pst_json_[pname] = PST_NEW; //resume to PST_NEW
                 return -11;
         }
     }
@@ -530,8 +530,20 @@ Json::Value Bean::removeProperty(Property* property)
 
 Json::Value Bean::doRemoveProperty(Property* property, bool internal)
 {
-    Json::Value* valuePtr = getMemberPtr(property);
+    const auto& pname = property->getName();
+   Json::Value* valuePtr = getMemberPtr(property);
     if (valuePtr == nullptr) return Json::Value::null;
+    Json::Value& pstValue = m_pst_json_[pname];
+   if (!pstValue.isArray()) {
+        if (pstValue.asInt() == PST_NEW) {
+        // a new created array property that contains no item
+        // so no need to later stuff.
+            m_pst_json_.removeMember(pname);
+            //need to do this for createProperty() call addSubject()
+            property->removeSubject(m_id_); 
+            return Json::Value::null;
+        }
+    }
 
     //delete from db first
     if (m_world_->m_db != nullptr) {
@@ -555,11 +567,11 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal)
         }
         else
         {
-            property->removeIndex(this, value);
+            if (m_pst_json_[pname].asInt() != PST_NSY)  {
+                property->removeIndex(this, value);
+            }
         }
     }
-
-    const auto& pname = property->getName();
 
     //remove object record if the property is relation
     if (property->getType() == Property::RelationType)
@@ -606,17 +618,30 @@ Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex ind
 Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex index, bool internal)
 {
     Json::Value rtn; //null
+    const auto& pname = property->getName();
+    if (!m_pst_json_.isMember(pname)) return Json::Value::null; //bean has no such property value
+    Json::Value& pstValue = m_pst_json_[pname];
+    if (!pstValue.isArray()) 
+    {
+        if (pstValue.asInt() == PST_NEW) { 
+        // a new created array property that contains no item,
+        // so no need to do later stuff.
+            m_pst_json_.removeMember(pname);
+            property->removeSubject(m_id_);
+            return Json::Value::null;
+        }
+    }
     Json::Value* arrayPtr = getMemberPtr(property);
-    if (arrayPtr == nullptr) return rtn; 
+    if (arrayPtr == nullptr) return Json::Value::null; 
     Json::Value& array = *arrayPtr;
-    if (!array.isArray()) return rtn; //if property is array, array.isArray() shall be true
-    if (index >= array.size()) return rtn;
+    if (!array.isArray()) return Json::Value::null; //if property is array, array.isArray() shall be true
+    if (index >= array.size()) return Json::Value::null;
 
-    // //delete from db first
-    // if (m_world_->m_db != nullptr) {
-    //     if (0 != m_world_->m_db->deleteBeanProperty(this, property, index))
-    //         return Json::Value::null;
-    // }
+    //delete from db first
+    if (m_world_->m_db != nullptr) {
+        if (0 != m_world_->m_db->deleteBeanProperty(m_id_, property, index))
+            return Json::Value::null;
+    }
 
     rtn = array[index];
 
@@ -642,13 +667,16 @@ Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex i
     
     //create a new array and replace the old
     Json::Value newArray(Json::arrayValue);
+    Json::Value newPstArray(Json::arrayValue);
     for (Json::ArrayIndex i = 0; i < array.size(); i++) {
         if (i != index) {
             newArray.append(array[i]);
+            newPstArray.append(pstValue[i]);
         }
     }
 
     array = newArray;
+    m_pst_json_[pname] = newPstArray;
     return rtn;
 }
 

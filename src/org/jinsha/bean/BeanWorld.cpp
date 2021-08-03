@@ -100,6 +100,8 @@ void BeanWorld::removeBean(oidType id)
             }
             iter2++;
         }
+
+        iter->second->unload();
        delete iter->second;
         m_beans_.erase(iter);
     }
@@ -232,16 +234,6 @@ int BeanWorld::loadProperties()
         return m_db->loadProperties();
     } else {
         return 0;
-    }
-}
-
-
-Bean* BeanWorld::loadBean(oidType id)
-{
-    if (m_db != nullptr) {
-        return m_db->getBean(id);
-    } else {
-        return nullptr;
     }
 }
 

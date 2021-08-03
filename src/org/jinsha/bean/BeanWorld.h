@@ -185,11 +185,6 @@ public:
     int loadProperties();
 
     /**
-     * See AbstractBeanDB::loadBean().
-     */
-    Bean* loadBean(oidType id);
-
-    /**
      * Remove all beans from this world.
      */
     int unloadBean(oidType id);

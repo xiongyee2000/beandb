@@ -160,31 +160,6 @@ _out:
 }
 
 
-int AbstractBeanDB::loadBeanProperty(Bean* bean, Property* property)
-{
-    if (bean == nullptr) return -1;
-    if (property == nullptr) return -1;
-    int err = 0;
-    const auto& pname = property->getName();
-    if (!bean->m_pst_json_.isMember(pname)) return -2;
-    if (bean->m_pst_json_[pname].asInt() == Bean::PST_SYN) return 0;
-    err = getBeanProperty(bean, property, bean->m_json_[pname]);
-    
-    if (!err) {
-        bean->m_pst_json_[pname] = Bean::PST_SYN;
-    }
-    return err;
-}
-
-
-int AbstractBeanDB::loadBeanProperty(Bean* bean, Property* property, Json::Value::ArrayIndex index)
-{
-    if (bean == nullptr) return -1;
-    if (property == nullptr) return -1;
-    int err = 0;
-    return err;
-}
-
 }
 }
 }

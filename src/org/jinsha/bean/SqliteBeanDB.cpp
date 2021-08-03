@@ -251,24 +251,24 @@ out:
 }
 
 
-Bean* SqliteBeanDB::getBean(oidType id)
-{
-    BeanWorld *world = nullptr;
-    if ((world = getWorld()) == nullptr) return nullptr;
+// Bean* SqliteBeanDB::getBean(oidType id)
+// {
+//     BeanWorld *world = nullptr;
+//     if ((world = getWorld()) == nullptr) return nullptr;
 
-    int err = 0;
-    Bean* bean = world->getBean(id);
-    if (bean == nullptr) {
-        if (m_db == nullptr) return nullptr;
-        bean = world->createBean((oidType)id);
-        err = loadBean(bean);
-        if (err) {
-            world->removeBean(bean->getId());
-            return nullptr;
-        }
-    } 
-    return bean;
-}
+//     int err = 0;
+//     Bean* bean = world->getBean(id);
+//     if (bean == nullptr) {
+//         if (m_db == nullptr) return nullptr;
+//         bean = world->createBean((oidType)id);
+//         err = loadBean(bean);
+//         if (err) {
+//             world->removeBean(bean->getId());
+//             return nullptr;
+//         }
+//     } 
+//     return bean;
+// }
 
 int SqliteBeanDB::loadBean(Bean* bean)
 {
@@ -418,14 +418,15 @@ _out:
 }
 
 
-int  SqliteBeanDB::getBeanProperty(const Bean* bean, const Property* property, Json::Value& value) const
+int  SqliteBeanDB::loadBeanProperty(const Bean* bean, const Property* property, Json::Value& value)
 {
-    if (bean == nullptr) return -1;
-    if (property == nullptr) return -1;
-    if (property->getType() == Property::RelationType) return 0; //not delay loading
-    if (property->getValueType() != Property::StringType) return 0; //not delay loading
-    if (!bean->getProperty(property).isNull()) return 0; //already loaded
     if (m_db == nullptr) return -1;
+    // bool connected = this->connected();
+    // if (!connected) {
+    //     if (0 != connect()) {
+    //         return -1;
+    //     }
+    // }
 
     int err = 0;
     oidType id = 0; //id of the string in property table
@@ -456,6 +457,11 @@ out:
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
+
+    // if (!connected) { 
+    //     //if previously not connected, resume it to disconnected
+    //     disconnect();
+    // }
     return 0;
 
 }
@@ -1222,6 +1228,14 @@ _out:
     sqlite3_finalize(pstmt);
     return err; 
 }
+
+int SqliteBeanDB::loadUnmanagedValues(const Bean* bean, Json::Value& value)
+{
+    int err = 0;
+    //todo:
+    return err;
+}
+
 
 }
 }

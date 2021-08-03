@@ -248,7 +248,9 @@ protected:
      * @param value the value loaded to
      * @return 0 on success, or an error code
      */
-    virtual int getBeanProperty(const Bean* bean, const Property* property, Json::Value& value) const = 0;
+    virtual int loadBeanProperty(const Bean* bean, const Property* property, Json::Value& value) = 0;
+
+    virtual int loadUnmanagedValues(const Bean* bean, Json::Value& value) = 0;
 
     /**
      * Load all properties from the storage into the world.
@@ -270,25 +272,6 @@ protected:
      * @return 0 on success, or an error code
      */
     virtual int loadBean(Bean* bean) = 0;
-
-    /**
-     * Load a bean property into memory.
-     * @param bean the bean
-     * @param property the property to be loaded
-     * @return 0 on success, or an error code
-     */
-    virtual int loadBeanProperty(Bean* bean, 
-        Property* property);
-
-    /**
-     * Load a bean array property into memory.
-     * @param bean the bean
-     * @param property the property to be loaded
-     * @return 0 on success, or an error code
-     */
-    virtual int loadBeanProperty(Bean* bean, 
-        Property* property,
-        Json::Value::ArrayIndex index);
 
     virtual int saveBeanBase(const Bean* bean) = 0;
 

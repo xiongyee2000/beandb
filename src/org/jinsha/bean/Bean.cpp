@@ -20,7 +20,6 @@ m_world_(world)
 
 Bean::~Bean()
 {
-    unload();
 }
 
 
@@ -737,34 +736,6 @@ void Bean::setUnmanagedValue(const char* name, Json::Value& value)
     m_unmanaged_pst_json_[name] = PST_SYN;
 }
 
-Json::Value* Bean::delayLoad(const Property* property)
-{
-    if (m_world_->m_db != nullptr) return nullptr;
-    
-    bool connected = m_world_->m_db->connected();
-    if (!connected) {
-        if (0 != m_world_->m_db->connect()) {
-            return nullptr;
-        }
-    }
-
-    Json::Value* rtn = nullptr;
-    const auto& pname = property->getName();
-    ((Bean*)this)->m_json_[pname] = Json::Value::null;
-    int err = m_world_->m_db->getBeanProperty(this, property, ((Bean*)this)->m_json_[pname]);
-    if (err) { 
-         ((Bean*)this)->m_json_.removeMember(pname);
-    } else {
-        //loaded, and then set the value
-        rtn = &m_json_[pname];
-        m_pst_json_[pname] = PST_SYN;
-    } 
-    if (!connected) { 
-        //if previously not connected, resume it to disconnected
-        m_world_->m_db->disconnect();
-    }
-    return rtn;
-}
 
 int Bean::pstTransition(int currentPst, int desiredPst)
 {
@@ -799,9 +770,50 @@ int Bean::pstTransition(int currentPst, int desiredPst)
 
 int Bean::load()
 {
-    int err = 0;
     if (m_world_->m_db == nullptr) return -1;
-    return m_world_->m_db->loadBean(this);
+    int err = 0;
+    Property* property = nullptr;
+    Json::Value& pstValue = (Json::Value&)Json::Value::null;
+    for (auto& pname : m_pst_json_.getMemberNames()) {
+        pstValue = m_pst_json_[pname];
+        if (pstValue.isArray()) {
+            continue; //assume already synced with db
+        } else {
+            if (pstValue.asInt() == PST_SYN) continue;
+            if (pstValue.asInt() == PST_NEW ) {
+                //newly created but empty array
+                m_pst_json_.removeMember(pname);
+                continue;
+            } 
+            if (pstValue.asInt() == PST_MOD) {
+                //changed property
+                property = m_world_->getProperty(pname.c_str());
+                if (property == nullptr) continue; //shall not happen
+                if (property->getType() == Property::PrimaryType &&
+                    property->indexed()) {
+                    //remove index if there
+                    property->removeIndex(this, m_json_[pname]);
+                }
+            }
+
+            //PST_MOD or PST_NSY
+            err = m_world_->m_db->loadBeanProperty(this, property, m_json_[pname]);
+            if (err) {
+                m_json_[pname] = Json::Value::null;
+                m_pst_json_[pname] = PST_NSY;
+            } else {
+                m_pst_json_[pname] = PST_SYN;
+            }
+        }
+   }
+
+    if (!m_unmanaged_pst_json_.isNull()) {
+        if (m_unmanaged_pst_json_.asInt() == PST_MOD) {
+            err = m_world_->m_db->loadUnmanagedValues(this, m_unmanaged_pst_json_);
+        }
+    }
+
+    return err;
 }
 
 
@@ -837,7 +849,7 @@ int Bean::loadProperty(const Property* property)
 
     if (property->m_propertyType_ == Property::ArrayPrimaryType ||
          property->m_propertyType_ == Property::ArrayRelationType) {
-        err = m_world_->m_db->getBeanProperty(this, property, (Json::Value&)m_json_[pname]);
+        err = m_world_->m_db->loadBeanProperty(this, property, (Json::Value&)m_json_[pname]);
         if (err) {
             (Json::Value&)m_json_[pname] = Json::Value::null; //reset to null
         } else {
@@ -848,7 +860,7 @@ int Bean::loadProperty(const Property* property)
             }
         }
     } else {
-        err = m_world_->m_db->getBeanProperty(this, property, (Json::Value&)m_json_[pname]);
+        err = m_world_->m_db->loadBeanProperty(this, property, (Json::Value&)m_json_[pname]);
         if (err) {
             (Json::Value&)m_json_[pname] = Json::Value::null; //reset to null
         } else {

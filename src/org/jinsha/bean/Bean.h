@@ -391,7 +391,6 @@ private:
 private:
     int load();
     int unload();
-    Json::Value* delayLoad(const Property* property);
     int loadProperty(const Property* property);
 
 private:

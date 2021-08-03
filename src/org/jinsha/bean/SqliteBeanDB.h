@@ -24,10 +24,10 @@ public:
     SqliteBeanDB(const char* dir);
     ~SqliteBeanDB() override;
 
-    int connect() override;
-    int disconnect() override;
-    bool connected() const {return m_connected;};
-    int clear() override;
+    virtual int connect() override;
+    virtual int disconnect() override;
+    virtual bool connected() const override {return m_connected;};
+    virtual int clear() override;
 
     virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
     virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
@@ -44,11 +44,11 @@ public:
     int loadAll() override;
     int saveAll() override;
 
-    virtual Bean* getBean(oidType id) override;
+    // virtual Bean* getBean(oidType id) override;
     virtual int loadBean(Bean* bean) override;
     virtual int saveBeanBase(const Bean* bean) override;
     virtual int deleteBean(Bean* bean) override;
-    virtual int getBeanProperty(const Bean* bean, const Property* property, Json::Value& value) const override;
+    virtual int loadBeanProperty(const Bean* bean, const Property* property, Json::Value& value) override;
     virtual int insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
@@ -64,6 +64,8 @@ public:
     virtual int deleteBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) override;
+    
+    virtual int loadUnmanagedValues(const Bean* bean, Json::Value& value) override;
 
     virtual int doBeginTransaction() override;
     virtual int doCommitTransaction() override;

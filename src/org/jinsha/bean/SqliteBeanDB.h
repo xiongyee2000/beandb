@@ -45,7 +45,7 @@ public:
     int saveAll() override;
 
     // virtual Bean* getBean(oidType id) override;
-    virtual int loadBean(Bean* bean) override;
+    virtual int loadBean(Bean* bean, Json::Value& value, Json::Value& unmanagedValue) override;
     virtual int saveBeanBase(const Bean* bean) override;
     virtual int deleteBean(Bean* bean) override;
     virtual int loadBeanProperty(const Bean* bean, const Property* property, Json::Value& value) override;

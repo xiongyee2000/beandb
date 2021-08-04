@@ -84,7 +84,7 @@ void BeanWorld::removeBean(oidType id)
             if (property->getType() == Property::RelationType)  {
                 //use doRemoveProperty(property, true) to keep
                 //m_subjectMap_ unchanged
-                subject->doRemoveProperty(property, true);
+                subject->doRemoveProperty(property, true, true);
             } else if (property->getType() == Property::ArrayRelationType) {
                 value = subject->getMemberPtr(property);
                 if (value == nullptr) {
@@ -95,7 +95,7 @@ void BeanWorld::removeBean(oidType id)
                 //todo: O(n*n) complexity! How to improve performance?
                 for (Json::ArrayIndex i = size; i > 0; i--)
                     if (subject->getRelationBeanId(property, i - 1) == bean->m_id_) {
-                        subject->doRemoveProperty(property, i - 1, true); 
+                        subject->doRemoveProperty(property, i - 1, true, true); 
                     }
             }
             iter2++;

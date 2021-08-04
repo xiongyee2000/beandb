@@ -376,10 +376,10 @@ private:
     int setPropertyBase_(Property* property, 
         Json::Value *oldValue,  
         const Json::Value&  newValue, 
-        Json::Value::ArrayIndex index = (Json::Value::ArrayIndex)-1);
+        Json::Value::ArrayIndex index = (Json::Value::ArrayIndex)-1, bool syncToDB = true);
 
-    Json::Value doRemoveProperty( Property* property, bool internal = false);
-    Json::Value doRemoveProperty( Property* property, Json::Value::ArrayIndex index,  bool internal = false);
+    Json::Value doRemoveProperty( Property* property, bool internal = false, bool syncToDB = true);
+    Json::Value doRemoveProperty( Property* property, Json::Value::ArrayIndex index,  bool internal = false, bool syncToDB = true);
 
     void addSubject(Bean* subject, Property* relation);
     void removeSubject(Bean* subject, Property* relation);

@@ -266,12 +266,20 @@ protected:
     virtual int loadProperties() = 0;
 
     /**
-     * Load bean into memory.
+     * Load bean data into memory.
+     * 
+     * All bean's direct-load properies must be loaded into the value, 
+     * while delay-load properties shall be set to null in the value.
+     * 
+     * Note the bean's unmanaged value is regarded as delay-load, 
+     * but can also be loaded into unmanagedValue.
      * 
      * @param bean the bean
+     * @param value the value that holds all bean's properties
+     * @param unmanagedValue the value that holds the bean's unmanagedValue
      * @return 0 on success, or an error code
      */
-    virtual int loadBean(Bean* bean) = 0;
+    virtual int loadBean(Bean* bean, Json::Value& value, Json::Value& unmanagedValue) = 0;
 
     virtual int saveBeanBase(const Bean* bean) = 0;
 

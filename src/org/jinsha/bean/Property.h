@@ -225,10 +225,15 @@ public:
 private:
     Property(BeanWorld* world, const char* name, 
         Type type, ValueType valueType, 
-        bool needIndex = false) : 
-        m_world_(world), m_name_(name), 
-        m_propertyType_(type), m_valueType_(valueType), 
-        m_indexed_(needIndex) {};
+        bool needIndex = false) 
+        : m_world_(world)
+        , m_name_(name)
+        , m_propertyType_(type)
+        , m_valueType_(valueType)
+        , m_indexed_(needIndex)
+        , m_delayLoad_(false)
+    {};
+
     virtual ~Property();
 
 private:
@@ -243,6 +248,10 @@ private:
     void findCommon_(int type, const Json::Value& value, std::list<oidType>& beans) const;
     void trivialFind(int opType,  const Json::Value& value, std::list<oidType>& beans) const;
 
+    //used by AbstractBeanDB
+    bool isDelayLoad() const {return m_delayLoad_;};
+    bool setDelayLoad(bool delayLoad) {m_delayLoad_ = delayLoad;};
+
 private:
     BeanWorld* m_world_;
     std::string m_name_;
@@ -251,6 +260,7 @@ private:
     ValueType m_valueType_ ;
     unsigned int m_refCount_ = 0;
     bool m_indexed_ = false;
+    bool m_delayLoad_;
     
     //keep all subject beans for better performance
     std::map<oidType, unsigned int> m_subjectMap_; 

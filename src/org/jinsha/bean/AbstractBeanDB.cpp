@@ -59,7 +59,7 @@ Bean* AbstractBeanDB::getBean(oidType id)
     Bean* bean = world->getBean(id);
     if (bean == nullptr) {
         bean = world->createBean((oidType)id);
-        err = loadBean(bean, bean->m_json_, bean->m_unmanaged_json_);
+        err = bean->load();
         if (err) {
             world->removeBean(bean->getId());
             return nullptr;

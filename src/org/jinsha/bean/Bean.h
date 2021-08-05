@@ -393,6 +393,13 @@ private:
     int unload();
     int loadProperty(const Property* property);
 
+    int doSetProperty(Property* property, const Json::Value& value, bool syncToDB = true);
+    int doSetRelation(Property* relation, oidType objectBeanId, bool syncToDB = true);
+    int doCreateArrayProperty(Property* property, bool syncToDB = true);
+    int doAppendProperty(Property* property, const Json::Value& value, bool syncToDB = true); 
+    int doCreateArrayRelation(Property* relation, bool syncToDB = true);
+    int doAppendRelation(Property* relation, oidType objectBeanId, bool syncToDB = true);      
+
 private:
     typedef enum {
         PST_NSY = 0,

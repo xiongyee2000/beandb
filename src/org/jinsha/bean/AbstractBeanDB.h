@@ -274,12 +274,12 @@ protected:
      * Note the bean's unmanaged value is regarded as delay-load, 
      * but can also be loaded into unmanagedValue.
      * 
-     * @param bean the bean
+     * @param id id of the bean to be leaded
      * @param value the value that holds all bean's properties
      * @param unmanagedValue the value that holds the bean's unmanagedValue
      * @return 0 on success, or an error code
      */
-    virtual int loadBean(Bean* bean, Json::Value& value, Json::Value& unmanagedValue) = 0;
+    virtual int loadBean(oidType id, Json::Value& value, Json::Value& unmanagedValue) = 0;
 
     virtual int saveBeanBase(const Bean* bean) = 0;
 

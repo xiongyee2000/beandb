@@ -536,6 +536,7 @@ Json::Value Bean::removeProperty(Property* property)
 Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncToDB)
 {
     const auto& pname = property->getName();
+    Json::Value rtnValue;
    Json::Value* valuePtr = getMemberPtr(property);
     if (valuePtr == nullptr) return Json::Value::null;
     Json::Value& pstValue = m_pst_json_[pname];
@@ -543,6 +544,7 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncT
         if (m_json_[pname].isNull() || !m_json_[pname].isArray()) 
             return Json::Value::null; //inconsistent value
             Json::Value& array = m_json_[pname];
+            rtnValue = *valuePtr;
             Json::Value::ArrayIndex size = array.size();
         for (Json::Value::ArrayIndex i = 0; i < size; i++) {
             doRemoveProperty(property, i, false, syncToDB);
@@ -618,8 +620,12 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncT
     
     //remove member of json object
     m_pst_json_.removeMember(pname);
-    return m_json_.
-    removeMember(pname);
+    if (property->getType() == Property::ArrayPrimaryType || 
+        property->getType() == Property::ArrayRelationType) {
+            m_json_.removeMember(pname);
+            return rtnValue;
+    }
+    return m_json_.removeMember(pname);
 }
 
 

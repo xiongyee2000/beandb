@@ -14,7 +14,6 @@ Bean::Bean(BeanWorld* world) :
 m_json_(Json::ValueType::objectValue), 
 m_world_(world)
 {
-
 }
 
 
@@ -790,15 +789,32 @@ Json::Value* Bean::getMemberPtr(const Property* property)
 
 Json::Value Bean::getUnmanagedValue(const char* name)
 {
-    if (name == nullptr || name[0] == 0) return Json::Value(nullptr);
-    if (m_unmanaged_pst_json_.isMember(name)) {
-        if (m_unmanaged_pst_json_[name].asInt() == PST_NSY) {
-            //todo: delay load
+    if (name == nullptr || name[0] == 0) return Json::Value::null;
+
+    //todo: tmp solution
+    if (m_unmanaged_pst_json_.isNull()) 
+        m_unmanaged_pst_json_ = PST_NSY;
+        
+    if (m_unmanaged_pst_json_.asInt() == PST_NSY) {
+    //not loaded yet, load it first
+        if (m_world_->m_db != nullptr) {
+            int err = m_world_->m_db->
+                loadUnmanagedValues(this, m_unmanaged_json_);
+            if (!err) {
+                m_unmanaged_pst_json_ = PST_SYN;
+                if (m_unmanaged_json_.isNull()) 
+                    m_unmanaged_json_ = Json::Value(Json::objectValue);
+            }
         } else {
-            return m_unmanaged_json_[name];
+            m_unmanaged_pst_json_ = PST_NSY;
         }
-    }
-    return Json::Value::null;
+    } 
+
+    if (!m_unmanaged_json_.isNull() &&
+         m_unmanaged_json_.isMember(name)) 
+        return m_unmanaged_json_[name];
+    else
+        return Json::Value::null; 
 }
 
 Json::Value Bean::getUnmanagedValue(const char* name) const
@@ -859,7 +875,7 @@ int Bean::load()
     //unload first
     unload();
 
-    err = m_world_->m_db->loadBean(m_id_, managedValue, unmanagedValue);
+    err = m_world_->m_db->loadBean(m_id_, managedValue, m_unmanaged_json_);
     if (err) {
         m_json_ = Json::Value(Json::objectValue);
         m_unmanaged_json_ = Json::Value(Json::objectValue);
@@ -928,8 +944,6 @@ int Bean::load()
             }
         }
 
-        //set proper pst value for unmanaged value
-        m_unmanaged_json_ = unmanagedValue;
         if (unmanagedValue.isNull()) { //delay load
             m_unmanaged_pst_json_ = PST_NSY;
         } else {
@@ -995,8 +1009,8 @@ int Bean::unload()
     m_pst_json_ = Json::Value(Json::objectValue);
 
     //remove all unmanaged values
-   m_unmanaged_json_ = Json::Value(Json::objectValue);
-   m_unmanaged_pst_json_ = Json::Value(Json::objectValue);
+   m_unmanaged_json_ = Json::Value::null;
+   m_unmanaged_pst_json_ = PST_NSY;
 
     return err;
 }
@@ -1004,28 +1018,31 @@ int Bean::unload()
 
 int Bean::loadProperty(const Property* property)
 {
+    if (m_world_->m_db == nullptr) return -1;
+
     int err = 0;
     const auto& pname = property->getName();
-    if (m_world_->m_db == nullptr) return -1;
 
     if (property->m_propertyType_ == Property::ArrayPrimaryType ||
          property->m_propertyType_ == Property::ArrayRelationType) {
-        err = m_world_->m_db->loadBeanProperty(this, property, (Json::Value&)m_json_[pname]);
+        err = m_world_->m_db->loadBeanProperty(m_id_, property, (Json::Value&)m_json_[pname]);
         if (err) {
-            (Json::Value&)m_json_[pname] = Json::Value::null; //reset to null
+            m_json_[pname] = Json::Value::null; //reset to null
+            m_pst_json_[pname] = PST_NSY;
         } else {
-            (Json::Value&)m_pst_json_[pname] = Json::Value(Json::arrayValue);
+            m_pst_json_[pname] = Json::Value(Json::arrayValue);
             auto& v = (Json::Value&)m_pst_json_[pname];
             for (int i = 0; i < m_json_.size(); i++) {
                 v.append(PST_SYN);
             }
         }
     } else {
-        err = m_world_->m_db->loadBeanProperty(this, property, (Json::Value&)m_json_[pname]);
+        err = m_world_->m_db->loadBeanProperty(m_id_, property, (Json::Value&)m_json_[pname]);
         if (err) {
-            (Json::Value&)m_json_[pname] = Json::Value::null; //reset to null
+            m_json_[pname] = Json::Value::null; //reset to null
+            m_pst_json_[pname] = PST_NSY;
         } else {
-            (Json::Value&)m_pst_json_[pname] = PST_SYN;
+            m_pst_json_[pname] = PST_SYN;
         }
     }
 

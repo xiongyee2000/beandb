@@ -315,13 +315,16 @@ int SqliteBeanDB::loadBean(oidType id, Json::Value& value, Json::Value& unmanage
 
         //retrieve unmanaged value
         if (sqlite3_column_type(pstmt, 1) != SQLITE_NULL) {
-            valueStr = (const char*)sqlite3_column_text(pstmt, 1);
-            if (valueStr == nullptr) valueStr = "{}";
-            if (!reader.parse(valueStr, unmanagedValue, false))
-            {
-                err = -2;
-                break;
-            }
+            // valueStr = (const char*)sqlite3_column_text(pstmt, 1);
+            // if (valueStr == nullptr) valueStr = "{}";
+            // if (!reader.parse(valueStr, unmanagedValue, false))
+            // {
+            //     err = -2;
+            //     break;
+            // }
+
+            //take unmanaged value as delay load
+            unmanagedValue = Json::Value::null;
         }
         
         found = true;
@@ -380,7 +383,7 @@ _out:
 }
 
 
-int  SqliteBeanDB::loadBeanProperty(const Bean* bean, const Property* property, Json::Value& value)
+int  SqliteBeanDB::loadBeanProperty(oidType beanId, const Property* property, Json::Value& value)
 {
     if (m_db == nullptr) return -1;
     // bool connected = this->connected();
@@ -396,24 +399,67 @@ int  SqliteBeanDB::loadBeanProperty(const Bean* bean, const Property* property, 
     char buff[128]{0};
     char * sql = &buff[0];
     sqlite3_stmt *pstmt = nullptr;
+    Json::Value* v = nullptr;
+    int i = 0;
 
-    if (property->getType() == Property::PrimaryType) {
+    //set to null first
+    value = Json::Value::null;
+
+    if (property->isDelayLoad()) {
         snprintf(buff, 64, "SELECT VALUE from p_%s WHERE ID = ?;", 
             pname);
         err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
         if (err != SQLITE_OK) goto out;
-        err = sqlite3_bind_int64(pstmt, 1, bean->getId());
+        err = sqlite3_bind_int64(pstmt, 1, beanId);
         if (err != SQLITE_OK) goto out;
 
         while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
-            // bean->setProperty(property, ) = (const char*)sqlite3_column_text(pstmt, 0);
-        }
-    } else if (property->getType() == Property::ArrayPrimaryType) {
+            //do some preparation for array
+            if (property->getType() == Property::ArrayPrimaryType ||
+                 property->getType() == Property::ArrayRelationType)  {
+                    if (value.isNull())  
+                        value = Json::Value(Json::arrayValue);
+                    value.append(Json::Value::null);
+                    v = &value[value.size() - 1];
+            } else {
+                v = &value;
+            }
 
+            //set value according to value type
+            switch (property->getValueType())
+            {
+            case Property::IntType:
+                (*v) = sqlite3_column_int64(pstmt, 0);
+                break;
+            case Property::UIntType:
+                (*v) = (Json::UInt64)sqlite3_column_int64(pstmt, 0);
+                break;
+            case Property::RealType:
+                (*v) = sqlite3_column_double(pstmt, 0);
+                break;
+            case Property::BoolType:
+                (*v) = sqlite3_column_int(pstmt, 0) == 0 ? false : true;
+                break;
+            case Property::StringType:
+                (*v) = sqlite3_column_text(pstmt, 0);
+                break;
+            default:
+                //shall not reach here
+                break;
+            }
+        }
+    } else  {
+        Json::Value managedValue;
+        Json::Value unmanagedValue;
+        err = loadBean(beanId, managedValue, unmanagedValue);
+        if (err)  goto out;
+        if (managedValue.isMember(pname))
+            value = managedValue[pname];
     }
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
+        value = Json::Value::null;
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
     }
     sqlite3_clear_bindings(pstmt);
@@ -424,7 +470,7 @@ out:
     //     //if previously not connected, resume it to disconnected
     //     disconnect();
     // }
-    return 0;
+    return err;
 
 }
 
@@ -1196,6 +1242,24 @@ int SqliteBeanDB::loadUnmanagedValues(const Bean* bean, Json::Value& value)
     int err = 0;
     //todo:
     return err;
+}
+
+int SqliteBeanDB::insertBeanUnmanagedValue(oidType beanId, 
+    const Json::Value& value)
+{
+    return -1;
+}
+
+int SqliteBeanDB::updateUnmanagedValue(oidType beanId, 
+    const Json::Value& value)
+{
+    return -1;
+}
+
+int SqliteBeanDB::deleteBeanUnmanagedValue(oidType beanId, 
+    const Json::Value& value)
+{
+    return -1;
 }
 
 

@@ -48,7 +48,7 @@ public:
     virtual int loadBean(oidType id, Json::Value& value, Json::Value& unmanagedValue) override;
     virtual int saveBeanBase(const Bean* bean) override;
     virtual int deleteBean(Bean* bean) override;
-    virtual int loadBeanProperty(const Bean* bean, const Property* property, Json::Value& value) override;
+    virtual int loadBeanProperty(oidType beanId, const Property* property, Json::Value& value) override;
     virtual int insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
@@ -64,6 +64,15 @@ public:
     virtual int deleteBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) override;
+
+    virtual int insertBeanUnmanagedValue(oidType beanId, 
+        const Json::Value& value) override;
+
+    virtual int updateUnmanagedValue(oidType beanId, 
+        const Json::Value& value) override;
+
+    virtual int deleteBeanUnmanagedValue(oidType beanId, 
+        const Json::Value& value) override;
     
     virtual int loadUnmanagedValues(const Bean* bean, Json::Value& value) override;
 

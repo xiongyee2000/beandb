@@ -248,7 +248,7 @@ protected:
      * @param value the value loaded to
      * @return 0 on success, or an error code
      */
-    virtual int loadBeanProperty(const Bean* bean, const Property* property, Json::Value& value) = 0;
+    virtual int loadBeanProperty(oidType beanId,  const Property* property, Json::Value& value) = 0;
 
     virtual int loadUnmanagedValues(const Bean* bean, Json::Value& value) = 0;
 
@@ -302,6 +302,15 @@ protected:
     virtual int deleteBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) = 0;
+
+    virtual int insertBeanUnmanagedValue(oidType beanId, 
+        const Json::Value& value) = 0;
+
+    virtual int updateUnmanagedValue(oidType beanId, 
+        const Json::Value& value) = 0;
+
+    virtual int deleteBeanUnmanagedValue(oidType beanId, 
+        const Json::Value& value) = 0;
 
 
     /**

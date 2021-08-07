@@ -1051,13 +1051,115 @@ int Bean::loadProperty(const Property* property)
 
 int Bean::save()
 {
+    if (m_world_->m_db == nullptr) return -1;
+    if (m_pst_json_.isNull()) return -2;
+
     int err = 0;
-    if (m_world_->m_db != nullptr) {
-        err = m_world_->m_db->saveBean(this);
+    int i = 0;
+    int size = 0;
+    Json::Value& pstValue = (Json::Value&)Json::Value::null;
+    Property* property = nullptr;
+
+    err = m_world_->m_db->beginTransaction();
+    if (err) return -3;
+
+    err = m_world_->m_db->saveBeanBase(this);
+    if (err) goto out;
+
+    if (!m_unmanaged_pst_json_.isNull() &&
+        m_unmanaged_pst_json_.asInt() == PST_MOD) {
+            err = m_world_->m_db->updateUnmanagedValue(m_id_, m_unmanaged_json_);
+             if (err) goto out;
     }
+    
+
+    for (auto& pname : m_pst_json_.getMemberNames()) {
+        property = m_world_->getProperty(pname.c_str());
+        if (property == nullptr) continue;
+        if (property->isDelayLoad()) {
+            pstValue = m_pst_json_[pname];
+            if (!pstValue.isNull()) {
+                if (pstValue.isArray()) {
+                    size = pstValue.size();
+                    for (i = 0; i < size; i++) {
+                        switch (pstValue[i].asInt()) {
+                            case PST_NSY:
+                                break;
+                            case PST_SYN:
+                                break;
+                            case PST_MOD:
+                                err = m_world_->m_db->updateBeanProperty(m_id_, property, i, m_json_[pname][i]);
+                                if (err) goto out;
+                                break;
+                            // case PST_NEW:
+                            //     err = m_world_->m_db->insertBeanProperty(m_id_, property, m_json_[pname][i]);
+                            //     if (err) goto out;
+                            //     break;
+                            default:
+                                break;
+                        }
+                    }
+                } else if (pstValue.asInt() == PST_NEW) {
+                    //todo: do anything?
+                } else if (pstValue.asInt() == PST_MOD) {
+                    err = m_world_->m_db->updateBeanProperty(m_id_, property, m_json_[pname]);
+                    if (err) goto out;
+                } else {
+                    //do nothing
+                }
+            }
+        } else {
+            //don't do anything for non-delay property here
+        }
+    }
+
+out:
+    if (err) {
+        m_world_->m_db->rollbackTransaction();
+    } else {
+        m_world_->m_db->commitTransaction();
+
+        //set pst value
+        for (auto& pname : m_pst_json_.getMemberNames()) {
+            property = m_world_->getProperty(pname.c_str());
+            if (property == nullptr) continue;
+            pstValue = m_pst_json_[pname];
+            if (pstValue.isArray()) {
+                size = pstValue.size();
+                for (i = 0; i < size; i++) {
+                    switch (pstValue[i].asInt()) {
+                        case PST_NSY:
+                            break;
+                        case PST_SYN:
+                            break;
+                        case PST_MOD:
+                            pstValue[i] = PST_SYN;
+                            break;
+                        // case PST_NEW:
+                        //     err = m_world_->m_db->insertBeanProperty(m_id_, property, m_json_[pname][i]);
+                        //     if (err) goto out;
+                        //     break;
+                        default:
+                            break;
+                    }
+                }
+            } else if (pstValue.asInt() == PST_NEW) {
+                //todo: do anything?
+            } else if (pstValue.asInt() == PST_MOD) {
+                pstValue[i] = PST_SYN;
+            } else {
+                //do nothing
+            }
+        }
+
+        if (!m_unmanaged_pst_json_.isNull() &&
+            m_unmanaged_pst_json_.asInt() == PST_MOD) {
+                m_unmanaged_pst_json_ = PST_SYN;
+        }
+    }
+    
     return err;
 }
-
 
 }
 }

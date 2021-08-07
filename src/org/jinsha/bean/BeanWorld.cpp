@@ -230,11 +230,13 @@ int BeanWorld::unloadAll()
 
 int BeanWorld::loadProperties()
 {
+    int err = 0;
     if (m_db != nullptr) {
-        return m_db->loadProperties();
-    } else {
-        return 0;
-    }
+        // std::list<std::string> pnames;
+        // err = m_db->loadProperties(pnames);
+        err = m_db->loadProperties();
+    } 
+    return err;
 }
 
 

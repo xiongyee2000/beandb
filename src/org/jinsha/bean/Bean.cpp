@@ -799,11 +799,9 @@ Json::Value Bean::getUnmanagedValue(const char* name)
     //not loaded yet, load it first
         if (m_world_->m_db != nullptr) {
             int err = m_world_->m_db->
-                loadUnmanagedValues(this, m_unmanaged_json_);
+                loadUnmanagedValue(m_id_, m_unmanaged_json_);
             if (!err) {
                 m_unmanaged_pst_json_ = PST_SYN;
-                if (m_unmanaged_json_.isNull()) 
-                    m_unmanaged_json_ = Json::Value(Json::objectValue);
             }
         } else {
             m_unmanaged_pst_json_ = PST_NSY;
@@ -822,13 +820,21 @@ Json::Value Bean::getUnmanagedValue(const char* name) const
     return ((Bean*)this)->getUnmanagedValue(name);
 }
 
-void Bean::setUnmanagedValue(const char* name, Json::Value& value)
+int Bean::setUnmanagedValue(const char* name, Json::Value& value)
 {
-    if (name == nullptr || name[0] == 0) return;
-    //todo: save to db
-    //...
-    m_unmanaged_json_[name] = value;
-    m_unmanaged_pst_json_[name] = PST_SYN;
+    if (name == nullptr || name[0] == 0) return -1;
+
+    int err = 0;
+    if (m_world_->m_db != nullptr) {
+        //save to db
+        err = m_world_->m_db->updateUnmanagedValue(m_id_, m_unmanaged_json_);
+        if (!err) {
+            m_unmanaged_json_[name] = value;
+            m_unmanaged_pst_json_[name] = PST_SYN;
+        }
+        
+        return err;
+    }   
 }
 
 
@@ -875,7 +881,7 @@ int Bean::load()
     //unload first
     unload();
 
-    err = m_world_->m_db->loadBean(m_id_, managedValue, m_unmanaged_json_);
+    err = m_world_->m_db->loadBeanBase(m_id_, managedValue, m_unmanaged_json_);
     if (err) {
         m_json_ = Json::Value(Json::objectValue);
         m_unmanaged_json_ = Json::Value(Json::objectValue);
@@ -1063,16 +1069,9 @@ int Bean::save()
     err = m_world_->m_db->beginTransaction();
     if (err) return -3;
 
-    err = m_world_->m_db->saveBeanBase(this);
+    err = m_world_->m_db->saveBeanBase(m_id_, m_json_, m_unmanaged_json_);
     if (err) goto out;
-
-    if (!m_unmanaged_pst_json_.isNull() &&
-        m_unmanaged_pst_json_.asInt() == PST_MOD) {
-            err = m_world_->m_db->updateUnmanagedValue(m_id_, m_unmanaged_json_);
-             if (err) goto out;
-    }
     
-
     for (auto& pname : m_pst_json_.getMemberNames()) {
         property = m_world_->getProperty(pname.c_str());
         if (property == nullptr) continue;

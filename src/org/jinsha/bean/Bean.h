@@ -360,8 +360,17 @@ public:
 
     Json::Value getUnmanagedValue(const char* name);
     Json::Value getUnmanagedValue(const char* name) const;
-    void setUnmanagedValue(const char* name, Json::Value& value);
+    int setUnmanagedValue(const char* name, Json::Value& value);
 
+    /**
+     * Save data of this bean into database storage.
+     * 
+     * Note this method will call AbstractDB::saveBeanBase() firstly,
+     * and then AbstractDB::saveBeanProperty() on each property
+     * that has changes.
+     * 
+     * @return 0 on success, or an error code
+     */
     int save();
 
 private:

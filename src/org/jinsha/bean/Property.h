@@ -250,7 +250,7 @@ private:
 
     //used by AbstractBeanDB
     bool isDelayLoad() const {return m_delayLoad_;};
-    bool setDelayLoad(bool delayLoad) {m_delayLoad_ = delayLoad;};
+    void setDelayLoad(bool delayLoad) {m_delayLoad_ = delayLoad;};
 
 private:
     BeanWorld* m_world_;

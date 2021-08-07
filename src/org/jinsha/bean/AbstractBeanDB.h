@@ -26,7 +26,7 @@ public:
      * 
      * @return the world
      */
-    virtual BeanWorld* getWorld() {return m_world;};
+    virtual BeanWorld* getWorld() const {return m_world;};
 
     /**
      * Connect to the database. 
@@ -42,24 +42,27 @@ public:
      */
     virtual int disconnect() = 0;
 
+    /**
+     * Is the database connected.
+     * 
+     * @return true if connected, or false otherwise 
+     */
     virtual bool connected() const = 0;
 
     /**
      * Clear the database, i.e. remove all data.
      * 
+     * CAUTIOUS: the operation is not revertable.
+     * 
      * @return 0 for success, or an error code
      */
     virtual int clear() = 0;
 
-
     /**
-     * Create a property.
-     * 
-     * Property must be created before it can be used.
+     * Define a property.
      * 
      * Notes:
-     * - Property is type sensitive: i.e. setting the property with a value of type other
-     *    than the one created here will fail.
+     * - Property must be defined before it can be used.
      * 
      * @param name the name of property
      * @param valueType the value type of property
@@ -69,13 +72,10 @@ public:
     virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
 
     /**
-     * Create an array property.
-     * 
-     * Array property must be created before it can be used.
+     * Define an array property.
      * 
      * Notes:
-     * - Array property is type sensitive: i.e. adding to the array property 
-     *   with a value of type other than the one created here will fail.
+     * - Array property must be defined before it can be used.
      * 
      * @param name the name of property
      * @param valueType the value type of the element of the array property
@@ -85,10 +85,11 @@ public:
     virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
 
     /**
-     * Create a relation property.
+     * Define a relation property.
      * 
-     * Relation is a special kind of property, which represents relationship between
-     * two beans, e.g. father/mother etc.
+     * Notes:
+     * - Relation is a special kind of property, which represents the relation between
+     * two beans, e.g. friend/colleague etc.
      * 
      * @param name the name of relation property
      * @param needIndex if index is needed
@@ -97,9 +98,10 @@ public:
     virtual Property* defineRelation(const char* name, bool needIndex = false) = 0;
 
     /**
-     * Create an array relation property.
+     * Define an array relation property.
      * 
-     * Array relation property must be created before it can be used.
+     * Notes:
+     * - Array relation property must be define before it can be used.
      * 
      * @param name the name of array relation property
      * @param needIndex if index is needed
@@ -108,17 +110,27 @@ public:
     virtual Property* defineArrayRelation(const char* name, bool needIndex = false) = 0;
 
     /**
-     * Delete a property.
+     * Undefine a property.
      * 
      * Notes:
-     * - This method can be used to delete either a property, an array property,
-     *    a relation, or an array relation;
-     * - All beans that have this property will remove the property with this id.
+     * - This method can be used to delete either a property, an array property;
+     * - CAUTOUS: the properties will also be removed from all beans that have this property.
      * 
      * @param name the name of property
      * @return 0 on success, or an error code
      */
     virtual int undefineProperty(const char* name) = 0;
+
+    /**
+     * Undefine a relation.
+     * 
+     * Notes:
+     * - This method can be used to delete either a relation, or an array relation;
+     * - CAUTOUS: the relations will also be removed from all beans that have this relation.
+     * 
+     * @param name the name of relation
+     * @return 0 on success, or an error code
+     */
     virtual int undefineRelation(const char* name) {return undefineProperty(name);};
 
     /**
@@ -178,15 +190,16 @@ public:
      */
     virtual Bean* getBean(oidType id);
 
-    /**
-     * Save a single bean into the storage.
-     * 
-     * This method is supposed to be called from class BeanWorld.
-     * 
-     * @param bean the bean to be saved
-     * @return 0 for success, or an error code
-     */
-    virtual int saveBean(Bean* bean);
+    // /**
+    //  * Save a single bean into the storage.
+    //  * 
+    //  * Notes:
+    //  * - This method will 
+    //  * 
+    //  * @param bean the bean to be saved
+    //  * @return 0 for success, or an error code
+    //  */
+    // virtual int saveBean(Bean* bean);
 
     /**
      * Remove a single bean from the storage.
@@ -250,7 +263,7 @@ protected:
      */
     virtual int loadBeanProperty(oidType beanId,  const Property* property, Json::Value& value) = 0;
 
-    virtual int loadUnmanagedValues(const Bean* bean, Json::Value& value) = 0;
+    virtual int loadUnmanagedValue(oidType beanId, Json::Value& value) = 0;
 
     /**
      * Load all properties from the storage into the world.
@@ -261,14 +274,16 @@ protected:
      * -  In out design, all properties must be loaded into world (memory) 
      *    before the world is usable.
      * 
+     * @param propertyNames the property names loaded
      * @return 0 for success, or an error code
      */
-    virtual int loadProperties() = 0;
+    // virtual int loadProperties(std::list<std::string> propertyNames) const = 0;
+    virtual int loadProperties() const = 0;
 
     /**
-     * Load bean data into memory.
+     * Load bean data from database into memory.
      * 
-     * All bean's direct-load properies must be loaded into the value, 
+     * All bean's direct-load properies must be loaded in this method, 
      * while delay-load properties shall be set to null in the value.
      * 
      * Note the bean's unmanaged value is regarded as delay-load, 
@@ -279,9 +294,23 @@ protected:
      * @param unmanagedValue the value that holds the bean's unmanagedValue
      * @return 0 on success, or an error code
      */
-    virtual int loadBean(oidType id, Json::Value& value, Json::Value& unmanagedValue) = 0;
+    virtual int loadBeanBase(oidType id, Json::Value& value, Json::Value& unmanagedValue) = 0;
 
-    virtual int saveBeanBase(const Bean* bean) = 0;
+    /**
+     * Save bean data into database.
+     * 
+     * All bean's direct-load properies must be saved in this method, 
+     * while delay-load properties may or may not be saved in this method.
+     * 
+     * Note the bean's unmanaged value is regarded as delay-load, 
+     * but can also be saved also.
+     * 
+     * @param id id of the bean to be leaded
+     * @param value the value that holds all bean's properties
+     * @param unmanagedValue the value that holds the bean's unmanagedValue
+     * @return 0 on success, or an error code
+     */
+    virtual int saveBeanBase(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue) = 0;
 
     virtual int insertBeanProperty(oidType beanId, 
         const Property* property, 

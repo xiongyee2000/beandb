@@ -11,9 +11,12 @@ namespace jinsha {
 namespace bean {
 
 Bean::Bean(BeanWorld* world) : 
-m_json_(Json::ValueType::objectValue), 
 m_world_(world)
 {
+    m_json_= Json::Value(Json::ValueType::objectValue);
+    m_unmanaged_json_ = Json::Value(Json::ValueType::objectValue);
+    m_pst_json_ = Json::Value(Json::ValueType::objectValue);
+    m_unmanaged_pst_json_ = PST_SYN;
 }
 
 

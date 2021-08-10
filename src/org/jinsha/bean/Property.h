@@ -225,14 +225,7 @@ public:
 private:
     Property(BeanWorld* world, const char* name, 
         Type type, ValueType valueType, 
-        bool needIndex = false) 
-        : m_world_(world)
-        , m_name_(name)
-        , m_propertyType_(type)
-        , m_valueType_(valueType)
-        , m_indexed_(needIndex)
-        , m_delayLoad_(false)
-    {};
+        bool needIndex = false);
 
     virtual ~Property();
 

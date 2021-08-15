@@ -27,7 +27,6 @@ Property::Property(BeanWorld* world, const char* name,
     , m_indexed_(needIndex)
     , m_delayLoad_(false)
 {
-    if (type == RelationType) m_delayLoad_ = true;
     if (valueType == StringType) m_delayLoad_ = true;
 };
 

@@ -324,7 +324,7 @@ int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value& 
                 break;
             }
         } else {
-            unmanagedValue = Json::Value::null;
+            unmanagedValue = Json::Value(Json::ValueType::objectValue);
         }
         
         found = true;
@@ -1235,8 +1235,54 @@ _out:
 
 int SqliteBeanDB::loadUnmanagedValue(oidType beanId, Json::Value& value)
 {
+   if (m_db == nullptr) return -1;
+    
+    BeanWorld *world = nullptr;
+    const char* pname = nullptr;
+    sqlite3_stmt *pstmt = nullptr;
     int err = 0;
-    //todo:
+    int size = 0;
+    Property* property = nullptr;
+    const char* valueStr = nullptr;
+    static const char sql[] = "SELECT UNMANAGED_VALUE from OTABLE WHERE ID = ?;";
+    Json::Reader reader; 
+    Json::Value jsonBean;  
+    bool found = false;
+
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int64(pstmt, 1, beanId);
+    if (err != SQLITE_OK) goto _out;
+
+	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+        //retrieve properties
+        Json::Value& v = (Json::Value&)Json::Value::null;
+        //retrieve unmanaged value
+        if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
+            valueStr = (const char*)sqlite3_column_text(pstmt, 1);
+            if (valueStr == nullptr) valueStr = "{}";
+            if (!reader.parse(valueStr, value, false))
+            {
+                err = -2;
+                break;
+            }
+        } else {
+            value = Json::Value(Json::ValueType::objectValue);
+        }
+        
+        found = true;
+        break;
+	}
+
+_out:
+    if (found) {
+        err = 0;
+    } else {
+        elog("Error in %s: %d \n", __func__, err);
+    }
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
     return err;
 }
 
@@ -1251,9 +1297,46 @@ int SqliteBeanDB::insertBeanUnmanagedValue(oidType beanId,
 int SqliteBeanDB::updateUnmanagedValue(oidType beanId, 
     const Json::Value& value)
 {
+   if (m_db == nullptr) return -1;
+
     int err = 0;
-    //todo:
-    return err;
+    char* errMsg = nullptr;
+    Json::Reader reader;
+    Json::FastWriter jsonWriter;
+    Json::Value tmpValue;
+    sqlite3_stmt *pstmt = nullptr;
+    const char* pzTail = nullptr;
+    std::string valueStr;
+    static const char *sql = "UPDATE OTABLE SET  UNMANAGED_VALUE = ? WHERE ID = ?;";
+
+	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+    if (err != SQLITE_OK) goto _out;
+
+    if (value.isNull()) {
+        valueStr = "{}";
+    }  else {
+        valueStr = jsonWriter.write(value);
+    }
+    err = sqlite3_bind_text(pstmt, 1, valueStr.c_str() , -1, nullptr);
+    if (err != SQLITE_OK) goto _out;
+
+    err = sqlite3_bind_int64(pstmt, 3, beanId);
+    if (err != SQLITE_OK) goto _out;
+
+    err = sqlite3_step(pstmt);
+    if (err != SQLITE_OK) goto _out;
+
+_out:
+
+   if (err != SQLITE_OK && err != SQLITE_DONE) {
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+    } else {
+        err = 0;
+    }
+    sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+    return err; 
 }
 
 int SqliteBeanDB::deleteBeanUnmanagedValue(oidType beanId, 

@@ -16,7 +16,7 @@ m_world_(world)
     m_json_= Json::Value(Json::ValueType::objectValue);
     m_unmanaged_json_ = Json::Value(Json::ValueType::objectValue);
     m_pst_json_ = Json::Value(Json::ValueType::objectValue);
-    m_unmanaged_pst_json_ = PST_SYN;
+    m_unmanaged_pst_json_ = PST_NSY;
 }
 
 
@@ -790,14 +790,8 @@ Json::Value* Bean::getMemberPtr(const Property* property)
     return (m_json_.isMember(pname)) ? &m_json_[pname] : nullptr;
 }
 
-Json::Value Bean::getUnmanagedValue(const char* name)
-{
-    if (name == nullptr || name[0] == 0) return Json::Value::null;
-
-    //todo: tmp solution
-    if (m_unmanaged_pst_json_.isNull()) 
-        m_unmanaged_pst_json_ = PST_NSY;
-        
+Json::Value Bean::getUnmanagedValue()
+{       
     if (m_unmanaged_pst_json_.asInt() == PST_NSY) {
     //not loaded yet, load it first
         if (m_world_->m_db != nullptr) {
@@ -805,39 +799,41 @@ Json::Value Bean::getUnmanagedValue(const char* name)
                 loadUnmanagedValue(m_id_, m_unmanaged_json_);
             if (!err) {
                 m_unmanaged_pst_json_ = PST_SYN;
+            } else {
+                m_unmanaged_json_ = Json::Value(Json::ValueType::objectValue);
             }
-        } else {
-            m_unmanaged_pst_json_ = PST_NSY;
-        }
+        } 
     } 
 
-    if (!m_unmanaged_json_.isNull() &&
-         m_unmanaged_json_.isMember(name)) 
-        return m_unmanaged_json_[name];
-    else
-        return Json::Value::null; 
+    return m_unmanaged_json_;
 }
 
-Json::Value Bean::getUnmanagedValue(const char* name) const
+Json::Value Bean::getUnmanagedValue() const
 {
-    return ((Bean*)this)->getUnmanagedValue(name);
+    return ((Bean*)this)->getUnmanagedValue();
 }
 
-int Bean::setUnmanagedValue(const char* name, Json::Value& value)
+int Bean::setUnmanagedValue(Json::Value& value, bool syncToDB)
 {
-    if (name == nullptr || name[0] == 0) return -1;
-
     int err = 0;
-    if (m_world_->m_db != nullptr) {
-        //save to db
-        err = m_world_->m_db->updateUnmanagedValue(m_id_, m_unmanaged_json_);
-        if (!err) {
-            m_unmanaged_json_[name] = value;
-            m_unmanaged_pst_json_[name] = PST_SYN;
+    if (syncToDB) {
+        if (m_world_->m_db != nullptr) {
+            //save to db
+            err = m_world_->m_db->updateUnmanagedValue(m_id_, m_unmanaged_json_);
+            if (!err) {
+                m_unmanaged_json_ = value;
+                m_unmanaged_pst_json_ = PST_SYN;
+            }
+        } else {
+            err = -1;
         }
-        
-        return err;
-    }   
+    }   else
+    {
+        m_unmanaged_json_ = value;
+        m_unmanaged_pst_json_ = PST_MOD;
+    }
+    
+    return err;
 }
 
 
@@ -886,8 +882,8 @@ int Bean::load()
 
     err = m_world_->m_db->loadBeanBase(m_id_, managedValue, m_unmanaged_json_);
     if (err) {
-        m_json_ = Json::Value(Json::objectValue);
-        m_unmanaged_json_ = Json::Value(Json::objectValue);
+        m_json_ = Json::Value(Json::ValueType::objectValue);
+        m_unmanaged_json_ = Json::Value(Json::ValueType::objectValue);
     } else {
         //todo: 
         //check data validity, e.g.: property name consistency, 
@@ -954,6 +950,7 @@ int Bean::load()
         }
 
         if (unmanagedValue.isNull()) { //delay load
+            unmanagedValue = Json::Value(Json::ValueType::objectValue);
             m_unmanaged_pst_json_ = PST_NSY;
         } else {
             m_unmanaged_pst_json_ = PST_SYN;
@@ -1018,7 +1015,7 @@ int Bean::unload()
     m_pst_json_ = Json::Value(Json::objectValue);
 
     //remove all unmanaged values
-   m_unmanaged_json_ = Json::Value::null;
+   m_unmanaged_json_ = Json::Value(Json::objectValue);
    m_unmanaged_pst_json_ = PST_NSY;
 
     return err;
@@ -1115,6 +1112,12 @@ int Bean::save()
         }
     }
 
+    if (m_unmanaged_pst_json_.asInt() == PST_MOD) {
+            err = m_world_->m_db->updateUnmanagedValue(m_id_, m_unmanaged_json_);
+            if (err) goto out;
+            m_unmanaged_pst_json_ = PST_SYN;
+    }
+
 out:
     if (err) {
         m_world_->m_db->rollbackTransaction();
@@ -1152,11 +1155,6 @@ out:
             } else {
                 //do nothing
             }
-        }
-
-        if (!m_unmanaged_pst_json_.isNull() &&
-            m_unmanaged_pst_json_.asInt() == PST_MOD) {
-                m_unmanaged_pst_json_ = PST_SYN;
         }
     }
     

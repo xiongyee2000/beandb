@@ -357,10 +357,28 @@ public:
     //  */
     // void removeRelation( Property* relation);
 
+    /**
+     * Get unmanaged value of a bean.
+     * 
+     * @return the unmanaged value
+     */
+    Json::Value getUnmanagedValue();
+    Json::Value getUnmanagedValue() const;
 
-    Json::Value getUnmanagedValue(const char* name);
-    Json::Value getUnmanagedValue(const char* name) const;
-    int setUnmanagedValue(const char* name, Json::Value& value);
+    /**
+     * Set unmanaged value of a bean.
+     * 
+     * Unmanaged value of bean is a json value that is
+     * out of Bean's property control.  User can set arbitrary
+     * value without defining any property in advance. This 
+     * is very useful and flexible for a bean to hold private data.
+     * However, no member of the unmanaged value 
+     * can be used as condition in the find/search operation.
+     * 
+     * @param the unmanaged value
+     * @param syncToDB if sync to db
+     */
+    int setUnmanagedValue(Json::Value& value, bool syncToDB = true);
 
     /**
      * Save data of this bean into database storage.

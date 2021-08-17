@@ -25,13 +25,8 @@ public:
      * Constructor
      * 
      * @param db the database attached with this world
-     * 
-     * Notes:
-     * Parameter db can be NULL, in which case no data persistency 
-     * will be available.
-     *  
      */
-    BeanWorld(AbstractBeanDB *db = nullptr);
+    BeanWorld(AbstractBeanDB& db);
 
     /**
      * Destructor
@@ -180,11 +175,6 @@ public:
     int unloadAll();
 
     /**
-     * See AbstractBeanDB::loadProperties().
-     */
-    int loadProperties();
-
-    /**
      * Remove all beans from this world.
      */
     int unloadBean(oidType id);
@@ -194,6 +184,11 @@ protected:
     Property::ValueType valueType, bool needIndex = false);
 
     oidType generateBeanId();
+
+    /**
+     * See AbstractBeanDB::loadProperties().
+     */
+    int loadProperties();
 
 protected:
     std::unordered_map<oidType, Bean*> m_beans_;

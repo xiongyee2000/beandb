@@ -170,7 +170,6 @@ public:
      */
     virtual bool inTransaction() {return m_inTransaction;};
 
-
     /**
      * Creat an empty bean.
      * 

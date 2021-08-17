@@ -12,6 +12,7 @@
 #include "org/jinsha/bean/BeanWorld.h"
 
 #include "./common.h"
+#include "./DummyBeanDB.h"
 
 using namespace std;
 using namespace Json;
@@ -19,7 +20,8 @@ using namespace org::jinsha::bean;
 
 void basic()
 {
-    BeanWorld *world = new BeanWorld();
+    DummyBeanDB dummyDB;
+    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
     EXPECT_TRUE(nullptr != world);
     EXPECT_TRUE(world->getNumOfBeans() == 0);
     EXPECT_TRUE(world->getProperties().size() == 0);
@@ -67,7 +69,8 @@ TEST(BeanWorld, getNumOfBeans)
 
 TEST(BeanWorld, getBeans)
 {
-    BeanWorld *world = new BeanWorld();
+    DummyBeanDB dummyDB;
+    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
     
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
@@ -80,7 +83,8 @@ TEST(BeanWorld, getBeans)
 
 TEST(BeanWorld, getBean)
 {
-    BeanWorld *world = new BeanWorld();
+    DummyBeanDB dummyDB;
+    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
     Bean* bean_ = nullptr;
 
     std::vector<int>::const_iterator it;
@@ -103,7 +107,8 @@ TEST(BeanWorld, getBean)
 
 TEST(BeanWorld, clear)
 {
-    BeanWorld *world = new BeanWorld();
+    DummyBeanDB dummyDB;
+    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
 
     world->createBean();
     world->createBean();
@@ -118,7 +123,8 @@ TEST(BeanWorld, clear)
 
 TEST(BeanWorld, defineProperty_undefineProperty)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     const Property* property = nullptr;
 
@@ -201,7 +207,8 @@ TEST(BeanWorld, defineProperty_undefineProperty)
 
 TEST(BeanWorld, getProperty)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     const Property* property = nullptr;
     TestHelper testHelper;
@@ -225,7 +232,8 @@ TEST(BeanWorld, getProperty)
 
 TEST(BeanWorld, getProperties)
 {
-    BeanWorld *world = new BeanWorld();
+    DummyBeanDB dummyDB;
+    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
     Value value;
     Property *p1, *p2;
 
@@ -272,7 +280,8 @@ TEST(BeanWorld, getProperties)
 
 TEST(BeanWorld, removeBean)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     oidType oid = 0;
     TestHelper testHelper;

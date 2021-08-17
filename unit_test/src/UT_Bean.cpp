@@ -13,6 +13,7 @@
 #include "org/jinsha/bean/BeanWorld.h"
 
 #include "./common.h"
+#include "./DummyBeanDB.h"
 
 using namespace std;
 using namespace Json;
@@ -20,7 +21,8 @@ using namespace org::jinsha::bean;
 
 TEST(Bean, Constructor)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
 
     Bean *bean = new Bean(&world);
     EXPECT_TRUE(nullptr != bean);
@@ -28,7 +30,8 @@ TEST(Bean, Constructor)
 
 TEST(Bean, getId)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
 
     Bean *bean1 = world.createBean();
     Bean *bean2 = world.createBean();
@@ -39,7 +42,8 @@ TEST(Bean, getId)
 
 TEST(Bean, isMember)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     TestHelper testHelper;
 
@@ -82,7 +86,8 @@ TEST(Bean, isMember)
 
 TEST(Bean, create_has_remove)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     int err = 0;
     TestHelper testHelper;
@@ -165,7 +170,8 @@ TEST(Bean, create_has_remove)
 
 TEST(Bean, property)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     int err = 0;
     TestHelper testHelper;
@@ -281,7 +287,8 @@ TEST(Bean, property)
 
 TEST(Bean, array_property)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     Json::Value value;
     Property* property;
     int err = 0;
@@ -370,7 +377,8 @@ TEST(Bean, array_property)
 
 TEST(Bean, relation)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     int err = 0;
     TestHelper testHelper;
@@ -407,7 +415,8 @@ TEST(Bean, relation)
 
 TEST(Bean, array_relation)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     int err = 0;
     TestHelper testHelper;

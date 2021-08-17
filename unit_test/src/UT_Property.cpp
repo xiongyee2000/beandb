@@ -15,6 +15,7 @@
 #include "org/jinsha/bean/BeanWorld.h"
 
 #include "./common.h"
+#include "./DummyBeanDB.h"
 
 using namespace std;
 using namespace Json;
@@ -22,7 +23,8 @@ using namespace org::jinsha::bean;
 
 TEST(Property, getName)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
     EXPECT_TRUE(property != nullptr);
@@ -31,7 +33,8 @@ TEST(Property, getName)
 
 TEST(Property, indexed)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
 
     world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
@@ -42,7 +45,8 @@ TEST(Property, indexed)
 
 TEST(Property, create_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
 
     world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
@@ -53,7 +57,8 @@ TEST(Property, create_index)
 
 TEST(Property, remove_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
 
     world.defineProperty("p1", Property::IntType);
     Property* property = world.getProperty("p1");
@@ -222,7 +227,8 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
 
 TEST(Property, getSubjects_without_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
     TestHelper testHelper;
 
@@ -236,7 +242,8 @@ TEST(Property, getSubjects_without_index)
 
 TEST(Property, getSubjects_with_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
     TestHelper testHelper;
 
@@ -250,7 +257,8 @@ TEST(Property, getSubjects_with_index)
 
 TEST(Property, getSubjects_array_without_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
 
     Bean &bean1 = *world.createBean();
@@ -261,7 +269,8 @@ TEST(Property, getSubjects_array_without_index)
 
 TEST(Property, getSubjects_array_with_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
 
     Bean &bean1 = *world.createBean();
@@ -344,7 +353,8 @@ void test_findSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, Bean& 
 
 TEST(Property, findSubjects_without_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
     TestHelper testHelper;
 
@@ -359,7 +369,8 @@ TEST(Property, findSubjects_without_index)
 
 TEST(Property, findSubjects_with_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
     TestHelper testHelper;
 
@@ -451,7 +462,8 @@ void test_findObjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bea
 
 TEST(Property, findObjects_without_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
     TestHelper testHelper;
 
@@ -466,7 +478,8 @@ TEST(Property, findObjects_without_index)
 
 TEST(Property, findObjects_with_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
     TestHelper testHelper;
 
@@ -551,7 +564,8 @@ void test_findEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1
 
 TEST(Property, findEqual_without_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
     init_world(testHelper, world);
     Bean *bean1 = world.createBean();
@@ -561,7 +575,8 @@ TEST(Property, findEqual_without_index)
 
 TEST(Property, findEqual_with_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
     init_world(testHelper, world);
     Bean *bean1 = world.createBean();
@@ -696,7 +711,8 @@ void test_findLessEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* b
 
 TEST(Property, findLessEqual_without_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
     init_world(testHelper, world);
 
@@ -709,7 +725,8 @@ TEST(Property, findLessEqual_without_index)
 
 TEST(Property, findLessEqual_with_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
     init_world(testHelper, world);
 
@@ -865,7 +882,8 @@ void test_FindGreaterEqual_common(TestHelper& testHelper, BeanWorld& world, Bean
 
 TEST(Property, findGreaterEqual_without_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
     init_world(testHelper, world);
 
@@ -878,7 +896,8 @@ TEST(Property, findGreaterEqual_without_index)
 
 TEST(Property, findGreaterEqual_with_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
     TestHelper testHelper;
 
@@ -1026,7 +1045,8 @@ void test_findLessThan_common(TestHelper& testHelper, BeanWorld& world, Bean* be
 
 TEST(Property, findLessThan_without_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
     init_world(testHelper, world);
 
@@ -1039,7 +1059,8 @@ TEST(Property, findLessThan_without_index)
 
 TEST(Property, findLessThan_with_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
     init_world(testHelper, world);
 
@@ -1190,7 +1211,8 @@ void test_findGreaterThan_common(TestHelper& testHelper, BeanWorld& world, Bean*
 
 TEST(Property, findGreaterThan_without_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
     TestHelper testHelper;
 
@@ -1204,7 +1226,8 @@ TEST(Property, findGreaterThan_without_index)
 
 TEST(Property, findGreaterThan_with_index)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
     init_world(testHelper, world);
 
@@ -1239,7 +1262,8 @@ TEST(Property, findGreaterThan_with_index)
 
 TEST(Property, index_more_complicated)
 {
-    BeanWorld world;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
     std::list<oidType> beans;
     TestHelper testHelper;
 

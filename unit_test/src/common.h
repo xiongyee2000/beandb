@@ -2,6 +2,7 @@
 
 #include "org/jinsha/bean/common.h"
 #include "org/jinsha/bean/BeanWorld.h"
+#include "./DummyBeanDB.h"
 
 using namespace org::jinsha::bean;
 

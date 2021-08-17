@@ -13,15 +13,12 @@ namespace jinsha {
 namespace bean {
 
 
-BeanWorld::BeanWorld(AbstractBeanDB *db) 
-    : m_db(db)
+BeanWorld::BeanWorld(AbstractBeanDB& db) 
+    : m_db(&db)
 {
     setlocale(LC_ALL, "");
-    if (m_db != nullptr)
-    {
-        m_db->m_world = this;
-        m_db->init();
-    }
+    m_db->m_world = this;
+    m_db->init();
 }
 
 
@@ -213,18 +210,15 @@ Property* BeanWorld::getProperty(const char* name)
 
 int BeanWorld::loadAll()
 {
-    if (m_db != nullptr) {
-        return m_db->loadAll();
-    } else {
-        return -1;
-    }
+    //todo
+    return -1;
 }
 
 
 int BeanWorld::unloadAll()
 {
     //todo
-    return 0;
+    return -1;
 }
 
 
@@ -243,7 +237,7 @@ int BeanWorld::loadProperties()
 int BeanWorld::unloadBean(oidType id)
 {
     //todo
-    return 0;
+    return -1;
 }
 
 

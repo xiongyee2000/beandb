@@ -14,6 +14,7 @@
 #include "org/jinsha/bean/SqliteBeanDB.h"
 
 #include "./common.h"
+#include "./DummyBeanDB.h"
 
 using namespace std;
 using namespace Json;
@@ -27,7 +28,6 @@ static void evaluate_testdb_empty_property(SqliteBeanDB& testdb);
 
 TEST(SqliteBeanDB, constuctor)
 {
-    BeanWorld world;
     const char* testdbDir = nullptr;
     SqliteBeanDB* testdb;
     
@@ -60,6 +60,7 @@ TEST(SqliteBeanDB, connect_disconnect)
 {
     const char* testdbDir = g_sqlite_db_1;
     SqliteBeanDB testdb(testdbDir);
+    AbstractBeanDB* testdbPtr = &testdb;
     int err = 0;
 
     err = testdb.connect();
@@ -67,7 +68,7 @@ TEST(SqliteBeanDB, connect_disconnect)
     err = testdb.disconnect();
     EXPECT_TRUE(err == 0);
 
-    BeanWorld world(&testdb);
+    BeanWorld world(*testdbPtr);
     err = testdb.connect();
     EXPECT_TRUE(err == 0);
     err = testdb.disconnect();
@@ -79,7 +80,8 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
     Property *property = nullptr;
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
-    BeanWorld world(&testdb);
+    AbstractBeanDB* testdbPtr = &testdb;
+    BeanWorld world(*testdbPtr);
     int err = 0;
 
     testdb.reInit();
@@ -186,7 +188,7 @@ TEST(SqliteBeanDB, getProperty)
 {
     const char* testdbDir = g_sqlite_db_1;
     SqliteBeanDB testdb(testdbDir);
-    BeanWorld world(&testdb);
+    BeanWorld world((AbstractBeanDB&)testdb);
     testdb.connect();
    validate_testdb_1(testdb);
    testdb.disconnect();
@@ -197,7 +199,7 @@ TEST(SqliteBeanDB, loadProperties)
     // Property *property;
     const char* testdbDir = g_sqlite_db_1;
     SqliteBeanDB testdb(testdbDir);
-    BeanWorld world(&testdb);
+    BeanWorld world((AbstractBeanDB&)testdb);
     int err = 0;
 
     world.clear();
@@ -270,7 +272,7 @@ TEST(SqliteBeanDB, createBean_deleteBean)
     Bean *bean = nullptr;
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
-    BeanWorld world(&testdb);
+    BeanWorld world((AbstractBeanDB&)testdb);
     int err = 0;
 
     testdb.reInit();
@@ -312,7 +314,7 @@ TEST(SqliteBeanDB, saveBean)
 
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
-    BeanWorld world(&testdb);
+    BeanWorld world((AbstractBeanDB&)testdb);
     int err = 0;
 
     testdb.connect();

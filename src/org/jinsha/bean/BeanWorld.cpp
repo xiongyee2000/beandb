@@ -36,12 +36,6 @@ void BeanWorld::clear()
         item.second = nullptr;
     }
     m_beans_.clear();
-
-    for (auto& item : m_propertyMap_) 
-    {
-        delete item.second;
-    }
-    m_propertyMap_.clear();
 }
 
 
@@ -132,73 +126,37 @@ Bean* BeanWorld::getBean(oidType id)
 
 Property* BeanWorld::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
+    return m_db->defineProperty(name, valueType, needIndex);
 }
 
 
 Property* BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
+    return m_db->defineProperty(name, valueType, needIndex);
 }
 
 
 Property* BeanWorld::defineRelation(const char* name, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
+    return m_db->defineRelation(name, needIndex);
 }
 
 
 Property* BeanWorld::defineArrayRelation(const char* name, bool needIndex)
 {
-    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
+    return m_db->defineArrayRelation(name, needIndex);
 }
 
 
-Property* BeanWorld::definePropertyCommon_(const char* name, Property::Type type, 
-    Property::ValueType valueType, bool needIndex)
+int BeanWorld::undefineProperty(const char* name)
 {
-    if (name == nullptr) return nullptr;
-    if (name[0] == 0) return nullptr;
-
-    Property* property = nullptr;
-    auto iter = m_propertyMap_.find(name);
-    if (iter == m_propertyMap_.end())
-    {
-        property = new Property(this, name, type, valueType, needIndex);
-        m_propertyMap_[name] = property;
-        //todo: current set to -1. Generate id in future...
-        property->m_id_ = -1;
-    }
-    else
-    {
-        property = iter->second;
-        if (property->getType() != type || property->getValueType() != valueType)
-            property = nullptr; 
-    }
-    return property;
-}
-
-
-void BeanWorld::undefineProperty(const char* name)
-{
-    if (name == nullptr) return;
-    if (name[0] == 0) return;
-    auto iter = m_propertyMap_.find(name);
-    if (iter == m_propertyMap_.end()) return;
-    Property* property = iter->second;
-    delete property;
-    m_propertyMap_.erase(iter);
+    return m_db->undefineProperty(name);
 }
 
 
 const Property* BeanWorld::getProperty(const char* name) const
 {
-    if (name == nullptr) return nullptr;
-    auto iter = m_propertyMap_.find(name);
-    if (iter == m_propertyMap_.end())
-        return nullptr;
-    else
-        return iter->second;
+    return m_db->getProperty(name);
 }
 
 
@@ -206,6 +164,11 @@ Property* BeanWorld::getProperty(const char* name)
 {
     return const_cast<Property*>(((const BeanWorld*)this)->getProperty(name));
 }
+
+const std::unordered_map<std::string, Property*>& BeanWorld::getProperties() const 
+{
+    return m_db->getProperties();
+};
 
 
 int BeanWorld::loadAll()
@@ -226,9 +189,8 @@ int BeanWorld::loadProperties()
 {
     int err = 0;
     if (m_db != nullptr) {
-        // std::list<std::string> pnames;
-        // err = m_db->loadProperties(pnames);
-        err = m_db->loadProperties();
+        //todo: tmp solution
+        m_db->getProperty("@#$%");
     } 
     return err;
 }

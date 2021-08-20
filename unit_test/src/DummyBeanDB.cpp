@@ -128,8 +128,10 @@ int DummyBeanDB::deleteBean(Bean* bean)
 }
 
 
-// int DummyBeanDB::loadProperties(std::list<std::string> propertyNames) const
-int DummyBeanDB::loadProperties() const
+int DummyBeanDB::loadProperties(std::vector<std::string>& names, 
+    std::vector<Property::Type>& types, 
+    std::vector<Property::ValueType>& valueTypes,
+    std::vector<bool>& indices) const
 {
     return 0;
 }
@@ -177,17 +179,6 @@ Property* DummyBeanDB::definePropertyCommon_(const char* name, Property::Type ty
      return 0;
 }
 
-
-const Property* DummyBeanDB::getProperty(const char* name) const
-{
-    return (const Property*) ((DummyBeanDB*)this)->getProperty(name);
-}
-
-
-Property* DummyBeanDB::getProperty(const char* name)
-{
-     return 0;
-}
 
 int DummyBeanDB::doBeginTransaction() 
 {

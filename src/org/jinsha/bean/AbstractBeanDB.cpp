@@ -12,6 +12,11 @@ AbstractBeanDB::AbstractBeanDB()
 
 AbstractBeanDB::~AbstractBeanDB()
 {
+    for (auto& item : m_propertyMap_) 
+    {
+        delete item.second;
+    }
+   m_propertyMap_.clear();
 }
 
 
@@ -49,6 +54,43 @@ int AbstractBeanDB::rollbackTransaction()
     }
     return err;
 }
+
+
+Property* AbstractBeanDB::getProperty(const char* name)
+{
+    if (!m_propertyLoaded_) {
+        //properties not loaded, load them first
+        std::vector<std::string> names;
+        std::vector<Property::Type> types;
+        std::vector<Property::ValueType> valueTypes;
+        std::vector<bool> indices;
+        int err = loadProperties(names, types, valueTypes, indices);
+
+        if (err) return nullptr;
+        if (names.size() != types.size()) return nullptr;
+        if (types.size() != valueTypes.size()) return nullptr;
+        if (valueTypes.size() != indices.size()) return nullptr;
+
+        std::string* namePtr = nullptr;
+        Property::Type type = Property::PrimaryType;
+        Property::ValueType valueType = Property::IntType;
+        size_t size = names.size();
+        m_propertyMap_.clear();
+        for (int i = 0; i < size; i++) {
+            Property* property = new Property(names[i].c_str(), types[i], valueTypes[i], indices[i]);
+            m_propertyMap_[names[i]] = property;
+        }
+
+        m_propertyLoaded_ = true;
+    }
+    auto iter = m_propertyMap_.find(std::string(name));
+    if (iter == m_propertyMap_.end()) {
+        return nullptr;
+    } else {
+        return iter->second;
+    }
+}
+
 
 Bean* AbstractBeanDB::getBean(oidType id)
 {

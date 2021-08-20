@@ -1,6 +1,7 @@
 #pragma once
 
 #include "./BeanWorld.h"
+#include <unordered_map>
 
 namespace org {
 namespace jinsha {
@@ -21,13 +22,10 @@ public:
      */
     virtual ~AbstractBeanDB();
 
-    /**
-     * Get the attached world.
-     * 
-     * @return the world
-     */
-    virtual BeanWorld* getWorld() const {return m_world;};
-
+    /***********************************************************
+     * Connection related
+     ***********************************************************/
+public:
     /**
      * Connect to the database. 
      * 
@@ -58,6 +56,10 @@ public:
      */
     virtual int clear() = 0;
 
+    /***********************************************************
+     * property related
+     ***********************************************************/
+public:
     /**
      * Define a property.
      * 
@@ -139,9 +141,19 @@ public:
      * @param name property name
      * @return property
      */
-    virtual const Property* getProperty(const char* name) const = 0;
-    virtual Property* getProperty(const char* name) = 0;
+     Property* getProperty(const char* name);
 
+    /**
+     * Get all properties.
+     * 
+     * @return a map containing all properties.
+     */
+    const std::unordered_map<std::string, Property*>& getProperties() const 
+     {return m_propertyMap_;};
+
+    /***********************************************************
+     * transaction related
+     ***********************************************************/
     /**
      * Begin a transaction.
      * 
@@ -170,6 +182,10 @@ public:
      */
     virtual bool inTransaction() {return m_inTransaction;};
 
+    /***********************************************************
+     * bean related
+     ***********************************************************/
+public:
     /**
      * Creat an empty bean.
      * 
@@ -220,6 +236,26 @@ protected:
      */
     virtual void init() {};
 
+
+    /**
+     * Load all defined properties from storage to memory.
+     * 
+     * Notes:
+     * -  In out design, all properties will be loaded into memory
+     *    before  any other operation. This is purposed to achieve
+     *    the best performance.
+     * 
+     * @param names the property names
+     * @param type the property types
+     * @param valueType the property valueTypes
+     * @param indices the property index flags
+     * @return 0 for success, or an error code
+     */
+    virtual int loadProperties(std::vector<std::string>& names, 
+        std::vector<Property::Type>& types, 
+        std::vector<Property::ValueType>& valueTypes,
+        std::vector<bool>& indices) const = 0;
+
     /**
      * Load all data, including all beans, properties, from the storage 
      * into the world.
@@ -263,21 +299,6 @@ protected:
     virtual int loadBeanProperty(oidType beanId,  const Property* property, Json::Value& value) = 0;
 
     virtual int loadUnmanagedValue(oidType beanId, Json::Value& value) = 0;
-
-    /**
-     * Load all properties from the storage into the world.
-     * 
-     * This method is supposed to be called from class BeanWorld.
-     * 
-     * Notes:
-     * -  In out design, all properties must be loaded into world (memory) 
-     *    before the world is usable.
-     * 
-     * @param propertyNames the property names loaded
-     * @return 0 for success, or an error code
-     */
-    // virtual int loadProperties(std::list<std::string> propertyNames) const = 0;
-    virtual int loadProperties() const = 0;
 
     /**
      * Load bean data from database into memory.
@@ -362,9 +383,19 @@ protected:
      */
     virtual int doRollbackTransaction() = 0;
 
+
+    /**
+     * Get the attached world.
+     * 
+     * @return the world
+     */
+    virtual BeanWorld* getWorld() const {return m_world;};
+
 protected:
     BeanWorld *m_world;
     bool m_inTransaction = false;
+    bool m_propertyLoaded_ = false;
+    std::unordered_map<std::string, Property*> m_propertyMap_;
 
 friend class BeanWorld;
 friend class Bean;

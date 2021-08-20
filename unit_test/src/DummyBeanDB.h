@@ -24,11 +24,11 @@ public:
     virtual Property* defineArrayRelation(const char* name, bool needIndex = false) override;
     virtual int undefineProperty(const char* name) override;
     virtual int undefineRelation(const char* name) override;
-    virtual const Property* getProperty(const char* name) const override;
-    virtual Property* getProperty(const char* name) override;
 
-    // int loadProperties(std::list<std::string> propertyNames) const override;
-    int loadProperties() const override;
+    virtual int loadProperties(std::vector<std::string>& names, 
+        std::vector<Property::Type>& types, 
+        std::vector<Property::ValueType>& valueTypes,
+        std::vector<bool>& indices) const override;
 
     virtual Bean* createBean();
     virtual std::list<std::string> getBeanProperties(oidType id) const override;

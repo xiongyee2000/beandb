@@ -143,8 +143,8 @@ public:
      * @param name the name of property
      * @return 
      */
-    virtual void undefineProperty(const char* name);
-    virtual void undefineRelation(const char* name) {undefineProperty(name);};
+    virtual int undefineProperty(const char* name);
+    virtual int undefineRelation(const char* name) {undefineProperty(name);};
 
     /**
      * Get property/relation/array property/array relation by name.
@@ -160,8 +160,7 @@ public:
      * 
      * @return a map containing all properties.
      */
-    virtual const std::unordered_map<std::string, Property*>& getProperties() const 
-     {return m_propertyMap_;};
+    virtual const std::unordered_map<std::string, Property*>& getProperties() const;
 
 public:
     /**
@@ -180,9 +179,6 @@ public:
     int unloadBean(oidType id);
 
 protected:
-    Property* definePropertyCommon_(const char* name, Property::Type type, 
-    Property::ValueType valueType, bool needIndex = false);
-
     oidType generateBeanId();
 
     /**
@@ -193,9 +189,6 @@ protected:
 protected:
     std::unordered_map<oidType, Bean*> m_beans_;
     oidType m_maxBeanId_ = 1;
-
-    //map from property name to property
-    std::unordered_map<std::string, Property*> m_propertyMap_; 
 
     AbstractBeanDB *m_db;
 

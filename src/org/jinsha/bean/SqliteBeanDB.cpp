@@ -70,13 +70,8 @@ int SqliteBeanDB::connect()
         elog("Failed to connect to db. err=%d", err);
         return err;
     }
-    // err = m_world->loadProperties();
-    err = loadProperties();
-    if (err) {
-        elog("Failed to load properties. err=%d", err);
-        closeDB();
-        return err;
-    }
+    //todo: tmp solution
+    getProperty("@#$%");
     return 0;
 }
 
@@ -809,8 +804,11 @@ out:
 //      return 0;
 //  }
 
-// int SqliteBeanDB::loadProperties(std::list<std::string> propertyNames) const
-int SqliteBeanDB::loadProperties() const
+
+int SqliteBeanDB::loadProperties(std::vector<std::string>& names, 
+    std::vector<Property::Type>& types, 
+    std::vector<Property::ValueType>& valueTypes,
+    std::vector<bool>& indices) const
 {
     static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM META_PTABLE;";
     BeanWorld *world = nullptr;
@@ -820,6 +818,7 @@ int SqliteBeanDB::loadProperties() const
     int err = 0;
     int type = 0;
     int valueType = 0;
+    bool indexed = false;
     const char *name = nullptr;
     // int64_t id = 0;
 
@@ -829,34 +828,48 @@ int SqliteBeanDB::loadProperties() const
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto out;
 
-    // propertyNames.clear();
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
         //todo: set id for the property in future
         // nCol = 0;
         // id = sqlite3_column_int64(pstmt, nCol++);
         nCol = 1;
         name = (const char*)sqlite3_column_text(pstmt, nCol++);
-        // propertyNames.push_back(name);
         type = sqlite3_column_int(pstmt, nCol++);
         valueType = sqlite3_column_int(pstmt, nCol++);
-        switch (type) {
-            case Property::PrimaryType:
-                world->defineProperty(name, (Property::ValueType)valueType);
-                break;
-            case Property::RelationType:
-                world->defineRelation(name);
-                break;
-            case Property::ArrayPrimaryType:
-                world->defineArrayProperty(name, (Property::ValueType)valueType);
-                break;
-            case Property::ArrayRelationType:
-                world->defineArrayRelation(name);
-                break;
-            default:
-                wlog("ignore invalid property of type: %d", type);
-                break;
-        }
+        indexed = (sqlite3_column_int(pstmt, nCol++) == 1 ? true : false);
+        names.push_back(name);
+        types.push_back((Property::Type)type);
+        valueTypes.push_back((Property::ValueType)valueType);
+        indices.push_back(indexed);
 	}
+
+	// while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+    //     //todo: set id for the property in future
+    //     // nCol = 0;
+    //     // id = sqlite3_column_int64(pstmt, nCol++);
+    //     nCol = 1;
+    //     name = (const char*)sqlite3_column_text(pstmt, nCol++);
+    //     // propertyNames.push_back(name);
+    //     type = sqlite3_column_int(pstmt, nCol++);
+    //     valueType = sqlite3_column_int(pstmt, nCol++);
+    //     switch (type) {
+    //         case Property::PrimaryType:
+    //             world->defineProperty(name, (Property::ValueType)valueType);
+    //             break;
+    //         case Property::RelationType:
+    //             world->defineRelation(name);
+    //             break;
+    //         case Property::ArrayPrimaryType:
+    //             world->defineArrayProperty(name, (Property::ValueType)valueType);
+    //             break;
+    //         case Property::ArrayRelationType:
+    //             world->defineArrayRelation(name);
+    //             break;
+    //         default:
+    //             wlog("ignore invalid property of type: %d", type);
+    //             break;
+    //     }
+	// }
     if (err == SQLITE_DONE) err = SQLITE_OK; 
  
  out:
@@ -1073,78 +1086,6 @@ _out:
     return property;
 }
 
-
-const Property* SqliteBeanDB::getProperty(const char* name) const
-{
-    return (const Property*) ((SqliteBeanDB*)this)->getProperty(name);
-}
-
-
-Property* SqliteBeanDB::getProperty(const char* name)
-{
-    if (name == nullptr || name[0] == 0) return nullptr;
-    
-    Property *property = nullptr;
-    BeanWorld *world = getWorld();
-    if (world != nullptr) {
-        property = world->getProperty(name);
-        if (property != nullptr) return property;
-    } else {
-        return nullptr; //todo: currently world is required
-    }
-
-    if (m_db == nullptr) return nullptr;
-
-    sqlite3_stmt *pstmt = nullptr;
-    const char* pzTail = nullptr;
-    int nCol = 0;
-    int err = 0;
-    int type = 0;
-    int valueType = 0;
-    bool needIndex = false;
-    // int64_t id = 0;
-   static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM META_PTABLE WHERE NAME = ?;";
-
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto out;
-    err = sqlite3_bind_text(pstmt, 1, name, -1, nullptr);
-    if (err != SQLITE_OK) goto out;
-
-	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
-        nCol = 1;
-        name = (const char*)sqlite3_column_text(pstmt, nCol++);
-        type = sqlite3_column_int(pstmt, nCol++);
-        valueType = sqlite3_column_int(pstmt, nCol++);
-        needIndex = sqlite3_column_int(pstmt, nCol++) == 1 ? true : false;
-        switch (type) {
-            case Property::PrimaryType:
-                property = world->defineProperty(name, (Property::ValueType)valueType, needIndex);
-                break;
-            case Property::RelationType:
-                property = world->defineRelation(name, needIndex);
-                break;
-            case Property::ArrayPrimaryType:
-                property = world->defineArrayProperty(name, (Property::ValueType)valueType, needIndex);
-                break;
-            case Property::ArrayRelationType:
-                property = world->defineArrayRelation(name, needIndex);
-                break;
-            default:
-                wlog("ignore invalid property of type: %d", type);
-                break;
-        }
-        break;
-	}
-    if (err != SQLITE_ROW) {
-        elog("error occurred in %s, err=%d", __func__, err);
-    } 
- 
-out:
-    sqlite3_reset(pstmt);
-	sqlite3_finalize(pstmt);
-
-    return property;
-}
 
 int SqliteBeanDB::doBeginTransaction() 
 {

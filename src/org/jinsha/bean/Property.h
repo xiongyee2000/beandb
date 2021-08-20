@@ -223,6 +223,9 @@ public:
 
 
 private:
+    Property(const char* name, 
+        Type type, ValueType valueType, 
+        bool needIndex = false);
     Property(BeanWorld* world, const char* name, 
         Type type, ValueType valueType, 
         bool needIndex = false);
@@ -289,7 +292,8 @@ private:
 
 friend class BeanWorld;
 friend class Bean;
-friend class SqliteBeanDB;
+friend class AbstractBeanDB;
+friend class SqliteBeanDB; //todo
 };
 
 }

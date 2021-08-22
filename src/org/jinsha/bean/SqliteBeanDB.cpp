@@ -70,8 +70,6 @@ int SqliteBeanDB::connect()
         elog("Failed to connect to db. err=%d", err);
         return err;
     }
-    //todo: tmp solution
-    getProperty("@#$%");
     return 0;
 }
 
@@ -217,7 +215,6 @@ Bean* SqliteBeanDB::createBean()
 
     static const char sql[] = "INSERT INTO OTABLE VALUES(?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
-    const char* pzTail = nullptr;
     int err = 0;
 
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
@@ -660,11 +657,14 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
     if (property == nullptr) return -1;
     if (m_db == nullptr) return -1;
 
-     //no need to do anything here for non-indexed
-     //and non-string-valued property
-    if (!property->indexed() && 
-        property->getValueType() != Property::StringType) 
-    return 0; 
+    //todo: remove propoerty value from bean record
+
+    //  //no need to do anything here for non-indexed
+    //  //and non-string-valued property
+    // if (!property->indexed() && 
+    //     property->getValueType() != Property::StringType) 
+    // return 0; 
+
 
     BeanWorld *world = getWorld();
     if (world == nullptr) return -1;
@@ -805,13 +805,9 @@ out:
 //  }
 
 
-int SqliteBeanDB::loadProperties(std::vector<std::string>& names, 
-    std::vector<Property::Type>& types, 
-    std::vector<Property::ValueType>& valueTypes,
-    std::vector<bool>& indices) const
+int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& properties) const
 {
     static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM META_PTABLE;";
-    BeanWorld *world = nullptr;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int nCol = 0;
@@ -820,56 +816,26 @@ int SqliteBeanDB::loadProperties(std::vector<std::string>& names,
     int valueType = 0;
     bool indexed = false;
     const char *name = nullptr;
-    // int64_t id = 0;
+    pid_t id = 0;
 
     if (m_db == nullptr) return -1;
-    if ((world = getWorld()) == nullptr) return -2;
 
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
-        //todo: set id for the property in future
-        // nCol = 0;
-        // id = sqlite3_column_int64(pstmt, nCol++);
-        nCol = 1;
+        nCol = 0;
+        id = sqlite3_column_int(pstmt, nCol++);
         name = (const char*)sqlite3_column_text(pstmt, nCol++);
         type = sqlite3_column_int(pstmt, nCol++);
         valueType = sqlite3_column_int(pstmt, nCol++);
         indexed = (sqlite3_column_int(pstmt, nCol++) == 1 ? true : false);
-        names.push_back(name);
-        types.push_back((Property::Type)type);
-        valueTypes.push_back((Property::ValueType)valueType);
-        indices.push_back(indexed);
+        Property* property = new Property(name, id, 
+            (Property::Type)type, 
+            (Property::ValueType)valueType, 
+            indexed);
+        properties[name] = property;
 	}
-
-	// while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
-    //     //todo: set id for the property in future
-    //     // nCol = 0;
-    //     // id = sqlite3_column_int64(pstmt, nCol++);
-    //     nCol = 1;
-    //     name = (const char*)sqlite3_column_text(pstmt, nCol++);
-    //     // propertyNames.push_back(name);
-    //     type = sqlite3_column_int(pstmt, nCol++);
-    //     valueType = sqlite3_column_int(pstmt, nCol++);
-    //     switch (type) {
-    //         case Property::PrimaryType:
-    //             world->defineProperty(name, (Property::ValueType)valueType);
-    //             break;
-    //         case Property::RelationType:
-    //             world->defineRelation(name);
-    //             break;
-    //         case Property::ArrayPrimaryType:
-    //             world->defineArrayProperty(name, (Property::ValueType)valueType);
-    //             break;
-    //         case Property::ArrayRelationType:
-    //             world->defineArrayRelation(name);
-    //             break;
-    //         default:
-    //             wlog("ignore invalid property of type: %d", type);
-    //             break;
-    //     }
-	// }
     if (err == SQLITE_DONE) err = SQLITE_OK; 
  
  out:
@@ -886,14 +852,6 @@ int SqliteBeanDB::loadProperties(std::vector<std::string>& names,
 int SqliteBeanDB::undefineProperty(const char* name)
 {
     if (name == nullptr || name[0] == 0) return 0;
-
-    Property *property = nullptr;
-    BeanWorld *world = getWorld();
-    if (world != nullptr) {
-        property = world->getProperty(name);
-        if (property == nullptr) return 0;
-    }
-
     if (m_db == nullptr) return -1;
 
     int err = 0;
@@ -916,12 +874,11 @@ int SqliteBeanDB::undefineProperty(const char* name)
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
 
-    if (property->indexed() 
-        || property->getValueType() == Property::StringType) {
-        snprintf(buff, buffSize, drop_table, name);
-        err = sqlite3_exec(m_db, buff, nullptr , nullptr , &errMsg );
-        if (err != SQLITE_OK) goto _out;
-    }
+    snprintf(buff, buffSize, drop_table, name);
+    err = sqlite3_exec(m_db, buff, nullptr , nullptr , &errMsg );
+    if (err != SQLITE_OK) goto _out;
+
+    //todo: remove property value from beans
 
 _out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
@@ -932,9 +889,6 @@ _out:
         if (err != SQLITE_OK && err != SQLITE_DONE) {
             elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
         } else {
-            if (world != nullptr) {
-                world->undefineProperty(name);
-            }
             err = 0;
         }
     }
@@ -947,62 +901,21 @@ _out:
 }
 
 
-int SqliteBeanDB::undefineRelation(const char* name) 
+pid_t SqliteBeanDB::defineProperty(const char* name, 
+    Property::Type type, 
+    Property::ValueType valueType, 
+    bool needIndex)
 {
-    return undefineProperty(name);
-}
-
-
-Property* SqliteBeanDB::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
-{
-    return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
-}
-
-
-Property* SqliteBeanDB::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
-{
-    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
-}
-
-
-Property* SqliteBeanDB::defineRelation(const char* name, bool needIndex)
-{
-    return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
-}
-
-
-Property* SqliteBeanDB::defineArrayRelation(const char* name, bool needIndex)
-{
-    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
-}
-
-
-Property* SqliteBeanDB::definePropertyCommon_(const char* name, Property::Type type, 
-    Property::ValueType valueType, bool needIndex)
-{
-    if (name == nullptr || name[0] == 0) return nullptr;
-
-    BeanWorld *world = getWorld();
-    if (world == nullptr) return nullptr; //todo: currently world is required
-
-    Property *property = nullptr;
-    property = world->getProperty(name);
-    if (property != nullptr) {
-        if (property->getType() == type && property->getValueType() == valueType) {
-            return property;
-        } else {
-            wlog("property with name %s already exists but with different type or value type.", name);
-            return nullptr;
-        }
-    }
+    if (name == nullptr || name[0] == 0) return -1;
 
      //now let's create it in db
-    if (m_db == nullptr) return nullptr;
+    if (m_db == nullptr) return -2;
 
     const char* sql = nullptr;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int err = 0;
+    pid_t pid = -1;
     char* errMsg = nullptr;
     char  buff[128] {0};
     int sizeOfBuff = sizeof(buff);
@@ -1018,7 +931,7 @@ Property* SqliteBeanDB::definePropertyCommon_(const char* name, Property::Type t
     static const char sql_insert_ptable[] = "INSERT INTO META_PTABLE VALUES(?, ?, ?, ?, ?) ;";
     sql = sql_insert_ptable;
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
-    if (err != SQLITE_OK) return nullptr;
+    if (err != SQLITE_OK) return -3;
 
     err = sqlite3_bind_null(pstmt, 1);
     if (err != SQLITE_OK) goto _out;
@@ -1037,17 +950,14 @@ Property* SqliteBeanDB::definePropertyCommon_(const char* name, Property::Type t
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
 
-    if (needIndex
-        || valueType ==  Property::StringType) {  
-    //create a table for index or string reference
-        snprintf(buff, sizeOfBuff - 1, create_property_table, 
-        name,
-        (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) ? "UNIQUE" : "",
-        (valueType == Property::StringType) ? "TEXT" : "BIGINT" );
-        sql = buff;
-        err = sqlite3_exec ( m_db , sql , nullptr , nullptr , &errMsg ) ;
-         if (err != SQLITE_OK)  goto _out;
-    }
+    //create property table
+    snprintf(buff, sizeOfBuff - 1, create_property_table, 
+    name,
+    (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) ? "UNIQUE" : "",
+    (valueType == Property::StringType) ? "TEXT" : "BIGINT" );
+    sql = buff;
+    err = sqlite3_exec ( m_db , sql , nullptr , nullptr , &errMsg ) ;
+        if (err != SQLITE_OK)  goto _out;
 
 _out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
@@ -1058,23 +968,7 @@ _out:
         if (err != SQLITE_OK && err != SQLITE_DONE) {
             elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
         } else {
-            switch (type) {
-                case Property::PrimaryType:
-                    property = world->defineProperty(name, (Property::ValueType)valueType, needIndex);
-                    break;
-                case Property::RelationType:
-                    property = world->defineRelation(name, needIndex);
-                    break;
-                case Property::ArrayPrimaryType:
-                    property = world->defineArrayProperty(name, (Property::ValueType)valueType, needIndex);
-                    break;
-                case Property::ArrayRelationType:
-                    property = world->defineArrayRelation(name, needIndex);
-                    break;
-                default:
-                    wlog("ignore invalid property of type: %d", type);
-                    break;
-            }
+            pid = (pid_t)sqlite3_last_insert_rowid(m_db);
         }
     }
 
@@ -1083,7 +977,7 @@ _out:
     sqlite3_finalize(pstmt);
     if (errMsg  != nullptr) sqlite3_free(errMsg);
 
-    return property;
+    return pid;
 }
 
 

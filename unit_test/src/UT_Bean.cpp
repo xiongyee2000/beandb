@@ -175,10 +175,9 @@ TEST(Bean, property)
     Value value;
     int err = 0;
     TestHelper testHelper;
+    Property* property = nullptr;
 
     init_world(testHelper, world);
-
-    world.defineProperty("p1", Property::IntType);
 
     Bean &bean = *world.createBean();
 
@@ -204,7 +203,8 @@ TEST(Bean, property)
     EXPECT_TRUE(value == Json::Value::minInt64);
 
     world.undefineProperty("p1");
-    world.defineProperty("p1", Property::UIntType);
+    testHelper.p1 = world.defineProperty("p1", Property::UIntType);
+
     err = bean.setProperty(testHelper.p1, Json::Value::maxUInt);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getProperty(testHelper.p1) == Json::Value::maxUInt);
@@ -220,7 +220,8 @@ TEST(Bean, property)
     EXPECT_TRUE(value == Json::Value::maxUInt64);
 
     world.undefineProperty("p1");
-    world.defineProperty("p1", Property::RealType);
+    testHelper.p1 = world.defineProperty("p1", Property::RealType);
+
     err = bean.setProperty(testHelper.p1, 8.8f);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getProperty(testHelper.p1) == 8.8f);
@@ -236,7 +237,7 @@ TEST(Bean, property)
     EXPECT_TRUE(value == 8.8);
 
     world.undefineProperty("p1");
-    world.defineProperty("p1", Property::StringType);
+    testHelper.p1 = world.defineProperty("p1", Property::StringType);
 
     bean.setProperty(testHelper.p1, "v1");
     EXPECT_TRUE(bean.getProperty(testHelper.p1) == "v1");
@@ -246,7 +247,7 @@ TEST(Bean, property)
 
     bean.setProperty(testHelper.p1, "v1");
     world.undefineProperty("p2");
-    world.defineProperty("p2", Property::StringType);
+    testHelper.p2 = world.defineProperty("p2", Property::StringType);
     err = bean.setProperty(testHelper.p2, "v2");
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 2);
@@ -263,7 +264,7 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.getProperty(testHelper.p2).isNull());
 
     world.undefineProperty("p1");
-    world.defineProperty("p1", Property::BoolType);
+    testHelper.p1 = world.defineProperty("p1", Property::BoolType);
     err = bean.setProperty(testHelper.p1, true);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 1);

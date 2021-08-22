@@ -3,6 +3,7 @@
 #include "./AbstractBeanDB.h"
 
 #include <sqlite3.h>
+#include <unordered_map>
 
 namespace org {
 namespace jinsha {
@@ -30,17 +31,13 @@ public:
 
     virtual int clear() override;
 
-    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
-    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
-    virtual Property* defineRelation(const char* name, bool needIndex = false) override;
-    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) override;
+    virtual pid_t defineProperty(const char* name, 
+        Property::Type type,
+        Property::ValueType valueType, 
+        bool needIndex = false) override;
     virtual int undefineProperty(const char* name) override;
-    virtual int undefineRelation(const char* name) override;
 
-    virtual int loadProperties(std::vector<std::string>& names, 
-        std::vector<Property::Type>& types, 
-        std::vector<Property::ValueType>& valueTypes,
-        std::vector<bool>& indices) const override;
+    virtual int loadProperties(std::unordered_map<std::string, Property*>& properties) const override;
 
     virtual Bean* createBean();
     virtual std::list<std::string> getBeanProperties(oidType id) const override;
@@ -86,8 +83,6 @@ public:
 
 private:
     int internalInit();
-    Property* definePropertyCommon_(const char* name, Property::Type type, 
-    Property::ValueType valueType, bool needIndex = false);
 
 private:
     const char* getDir()  {return m_dir;};

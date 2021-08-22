@@ -280,11 +280,8 @@ TEST(Property, getSubjects_array_with_index)
 }
 
 
-void test_findSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, Bean& bean3, std::list<oidType>& beans, bool needIndex = false)
+void test_findSubjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bean1, Bean& bean2, Bean& bean3, std::list<oidType>& beans, bool needIndex = false)
 {
-    TestHelper testHelper;
-    init_world(testHelper, world, needIndex);
-
     testHelper.p_int->findSubjects(0, beans);
     EXPECT_TRUE(beans.size() == 0);
     testHelper.p_uint->findSubjects(0, beans);
@@ -358,13 +355,13 @@ TEST(Property, findSubjects_without_index)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world);
+    init_world(testHelper, world, false);
 
     Bean &bean1 = *world.createBean();
     Bean& bean2 = *world.createBean();
     Bean& bean3 = *world.createBean();
 
-    test_findSubjects_common(world, bean1, bean2, bean3, beans, false);
+    test_findSubjects_common(testHelper, world, bean1, bean2, bean3, beans, false);
 }
 
 TEST(Property, findSubjects_with_index)
@@ -380,7 +377,7 @@ TEST(Property, findSubjects_with_index)
     Bean& bean2 = *world.createBean();
     Bean& bean3 = *world.createBean();
 
-    test_findSubjects_common(world, bean1, bean2, bean3, beans, false);
+    test_findSubjects_common(testHelper, world, bean1, bean2, bean3, beans, true);
 }
 
 

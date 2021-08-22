@@ -58,12 +58,23 @@ public:
     } ;
 
 public:
+    Property(const char* name,  pid_t id,
+        Type type, ValueType valueType, 
+        bool needIndex = false);
+
     /**
      * Get the name of the property
      * 
      * @return property name (key)
      */
     const std::string& getName() const {return m_name_;};
+
+    /**
+     * Get the id of the property
+     * 
+     * @return property id
+     */
+    pid_t getId() {return m_id_;};
 
     /**
      * Get the type of this property.
@@ -223,10 +234,7 @@ public:
 
 
 private:
-    Property(const char* name, 
-        Type type, ValueType valueType, 
-        bool needIndex = false);
-    Property(BeanWorld* world, const char* name, 
+    Property(BeanWorld* world, const char* name,  pid_t id,
         Type type, ValueType valueType, 
         bool needIndex = false);
 
@@ -251,7 +259,7 @@ private:
 private:
     BeanWorld* m_world_;
     std::string m_name_;
-    int m_id_ = -1;
+    int m_id_ =  -1;
     Type m_propertyType_;
     ValueType m_valueType_ ;
     unsigned int m_refCount_ = 0;

@@ -19,6 +19,9 @@ BeanWorld::BeanWorld(AbstractBeanDB& db)
     setlocale(LC_ALL, "");
     m_db->m_world = this;
     m_db->init();
+    if (0 == m_db->connect()) {
+        reloadProperties();
+    }
 }
 
 
@@ -36,6 +39,13 @@ void BeanWorld::clear()
         item.second = nullptr;
     }
     m_beans_.clear();
+
+    for (auto& item : m_propertyMap_) 
+    {
+        delete item.second;
+    }
+   m_propertyMap_.clear();
+   m_properties_loaded_ = false;
 }
 
 
@@ -126,48 +136,103 @@ Bean* BeanWorld::getBean(oidType id)
 
 Property* BeanWorld::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return m_db->defineProperty(name, valueType, needIndex);
+    return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
 }
 
 
 Property* BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
 {
-    return m_db->defineProperty(name, valueType, needIndex);
+    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
 }
 
 
 Property* BeanWorld::defineRelation(const char* name, bool needIndex)
 {
-    return m_db->defineRelation(name, needIndex);
+    return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
 }
 
 
 Property* BeanWorld::defineArrayRelation(const char* name, bool needIndex)
 {
-    return m_db->defineArrayRelation(name, needIndex);
+    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
 }
+
+
+Property* BeanWorld::definePropertyCommon_(const char* name, 
+    Property::Type type, 
+    Property::ValueType valueType, 
+    bool needIndex)
+{
+    if (name == nullptr) return nullptr;
+    if (name[0] == 0) return nullptr;
+
+    pid_t pid = 0;
+    Property* property = nullptr;
+    auto iter = m_propertyMap_.find(name);
+    if (iter == m_propertyMap_.end())
+    {
+        pid = m_db ->defineProperty(name, type, valueType, needIndex);
+        if (pid < 0) {
+            elog("Failed to define property %s in database.", name);
+            return nullptr;
+        } else {
+            property = new Property(this, name, pid, type, valueType, needIndex);
+            m_propertyMap_[name] = property;
+            property->m_id_ = pid;
+        }
+    }
+    else
+    {
+        property = iter->second;
+        if (property->getType() != type || 
+            property->getValueType() != valueType ||
+            property->indexed() != needIndex) {
+            elog("Property with name %s already exist but its type/valueType/indexFlag is inconsistent.", name);
+            property = nullptr; 
+        }
+    }
+    return property;
+ }
 
 
 int BeanWorld::undefineProperty(const char* name)
 {
-    return m_db->undefineProperty(name);
+    if (name == nullptr) return 0;
+    if (name[0] == 0) return 0;
+
+    if (0 != m_db->undefineProperty(name)) {
+        elog("Failed to undefine property %s in database.", name);
+        return -1;
+    }
+    auto iter = m_propertyMap_.find(name);
+    if (iter == m_propertyMap_.end()) return 0;
+    Property* property = iter->second;
+    delete property;
+    m_propertyMap_.erase(iter);
+    return 0;
 }
 
 
-const Property* BeanWorld::getProperty(const char* name) const
-{
-    return m_db->getProperty(name);
-}
+// const Property* BeanWorld::getProperty(const char* name) const
+// {
+//     return const_cast<Property*>(((const BeanWorld*)this)->getProperty(name));
+// }
 
 
 Property* BeanWorld::getProperty(const char* name)
 {
-    return const_cast<Property*>(((const BeanWorld*)this)->getProperty(name));
+    if (name == nullptr || name[0] == 0) return nullptr;
+    auto iter = m_propertyMap_.find(std::string(name));
+    if (iter == m_propertyMap_.end()) {
+        return nullptr;
+    } else {
+        return iter->second;
+    }
 }
 
-const std::unordered_map<std::string, Property*>& BeanWorld::getProperties() const 
+const std::unordered_map<std::string, Property*>& BeanWorld::getProperties() 
 {
-    return m_db->getProperties();
+    return m_propertyMap_;
 };
 
 
@@ -185,13 +250,19 @@ int BeanWorld::unloadAll()
 }
 
 
-int BeanWorld::loadProperties()
+int BeanWorld::reloadProperties()
 {
     int err = 0;
-    if (m_db != nullptr) {
-        //todo: tmp solution
-        m_db->getProperty("@#$%");
-    } 
+    if (m_properties_loaded_)
+        clear();
+    err = m_db->loadProperties(m_propertyMap_);
+    if (err) {
+        elog("%s", "Failed to load properties from database");
+        clear();
+        err = -1 ;
+    } else {
+        m_properties_loaded_ = true;
+    }
     return err;
 }
 

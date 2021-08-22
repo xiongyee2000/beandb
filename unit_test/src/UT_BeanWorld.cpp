@@ -226,7 +226,7 @@ TEST(BeanWorld, getProperty)
     property = world.getProperty("p1");
     EXPECT_TRUE(property->getName() == "p1");
 
-    property = ((const BeanWorld*)&world)->getProperty("p1");
+    property = ((BeanWorld*)&world)->getProperty("p1");
     EXPECT_TRUE(property->getName() == "p1");
 }
 

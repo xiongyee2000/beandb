@@ -288,9 +288,9 @@ int Bean::doAppendProperty(Property* property,  const Json::Value& value, bool s
     //insert property record first
     if (m_world_->m_db != nullptr && syncToDB) {
         if (0 != m_world_->m_db->insertBeanProperty(m_id_, property, value)) {
-            if (m_pst_json_[pname].size() == 0)
+            if (m_pst_json_.isArray() && m_pst_json_[pname].size() == 0)
                 m_pst_json_[pname] = PST_NEW; //resume to PST_NEW
-                return -11;
+            return -11;
         }
     }
     array->append(value);
@@ -476,10 +476,11 @@ int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool syncT
 
     //insert property record first
     if (m_world_->m_db != nullptr && syncToDB) {
-        if (0 != m_world_->m_db->insertBeanProperty(m_id_, relation, Json::Value(objectBeanId)))
+        if (0 != m_world_->m_db->insertBeanProperty(m_id_, relation, Json::Value(objectBeanId))) {
             if (m_pst_json_[pname].size() == 0)
                 m_pst_json_[pname] = PST_NEW; //resume to PST_NEW
             return -11;
+        }
     }
 
     auto& arrayValue = m_json_[pname];
@@ -601,9 +602,9 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncT
     if (pstValue.isArray()) {
         if (m_json_[pname].isNull() || !m_json_[pname].isArray()) 
             return Json::Value::null; //inconsistent value
-            Json::Value& array = m_json_[pname];
-            rtnValue = *valuePtr;
-            Json::Value::ArrayIndex size = array.size();
+        Json::Value& array = m_json_[pname];
+        rtnValue = *valuePtr;
+        Json::Value::ArrayIndex size = array.size();
         for (Json::Value::ArrayIndex i = 0; i < size; i++) {
             doRemoveProperty(property, i, false, syncToDB);
         }

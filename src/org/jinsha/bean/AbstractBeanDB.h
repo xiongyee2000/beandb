@@ -65,91 +65,32 @@ public:
      * 
      * Notes:
      * - Property must be defined before it can be used.
+     * - The argument valueType is ignored when it is a relation property.
      * 
      * @param name the name of property
+     * @param type the type of property
      * @param valueType the value type of property
+     * @param isArray if it is an array property
      * @param needIndex if index is needed
-     * @return the pointer to the property instance
+     * @return the id of the property if successful (non-negative), 
+     *                   or a  negative number as error code
      */
-    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
-
-    /**
-     * Define an array property.
-     * 
-     * Notes:
-     * - Array property must be defined before it can be used.
-     * 
-     * @param name the name of property
-     * @param valueType the value type of the element of the array property
-     * @param needIndex if index is needed
-     * @return the pointer to the property instance
-     */
-    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
-
-    /**
-     * Define a relation property.
-     * 
-     * Notes:
-     * - Relation is a special kind of property, which represents the relation between
-     * two beans, e.g. friend/colleague etc.
-     * 
-     * @param name the name of relation property
-     * @param needIndex if index is needed
-     * @return the pointer to the property instance
-     */
-    virtual Property* defineRelation(const char* name, bool needIndex = false) = 0;
-
-    /**
-     * Define an array relation property.
-     * 
-     * Notes:
-     * - Array relation property must be define before it can be used.
-     * 
-     * @param name the name of array relation property
-     * @param needIndex if index is needed
-     * @return the pointer to the property instance
-     */
-    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) = 0;
+    virtual pid_t defineProperty(const char* name, 
+        Property::Type type,
+        Property::ValueType valueType, 
+        bool needIndex = false) = 0;
 
     /**
      * Undefine a property.
      * 
      * Notes:
-     * - This method can be used to delete either a property, an array property;
-     * - CAUTOUS: the properties will also be removed from all beans that have this property.
+     * - CAUTIOUS: the property value will also be removed from all beans 
+     *   that have this property.
      * 
      * @param name the name of property
      * @return 0 on success, or an error code
      */
     virtual int undefineProperty(const char* name) = 0;
-
-    /**
-     * Undefine a relation.
-     * 
-     * Notes:
-     * - This method can be used to delete either a relation, or an array relation;
-     * - CAUTOUS: the relations will also be removed from all beans that have this relation.
-     * 
-     * @param name the name of relation
-     * @return 0 on success, or an error code
-     */
-    virtual int undefineRelation(const char* name) {return undefineProperty(name);};
-
-    /**
-     * Get property/relation/array property/array relation by name.
-     * 
-     * @param name property name
-     * @return property
-     */
-     Property* getProperty(const char* name);
-
-    /**
-     * Get all properties.
-     * 
-     * @return a map containing all properties.
-     */
-    const std::unordered_map<std::string, Property*>& getProperties() const 
-     {return m_propertyMap_;};
 
     /***********************************************************
      * transaction related
@@ -244,17 +185,17 @@ protected:
      * -  In out design, all properties will be loaded into memory
      *    before  any other operation. This is purposed to achieve
      *    the best performance.
+     * - The implementation of this method must new Property 
+     *    instances. 
+     * -  The caller method shall make sure properties is empty
+     *    before this method is called.
+     * - When error occurs, the mthod won't do cleaning work
+     *    on properties. It is the caller's responsibility to do it.
      * 
-     * @param names the property names
-     * @param type the property types
-     * @param valueType the property valueTypes
-     * @param indices the property index flags
+     * @param properties the loaded properties
      * @return 0 for success, or an error code
      */
-    virtual int loadProperties(std::vector<std::string>& names, 
-        std::vector<Property::Type>& types, 
-        std::vector<Property::ValueType>& valueTypes,
-        std::vector<bool>& indices) const = 0;
+    virtual int loadProperties(std::unordered_map<std::string, Property*>& properties) const = 0;
 
     /**
      * Load all data, including all beans, properties, from the storage 
@@ -394,8 +335,6 @@ protected:
 protected:
     BeanWorld *m_world;
     bool m_inTransaction = false;
-    bool m_propertyLoaded_ = false;
-    std::unordered_map<std::string, Property*> m_propertyMap_;
 
 friend class BeanWorld;
 friend class Bean;

@@ -1,1 +1,3 @@
 well define error codes
+
+windows line ending \r\n

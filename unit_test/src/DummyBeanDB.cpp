@@ -128,10 +128,7 @@ int DummyBeanDB::deleteBean(Bean* bean)
 }
 
 
-int DummyBeanDB::loadProperties(std::vector<std::string>& names, 
-    std::vector<Property::Type>& types, 
-    std::vector<Property::ValueType>& valueTypes,
-    std::vector<bool>& indices) const
+int DummyBeanDB::loadProperties(std::unordered_map<std::string, Property*>& properties) const
 {
     return 0;
 }
@@ -139,44 +136,26 @@ int DummyBeanDB::loadProperties(std::vector<std::string>& names,
 
 int DummyBeanDB::undefineProperty(const char* name)
 {
+    auto iter = m_properties.find(name);
+    if (iter != m_properties.end()) {
+        //todo: delete iter->second
+        m_properties.erase(iter);
+    }
     return 0;
 }
 
 
-int DummyBeanDB::undefineRelation(const char* name) 
-{
-    return undefineProperty(name);
-}
-
-
-Property* DummyBeanDB::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
-{
-    return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
-}
-
-
-Property* DummyBeanDB::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
-{
-    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
-}
-
-
-Property* DummyBeanDB::defineRelation(const char* name, bool needIndex)
-{
-    return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
-}
-
-
-Property* DummyBeanDB::defineArrayRelation(const char* name, bool needIndex)
-{
-    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
-}
-
-
-Property* DummyBeanDB::definePropertyCommon_(const char* name, Property::Type type, 
+pid_t DummyBeanDB::defineProperty(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex)
 {
-     return 0;
+    auto iter = m_properties.find(name);
+    if (iter == m_properties.end()) {
+        pid_t id = m_maxPid++;
+        Property* property = new Property(name, id, type, valueType, needIndex);
+        m_properties[name] = property;
+        return id;
+    }
+    return iter->second->getId();
 }
 
 

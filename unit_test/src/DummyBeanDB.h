@@ -65,7 +65,7 @@ public:
 
 private:
     int internalInit();
-    pid_t m_maxPid = 0;
+    pidType m_maxPid = 0;
     std::unordered_map<std::string, Property*> m_properties;
 
 private:

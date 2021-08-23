@@ -75,7 +75,7 @@ public:
      * @return the id of the property if successful (non-negative), 
      *                   or a  negative number as error code
      */
-    virtual pid_t defineProperty(const char* name, 
+    virtual pidType defineProperty(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
         bool needIndex = false) = 0;
@@ -121,7 +121,7 @@ public:
      * 
      * @return true if in a transaction, or false if not
      */
-    virtual bool inTransaction() {return m_inTransaction;};
+    virtual bool inTransaction() {return m_inTransaction_;};
 
     /***********************************************************
      * bean related
@@ -330,11 +330,41 @@ protected:
      * 
      * @return the world
      */
-    virtual BeanWorld* getWorld() const {return m_world;};
+    virtual BeanWorld* getWorld() const {return m_world_;};
+
+    /**
+     * This method is used for the implemenation method of 
+     * AbstractBeanDB::loadProperties() to create new Property
+     * instance.
+     */
+    Property* newProperty(const char* name, 
+        pidType id,
+        Property::Type type,
+        Property::ValueType valueType, 
+        bool needIndex = false) const;
+
+    /**
+     * This method is used for the implemenation method of 
+     * AbstractBeanDB::getBean() to create new Property
+     * instance.
+     */
+    Bean* newBean(oidType id) const;
+
+    /**
+     * This method is used for the derived class to get delayLoad
+     * flag of a property.
+     */
+    static bool isDelayLoad(const Property& property);
+
+    /**
+     * This method is used for the derived class to set delayLoad
+     * flag of a property.
+     */
+    static void setDelayLoad(Property& property, bool isDelayLoad);
 
 protected:
-    BeanWorld *m_world;
-    bool m_inTransaction = false;
+    BeanWorld *m_world_;
+    bool m_inTransaction_ = false;
 
 friend class BeanWorld;
 friend class Bean;

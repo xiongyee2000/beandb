@@ -210,9 +210,6 @@ Bean* SqliteBeanDB::createBean()
 {
     if (m_db == nullptr) return nullptr;
 
-    BeanWorld *world = getWorld();
-    if (world == nullptr) return nullptr;
-
     static const char sql[] = "INSERT INTO OTABLE VALUES(?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
     int err = 0;
@@ -239,7 +236,7 @@ out:
 
     sqlite3_int64 id = sqlite3_last_insert_rowid(m_db);
 
-    return world->createBean(id);
+    return newBean((oidType)id);
 
 }
 
@@ -298,12 +295,12 @@ int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value& 
 
         Json::Value& v = (Json::Value&)Json::Value::null;
         for (auto& pname : value.getMemberNames()) {
-            property = m_world->getProperty(pname.c_str());
+            property = m_world_->getProperty(pname.c_str());
             if (property == nullptr) continue; //it's not a defined property
             //filter out delay load properties
-            if (property->isDelayLoad()) {
+            if (isDelayLoad(*property)) {
                 value[pname] = Json::Value::null;
-            } 
+            }
         }
 
         //retrieve unmanaged value
@@ -397,7 +394,7 @@ int  SqliteBeanDB::loadBeanProperty(oidType beanId, const Property* property, Js
     //set to null first
     value = Json::Value::null;
 
-    if (property->isDelayLoad()) {
+    if (isDelayLoad(*property)) {
         snprintf(buff, 64, "SELECT VALUE from p_%s WHERE ID = ?;", 
             pname);
         err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
@@ -816,7 +813,7 @@ int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& pro
     int valueType = 0;
     bool indexed = false;
     const char *name = nullptr;
-    pid_t id = 0;
+    int id = 0;
 
     if (m_db == nullptr) return -1;
 
@@ -830,10 +827,13 @@ int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& pro
         type = sqlite3_column_int(pstmt, nCol++);
         valueType = sqlite3_column_int(pstmt, nCol++);
         indexed = (sqlite3_column_int(pstmt, nCol++) == 1 ? true : false);
-        Property* property = new Property(name, id, 
+        Property* property = newProperty(name,  
+            (pidType)id, 
             (Property::Type)type, 
             (Property::ValueType)valueType, 
             indexed);
+        if (valueType == Property::StringType) 
+            setDelayLoad(*property, true);
         properties[name] = property;
 	}
     if (err == SQLITE_DONE) err = SQLITE_OK; 
@@ -901,7 +901,7 @@ _out:
 }
 
 
-pid_t SqliteBeanDB::defineProperty(const char* name, 
+pidType SqliteBeanDB::defineProperty(const char* name, 
     Property::Type type, 
     Property::ValueType valueType, 
     bool needIndex)
@@ -915,7 +915,7 @@ pid_t SqliteBeanDB::defineProperty(const char* name,
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int err = 0;
-    pid_t pid = -1;
+    pidType pid = -1;
     char* errMsg = nullptr;
     char  buff[128] {0};
     int sizeOfBuff = sizeof(buff);
@@ -968,7 +968,7 @@ _out:
         if (err != SQLITE_OK && err != SQLITE_DONE) {
             elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
         } else {
-            pid = (pid_t)sqlite3_last_insert_rowid(m_db);
+            pid = (pidType)sqlite3_last_insert_rowid(m_db);
         }
     }
 

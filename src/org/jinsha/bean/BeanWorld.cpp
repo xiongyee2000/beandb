@@ -17,7 +17,7 @@ BeanWorld::BeanWorld(AbstractBeanDB& db)
     : m_db(&db)
 {
     setlocale(LC_ALL, "");
-    m_db->m_world = this;
+    m_db->m_world_ = this;
     m_db->init();
     if (0 == m_db->connect()) {
         reloadProperties();
@@ -166,7 +166,7 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
     if (name == nullptr) return nullptr;
     if (name[0] == 0) return nullptr;
 
-    pid_t pid = 0;
+    pidType pid = 0;
     Property* property = nullptr;
     auto iter = m_propertyMap_.find(name);
     if (iter == m_propertyMap_.end())
@@ -259,8 +259,12 @@ int BeanWorld::reloadProperties()
     if (err) {
         elog("%s", "Failed to load properties from database");
         clear();
-        err = -1 ;
+        err = -1;
     } else {
+        for (auto& item : m_propertyMap_) {
+            //set world to this
+            item.second->m_world_ = this;
+        }
         m_properties_loaded_ = true;
     }
     return err;

@@ -392,6 +392,7 @@ public:
     int save();
 
 private:
+    Bean(oidType id);
     Bean(BeanWorld* world);
     Bean(const Bean& bean) = delete;
     Bean& operator =(const Bean& bean) = delete;    
@@ -457,7 +458,6 @@ private:
 friend class BeanWorld;
 friend class Property;
 friend class AbstractBeanDB;
-friend class SqliteBeanDB;
 };
 
 }

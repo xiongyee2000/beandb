@@ -145,13 +145,13 @@ int DummyBeanDB::undefineProperty(const char* name)
 }
 
 
-pid_t DummyBeanDB::defineProperty(const char* name, Property::Type type, 
+pidType DummyBeanDB::defineProperty(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex)
 {
     auto iter = m_properties.find(name);
     if (iter == m_properties.end()) {
-        pid_t id = m_maxPid++;
-        Property* property = new Property(name, id, type, valueType, needIndex);
+        pidType id = m_maxPid++;
+        Property* property = newProperty(name, id, type, valueType, needIndex);
         m_properties[name] = property;
         return id;
     }

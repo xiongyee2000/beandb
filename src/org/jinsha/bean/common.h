@@ -8,6 +8,7 @@ namespace jinsha {
 namespace bean {
 
 typedef Json::UInt64 oidType;
+typedef int pidType;
 typedef Json::Int64 int_t;
 typedef Json::UInt64 uint_t;
 

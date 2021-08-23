@@ -10,6 +10,17 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
+Bean::Bean(oidType id) : 
+m_world_(nullptr)
+, m_id_(id)
+{
+    m_json_= Json::Value(Json::ValueType::objectValue);
+    m_unmanaged_json_ = Json::Value(Json::ValueType::objectValue);
+    m_pst_json_ = Json::Value(Json::ValueType::objectValue);
+    m_unmanaged_pst_json_ = PST_NSY;
+}
+
+
 Bean::Bean(BeanWorld* world) : 
 m_world_(world)
 {

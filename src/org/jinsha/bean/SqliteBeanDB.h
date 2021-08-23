@@ -29,9 +29,10 @@ public:
     virtual int disconnect() override;
     virtual bool connected() const override {return m_connected;};
 
+private:
     virtual int clear() override;
 
-    virtual pid_t defineProperty(const char* name, 
+    virtual pidType defineProperty(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
         bool needIndex = false) override;

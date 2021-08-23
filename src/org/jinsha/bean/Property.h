@@ -58,10 +58,6 @@ public:
     } ;
 
 public:
-    Property(const char* name,  pid_t id,
-        Type type, ValueType valueType, 
-        bool needIndex = false);
-
     /**
      * Get the name of the property
      * 
@@ -74,7 +70,7 @@ public:
      * 
      * @return property id
      */
-    pid_t getId() {return m_id_;};
+    pidType getId() {return m_id_;};
 
     /**
      * Get the type of this property.
@@ -234,7 +230,10 @@ public:
 
 
 private:
-    Property(BeanWorld* world, const char* name,  pid_t id,
+    Property(const char* name,  pidType id,
+        Type type, ValueType valueType, 
+        bool needIndex = false);
+    Property(BeanWorld* world, const char* name,  pidType id,
         Type type, ValueType valueType, 
         bool needIndex = false);
 
@@ -296,12 +295,9 @@ private:
     std::multimap<const char*, Bean*, StrComparator> m_strValueMap_;
 
 
-
-
 friend class BeanWorld;
 friend class Bean;
 friend class AbstractBeanDB;
-friend class SqliteBeanDB; //todo
 };
 
 }

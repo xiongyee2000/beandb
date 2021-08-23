@@ -18,7 +18,7 @@ template<typename ValueT, typename MapT>
 static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
 
 
-Property::Property(const char* name, pid_t id,
+Property::Property(const char* name, pidType id,
     Type type, ValueType valueType, 
     bool needIndex) 
     : m_world_(nullptr)
@@ -33,7 +33,7 @@ Property::Property(const char* name, pid_t id,
 };
 
 
-Property::Property(BeanWorld* world, const char* name, pid_t id,
+Property::Property(BeanWorld* world, const char* name, pidType id,
     Type type, ValueType valueType, 
     bool needIndex) 
     : m_world_(world)

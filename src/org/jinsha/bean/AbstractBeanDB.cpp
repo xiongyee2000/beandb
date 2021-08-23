@@ -5,7 +5,7 @@ namespace jinsha {
 namespace bean {
 
 AbstractBeanDB::AbstractBeanDB()
-    : m_world(nullptr) 
+    : m_world_(nullptr) 
 {
 }
 
@@ -18,10 +18,10 @@ AbstractBeanDB::~AbstractBeanDB()
 int AbstractBeanDB::beginTransaction()
 {
     int err = 0;
-    if (!m_inTransaction) {
+    if (!m_inTransaction_) {
         err = doBeginTransaction();
         if (!err) {
-            m_inTransaction = true;
+            m_inTransaction_ = true;
         }
     } 
     return err;
@@ -31,10 +31,10 @@ int AbstractBeanDB::beginTransaction()
 int AbstractBeanDB::commitTransaction()
 {
     int err = 0;
-    if (!m_inTransaction) return -1;
+    if (!m_inTransaction_) return -1;
     err = doCommitTransaction();
     if (!err) 
-        m_inTransaction = false;
+        m_inTransaction_ = false;
     return err;
 }
 
@@ -42,10 +42,10 @@ int AbstractBeanDB::commitTransaction()
 int AbstractBeanDB::rollbackTransaction()
 {
     int err = 0;
-    if (!m_inTransaction) return -1;
+    if (!m_inTransaction_) return -1;
     err = doRollbackTransaction();
     if (!err) {
-        m_inTransaction = false;
+        m_inTransaction_ = false;
     }
     return err;
 }
@@ -67,6 +67,33 @@ Bean* AbstractBeanDB::getBean(oidType id)
         }
     } 
     return bean;
+}
+
+
+Property* AbstractBeanDB::newProperty(const char* name, 
+    pidType id,
+    Property::Type type,
+    Property::ValueType valueType, 
+    bool needIndex) const
+{
+    return new Property(name, id, type, valueType, needIndex);
+}
+
+Bean* AbstractBeanDB::newBean(oidType id) const
+{
+    return new Bean(id);
+}
+
+
+bool AbstractBeanDB::isDelayLoad(const Property& property)
+{
+    return property.isDelayLoad();
+}
+
+
+void AbstractBeanDB::setDelayLoad(Property&  property, bool isDelayLoad)
+{
+    property.setDelayLoad(isDelayLoad);
 }
 
 

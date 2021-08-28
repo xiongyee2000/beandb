@@ -1,19 +1,23 @@
 #pragma once
 
+#include "./BeanDBUserIntf.h"
+#include "./BeanDBPersistenceIntf.h"
 #include "./BeanWorld.h"
-#include <unordered_map>
 
 namespace org {
 namespace jinsha {
 namespace bean {
 
-class AbstractBeanDB
+class AbstractBeanDB : public BeanDBUserIntf, public BeanDBPersistenceIntf
 {
+
+    ////////////////////////////////////////////////////////////////////////
+    // public methods at user level
+     ////////////////////////////////////////////////////////////////////////
+
 public:
     /**
      * Constructor
-     * 
-     * @param world the world attached to this storage
      */
     AbstractBeanDB();
 
@@ -22,316 +26,140 @@ public:
      */
     virtual ~AbstractBeanDB();
 
+    /**
+     * @ref BeanDBUserIntf::reInit()
+     */
+    virtual int reInit() override;
+
     /***********************************************************
-     * Connection related
+     * connection related
      ***********************************************************/
 public:
     /**
-     * Connect to the database. 
-     * 
-     * @return 0 for success, or an error code
+     * @ref BeanDBUserIntf::connect()
      */
-    virtual int connect() = 0;
+    virtual int connect() override;
 
     /**
-     * Disonnect to the database. 
-     * 
-     * @return 0 for success, or an error code
+     * @ref BeanDBUserIntf::disconnect()
      */
-    virtual int disconnect() = 0;
+    virtual int disconnect() override;
 
     /**
-     * Is the database connected.
-     * 
-     * @return true if connected, or false otherwise 
+     * @ref BeanDBUserIntf::connected()
      */
-    virtual bool connected() const = 0;
+    virtual bool connected() const override;
+
+    /***********************************************************
+     * transaction related
+     ***********************************************************/
+    /**
+     * @ref BeanDBUserIntf::beginTransaction()
+     */
+    virtual int beginTransaction() override;
 
     /**
-     * Clear the database, i.e. remove all data.
-     * 
-     * CAUTIOUS: the operation is not revertable.
-     * 
-     * @return 0 for success, or an error code
+     * @ref BeanDBUserIntf::commitTransaction()
      */
-    virtual int clear() = 0;
+    virtual int commitTransaction() override;
+
+    /**
+     * @ref BeanDBUserIntf::rollbackTransaction()
+     */
+    virtual int rollbackTransaction() override;
+
+    /**
+     * @ref BeanDBUserIntf::inTransaction()
+     */
+    virtual bool inTransaction() override;
+
 
     /***********************************************************
      * property related
      ***********************************************************/
 public:
     /**
-     * Define a property.
-     * 
-     * Notes:
-     * - Property must be defined before it can be used.
-     * - The argument valueType is ignored when it is a relation property.
-     * 
-     * @param name the name of property
-     * @param type the type of property
-     * @param valueType the value type of property
-     * @param isArray if it is an array property
-     * @param needIndex if index is needed
-     * @return the id of the property if successful (non-negative), 
-     *                   or a  negative number as error code
+     * @ref BeanDBUserIntf::defineProperty()
      */
-    virtual pidType defineProperty(const char* name, 
-        Property::Type type,
-        Property::ValueType valueType, 
-        bool needIndex = false) = 0;
+    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
 
     /**
-     * Undefine a property.
-     * 
-     * Notes:
-     * - CAUTIOUS: the property value will also be removed from all beans 
-     *   that have this property.
-     * 
-     * @param name the name of property
-     * @return 0 on success, or an error code
+     * @ref BeanDBUserIntf::defineArrayProperty()
      */
-    virtual int undefineProperty(const char* name) = 0;
-
-    /***********************************************************
-     * transaction related
-     ***********************************************************/
-    /**
-     * Begin a transaction.
-     * 
-     * @return 0 on success, or an error code
-     */
-    virtual int beginTransaction();
+    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
 
     /**
-     * Commit a transaction.
-     * 
-     * @return 0 on success, or an error code
+     * @ref BeanDBUserIntf::defineRelation()
      */
-    virtual int commitTransaction();
+    virtual Property* defineRelation(const char* name, bool needIndex = false) override;
 
     /**
-     * Rollback a transaction.
-     * 
-     * @return 0 on success, or an error code
+     * @ref BeanDBUserIntf::defineArrayRelation()
      */
-    virtual int rollbackTransaction();
+    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) override;
 
     /**
-     * Check if it is in a transaction
-     * 
-     * @return true if in a transaction, or false if not
+     * @ref BeanDBUserIntf::undefineProperty()
      */
-    virtual bool inTransaction() {return m_inTransaction_;};
+     virtual int undefineProperty(const char* name) override;
+
+    /**
+     * @ref BeanDBUserIntf::undefineRelation()
+     */
+    virtual int undefineRelation(const char* name) override {return undefineProperty(name);};
+
+    /**
+     * @ref BeanDBUserIntf::getProperty()
+     */
+    // virtual const Property* getProperty(const char* name) const;
+    virtual Property* getProperty(const char* name) override;
+
+    /**
+     * @ref BeanDBUserIntf::getProperties()
+     */
+    virtual const std::unordered_map<std::string, Property*>& getProperties() override;
+
 
     /***********************************************************
      * bean related
      ***********************************************************/
 public:
     /**
-     * Creat an empty bean.
-     * 
-     * @return the pointer pointing to the bean, or nullptr if exception occurs.
+     * @ref BeanDBUserIntf::createBean()
      */
-    virtual Bean* createBean() = 0;
+    virtual Bean* createBean() override;
 
     /**
-     * Get bean by id.
-     * 
-     * The method will firstly try to get the bean by calling BeanWorld::getBean(),
-     * if it fails, it will then try to call loadBean().
-     * 
-     * @param id the id of the bean
-     * @return the pointer pointing to the bean, or null if no such
-     *                   bean exist.
+     * @ref BeanDBUserIntf::getBean()
      */
-    virtual Bean* getBean(oidType id);
-
-    // /**
-    //  * Save a single bean into the storage.
-    //  * 
-    //  * Notes:
-    //  * - This method will 
-    //  * 
-    //  * @param bean the bean to be saved
-    //  * @return 0 for success, or an error code
-    //  */
-    // virtual int saveBean(Bean* bean);
+    virtual Bean* getBean(oidType id) override;
 
     /**
-     * Remove a single bean from the storage.
-     * 
-     * This method is supposed to be called from class BeanWorld.
-     * 
-     * @param bean the bean to be removed
-     * @return 0 for success, or an error code
+     * @ref BeanDBUserIntf::saveBean()
      */
-    virtual int deleteBean(Bean* bean) = 0;
+    virtual int saveBean(Bean* bean) override;
 
+    /**
+     * @ref BeanDBUserIntf::deleteBean()
+     */
+    virtual int deleteBean(Bean* bean) override;
+
+
+    /**
+     * @ref BeanDBUserIntf::loadAll()
+     */
+    virtual int loadAll() override;
+
+    /**
+     * @ref BeanDBUserIntf::saveAll()
+     */
+    virtual int saveAll() override;
+
+    ////////////////////////////////////////////////////////////////////////
+    // Other methods that derived class may use
+     ////////////////////////////////////////////////////////////////////////
 
 protected:
-    /**
-     * This method will be called in BeanWorld::BeanWold().
-     * You can customize your initialization here.
-     * 
-     * @return void
-     */
-    virtual void init() {};
-
-
-    /**
-     * Load all defined properties from storage to memory.
-     * 
-     * Notes:
-     * -  In out design, all properties will be loaded into memory
-     *    before  any other operation. This is purposed to achieve
-     *    the best performance.
-     * - The implementation of this method must new Property 
-     *    instances. 
-     * -  The caller method shall make sure properties is empty
-     *    before this method is called.
-     * - When error occurs, the mthod won't do cleaning work
-     *    on properties. It is the caller's responsibility to do it.
-     * 
-     * @param properties the loaded properties
-     * @return 0 for success, or an error code
-     */
-    virtual int loadProperties(std::unordered_map<std::string, Property*>& properties) const = 0;
-
-    /**
-     * Load all data, including all beans, properties, from the storage 
-     * into the world.
-     * 
-     * Notes:
-     * - This method shall apply only to small scaled data storage.
-     * 
-     * This method is supposed to be called from class BeanWorld.
-     * 
-     * @return 0 for success, or an error code
-     */
-    virtual int loadAll() = 0;
-
-    /**
-     * Save all data, including all beans, properties in the world, 
-     * to the persistent storage.
-     * 
-     * This method is supposed to be called from class BeanWorld.
-     * 
-     * @return 0 for success, or an error code
-     */
-    virtual int saveAll() = 0;
-
-    /**
-     * Load bean properties. 
-     * 
-     * @param id the id of the bean
-     * @return A list containing bean's property names
-     */
-    virtual std::list<std::string> getBeanProperties(oidType id) const = 0;
-
-    /**
-     * Load bean property. This method is used in case "delay-load"
-     * is needed.
-     * 
-     * @param bean the bean
-     * @param property the property to be loaded
-     * @param value the value loaded to
-     * @return 0 on success, or an error code
-     */
-    virtual int loadBeanProperty(oidType beanId,  const Property* property, Json::Value& value) = 0;
-
-    virtual int loadUnmanagedValue(oidType beanId, Json::Value& value) = 0;
-
-    /**
-     * Load bean data from database into memory.
-     * 
-     * All bean's direct-load properies must be loaded in this method, 
-     * while delay-load properties shall be set to null in the value.
-     * 
-     * Note the bean's unmanaged value is regarded as delay-load, 
-     * but can also be loaded into unmanagedValue.
-     * 
-     * @param id id of the bean to be leaded
-     * @param value the value that holds all bean's properties
-     * @param unmanagedValue the value that holds the bean's unmanagedValue
-     * @return 0 on success, or an error code
-     */
-    virtual int loadBeanBase(oidType id, Json::Value& value, Json::Value& unmanagedValue) = 0;
-
-    /**
-     * Save bean data into database.
-     * 
-     * All bean's direct-load properies must be saved in this method, 
-     * while delay-load properties may or may not be saved in this method.
-     * 
-     * Note the bean's unmanaged value is regarded as delay-load, 
-     * but can also be saved also.
-     * 
-     * @param id id of the bean to be leaded
-     * @param value the value that holds all bean's properties
-     * @param unmanagedValue the value that holds the bean's unmanagedValue
-     * @return 0 on success, or an error code
-     */
-    virtual int saveBeanBase(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue) = 0;
-
-    virtual int insertBeanProperty(oidType beanId, 
-        const Property* property, 
-        const Json::Value& value) = 0;
-
-    virtual int updateBeanProperty(oidType beanId, 
-        const Property* property, 
-        const Json::Value& value) = 0;
-
-    virtual int updateBeanProperty(oidType beanId, 
-        const Property* property, 
-        Json::Value::ArrayIndex  index,
-        const Json::Value& value) = 0;
-
-    virtual int deleteBeanProperty(oidType beanId, 
-        const Property* property) = 0;
-
-    virtual int deleteBeanProperty(oidType beanId, 
-        const Property* property, 
-        Json::Value::ArrayIndex index) = 0;
-
-    virtual int insertBeanUnmanagedValue(oidType beanId, 
-        const Json::Value& value) = 0;
-
-    virtual int updateUnmanagedValue(oidType beanId, 
-        const Json::Value& value) = 0;
-
-    virtual int deleteBeanUnmanagedValue(oidType beanId, 
-        const Json::Value& value) = 0;
-
-
-    /**
-     * Begin a transaction.
-     * 
-     * @return 0 on success, or an error code
-     */
-    virtual int doBeginTransaction() = 0;
-
-    /**
-     * Commit a transaction.
-     * 
-     * @return 0 on success, or an error code
-     */
-    virtual int doCommitTransaction() = 0;
-
-    /**
-     * Rollback a transaction.
-     * 
-     * @return 0 on success, or an error code
-     */
-    virtual int doRollbackTransaction() = 0;
-
-
-    /**
-     * Get the attached world.
-     * 
-     * @return the world
-     */
-    virtual BeanWorld* getWorld() const {return m_world_;};
-
     /**
      * This method is used for the implemenation method of 
      * AbstractBeanDB::loadProperties() to create new Property
@@ -362,9 +190,19 @@ protected:
      */
     static void setDelayLoad(Property& property, bool isDelayLoad);
 
+    /**
+     * Get the attached world.
+     * 
+     * @return the world
+     */
+    virtual BeanWorld* getWorld() const {return m_world_;};
+
 protected:
     BeanWorld *m_world_;
+    bool m_connected_ = false;
     bool m_inTransaction_ = false;
+
+private:
 
 friend class BeanWorld;
 friend class Bean;

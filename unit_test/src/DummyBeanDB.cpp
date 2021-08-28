@@ -15,7 +15,6 @@ namespace bean {
 
 DummyBeanDB::DummyBeanDB() 
     : AbstractBeanDB()
-    ,m_connected(false)
 {
 }
 
@@ -26,20 +25,18 @@ DummyBeanDB::~DummyBeanDB()
 }
 
 
-int DummyBeanDB::connect()
+int DummyBeanDB::connect_()
 {
-    m_connected = true;
     return 0;
 }
 
 
-int DummyBeanDB::disconnect()
+int DummyBeanDB::disconnect_()
 {
-    m_connected = false;
     return 0;
 }
 
-int DummyBeanDB::clear()
+int DummyBeanDB::reInit_()
 {
     return 0;
 }
@@ -56,35 +53,39 @@ int DummyBeanDB::saveAll()
     return 0;
 }
 
-
-Bean* DummyBeanDB::createBean()
+int DummyBeanDB::createBean_(oidType& id) 
 {
-    BeanWorld *world = getWorld();
-    return world->createBean(0);
+    id = m_maxOid++;
+    return 0;
 }
 
 
-int DummyBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) 
+int DummyBeanDB::deleteBean_(Bean* bean) 
+{
+    return 0;
+}
+
+int DummyBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) 
 {
     return 0;
 }
 
 
- std::list<std::string> DummyBeanDB::getBeanProperties(oidType id) const
+ std::list<std::string> DummyBeanDB::getBeanProperties_(oidType id) const
 {
     std::list<std::string> properties;
     return properties;
 }
 
 
-int  DummyBeanDB::loadBeanProperty(oidType beanId, const Property* property, Json::Value& value)
+int  DummyBeanDB::loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value)
 {
     return 0;
 
 }
 
 
-int DummyBeanDB::insertBeanProperty(oidType beanId, 
+int DummyBeanDB::insertBeanProperty_(oidType beanId, 
         const Property* property, 
         const Json::Value& value) 
 {
@@ -92,15 +93,15 @@ int DummyBeanDB::insertBeanProperty(oidType beanId,
 }
 
 
-int DummyBeanDB::updateBeanProperty(oidType beanId, 
+int DummyBeanDB::updateBeanProperty_(oidType beanId, 
         const Property* property, 
         const Json::Value& value) 
 {
-    return updateBeanProperty(beanId, property, (Json::ArrayIndex)-1, value);
+    return updateBeanProperty_(beanId, property, (Json::ArrayIndex)-1, value);
 }
 
 
-int DummyBeanDB::updateBeanProperty(oidType beanId, 
+int DummyBeanDB::updateBeanProperty_(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) 
@@ -108,13 +109,13 @@ int DummyBeanDB::updateBeanProperty(oidType beanId,
     return 0;
 }
 
-int DummyBeanDB::deleteBeanProperty(oidType beanId, 
+int DummyBeanDB::deleteBeanProperty_(oidType beanId, 
     const Property* property) 
 {
-    return deleteBeanProperty(beanId, property, (Json::Value::ArrayIndex)-1);
+    return deleteBeanProperty_(beanId, property, (Json::Value::ArrayIndex)-1);
 }
 
-int DummyBeanDB::deleteBeanProperty(oidType beanId, 
+int DummyBeanDB::deleteBeanProperty_(oidType beanId, 
     const Property* property, 
     Json::Value::ArrayIndex index) 
 {
@@ -122,19 +123,13 @@ int DummyBeanDB::deleteBeanProperty(oidType beanId,
 }
 
 
-int DummyBeanDB::deleteBean(Bean* bean)
-{
-     return 0;
-}
-
-
-int DummyBeanDB::loadProperties(std::unordered_map<std::string, Property*>& properties) const
+int DummyBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& properties) const
 {
     return 0;
 }
 
 
-int DummyBeanDB::undefineProperty(const char* name)
+int DummyBeanDB::undefineProperty_(const char* name)
 {
     auto iter = m_properties.find(name);
     if (iter != m_properties.end()) {
@@ -145,7 +140,7 @@ int DummyBeanDB::undefineProperty(const char* name)
 }
 
 
-pidType DummyBeanDB::defineProperty(const char* name, Property::Type type, 
+pidType DummyBeanDB::defineProperty_(const char* name, Property::Type type, 
     Property::ValueType valueType, bool needIndex)
 {
     auto iter = m_properties.find(name);
@@ -159,47 +154,47 @@ pidType DummyBeanDB::defineProperty(const char* name, Property::Type type,
 }
 
 
-int DummyBeanDB::doBeginTransaction() 
+int DummyBeanDB::beginTransaction_() 
 {
     return 0;
 }
 
 
-int DummyBeanDB::doCommitTransaction() 
+int DummyBeanDB::commitTransaction_() 
 {
     return 0;
 }
 
 
-int DummyBeanDB::doRollbackTransaction() 
+int DummyBeanDB::rollbackTransaction_() 
 {
     return 0;
 }
 
 
-int DummyBeanDB::saveBeanBase(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue)
+int DummyBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue)
 {
      return 0;
 }
 
-int DummyBeanDB::loadUnmanagedValue(oidType beanId, Json::Value& value)
+int DummyBeanDB::loadUnmanagedValue_(oidType beanId, Json::Value& value)
 {
     return 0;
 }
 
-int DummyBeanDB::insertBeanUnmanagedValue(oidType beanId, 
+int DummyBeanDB::insertBeanUnmanagedValue_(oidType beanId, 
     const Json::Value& value)
 {
     return 0;
 }
 
-int DummyBeanDB::updateUnmanagedValue(oidType beanId, 
+int DummyBeanDB::updateUnmanagedValue_(oidType beanId, 
     const Json::Value& value)
 {
     return 0;
 }
 
-int DummyBeanDB::deleteBeanUnmanagedValue(oidType beanId, 
+int DummyBeanDB::deleteBeanUnmanagedValue_(oidType beanId, 
     const Json::Value& value)
 {
     return 0;

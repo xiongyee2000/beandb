@@ -3,7 +3,6 @@
 #include <vector>
 #include <list>
 #include <unordered_map>
-#include <map>
 
 #include "./common.h"
 #include "./Property.h"
@@ -198,6 +197,7 @@ protected:
 
 friend class Bean;
 friend class Property;
+friend class AbstractBeanDB;
 };
 
 }

@@ -18,7 +18,6 @@ BeanWorld::BeanWorld(AbstractBeanDB& db)
 {
     setlocale(LC_ALL, "");
     m_db->m_world_ = this;
-    m_db->init();
     if (0 == m_db->connect()) {
         reloadProperties();
     }
@@ -171,7 +170,7 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
     auto iter = m_propertyMap_.find(name);
     if (iter == m_propertyMap_.end())
     {
-        pid = m_db ->defineProperty(name, type, valueType, needIndex);
+        pid = m_db ->defineProperty_(name, type, valueType, needIndex);
         if (pid < 0) {
             elog("Failed to define property %s in database.", name);
             return nullptr;
@@ -200,7 +199,7 @@ int BeanWorld::undefineProperty(const char* name)
     if (name == nullptr) return 0;
     if (name[0] == 0) return 0;
 
-    if (0 != m_db->undefineProperty(name)) {
+    if (0 != m_db->undefineProperty_(name)) {
         elog("Failed to undefine property %s in database.", name);
         return -1;
     }
@@ -255,7 +254,7 @@ int BeanWorld::reloadProperties()
     int err = 0;
     if (m_properties_loaded_)
         clear();
-    err = m_db->loadProperties(m_propertyMap_);
+    err = m_db->loadProperties_(m_propertyMap_);
     if (err) {
         elog("%s", "Failed to load properties from database");
         clear();

@@ -25,69 +25,67 @@ public:
     SqliteBeanDB(const char* dir);
     ~SqliteBeanDB() override;
 
-    virtual int connect() override;
-    virtual int disconnect() override;
-    virtual bool connected() const override {return m_connected;};
+    virtual int connect_() override;
+    virtual int disconnect_() override;
 
 private:
-    virtual int clear() override;
+    virtual int reInit_() override;
 
-    virtual pidType defineProperty(const char* name, 
+    virtual pidType defineProperty_(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
         bool needIndex = false) override;
-    virtual int undefineProperty(const char* name) override;
+    virtual int undefineProperty_(const char* name) override;
 
-    virtual int loadProperties(std::unordered_map<std::string, Property*>& properties) const override;
+    virtual int loadProperties_(std::unordered_map<std::string, Property*>& properties) const override;
 
-    virtual Bean* createBean();
-    virtual std::list<std::string> getBeanProperties(oidType id) const override;
+    virtual int createBean_(oidType &id);
+    virtual std::list<std::string> getBeanProperties_(oidType id) const override;
 
     int loadAll() override;
     int saveAll() override;
 
     // virtual Bean* getBean(oidType id) override;
-    virtual int loadBeanBase(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) override;
-    virtual int saveBeanBase(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue) override;
-    virtual int deleteBean(Bean* bean) override;
-    virtual int loadBeanProperty(oidType beanId, const Property* property, Json::Value& value) override;
-    virtual int insertBeanProperty(oidType beanId, 
+    virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) override;
+    virtual int saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue) override;
+    virtual int deleteBean_(Bean* bean) override;
+    virtual int loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value) override;
+    virtual int insertBeanProperty_(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
-    virtual int updateBeanProperty(oidType beanId, 
+    virtual int updateBeanProperty_(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
-    virtual int updateBeanProperty(oidType beanId, 
+    virtual int updateBeanProperty_(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) override;
-    virtual int deleteBeanProperty(oidType beanId, 
+    virtual int deleteBeanProperty_(oidType beanId, 
         const Property* property) override;
-    virtual int deleteBeanProperty(oidType beanId, 
+    virtual int deleteBeanProperty_(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) override;
 
-    virtual int insertBeanUnmanagedValue(oidType beanId, 
+    virtual int insertBeanUnmanagedValue_(oidType beanId, 
         const Json::Value& value) override;
 
-    virtual int updateUnmanagedValue(oidType beanId, 
+    virtual int updateUnmanagedValue_(oidType beanId, 
         const Json::Value& value) override;
 
-    virtual int deleteBeanUnmanagedValue(oidType beanId, 
+    virtual int deleteBeanUnmanagedValue_(oidType beanId, 
         const Json::Value& value) override;
     
-    virtual int loadUnmanagedValue(oidType beanId, Json::Value& value) override;
+    virtual int loadUnmanagedValue_(oidType beanId, Json::Value& value) override;
 
-    virtual int doBeginTransaction() override;
-    virtual int doCommitTransaction() override;
-    virtual int doRollbackTransaction() override;
+    virtual int beginTransaction_() override;
+    virtual int commitTransaction_() override;
+    virtual int rollbackTransaction_() override;
 
 private:
     int internalInit();
 
 private:
     const char* getDir()  {return m_dir;};
-    int reInit(); //todo: tmp solution
     int checkDB();
     int openDB();
     int closeDB();
@@ -100,7 +98,6 @@ private:
     sqlite3* m_db;
     // int m_status = INIT;
     bool m_initialized;
-    bool m_connected;
 
 };
 

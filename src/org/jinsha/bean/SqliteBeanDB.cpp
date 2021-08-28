@@ -45,7 +45,6 @@ SqliteBeanDB::SqliteBeanDB( const char* dir)
     , m_dir(dir)
     ,m_db(nullptr)
     ,m_initialized(false)
-    ,m_connected(false)
 {
     if (dir == nullptr ||  dir[0] == 0) return;
     m_dbFullPath.append(m_dir).append("/").append(DB_PATH);
@@ -60,7 +59,7 @@ SqliteBeanDB::~SqliteBeanDB()
 }
 
 
-int SqliteBeanDB::connect()
+int SqliteBeanDB::connect_()
 {
     if (!m_initialized) return -1;
     if (m_db != nullptr) return 0;
@@ -74,17 +73,11 @@ int SqliteBeanDB::connect()
 }
 
 
-int SqliteBeanDB::disconnect()
+int SqliteBeanDB::disconnect_()
 {
     if (!m_db) return 0;
     return closeDB();
 }
-
-int SqliteBeanDB::clear()
-{
-    return reInit();
-}
-
 
 int SqliteBeanDB::checkDB()
 {
@@ -146,7 +139,7 @@ int SqliteBeanDB::internalInit()
 }
 
 
-int SqliteBeanDB::reInit()
+int SqliteBeanDB::reInit_()
 {
     if (m_dir == nullptr || m_dir[0] == 0) return -1;
 
@@ -172,9 +165,7 @@ int SqliteBeanDB::openDB()
         if( err )  {
             elog("Failed to open database: %s\n", sqlite3_errmsg(m_db));
             m_db = nullptr;
-        } else {
-            m_connected = true;
-        }
+        } 
     }
     return err;
 }
@@ -188,7 +179,6 @@ int SqliteBeanDB::closeDB()
         elog("Failed to close database: %s\n", sqlite3_errmsg(m_db));
     } else {
         m_db = nullptr;
-        m_connected = false;
     }
     return err;
 }
@@ -206,16 +196,16 @@ int SqliteBeanDB::saveAll()
 }
 
 
-Bean* SqliteBeanDB::createBean()
+int SqliteBeanDB::createBean_(oidType &beanId)
 {
-    if (m_db == nullptr) return nullptr;
+    if (m_db == nullptr) return -1;
 
     static const char sql[] = "INSERT INTO OTABLE VALUES(?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
     int err = 0;
 
 	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) return nullptr;
+    if (err != SQLITE_OK) return -1;
 
     err = sqlite3_bind_null(pstmt, 1);
     if (err != SQLITE_OK) goto out;
@@ -236,7 +226,8 @@ out:
 
     sqlite3_int64 id = sqlite3_last_insert_rowid(m_db);
 
-    return newBean((oidType)id);
+    beanId = (oidType)id;
+    return 0;
 
 }
 
@@ -260,7 +251,7 @@ out:
 //     return bean;
 // }
 
-int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) 
+int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) 
 {
     if (m_db == nullptr) return -1;
     
@@ -333,7 +324,7 @@ _out:
 }
 
 
- std::list<std::string> SqliteBeanDB::getBeanProperties(oidType id) const
+ std::list<std::string> SqliteBeanDB::getBeanProperties_(oidType id) const
 {
     std::list<std::string> properties;
     sqlite3_stmt *pstmt = nullptr;
@@ -372,7 +363,7 @@ _out:
 }
 
 
-int  SqliteBeanDB::loadBeanProperty(oidType beanId, const Property* property, Json::Value& value)
+int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value)
 {
     if (m_db == nullptr) return -1;
     // bool connected = this->connected();
@@ -440,7 +431,7 @@ int  SqliteBeanDB::loadBeanProperty(oidType beanId, const Property* property, Js
     } else  {
         Json::Value managedValue;
         Json::Value unmanagedValue;
-        err = loadBeanBase(beanId, managedValue, unmanagedValue);
+        err = loadBeanBase_(beanId, managedValue, unmanagedValue);
         if (err)  goto out;
         if (managedValue.isMember(pname))
             value = managedValue[pname];
@@ -464,7 +455,7 @@ out:
 }
 
 
-int SqliteBeanDB::insertBeanProperty(oidType beanId, 
+int SqliteBeanDB::insertBeanProperty_(oidType beanId, 
         const Property* property, 
         const Json::Value& value) 
 {
@@ -530,11 +521,11 @@ out:
 }
 
 
-int SqliteBeanDB::updateBeanProperty(oidType beanId, 
+int SqliteBeanDB::updateBeanProperty_(oidType beanId, 
         const Property* property, 
         const Json::Value& value) 
 {
-    return updateBeanProperty(beanId, property, (Json::ArrayIndex)-1, value);
+    return updateBeanProperty_(beanId, property, (Json::ArrayIndex)-1, value);
 }
 
 
@@ -568,7 +559,7 @@ out:
 }
 
 
-int SqliteBeanDB::updateBeanProperty(oidType beanId, 
+int SqliteBeanDB::updateBeanProperty_(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) 
@@ -641,13 +632,13 @@ out:
     return err;
 }
 
-int SqliteBeanDB::deleteBeanProperty(oidType beanId, 
+int SqliteBeanDB::deleteBeanProperty_(oidType beanId, 
     const Property* property) 
 {
-    return deleteBeanProperty(beanId, property, (Json::Value::ArrayIndex)-1);
+    return deleteBeanProperty_(beanId, property, (Json::Value::ArrayIndex)-1);
 }
 
-int SqliteBeanDB::deleteBeanProperty(oidType beanId, 
+int SqliteBeanDB::deleteBeanProperty_(oidType beanId, 
     const Property* property, 
     Json::Value::ArrayIndex index) 
 {
@@ -715,7 +706,7 @@ out:
 }
 
 
-int SqliteBeanDB::deleteBean(Bean* bean)
+int SqliteBeanDB::deleteBean_(Bean* bean)
 {
     if (bean == nullptr) return 0;
     if (m_db == nullptr) return -1;
@@ -802,7 +793,7 @@ out:
 //  }
 
 
-int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& properties) const
+int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& properties) const
 {
     static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM META_PTABLE;";
     sqlite3_stmt *pstmt = nullptr;
@@ -849,7 +840,7 @@ int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& pro
 }
 
 
-int SqliteBeanDB::undefineProperty(const char* name)
+int SqliteBeanDB::undefineProperty_(const char* name)
 {
     if (name == nullptr || name[0] == 0) return 0;
     if (m_db == nullptr) return -1;
@@ -901,7 +892,7 @@ _out:
 }
 
 
-pidType SqliteBeanDB::defineProperty(const char* name, 
+pidType SqliteBeanDB::defineProperty_(const char* name, 
     Property::Type type, 
     Property::ValueType valueType, 
     bool needIndex)
@@ -981,7 +972,7 @@ _out:
 }
 
 
-int SqliteBeanDB::doBeginTransaction() 
+int SqliteBeanDB::beginTransaction_() 
 {
     if (m_db == nullptr) return -1;
     int err = 0;
@@ -993,7 +984,7 @@ int SqliteBeanDB::doBeginTransaction()
 }
 
 
-int SqliteBeanDB::doCommitTransaction() 
+int SqliteBeanDB::commitTransaction_() 
 {
     if (m_db == nullptr) return -1;
     int err = 0;
@@ -1005,7 +996,7 @@ int SqliteBeanDB::doCommitTransaction()
 }
 
 
-int SqliteBeanDB::doRollbackTransaction() 
+int SqliteBeanDB::rollbackTransaction_() 
 {
     if (m_db == nullptr) return -1;
     int err = 0;
@@ -1017,7 +1008,7 @@ int SqliteBeanDB::doRollbackTransaction()
 }
 
 
-int SqliteBeanDB::saveBeanBase(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue)
+int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue)
 {
     if (m_db == nullptr) return -1;
 
@@ -1068,7 +1059,7 @@ _out:
     return err; 
 }
 
-int SqliteBeanDB::loadUnmanagedValue(oidType beanId, Json::Value& value)
+int SqliteBeanDB::loadUnmanagedValue_(oidType beanId, Json::Value& value)
 {
    if (m_db == nullptr) return -1;
     
@@ -1121,7 +1112,7 @@ _out:
     return err;
 }
 
-int SqliteBeanDB::insertBeanUnmanagedValue(oidType beanId, 
+int SqliteBeanDB::insertBeanUnmanagedValue_(oidType beanId, 
     const Json::Value& value)
 {
     int err = 0;
@@ -1129,7 +1120,7 @@ int SqliteBeanDB::insertBeanUnmanagedValue(oidType beanId,
     return err;
 }
 
-int SqliteBeanDB::updateUnmanagedValue(oidType beanId, 
+int SqliteBeanDB::updateUnmanagedValue_(oidType beanId, 
     const Json::Value& value)
 {
    if (m_db == nullptr) return -1;
@@ -1174,7 +1165,7 @@ _out:
     return err; 
 }
 
-int SqliteBeanDB::deleteBeanUnmanagedValue(oidType beanId, 
+int SqliteBeanDB::deleteBeanUnmanagedValue_(oidType beanId, 
     const Json::Value& value)
 {
     int err = 0;

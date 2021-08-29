@@ -18,9 +18,6 @@ BeanWorld::BeanWorld(AbstractBeanDB& db)
 {
     setlocale(LC_ALL, "");
     m_db->m_world_ = this;
-    if (0 == m_db->connect()) {
-        reloadProperties();
-    }
 }
 
 

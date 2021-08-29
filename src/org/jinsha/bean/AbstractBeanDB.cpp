@@ -30,7 +30,10 @@ int AbstractBeanDB::connect()
     int err = 0;
     if (!m_connected_) {
         err = connect_();
-        if (!err) m_connected_ = true;
+        if (!err) {
+            m_world_->reloadProperties();
+            m_connected_ = true;
+        }
     } 
     return err;
 }
@@ -264,8 +267,15 @@ int AbstractBeanDB::saveBean(Bean* bean)
 
 int AbstractBeanDB::deleteBean(Bean* bean)
 {
-    //todo:
-    return -1;
+    if (bean == nullptr) return 0;
+    
+    int err = 0;
+    err = deleteBean_(bean);
+    if (!err) {
+        m_world_->removeBean(bean->getId());
+    }
+    
+    return err;
 }
 
 

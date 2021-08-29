@@ -43,7 +43,7 @@ VALUE TEXT NOT NULL \
 SqliteBeanDB::SqliteBeanDB( const char* dir) 
     : AbstractBeanDB()
     , m_dir(dir)
-    ,m_db(nullptr)
+    ,m_sqlite3Db_(nullptr)
     ,m_initialized(false)
 {
     if (dir == nullptr ||  dir[0] == 0) return;
@@ -62,7 +62,7 @@ SqliteBeanDB::~SqliteBeanDB()
 int SqliteBeanDB::connect_()
 {
     if (!m_initialized) return -1;
-    if (m_db != nullptr) return 0;
+    if (m_sqlite3Db_ != nullptr) return 0;
     int err = 0;
     err = openDB();
     if (err) {
@@ -75,7 +75,7 @@ int SqliteBeanDB::connect_()
 
 int SqliteBeanDB::disconnect_()
 {
-    if (!m_db) return 0;
+    if (!m_sqlite3Db_) return 0;
     return closeDB();
 }
 
@@ -108,7 +108,7 @@ int SqliteBeanDB::internalInit()
     const char *sql = nullptr;
 
     sql = CREATE_PTABLE;
-    err = sqlite3_exec(m_db, sql, nullptr, 0, &zErrMsg);
+    err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
         elog("SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
@@ -117,7 +117,7 @@ int SqliteBeanDB::internalInit()
     ilog("%s", "META_PTABLE created successfully\n");
 
     sql = CREATE_OTABLE;
-    err = sqlite3_exec(m_db, sql, nullptr, 0, &zErrMsg);
+    err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
         elog("SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
@@ -126,7 +126,7 @@ int SqliteBeanDB::internalInit()
     ilog("%s", "OTABLE created successfully\n");
     
     sql = CREATE_STABLE;
-    err = sqlite3_exec(m_db, sql, nullptr, 0, &zErrMsg);
+    err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
         elog("SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
@@ -160,11 +160,11 @@ int SqliteBeanDB::reInit_()
 int SqliteBeanDB::openDB()
 {
     int err = 0;
-    if (m_db == nullptr)  {
-        err = sqlite3_open(m_dbFullPath.c_str(), &m_db);
+    if (m_sqlite3Db_ == nullptr)  {
+        err = sqlite3_open(m_dbFullPath.c_str(), &m_sqlite3Db_);
         if( err )  {
-            elog("Failed to open database: %s\n", sqlite3_errmsg(m_db));
-            m_db = nullptr;
+            elog("Failed to open database: %s\n", sqlite3_errmsg(m_sqlite3Db_));
+            m_sqlite3Db_ = nullptr;
         } 
     }
     return err;
@@ -173,12 +173,12 @@ int SqliteBeanDB::openDB()
 int SqliteBeanDB::closeDB()
 {
     int err = 0;
-    if (m_db == nullptr) return 0;
-    err = sqlite3_close(m_db);
+    if (m_sqlite3Db_ == nullptr) return 0;
+    err = sqlite3_close(m_sqlite3Db_);
     if( err )  {
-        elog("Failed to close database: %s\n", sqlite3_errmsg(m_db));
+        elog("Failed to close database: %s\n", sqlite3_errmsg(m_sqlite3Db_));
     } else {
-        m_db = nullptr;
+        m_sqlite3Db_ = nullptr;
     }
     return err;
 }
@@ -198,13 +198,13 @@ int SqliteBeanDB::saveAll()
 
 int SqliteBeanDB::createBean_(oidType &beanId)
 {
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
 
     static const char sql[] = "INSERT INTO OTABLE VALUES(?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
     int err = 0;
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) return -1;
 
     err = sqlite3_bind_null(pstmt, 1);
@@ -218,13 +218,13 @@ int SqliteBeanDB::createBean_(oidType &beanId)
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
 
-    sqlite3_int64 id = sqlite3_last_insert_rowid(m_db);
+    sqlite3_int64 id = sqlite3_last_insert_rowid(m_sqlite3Db_);
 
     beanId = (oidType)id;
     return 0;
@@ -253,7 +253,7 @@ out:
 
 int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) 
 {
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
     
     BeanWorld *world = nullptr;
     const char* pname = nullptr;
@@ -267,7 +267,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
     Json::Value jsonBean;  
     bool found = false;
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int64(pstmt, 1, beanId);
     if (err != SQLITE_OK) goto _out;
@@ -336,7 +336,7 @@ _out:
     Json::Value jsonBean;
     int err = 0;
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int64(pstmt, 1, id);
     if (err != SQLITE_OK) goto _out;
@@ -354,7 +354,7 @@ _out:
 
 _out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -365,7 +365,7 @@ _out:
 
 int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value)
 {
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
     // bool connected = this->connected();
     // if (!connected) {
     //     if (0 != connect()) {
@@ -388,7 +388,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     if (isDelayLoad(*property)) {
         snprintf(buff, 64, "SELECT VALUE from p_%s WHERE ID = ?;", 
             pname);
-        err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+        err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
         if (err != SQLITE_OK) goto out;
         err = sqlite3_bind_int64(pstmt, 1, beanId);
         if (err != SQLITE_OK) goto out;
@@ -440,7 +440,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
         value = Json::Value::null;
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -460,7 +460,7 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
         const Json::Value& value) 
 {
     if (property == nullptr) return -1;
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
      //no need to do anything here for non-indexed
      //and non-string-valued property
     if (!property->indexed() && 
@@ -487,7 +487,7 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
         vlist.push_back(&value);
     }
 
-    err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) return -2;
     for (const auto& v : vlist) {
         nCol = 0;
@@ -511,7 +511,7 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -536,7 +536,7 @@ int SqliteBeanDB::getIdByPropertyIndex(const char* pname, Json::ArrayIndex index
     Json::ArrayIndex i = 0;
     bool found = false;
     static const char sql[] = "SELECT ID FROM p_? WHERE SID = ? ;";
-    err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int64(pstmt, 1, id);
     if (err != SQLITE_OK) goto out;
@@ -565,7 +565,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         const Json::Value& value) 
 {
     if (property == nullptr) return -1;
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
      //no need to do anything here for non-indexed
      //and non-string-valued property
     if (!property->indexed() && 
@@ -601,7 +601,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         v = &value;
     }
 
-    err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) return -2;
     nCol = 0;
     err = sqlite3_bind_text(pstmt, nCol++, pname, -1, nullptr);
@@ -623,7 +623,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -643,7 +643,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     Json::Value::ArrayIndex index) 
 {
     if (property == nullptr) return -1;
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
 
     //todo: remove propoerty value from bean record
 
@@ -680,7 +680,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
         if (err) return -12;
     } 
 
-    err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) return -2;
     nCol = 0;
     err = sqlite3_bind_text(pstmt, nCol++, pname, -1, nullptr);
@@ -696,7 +696,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -709,14 +709,14 @@ out:
 int SqliteBeanDB::deleteBean_(Bean* bean)
 {
     if (bean == nullptr) return 0;
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
 
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     static const char *sql = "DELETE FROM  OTABLE WHERE ID = ?;";
     
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int64(pstmt, 1, (sqlite3_int64)bean->getId());
     if (err != SQLITE_OK) goto out;
@@ -728,7 +728,7 @@ int SqliteBeanDB::deleteBean_(Bean* bean)
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -806,9 +806,9 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
     const char *name = nullptr;
     int id = 0;
 
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
@@ -831,7 +831,7 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
  
  out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }
     sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -843,7 +843,7 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
 int SqliteBeanDB::undefineProperty_(const char* name)
 {
     if (name == nullptr || name[0] == 0) return 0;
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
 
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
@@ -854,9 +854,9 @@ int SqliteBeanDB::undefineProperty_(const char* name)
     static const char *sql = "DELETE FROM  META_PTABLE WHERE NAME = ?;";
     static const char drop_table[] =   "DROP TABLE p_%s; ";
 
-    sqlite3_exec(m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+    sqlite3_exec(m_sqlite3Db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_text(pstmt, 1, name, -1, nullptr);
     if (err != SQLITE_OK) goto _out;
@@ -866,19 +866,19 @@ int SqliteBeanDB::undefineProperty_(const char* name)
     sqlite3_reset(pstmt);
 
     snprintf(buff, buffSize, drop_table, name);
-    err = sqlite3_exec(m_db, buff, nullptr , nullptr , &errMsg );
+    err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
     if (err != SQLITE_OK) goto _out;
 
     //todo: remove property value from beans
 
 _out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        err = sqlite3_exec ( m_db , "ROLLBACK  TRANSACTION" , nullptr , nullptr , &errMsg ) ;
+        err = sqlite3_exec ( m_sqlite3Db_ , "ROLLBACK  TRANSACTION" , nullptr , nullptr , &errMsg ) ;
         elog("error occurred in %s, err=%d", __func__, err);
     } else {
-        err = sqlite3_exec ( m_db , "COMMIT TRANSACTION" , nullptr , nullptr , &errMsg ) ;
+        err = sqlite3_exec ( m_sqlite3Db_ , "COMMIT TRANSACTION" , nullptr , nullptr , &errMsg ) ;
         if (err != SQLITE_OK && err != SQLITE_DONE) {
-            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
         } else {
             err = 0;
         }
@@ -900,7 +900,7 @@ pidType SqliteBeanDB::defineProperty_(const char* name,
     if (name == nullptr || name[0] == 0) return -1;
 
      //now let's create it in db
-    if (m_db == nullptr) return -2;
+    if (m_sqlite3Db_ == nullptr) return -2;
 
     const char* sql = nullptr;
     sqlite3_stmt *pstmt = nullptr;
@@ -917,11 +917,11 @@ pidType SqliteBeanDB::defineProperty_(const char* name,
     VALUE  %s NOT NULL \
     ); ";
 
-    sqlite3_exec(m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+    sqlite3_exec(m_sqlite3Db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
 
     static const char sql_insert_ptable[] = "INSERT INTO META_PTABLE VALUES(?, ?, ?, ?, ?) ;";
     sql = sql_insert_ptable;
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) return -3;
 
     err = sqlite3_bind_null(pstmt, 1);
@@ -947,19 +947,19 @@ pidType SqliteBeanDB::defineProperty_(const char* name,
     (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) ? "UNIQUE" : "",
     (valueType == Property::StringType) ? "TEXT" : "BIGINT" );
     sql = buff;
-    err = sqlite3_exec ( m_db , sql , nullptr , nullptr , &errMsg ) ;
+    err = sqlite3_exec ( m_sqlite3Db_ , sql , nullptr , nullptr , &errMsg ) ;
         if (err != SQLITE_OK)  goto _out;
 
 _out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        err = sqlite3_exec ( m_db , "ROLLBACK  TRANSACTION" , nullptr , nullptr , &errMsg ) ;
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        err = sqlite3_exec ( m_sqlite3Db_ , "ROLLBACK  TRANSACTION" , nullptr , nullptr , &errMsg ) ;
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }  else {
-        err = sqlite3_exec ( m_db , "COMMIT TRANSACTION" , nullptr , nullptr , &errMsg ) ;
+        err = sqlite3_exec ( m_sqlite3Db_ , "COMMIT TRANSACTION" , nullptr , nullptr , &errMsg ) ;
         if (err != SQLITE_OK && err != SQLITE_DONE) {
-            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
         } else {
-            pid = (pidType)sqlite3_last_insert_rowid(m_db);
+            pid = (pidType)sqlite3_last_insert_rowid(m_sqlite3Db_);
         }
     }
 
@@ -974,10 +974,10 @@ _out:
 
 int SqliteBeanDB::beginTransaction_() 
 {
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
     int err = 0;
     char* errmsg = nullptr;
-    err = sqlite3_exec(m_db, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
+    err = sqlite3_exec(m_sqlite3Db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
     if (err != SQLITE_OK) 
         elog("sqlite3 errormsg: %s \n", errmsg);
     return err;
@@ -986,10 +986,10 @@ int SqliteBeanDB::beginTransaction_()
 
 int SqliteBeanDB::commitTransaction_() 
 {
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
     int err = 0;
     char* errmsg = nullptr;
-    err = sqlite3_exec(m_db, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
+    err = sqlite3_exec(m_sqlite3Db_, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
     if (err != SQLITE_OK) 
         elog("sqlite3 errormsg: %s \n", errmsg);
     return err;
@@ -998,10 +998,10 @@ int SqliteBeanDB::commitTransaction_()
 
 int SqliteBeanDB::rollbackTransaction_() 
 {
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
     int err = 0;
     char* errmsg = nullptr;
-    err = sqlite3_exec(m_db, "ROLLBACK TRANSACTION", nullptr, nullptr, &errmsg);
+    err = sqlite3_exec(m_sqlite3Db_, "ROLLBACK TRANSACTION", nullptr, nullptr, &errmsg);
     if (err != SQLITE_OK) 
         elog("sqlite3 errormsg: %s \n", errmsg);
     return err;
@@ -1010,7 +1010,7 @@ int SqliteBeanDB::rollbackTransaction_()
 
 int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue)
 {
-    if (m_db == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
 
     int err = 0;
     char* errMsg = nullptr;
@@ -1021,7 +1021,7 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue,
     const char* pzTail = nullptr;
     static const char *sql = "UPDATE OTABLE SET  VALUE = ?, UNMANAGED_VALUE = ? WHERE ID = ?;";
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto _out;
 
     if (managedValue.isNull()) {
@@ -1049,7 +1049,7 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue,
 _out:
 
    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     } else {
         err = 0;
     }
@@ -1061,7 +1061,7 @@ _out:
 
 int SqliteBeanDB::loadUnmanagedValue_(oidType beanId, Json::Value& value)
 {
-   if (m_db == nullptr) return -1;
+   if (m_sqlite3Db_ == nullptr) return -1;
     
     BeanWorld *world = nullptr;
     const char* pname = nullptr;
@@ -1075,7 +1075,7 @@ int SqliteBeanDB::loadUnmanagedValue_(oidType beanId, Json::Value& value)
     Json::Value jsonBean;  
     bool found = false;
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt, nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int64(pstmt, 1, beanId);
     if (err != SQLITE_OK) goto _out;
@@ -1123,7 +1123,7 @@ int SqliteBeanDB::insertBeanUnmanagedValue_(oidType beanId,
 int SqliteBeanDB::updateUnmanagedValue_(oidType beanId, 
     const Json::Value& value)
 {
-   if (m_db == nullptr) return -1;
+   if (m_sqlite3Db_ == nullptr) return -1;
 
     int err = 0;
     char* errMsg = nullptr;
@@ -1135,7 +1135,7 @@ int SqliteBeanDB::updateUnmanagedValue_(oidType beanId,
     std::string valueStr;
     static const char *sql = "UPDATE OTABLE SET  UNMANAGED_VALUE = ? WHERE ID = ?;";
 
-	err = sqlite3_prepare_v2(m_db, sql, strlen(sql), &pstmt,nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto _out;
 
     if (value.isNull()) {
@@ -1155,7 +1155,7 @@ int SqliteBeanDB::updateUnmanagedValue_(oidType beanId,
 _out:
 
    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_db));
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     } else {
         err = 0;
     }

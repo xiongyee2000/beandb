@@ -95,7 +95,7 @@ private:
 private:
     const char* m_dir;
     std::string m_dbFullPath;
-    sqlite3* m_db;
+    sqlite3* m_sqlite3Db_;
     // int m_status = INIT;
     bool m_initialized;
 

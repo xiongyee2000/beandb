@@ -15,7 +15,6 @@
 #include "org/jinsha/bean/SqliteBeanDB.h"
 
 #include "./common.h"
-#include "./DummyBeanDB.h"
 
 using namespace std;
 using namespace Json;
@@ -27,7 +26,7 @@ static const char* g_sqlite_db_1 = "./unit_test/data/sqlite_db_1";
 static void validate_testdb_1(SqliteBeanDB& testdb);
 static void evaluate_testdb_empty_property(SqliteBeanDB& testdb);
 
-TEST(SqliteBeanDB, constuctor)
+TEST(SqliteBeanDB, constuctor_destructor)
 {
     const char* testdbDir = nullptr;
     SqliteBeanDB* testdb;
@@ -56,19 +55,81 @@ TEST(SqliteBeanDB, constuctor)
     delete testdb;
 }
 
-
 TEST(SqliteBeanDB, connect_disconnect)
 {
+    int err = 0;
+    const char* testdbDir = "invalid";
+    SqliteBeanDB* testdb = new SqliteBeanDB(testdbDir);
+    err = testdb->connect();
+    EXPECT_TRUE(err != 0);
+    EXPECT_TRUE(!testdb->connected());
+    delete testdb;
+
+    testdbDir = g_sqlite_db_1;
+    testdb = new SqliteBeanDB(testdbDir);
+    err = testdb->connect();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(testdb->connected());
+    err = testdb->disconnect();
+    EXPECT_TRUE(!testdb->connected());
+    EXPECT_TRUE(err == 0);
+    delete testdb;
+}
+
+TEST(SqliteBeanDB, transaction)
+{
+    int err = 0;
     const char* testdbDir = g_sqlite_db_1;
     SqliteBeanDB testdb(testdbDir);
-    AbstractBeanDB* testdbPtr = &testdb;
-    int err = 0;
 
-    err = testdb.connect();
+    err = testdb.beginTransaction();
+    EXPECT_TRUE(err != 0);
+    EXPECT_TRUE(!testdb.inTransaction());
+    err = testdb.commitTransaction();
+    EXPECT_TRUE(err != 0);
+    err = testdb.rollbackTransaction();
+    EXPECT_TRUE(err != 0);
+
+    testdb.connect();
+
+    err = testdb.commitTransaction();
+    EXPECT_TRUE(err != 0);
+    err = testdb.rollbackTransaction();
+    EXPECT_TRUE(err != 0);
+
+    err = testdb.beginTransaction();
     EXPECT_TRUE(err == 0);
-    err = testdb.disconnect();
+    EXPECT_TRUE(testdb.inTransaction());
+    err = testdb.commitTransaction();
     EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(!testdb.inTransaction());
+
+    err = testdb.beginTransaction();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(testdb.inTransaction());
+    err = testdb.rollbackTransaction();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(!testdb.inTransaction());
+
+    err = testdb.beginTransaction();
+    EXPECT_TRUE(testdb.inTransaction());
+    err = testdb.beginTransaction();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(testdb.inTransaction());
+
+    err = testdb.beginTransaction();
+    err = testdb.commitTransaction();
+    err = testdb.commitTransaction();
+    EXPECT_TRUE(err != 0);
+
+    err = testdb.beginTransaction();
+    err = testdb.rollbackTransaction();
+    err = testdb.rollbackTransaction();
+    EXPECT_TRUE(err != 0);
+
+    testdb.disconnect();
 }
+
 
 TEST(SqliteBeanDB, defineProperty_undefineProperty)
 {
@@ -77,100 +138,100 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
     AbstractBeanDB* testdbPtr = &testdb;
     BeanWorld world(*testdbPtr);
     int err = 0;
-    int pid = 0;
+    Property* property = nullptr;
 
     testdb.reInit();
     testdb.connect();
 
-    pid  = testdb.defineProperty_("p1", Property::PrimaryType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("p2", Property::PrimaryType, Property::UIntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("p3", Property::PrimaryType, Property::RealType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("p4", Property::PrimaryType, Property::StringType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("p5", Property::PrimaryType, Property::BoolType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ap1", Property::ArrayPrimaryType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ap2", Property::ArrayPrimaryType, Property::UIntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ap3", Property::ArrayPrimaryType, Property::RealType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ap4", Property::ArrayPrimaryType, Property::StringType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ap5", Property::ArrayPrimaryType, Property::BoolType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("r1", Property::RelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("r2", Property::RelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("r3", Property::RelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("r4", Property::RelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("r5", Property::RelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ar1", Property::ArrayRelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ar2", Property::ArrayRelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ar3", Property::ArrayRelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ar4", Property::ArrayRelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
-    pid = testdb.defineProperty_("ar5", Property::ArrayRelationType, Property::IntType, true);
-    EXPECT_TRUE(pid >= 0);
+    property  = testdb.defineProperty("p1", Property::IntType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineProperty("p2", Property::UIntType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineProperty("p3", Property::RealType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineProperty("p4", Property::StringType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineProperty("p5", Property::BoolType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayProperty("ap1", Property::IntType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayProperty("ap2", Property::UIntType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayProperty("ap3", Property::RealType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayProperty("ap4", Property::StringType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayProperty("ap5", Property::BoolType, true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineRelation("r1",  true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineRelation("r2",  true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineRelation("r3",  true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineRelation("r4",  true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineRelation("r5",  true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayRelation("ar1", true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayRelation("ar2", true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayRelation("ar3", true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayRelation("ar4", true);
+    EXPECT_TRUE(property != nullptr);
+    property = testdb.defineArrayRelation("ar5", true);
+    EXPECT_TRUE(property != nullptr);
 
     validate_testdb_1(testdb);
 
-    err = testdb.undefineProperty_("p1");
+    err = testdb.undefineProperty("p1");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("p2");
+    err = testdb.undefineProperty("p2");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("p3");
+    err = testdb.undefineProperty("p3");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("p4");
+    err = testdb.undefineProperty("p4");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("p5");
+    err = testdb.undefineProperty("p5");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ap1");
+    err = testdb.undefineProperty("ap1");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ap2");
+    err = testdb.undefineProperty("ap2");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ap3");
+    err = testdb.undefineProperty("ap3");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ap4");
+    err = testdb.undefineProperty("ap4");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ap5");
+    err = testdb.undefineProperty("ap5");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("r1");
+    err = testdb.undefineProperty("r1");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("r2");
+    err = testdb.undefineProperty("r2");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("r3");
+    err = testdb.undefineProperty("r3");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("r4");
+    err = testdb.undefineProperty("r4");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("r5");
+    err = testdb.undefineProperty("r5");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ar1");
+    err = testdb.undefineProperty("ar1");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ar2");
+    err = testdb.undefineProperty("ar2");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ar3");
+    err = testdb.undefineProperty("ar3");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ar4");
+    err = testdb.undefineProperty("ar4");
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("ar5");
+    err = testdb.undefineProperty("ar5");
     EXPECT_TRUE(err == 0);
 
     evaluate_testdb_empty_property(testdb);
 
-    err = testdb.undefineProperty_(nullptr);
+    err = testdb.undefineProperty(nullptr);
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty_("");
+    err = testdb.undefineProperty("");
     EXPECT_TRUE(err == 0);
 
     testdb.reInit();
@@ -185,82 +246,80 @@ TEST(SqliteBeanDB, getProperty)
     SqliteBeanDB testdb(testdbDir);
     BeanWorld world((AbstractBeanDB&)testdb);
     testdb.connect();
-   validate_testdb_1(testdb);
+
+
+    EXPECT_TRUE(testdb.getProperty("p1")->getName() == "p1" && 
+        testdb.getProperty("p1")->getType() == Property::PrimaryType && 
+        testdb.getProperty("p1")->getValueType() == Property::IntType);
+    EXPECT_TRUE(testdb.getProperty("p2")->getName() == "p2" && 
+        testdb.getProperty("p2")->getType() == Property::PrimaryType && 
+        testdb.getProperty("p2")->getValueType() == Property::UIntType);
+    EXPECT_TRUE(testdb.getProperty("p3")->getName() == "p3" && 
+        testdb.getProperty("p3")->getType() == Property::PrimaryType && 
+        testdb.getProperty("p3")->getValueType() == Property::RealType);
+    EXPECT_TRUE(testdb.getProperty("p4")->getName() == "p4" && 
+        testdb.getProperty("p4")->getType() == Property::PrimaryType && 
+        testdb.getProperty("p4")->getValueType() == Property::StringType);
+    EXPECT_TRUE(testdb.getProperty("p5")->getName() == "p5" && 
+        testdb.getProperty("p5")->getType() == Property::PrimaryType && 
+        testdb.getProperty("p5")->getValueType() == Property::BoolType);
+
+    EXPECT_TRUE(testdb.getProperty("ap1")->getName() == "ap1" && 
+        testdb.getProperty("ap1")->getType() == Property::ArrayPrimaryType && 
+        testdb.getProperty("ap1")->getValueType() == Property::IntType);
+    EXPECT_TRUE(testdb.getProperty("ap2")->getName() == "ap2" && 
+        testdb.getProperty("ap2")->getType() == Property::ArrayPrimaryType && 
+        testdb.getProperty("ap2")->getValueType() == Property::UIntType);
+    EXPECT_TRUE(testdb.getProperty("ap3")->getName() == "ap3" && 
+        testdb.getProperty("ap3")->getType() == Property::ArrayPrimaryType && 
+        testdb.getProperty("ap3")->getValueType() == Property::RealType);
+    EXPECT_TRUE(testdb.getProperty("ap4")->getName() == "ap4" && 
+        testdb.getProperty("ap4")->getType() == Property::ArrayPrimaryType && 
+        testdb.getProperty("ap4")->getValueType() == Property::StringType);
+    EXPECT_TRUE(testdb.getProperty("ap5")->getName() == "ap5" && 
+        testdb.getProperty("ap5")->getType() == Property::ArrayPrimaryType && 
+        testdb.getProperty("ap5")->getValueType() == Property::BoolType);
+
+    EXPECT_TRUE(testdb.getProperty("r1")->getName() == "r1" && 
+        testdb.getProperty("r1")->getType() == Property::RelationType);
+    EXPECT_TRUE(testdb.getProperty("r2")->getName() == "r2" && 
+        testdb.getProperty("r2")->getType() == Property::RelationType);
+    EXPECT_TRUE(testdb.getProperty("r3")->getName() == "r3" && 
+        testdb.getProperty("r3")->getType() == Property::RelationType);
+    EXPECT_TRUE(testdb.getProperty("r4")->getName() == "r4" && 
+        testdb.getProperty("r4")->getType() == Property::RelationType);
+    EXPECT_TRUE(testdb.getProperty("r5")->getName() == "r5" && 
+        testdb.getProperty("r5")->getType() == Property::RelationType);
+
+    EXPECT_TRUE(testdb.getProperty("ar1")->getName() == "ar1" && 
+        testdb.getProperty("ar1")->getType() == Property::ArrayRelationType);
+    EXPECT_TRUE(testdb.getProperty("ar2")->getName() == "ar2" && 
+        testdb.getProperty("ar2")->getType() == Property::ArrayRelationType);
+    EXPECT_TRUE(testdb.getProperty("ar3")->getName() == "ar3" && 
+        testdb.getProperty("ar3")->getType() == Property::ArrayRelationType);
+    EXPECT_TRUE(testdb.getProperty("ar4")->getName() == "ar4" && 
+        testdb.getProperty("ar4")->getType() == Property::ArrayRelationType);
+    EXPECT_TRUE(testdb.getProperty("ar5")->getName() == "ar5" && 
+        testdb.getProperty("ar5")->getType() == Property::ArrayRelationType);
+
    testdb.disconnect();
 }
 
-// TEST(SqliteBeanDB, loadProperties_)
-// {
-//     // Property *property;
-//     const char* testdbDir = g_sqlite_db_1;
-//     SqliteBeanDB testdb(testdbDir);
-//     BeanWorld world((AbstractBeanDB&)testdb);
-//     int err = 0;
+TEST(SqliteBeanDB, loadProperties_)
+{
+    const char* testdbDir = g_sqlite_db_1;
+    SqliteBeanDB testdb(testdbDir);
+    int err = 0;
 
-//     world.clear();
+    testdb.connect();
 
-//     testdb.connect();
-
-//     err = testdb.loadProperties_();
-//     EXPECT_TRUE(err == 0);
-
-//     EXPECT_TRUE(world.getProperty("p1")->getName() == "p1" && 
-//         world.getProperty("p1")->getType() == Property::PrimaryType && 
-//         world.getProperty("p1")->getValueType() == Property::IntType);
-//     EXPECT_TRUE(world.getProperty("p2")->getName() == "p2" && 
-//         world.getProperty("p2")->getType() == Property::PrimaryType && 
-//         world.getProperty("p2")->getValueType() == Property::UIntType);
-//     EXPECT_TRUE(world.getProperty("p3")->getName() == "p3" && 
-//         world.getProperty("p3")->getType() == Property::PrimaryType && 
-//         world.getProperty("p3")->getValueType() == Property::RealType);
-//     EXPECT_TRUE(world.getProperty("p4")->getName() == "p4" && 
-//         world.getProperty("p4")->getType() == Property::PrimaryType && 
-//         world.getProperty("p4")->getValueType() == Property::StringType);
-//     EXPECT_TRUE(world.getProperty("p5")->getName() == "p5" && 
-//         world.getProperty("p5")->getType() == Property::PrimaryType && 
-//         world.getProperty("p5")->getValueType() == Property::BoolType);
-
-//     EXPECT_TRUE(world.getProperty("ap1")->getName() == "ap1" && 
-//         world.getProperty("ap1")->getType() == Property::ArrayPrimaryType && 
-//         world.getProperty("ap1")->getValueType() == Property::IntType);
-//     EXPECT_TRUE(world.getProperty("ap2")->getName() == "ap2" && 
-//         world.getProperty("ap2")->getType() == Property::ArrayPrimaryType && 
-//         world.getProperty("ap2")->getValueType() == Property::UIntType);
-//     EXPECT_TRUE(world.getProperty("ap3")->getName() == "ap3" && 
-//         world.getProperty("ap3")->getType() == Property::ArrayPrimaryType && 
-//         world.getProperty("ap3")->getValueType() == Property::RealType);
-//     EXPECT_TRUE(world.getProperty("ap4")->getName() == "ap4" && 
-//         world.getProperty("ap4")->getType() == Property::ArrayPrimaryType && 
-//         world.getProperty("ap4")->getValueType() == Property::StringType);
-//     EXPECT_TRUE(world.getProperty("ap5")->getName() == "ap5" && 
-//         world.getProperty("ap5")->getType() == Property::ArrayPrimaryType && 
-//         world.getProperty("ap5")->getValueType() == Property::BoolType);
-
-//     EXPECT_TRUE(world.getProperty("r1")->getName() == "r1" && 
-//         world.getProperty("r1")->getType() == Property::RelationType);
-//     EXPECT_TRUE(world.getProperty("r2")->getName() == "r2" && 
-//         world.getProperty("r2")->getType() == Property::RelationType);
-//     EXPECT_TRUE(world.getProperty("r3")->getName() == "r3" && 
-//         world.getProperty("r3")->getType() == Property::RelationType);
-//     EXPECT_TRUE(world.getProperty("r4")->getName() == "r4" && 
-//         world.getProperty("r4")->getType() == Property::RelationType);
-//     EXPECT_TRUE(world.getProperty("r5")->getName() == "r5" && 
-//         world.getProperty("r5")->getType() == Property::RelationType);
-
-//     EXPECT_TRUE(world.getProperty("ar1")->getName() == "ar1" && 
-//         world.getProperty("ar1")->getType() == Property::ArrayRelationType);
-//     EXPECT_TRUE(world.getProperty("ar2")->getName() == "ar2" && 
-//         world.getProperty("ar2")->getType() == Property::ArrayRelationType);
-//     EXPECT_TRUE(world.getProperty("ar3")->getName() == "ar3" && 
-//         world.getProperty("ar3")->getType() == Property::ArrayRelationType);
-//     EXPECT_TRUE(world.getProperty("ar4")->getName() == "ar4" && 
-//         world.getProperty("ar4")->getType() == Property::ArrayRelationType);
-//     EXPECT_TRUE(world.getProperty("ar5")->getName() == "ar5" && 
-//         world.getProperty("ar5")->getType() == Property::ArrayRelationType);
+    err = testdb.m_world_->reloadProperties();
+    EXPECT_TRUE(err == 0);
+    validate_testdb_1(testdb);
     
-//     testdb.disconnect();
+    testdb.disconnect();
 
-// }
+}
 
 TEST(SqliteBeanDB, createBean_deleteBean)
 {
@@ -313,26 +372,26 @@ TEST(SqliteBeanDB, saveBean)
     testdb.connect();
     // testdb.loadProperties_();
 
-    Property* p1 = world.getProperty("p1");
-    Property* p2 = world.getProperty("p2");
-    Property* p3 = world.getProperty("p3");
-    Property* p4 = world.getProperty("p4");
-    Property* p5 = world.getProperty("p5");
-    Property* ap1 = world.getProperty("ap1");
-    Property* ap2 = world.getProperty("ap2");
-    Property* ap3 = world.getProperty("ap3");
-    Property* ap4 = world.getProperty("ap4");
-    Property* ap5 = world.getProperty("ap5");
-    Property* r1 = world.getProperty("r1");
-    Property* r2 = world.getProperty("r2");
-    Property* r3 = world.getProperty("r3");
-    Property* r4 = world.getProperty("r4");
-    Property* r5 = world.getProperty("r5");
-    Property* ar1 = world.getProperty("ar1");
-    Property* ar2= world.getProperty("ar2");
-    Property* ar3 = world.getProperty("ar3");
-    Property* ar4 = world.getProperty("ar4");
-    Property* ar5 = world.getProperty("ar5");
+    Property* p1 = testdb.getProperty("p1");
+    Property* p2 = testdb.getProperty("p2");
+    Property* p3 = testdb.getProperty("p3");
+    Property* p4 = testdb.getProperty("p4");
+    Property* p5 = testdb.getProperty("p5");
+    Property* ap1 = testdb.getProperty("ap1");
+    Property* ap2 = testdb.getProperty("ap2");
+    Property* ap3 = testdb.getProperty("ap3");
+    Property* ap4 = testdb.getProperty("ap4");
+    Property* ap5 = testdb.getProperty("ap5");
+    Property* r1 = testdb.getProperty("r1");
+    Property* r2 = testdb.getProperty("r2");
+    Property* r3 = testdb.getProperty("r3");
+    Property* r4 = testdb.getProperty("r4");
+    Property* r5 = testdb.getProperty("r5");
+    Property* ar1 = testdb.getProperty("ar1");
+    Property* ar2= testdb.getProperty("ar2");
+    Property* ar3 = testdb.getProperty("ar3");
+    Property* ar4 = testdb.getProperty("ar4");
+    Property* ar5 = testdb.getProperty("ar5");
 
     // bean = testdb.getBean(1);
     // EXPECTE_TRUE(bean->getProperty(p1) == 1);

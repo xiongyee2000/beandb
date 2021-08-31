@@ -46,6 +46,10 @@ public:
     /**
      * Disonnect to the database. 
      * 
+     * CAUTION: 
+     * Once disconnected, all beans and properties
+     * previously loaded will be deleted!
+     * 
      * @return 0 for success, or an error code
      */
     virtual int disconnect() = 0;

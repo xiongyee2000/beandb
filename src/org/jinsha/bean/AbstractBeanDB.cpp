@@ -170,8 +170,8 @@ Bean* AbstractBeanDB::getBean(oidType id)
 
 int AbstractBeanDB::saveBean(Bean* bean)
 {
-    //todo
-    return -1;
+    if (bean == nullptr) return 0;
+    return bean->save();
 }
 
 // int AbstractBeanDB::saveBean(Bean* bean)

@@ -24,7 +24,11 @@ static const char* g_tmpDBDir = "./unit_test/data/sqlite_tmp_db";
 static const char* g_sqlite_db_1 = "./unit_test/data/sqlite_db_1";
 
 static void validate_testdb_1(SqliteBeanDB& testdb);
+static void validate_properties_testdb_1(std::unordered_map<std::string, Property*>& propertyMap);
 static void evaluate_testdb_empty_property(SqliteBeanDB& testdb);
+void initTestHelper(TestHelper& testHelper, AbstractBeanDB& db, bool needIndex);
+void setBean(TestHelper& testHelper, Bean* bean);
+void validateBean(TestHelper& testHelper, Bean* bean);
 
 TEST(SqliteBeanDB, constuctor_destructor)
 {
@@ -244,11 +248,10 @@ TEST(SqliteBeanDB, getProperty)
 {
     const char* testdbDir = g_sqlite_db_1;
     SqliteBeanDB testdb(testdbDir);
-    BeanWorld world((AbstractBeanDB&)testdb);
+
     testdb.connect();
 
-
-    EXPECT_TRUE(testdb.getProperty("p1")->getName() == "p1" && 
+   EXPECT_TRUE(testdb.getProperty("p1")->getName() == "p1" && 
         testdb.getProperty("p1")->getType() == Property::PrimaryType && 
         testdb.getProperty("p1")->getValueType() == Property::IntType);
     EXPECT_TRUE(testdb.getProperty("p2")->getName() == "p2" && 
@@ -305,7 +308,7 @@ TEST(SqliteBeanDB, getProperty)
    testdb.disconnect();
 }
 
-TEST(SqliteBeanDB, loadProperties_)
+TEST(SqliteBeanDB, getProperties)
 {
     const char* testdbDir = g_sqlite_db_1;
     SqliteBeanDB testdb(testdbDir);
@@ -313,9 +316,9 @@ TEST(SqliteBeanDB, loadProperties_)
 
     testdb.connect();
 
-    err = testdb.m_world_->reloadProperties();
-    EXPECT_TRUE(err == 0);
-    validate_testdb_1(testdb);
+    const std::unordered_map<std::string, Property*>& pmap = testdb.getProperties();
+    testdb.m_world_->m_propertyMap_ = pmap;
+    validate_properties_testdb_1(testdb.m_world_->m_propertyMap_);
     
     testdb.disconnect();
 
@@ -357,8 +360,7 @@ TEST(SqliteBeanDB, createBean_deleteBean)
     testdb.disconnect();
 }
 
-
-TEST(SqliteBeanDB, saveBean)
+TEST(SqliteBeanDB, getBean)
 {
     char buff[128] = {0};
     char* cmd = &buff[0];
@@ -368,49 +370,124 @@ TEST(SqliteBeanDB, saveBean)
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
     BeanWorld world((AbstractBeanDB&)testdb);
+    Bean* bean = nullptr;
 
     testdb.connect();
-    // testdb.loadProperties_();
 
-    Property* p1 = testdb.getProperty("p1");
-    Property* p2 = testdb.getProperty("p2");
-    Property* p3 = testdb.getProperty("p3");
-    Property* p4 = testdb.getProperty("p4");
-    Property* p5 = testdb.getProperty("p5");
-    Property* ap1 = testdb.getProperty("ap1");
-    Property* ap2 = testdb.getProperty("ap2");
-    Property* ap3 = testdb.getProperty("ap3");
-    Property* ap4 = testdb.getProperty("ap4");
-    Property* ap5 = testdb.getProperty("ap5");
-    Property* r1 = testdb.getProperty("r1");
-    Property* r2 = testdb.getProperty("r2");
-    Property* r3 = testdb.getProperty("r3");
-    Property* r4 = testdb.getProperty("r4");
-    Property* r5 = testdb.getProperty("r5");
-    Property* ar1 = testdb.getProperty("ar1");
-    Property* ar2= testdb.getProperty("ar2");
-    Property* ar3 = testdb.getProperty("ar3");
-    Property* ar4 = testdb.getProperty("ar4");
-    Property* ar5 = testdb.getProperty("ar5");
+    TestHelper testHelper;
+    initTestHelper(testHelper, testdb, false);
 
-    // bean = testdb.getBean(1);
-    // EXPECTE_TRUE(bean->getProperty(p1) == 1);
-    // bean->setProperty(p1, 101);
-    // testdb.saveBean(bean, p1);
-    // world.clear();
-    // bean = testdb.getBean(1);
-    //  EXPECTE_TRUE(bean->getProperty(p1) == 1);
+    bean = testdb.getBean(1);
+    EXPECT_TRUE(bean != nullptr && bean->getProperty(testHelper.p1).asInt() == 1);
+}
+
+TEST(SqliteBeanDB, saveBean)
+{
+    int err = 0;
+    char buff[128] = {0};
+    char* cmd = &buff[0];
+    sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
+    system(cmd);
+
+    const char* testdbDir = g_tmpDBDir;
+    SqliteBeanDB testdb(testdbDir);
+    BeanWorld world((AbstractBeanDB&)testdb);
+    TestHelper testHelper;
+    Bean* bean = nullptr;
+    Bean* bean1 = nullptr;
+    Bean* bean2 = nullptr;
+    oidType beanId_1 = 0;
+    oidType beanId_2 = 0;
+
+    testdb.reInit();
+    testdb.connect();
+
+    initTestHelper(testHelper, testdb, false);
+
+    // Property* p1 = testdb.getProperty("p1");
+    // Property* p2 = testdb.getProperty("p2");
+    // Property* p3 = testdb.getProperty("p3");
+    // Property* p4 = testdb.getProperty("p4");
+    // Property* p5 = testdb.getProperty("p5");
+    // Property* ap1 = testdb.getProperty("ap1");
+    // Property* ap2 = testdb.getProperty("ap2");
+    // Property* ap3 = testdb.getProperty("ap3");
+    // Property* ap4 = testdb.getProperty("ap4");
+    // Property* ap5 = testdb.getProperty("ap5");
+    // Property* r1 = testdb.getProperty("r1");
+    // Property* r2 = testdb.getProperty("r2");
+    // Property* r3 = testdb.getProperty("r3");
+    // Property* r4 = testdb.getProperty("r4");
+    // Property* r5 = testdb.getProperty("r5");
+    // Property* ar1 = testdb.getProperty("ar1");
+    // Property* ar2= testdb.getProperty("ar2");
+    // Property* ar3 = testdb.getProperty("ar3");
+    // Property* ar4 = testdb.getProperty("ar4");
+    // Property* ar5 = testdb.getProperty("ar5");
+
+    bean1 = testdb.createBean();
+    beanId_1 = bean1->getId();
+    setBean(testHelper, bean1);
+
+    bean2 = testdb.createBean();
+    beanId_2 = bean2->getId();
+    setBean(testHelper, bean2);
+
+    bean1->setRelation(testHelper.r1, bean2);
+    bean1->createArrayRelation(testHelper.rArray_1);
+    bean1->appendRelation(testHelper.rArray_1, bean2);
+    bean1->appendRelation(testHelper.rArray_1, bean2);
+
+    err = testdb.saveBean(bean1);
+    EXPECT_TRUE(err == 0);
+    err = testdb.saveBean(bean2);
+    EXPECT_TRUE(err == 0);
+
+    testdb.disconnect();
+    testdb.connect();
+
+    bean1 = testdb.getBean(beanId_1);
+    bean2 = testdb.getBean(beanId_2);
+
+    validateBean(testHelper, bean1);
+    validateBean(testHelper, bean2);
+
+    EXPECT_TRUE(bean->getRelationBeanId(testHelper.rArray_1, 0) ==beanId_2);
+    EXPECT_TRUE(bean->getRelationBeanId(testHelper.rArray_1, 1) ==beanId_2);
 
     testdb.reInit();
     testdb.disconnect();
 }
 
 
+TEST(SqliteBeanDB, loadProperties_)
+{
+    const char* testdbDir = g_sqlite_db_1;
+    SqliteBeanDB testdb(testdbDir);
+    int err = 0;
+
+    testdb.connect();
+
+    std::unordered_map<std::string, Property*> propertyMap;
+    err = testdb.loadProperties_(propertyMap);
+    testdb.m_world_->m_propertyMap_ = propertyMap;
+    validate_properties_testdb_1(testdb.m_world_->m_propertyMap_);
+    
+    testdb.disconnect();
+
+}
+
+
+
+
 static void validate_testdb_1(SqliteBeanDB& testdb)
 {
+    validate_properties_testdb_1(testdb.m_world_->m_propertyMap_);
+}
+
+static void validate_properties_testdb_1(std::unordered_map<std::string, Property*>& propertyMap)
+{
     Property *property = nullptr;
-    std::unordered_map<std::string, Property*> propertyMap;
-    testdb.loadProperties_(propertyMap);
 
     property = propertyMap.at("p1");
     EXPECT_TRUE(property->getName() == "p1" && 
@@ -512,4 +589,76 @@ void evaluate_testdb_empty_property(SqliteBeanDB& testdb)
     testdb.loadProperties_(propertyMap);
     EXPECT_TRUE(propertyMap.size() == 0);
     testdb.disconnect();
+}
+
+
+void initTestHelper(TestHelper& testHelper, AbstractBeanDB& db, bool needIndex)
+{
+    testHelper.p_int = db.defineProperty("p_int", Property::IntType);
+    testHelper.p_uint = db.defineProperty("p_uint", Property::UIntType);
+    testHelper.p_int64 = db.defineProperty("p_int64", Property::IntType);
+    testHelper.p_uint64 = db.defineProperty("p_uint64", Property::UIntType);
+    testHelper.p_double = db.defineProperty("p_double", Property::RealType);
+    testHelper.p_str = db.defineProperty("p_str", Property::StringType);
+    testHelper.p_bool_0 = db.defineProperty("bool_p0", Property::BoolType);
+    testHelper.p_bool_1 = db.defineProperty("bool_p1", Property::BoolType);
+
+    testHelper.p1 = db.defineProperty("p1", Property::IntType);
+    testHelper.p2 = db.defineProperty("p2", Property::IntType);
+    testHelper.pArray_1 = db.defineArrayProperty("pArray_1", Property::IntType);
+    testHelper.r1 = db.defineRelation("r1");
+    testHelper.r2 = db.defineRelation("r2");
+    testHelper.rArray_1 =  db.defineArrayRelation("rArray_1");
+    testHelper.rArray_2 =  db.defineArrayRelation("rArray_2");
+
+    if (needIndex)
+    {
+        testHelper.p_double->createIndex();
+        testHelper.p_str->createIndex();
+        testHelper.p_int->createIndex();
+        testHelper.p_uint->createIndex();
+        testHelper.p_int64->createIndex();
+        testHelper.p_uint64->createIndex();
+        testHelper.p_bool_0->createIndex();
+        testHelper.p_bool_1->createIndex();
+        testHelper.p1->createIndex();
+        testHelper.p2->createIndex();
+        testHelper.pArray_1->createIndex();
+        testHelper.r1->createIndex();
+        testHelper.r2->createIndex();
+        testHelper.rArray_1->createIndex();
+        testHelper.rArray_2->createIndex();
+    }
+}
+
+void setBean(TestHelper& testHelper, Bean* bean)
+{
+    // bean->setProperty(testHelper.p_int, Json::Value::minInt);
+    bean->setProperty(testHelper.p_int, -1);
+    bean->setProperty(testHelper.p_uint, 1);
+    bean->setProperty(testHelper.p_int64, -1);
+    bean->setProperty(testHelper.p_uint64, 1);
+    bean->setProperty(testHelper.p_double, 1.0);
+    bean->setProperty(testHelper.p_bool_0, false);
+    bean->setProperty(testHelper.p_bool_1, true);
+    bean->setProperty(testHelper.p_str, "foo");
+
+    bean->createArrayProperty(testHelper.pArray_1);
+    bean->appendProperty(testHelper.pArray_1, 101);
+    bean->appendProperty(testHelper.pArray_1, 102);
+}
+
+void validateBean(TestHelper& testHelper, Bean* bean)
+{
+    EXPECT_TRUE(bean->getProperty(testHelper.p_int).asInt() == -1);
+    EXPECT_TRUE(bean->getProperty(testHelper.p_uint).asUInt() == 1);
+    EXPECT_TRUE(bean->getProperty(testHelper.p_int64).asInt64() == -1);
+    EXPECT_TRUE(bean->getProperty(testHelper.p_uint64).asUInt64() == 1);
+    EXPECT_TRUE(bean->getProperty(testHelper.p_double).asDouble() == 1.0);
+    EXPECT_TRUE(bean->getProperty(testHelper.p_bool_0).asBool() == false);
+    EXPECT_TRUE(bean->getProperty(testHelper.p_bool_1).asBool() == true);
+    EXPECT_TRUE(bean->getProperty(testHelper.p_str).asString() == "foo");
+
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.pArray_1, 0).asInt() == 101);
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.pArray_1, 1).asInt() == 102);
 }

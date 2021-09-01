@@ -445,6 +445,7 @@ TEST(SqliteBeanDB, saveBean)
 
     testdb.disconnect();
     testdb.connect();
+    initTestHelper(testHelper, testdb, false);
 
     bean1 = testdb.getBean(beanId_1);
     bean2 = testdb.getBean(beanId_2);
@@ -635,9 +636,9 @@ void setBean(TestHelper& testHelper, Bean* bean)
 {
     // bean->setProperty(testHelper.p_int, Json::Value::minInt);
     bean->setProperty(testHelper.p_int, -1);
-    bean->setProperty(testHelper.p_uint, 1);
+    bean->setProperty(testHelper.p_uint, (Json::UInt)1);
     bean->setProperty(testHelper.p_int64, -1);
-    bean->setProperty(testHelper.p_uint64, 1);
+    bean->setProperty(testHelper.p_uint64, (Json::UInt64)1);
     bean->setProperty(testHelper.p_double, 1.0);
     bean->setProperty(testHelper.p_bool_0, false);
     bean->setProperty(testHelper.p_bool_1, true);

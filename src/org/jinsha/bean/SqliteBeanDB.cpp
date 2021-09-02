@@ -286,13 +286,12 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
             break;
         }
 
-        Json::Value& v = (Json::Value&)Json::Value::null;
         for (auto& pname : value.getMemberNames()) {
             property = m_world_->getProperty(pname.c_str());
             if (property == nullptr) continue; //it's not a defined property
             //filter out delay load properties
             if (isDelayLoad(*property)) {
-                value[pname] = Json::Value::null;
+                value[pname] = Json::Value();
             }
         }
 
@@ -394,7 +393,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     value = Json::Value::null;
 
     if (isDelayLoad(*property)) {
-        snprintf(buff, 64, "SELECT VALUE from p_%s WHERE ID = ?;", 
+        snprintf(buff, 64, "SELECT VALUE from p_%s WHERE SID = ?;", 
             pname);
         err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
         if (err != SQLITE_OK) goto out;
@@ -429,7 +428,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
                 (*v) = sqlite3_column_int(pstmt, 0) == 0 ? false : true;
                 break;
             case Property::StringType:
-                (*v) = sqlite3_column_text(pstmt, 0);
+                (*v) = (const char*)sqlite3_column_text(pstmt, 0);
                 break;
             default:
                 //shall not reach here
@@ -481,8 +480,8 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
     if (world == nullptr) return -1;
 
     const char* pname = property->getName().c_str();
-    char buff[32];
-    sprintf(buff, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
+    char buff[128]{0};
+    snprintf(buff, sizeof(buff) - 1, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
     const char* sql = buff;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
@@ -517,7 +516,6 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
         
         err = sqlite3_step(pstmt);
          if (err != SQLITE_OK) goto out;
-        if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
     }
 
 out:
@@ -873,7 +871,7 @@ int SqliteBeanDB::undefineProperty_(const char* name)
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     char* errMsg = nullptr;
-    char buff[128]{0};
+    char buff[256]{0};
     int buffSize = sizeof(buff);
     static const char *sql = "DELETE FROM  META_PTABLE WHERE NAME = ?;";
     static const char drop_table[] =   "DROP TABLE p_%s; ";
@@ -938,7 +936,7 @@ pidType SqliteBeanDB::defineProperty_(const char* name,
     int err = 0;
     pidType pid = -1;
     char* errMsg = nullptr;
-    char  buff[128] {0};
+    char  buff[256] {0};
     int sizeOfBuff = sizeof(buff);
     static const char create_property_table[] =   
     "CREATE TABLE p_%s ( \
@@ -1051,7 +1049,7 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue,
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     char* tmpStr = nullptr;
-    static const char *sql = "UPDATE OTABLE SET  VALUE = ?, UNMANAGED_VALUE = ? WHERE ID = 1;";
+    static const char *sql = "UPDATE OTABLE SET  VALUE = ?, UNMANAGED_VALUE = ? WHERE ID = ?;";
 
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto _out;
@@ -1074,8 +1072,8 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue,
     }
     if (err != SQLITE_OK) goto _out;
 
-    // err = sqlite3_bind_int64(pstmt, 3, beanId_);
-    // if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int64(pstmt, 3, beanId_);
+    if (err != SQLITE_OK) goto _out;
 
     err = sqlite3_step(pstmt);
     if (err != SQLITE_OK) goto _out;

@@ -453,8 +453,8 @@ TEST(SqliteBeanDB, saveBean)
     validateBean(testHelper, bean1);
     validateBean(testHelper, bean2);
 
-    EXPECT_TRUE(bean->getRelationBeanId(testHelper.rArray_1, 0) ==beanId_2);
-    EXPECT_TRUE(bean->getRelationBeanId(testHelper.rArray_1, 1) ==beanId_2);
+    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_1, 0) ==beanId_2);
+    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_1, 1) ==beanId_2);
 
     testdb.reInit();
     testdb.disconnect();

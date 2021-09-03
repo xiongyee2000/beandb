@@ -27,7 +27,7 @@ using namespace org::jinsha::bean;
 
 typedef struct TestHelper
 {
-    Property* p_double;
+    Property* p_real;
     Property* p_str;
     Property* p_int;
     Property* p_uint;
@@ -37,10 +37,14 @@ typedef struct TestHelper
     Property* p_bool_1;
     Property* p1;
     Property* p2;
-    Property* pArray_1;
+    Property* p_array_int;
+    Property* p_array_uint;
+    Property* p_array_real;
+    Property* p_array_bool;
+    Property* p_array_str;
     Property* r1;
     Property* r2;
-    Property* rArray_1;
+    Property* r_array_1;
     Property* rArray_2;
 } TestHelper;
 

@@ -83,7 +83,7 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     EXPECT_TRUE(beans.size() == 0);
     testHelper.p_uint64->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
-    testHelper.p_double->getSubjects(beans);
+    testHelper.p_real->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
     testHelper.p_str->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
@@ -94,7 +94,7 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     testHelper.r1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    bean1.setProperty(testHelper.p_double, 1.0);
+    bean1.setProperty(testHelper.p_real, 1.0);
     bean1.setProperty(testHelper.p_str, "hello");
     bean1.setProperty(testHelper.p_bool_0, false);
     bean1.setProperty(testHelper.p_bool_1, true);
@@ -112,7 +112,7 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     EXPECT_TRUE(beans.size() == 1);
     testHelper.p_uint64->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    testHelper.p_double->getSubjects(beans);
+    testHelper.p_real->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
     testHelper.p_str->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
@@ -123,7 +123,7 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     testHelper.r1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
 
-    bean2.setProperty(testHelper.p_double, 1.0);
+    bean2.setProperty(testHelper.p_real, 1.0);
     bean2.setProperty(testHelper.p_str, "hello");
     bean2.setProperty(testHelper.p_bool_0, false);
     bean2.setProperty(testHelper.p_bool_1, true);
@@ -141,7 +141,7 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     EXPECT_TRUE(beans.size() == 2);
     testHelper.p_uint64->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 2);
-    testHelper.p_double->getSubjects(beans);
+    testHelper.p_real->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 2);
     testHelper.p_str->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 2);
@@ -153,7 +153,7 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     EXPECT_TRUE(beans.size() == 2);
     EXPECT_TRUE(testHelper.r1->getNumOfSubjects() == 2);
 
-    bean2.removeProperty(testHelper.p_double);
+    bean2.removeProperty(testHelper.p_real);
     bean2.removeProperty(testHelper.p_str);
     bean2.removeProperty(testHelper.p_bool_0);
     bean2.removeProperty(testHelper.p_bool_1);
@@ -171,7 +171,7 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     EXPECT_TRUE(beans.size() == 1);
     testHelper.p_uint64->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    testHelper.p_double->getSubjects(beans);
+    testHelper.p_real->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
     testHelper.p_str->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
@@ -186,18 +186,18 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
 void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<oidType>& beans, bool needIndex)
 {
     Property *pArray_1, *rArray_1;
-   pArray_1 =  world.defineArrayProperty("pArray_1", Property::IntType, needIndex);
+   pArray_1 =  world.defineArrayProperty("p_array_int", Property::IntType, needIndex);
 
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
     bean1.createArrayProperty(pArray_1);
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    world.undefineProperty("pArray_1");
+    world.undefineProperty("p_array_int");
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    pArray_1 = world.defineArrayProperty("pArray_1", Property::BoolType, needIndex);
+    pArray_1 = world.defineArrayProperty("p_array_int", Property::BoolType, needIndex);
 
     bean1.createArrayProperty(pArray_1);
     pArray_1->getSubjects(beans);
@@ -206,7 +206,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    rArray_1 = world.defineArrayRelation("rArray_1");
+    rArray_1 = world.defineArrayRelation("r_array_1");
 
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
@@ -219,7 +219,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
     bean1.createArrayRelation(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    world.undefineRelation("rArray_1");
+    world.undefineRelation("r_array_1");
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
@@ -290,7 +290,7 @@ void test_findSubjects_common(TestHelper& testHelper, BeanWorld &world, Bean& be
     EXPECT_TRUE(beans.size() == 0);
     testHelper.p_uint64->findSubjects(0, beans);
     EXPECT_TRUE(beans.size() == 0);
-    testHelper.p_double->findSubjects(0, beans);
+    testHelper.p_real->findSubjects(0, beans);
     EXPECT_TRUE(beans.size() == 0);
     testHelper.p_str->findSubjects(0, beans);
     EXPECT_TRUE(beans.size() == 0);
@@ -298,11 +298,11 @@ void test_findSubjects_common(TestHelper& testHelper, BeanWorld &world, Bean& be
     EXPECT_TRUE(beans.size() == 0);
     testHelper.p_bool_1->findSubjects(0, beans);
     EXPECT_TRUE(beans.size() == 0);
-    testHelper.pArray_1->findSubjects(0, beans);
+    testHelper.p_array_int->findSubjects(0, beans);
     EXPECT_TRUE(beans.size() == 0);
     testHelper.r1->findSubjects(0, beans);
     EXPECT_TRUE(beans.size() == 0);
-    testHelper.rArray_1->findSubjects(0, beans);
+    testHelper.r_array_1->findSubjects(0, beans);
     EXPECT_TRUE(beans.size() == 0);
 
     auto bean3_id = bean3.getId();
@@ -321,29 +321,29 @@ void test_findSubjects_common(TestHelper& testHelper, BeanWorld &world, Bean& be
     testHelper.r1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    bean1.createArrayRelation(testHelper.rArray_1);
-    bean2.createArrayRelation(testHelper.rArray_1);
-    testHelper.rArray_1->findSubjects(bean3_id, beans);
+    bean1.createArrayRelation(testHelper.r_array_1);
+    bean2.createArrayRelation(testHelper.r_array_1);
+    testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    bean1.appendRelation(testHelper.rArray_1, &bean3);
-    testHelper.rArray_1->findSubjects(bean3_id, beans);
+    bean1.appendRelation(testHelper.r_array_1, &bean3);
+    testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 1);
-    bean1.appendRelation(testHelper.rArray_1, &bean3);
-    testHelper.rArray_1->findSubjects(bean3_id, beans);
+    bean1.appendRelation(testHelper.r_array_1, &bean3);
+    testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 2);
-    bean2.appendRelation(testHelper.rArray_1, &bean3);
-    testHelper.rArray_1->findSubjects(bean3_id, beans);
+    bean2.appendRelation(testHelper.r_array_1, &bean3);
+    testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 3);
-    bean2.appendRelation(testHelper.rArray_1, &bean3);
-    testHelper.rArray_1->findSubjects(bean3_id, beans);
+    bean2.appendRelation(testHelper.r_array_1, &bean3);
+    testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 4);
 
-    bean1.removeProperty(testHelper.rArray_1);
-    testHelper.rArray_1->findSubjects(bean3_id, beans);
+    bean1.removeProperty(testHelper.r_array_1);
+    testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 2);
-    bean2.removeProperty(testHelper.rArray_1);
-    testHelper.rArray_1->findSubjects(bean3_id, beans);
+    bean2.removeProperty(testHelper.r_array_1);
+    testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 0);
 }
 
@@ -393,7 +393,7 @@ void test_findObjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bea
     EXPECT_TRUE(beans.size() == 0);
     testHelper.p_uint64->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
-    testHelper.p_double->getObjects(beans);
+    testHelper.p_real->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
     testHelper.p_str->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
@@ -401,11 +401,11 @@ void test_findObjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bea
     EXPECT_TRUE(beans.size() == 0);
     testHelper.p_bool_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
-    testHelper.pArray_1->getObjects(beans);
+    testHelper.p_array_int->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
     testHelper.r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
-    testHelper.rArray_1->getObjects(beans);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
     bean1.setRelation(testHelper.r1, &bean3);
@@ -423,36 +423,36 @@ void test_findObjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bea
     testHelper.r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    bean1.createArrayRelation(testHelper.rArray_1);
-    bean2.createArrayRelation(testHelper.rArray_1);
-    testHelper.rArray_1->getObjects(beans);
+    bean1.createArrayRelation(testHelper.r_array_1);
+    bean2.createArrayRelation(testHelper.r_array_1);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    bean1.appendRelation(testHelper.rArray_1, &bean3);
-    testHelper.rArray_1->getObjects(beans);
+    bean1.appendRelation(testHelper.r_array_1, &bean3);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    bean1.appendRelation(testHelper.rArray_1, &bean3);
-    testHelper.rArray_1->getObjects(beans);
+    bean1.appendRelation(testHelper.r_array_1, &bean3);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    bean2.appendRelation(testHelper.rArray_1, &bean3);
-    testHelper.rArray_1->getObjects(beans);
+    bean2.appendRelation(testHelper.r_array_1, &bean3);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    bean2.appendRelation(testHelper.rArray_1, &bean3);
-    testHelper.rArray_1->getObjects(beans);
+    bean2.appendRelation(testHelper.r_array_1, &bean3);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    bean1.appendRelation(testHelper.rArray_1, &bean2);
-    testHelper.rArray_1->getObjects(beans);
+    bean1.appendRelation(testHelper.r_array_1, &bean2);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 2);
-    bean2.appendRelation(testHelper.rArray_1, &bean1);
-    testHelper.rArray_1->getObjects(beans);
+    bean2.appendRelation(testHelper.r_array_1, &bean1);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 3);
-    EXPECT_TRUE(testHelper.rArray_1->getNumOfObjects() == 3);
+    EXPECT_TRUE(testHelper.r_array_1->getNumOfObjects() == 3);
 
-    bean1.removeProperty(testHelper.rArray_1);
-    testHelper.rArray_1->getObjects(beans);
+    bean1.removeProperty(testHelper.r_array_1);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 2);
-    bean2.removeProperty(testHelper.rArray_1);
-    testHelper.rArray_1->getObjects(beans);
+    bean2.removeProperty(testHelper.r_array_1);
+    testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 }
 
@@ -491,7 +491,7 @@ TEST(Property, findObjects_with_index)
 
 void test_find_init(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3)
 {
-    bean1->setProperty(testHelper.p_double, 1.0);
+    bean1->setProperty(testHelper.p_real, 1.0);
     bean1->setProperty(testHelper.p_str, "hello");
     bean1->setProperty(testHelper.p_bool_0, false);
     bean1->setProperty(testHelper.p_bool_1, true);
@@ -500,7 +500,7 @@ void test_find_init(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean*
     bean1->setProperty(testHelper.p_int64, 3);
     bean1->setProperty(testHelper.p_uint64, 4U);
 
-    bean2->setProperty(testHelper.p_double, 1.0);
+    bean2->setProperty(testHelper.p_real, 1.0);
     bean2->setProperty(testHelper.p_str, "hello");
     bean2->setProperty(testHelper.p_bool_0, false);
     bean2->setProperty(testHelper.p_bool_1, true);
@@ -516,11 +516,11 @@ void test_findEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1
 
     test_find_init(testHelper, world, bean1, bean2, nullptr);
 
-    testHelper.p_double->findEqual(1.0, beans);
+    testHelper.p_real->findEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) == 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) == 1.0);
     }
 
     testHelper.p_bool_0->findEqual(false, beans);
@@ -579,7 +579,7 @@ TEST(Property, findEqual_with_index)
     Bean *bean1 = world.createBean();
     Bean *bean2 = world.createBean();
 
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -587,7 +587,7 @@ TEST(Property, findEqual_with_index)
     testHelper.p_uint64->createIndex();
      test_findEqual_common(testHelper, world, bean1, bean2);
 
-    testHelper.p_double->removeIndex();
+    testHelper.p_real->removeIndex();
     testHelper.p_str->removeIndex();
     testHelper.p_int->removeIndex();
     testHelper.p_uint->removeIndex();
@@ -595,7 +595,7 @@ TEST(Property, findEqual_with_index)
     testHelper.p_uint64->removeIndex();
      test_findEqual_common(testHelper, world, bean1, bean2);
 
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -607,21 +607,21 @@ TEST(Property, findEqual_with_index)
 void test_findLessEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3)
 {
     std::list<oidType> beans;
-    bean1->setProperty(testHelper.p_double, 1.0);
+    bean1->setProperty(testHelper.p_real, 1.0);
     bean1->setProperty(testHelper.p_str, "hello");
     bean1->setProperty(testHelper.p_int, 1);
     bean1->setProperty(testHelper.p_uint, 1U);
     bean1->setProperty(testHelper.p_int64, 101);
     bean1->setProperty(testHelper.p_uint64, 101U);
 
-    bean2->setProperty(testHelper.p_double, 2.0);
+    bean2->setProperty(testHelper.p_real, 2.0);
     bean2->setProperty(testHelper.p_str, "my");
     bean2->setProperty(testHelper.p_int, 2);
     bean2->setProperty(testHelper.p_uint, 2U);
     bean2->setProperty(testHelper.p_int64, 102);
     bean2->setProperty(testHelper.p_uint64, 102U);
 
-    bean3->setProperty(testHelper.p_double, 3.0);
+    bean3->setProperty(testHelper.p_real, 3.0);
     bean3->setProperty(testHelper.p_str, "world");
     bean3->setProperty(testHelper.p_int, 3);
     bean3->setProperty(testHelper.p_uint, 3U);
@@ -629,23 +629,23 @@ void test_findLessEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* b
     bean3->setProperty(testHelper.p_uint64, 103U);
 
 
-    testHelper.p_double->findLessEqual(1.0, beans);
+    testHelper.p_real->findLessEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 1);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) <= 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) <= 1.0);
     }
-    testHelper.p_double->findLessEqual(2.0, beans);
+    testHelper.p_real->findLessEqual(2.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) <= 2.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) <= 2.0);
     }
-    testHelper.p_double->findLessEqual(3.0, beans);
+    testHelper.p_real->findLessEqual(3.0, beans);
    EXPECT_TRUE(beans.size() == 3);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) <= 3.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) <= 3.0);
     }
 
     testHelper.p_str->findLessEqual("hello", beans);
@@ -751,7 +751,7 @@ TEST(Property, findLessEqual_with_index)
     // bean3->setProperty(testHelper.p_int64, 103);
     // bean3->setProperty(testHelper.p_uint64, 103U);
     
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -759,7 +759,7 @@ TEST(Property, findLessEqual_with_index)
     testHelper.p_uint64->createIndex();
     test_findLessEqual_common(testHelper, world, bean1, bean2, bean3);
     
-    testHelper.p_double->removeIndex();
+    testHelper.p_real->removeIndex();
     testHelper.p_str->removeIndex();
     testHelper.p_int->removeIndex();
     testHelper.p_uint->removeIndex();
@@ -767,7 +767,7 @@ TEST(Property, findLessEqual_with_index)
     testHelper.p_uint64->removeIndex();
     test_findLessEqual_common(testHelper, world, bean1, bean2, bean3);
     
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -779,44 +779,44 @@ TEST(Property, findLessEqual_with_index)
 void test_FindGreaterEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3)
 {
     std::list<oidType> beans;
-    bean1->setProperty(testHelper.p_double, 1.0);
+    bean1->setProperty(testHelper.p_real, 1.0);
     bean1->setProperty(testHelper.p_str, "hello");
     bean1->setProperty(testHelper.p_int, 1);
     bean1->setProperty(testHelper.p_uint, 1U);
     bean1->setProperty(testHelper.p_int64, 101);
     bean1->setProperty(testHelper.p_uint64, 101U);
 
-    bean2->setProperty(testHelper.p_double, 2.0);
+    bean2->setProperty(testHelper.p_real, 2.0);
     bean2->setProperty(testHelper.p_str, "my");
     bean2->setProperty(testHelper.p_int, 2);
     bean2->setProperty(testHelper.p_uint, 2U);
     bean2->setProperty(testHelper.p_int64, 102);
     bean2->setProperty(testHelper.p_uint64, 102U);
 
-    bean3->setProperty(testHelper.p_double, 3.0);
+    bean3->setProperty(testHelper.p_real, 3.0);
     bean3->setProperty(testHelper.p_str, "world");
     bean3->setProperty(testHelper.p_int, 3);
     bean3->setProperty(testHelper.p_uint, 3U);
     bean3->setProperty(testHelper.p_int64, 103);
     bean3->setProperty(testHelper.p_uint64, 103U);
 
-    testHelper.p_double->findGreaterEqual(1.0, beans);
+    testHelper.p_real->findGreaterEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 3);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) >= 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) >= 1.0);
     }
-    testHelper.p_double->findGreaterEqual(2.0, beans);
+    testHelper.p_real->findGreaterEqual(2.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) >= 2.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) >= 2.0);
     }
-    testHelper.p_double->findGreaterEqual(3.0, beans);
+    testHelper.p_real->findGreaterEqual(3.0, beans);
    EXPECT_TRUE(beans.size() == 1);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) >= 3.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) >= 3.0);
     }
 
     testHelper.p_str->findGreaterEqual("hello", beans);
@@ -904,7 +904,7 @@ TEST(Property, findGreaterEqual_with_index)
     Bean* bean2 = world.createBean();
     Bean* bean3 = world.createBean();
 
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -912,7 +912,7 @@ TEST(Property, findGreaterEqual_with_index)
     testHelper.p_uint64->createIndex();
     test_FindGreaterEqual_common(testHelper, world, bean1, bean2, bean3);
 
-    testHelper.p_double->removeIndex();
+    testHelper.p_real->removeIndex();
     testHelper.p_str->removeIndex();
     testHelper.p_int->removeIndex();
     testHelper.p_uint->removeIndex();
@@ -920,7 +920,7 @@ TEST(Property, findGreaterEqual_with_index)
     testHelper.p_uint64->removeIndex();
     test_FindGreaterEqual_common(testHelper, world, bean1, bean2, bean3);
 
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -933,21 +933,21 @@ void test_findLessThan_common(TestHelper& testHelper, BeanWorld& world, Bean* be
 {
     std::list<oidType> beans;
 
-    bean1->setProperty(testHelper.p_double, 1.0);
+    bean1->setProperty(testHelper.p_real, 1.0);
     bean1->setProperty(testHelper.p_str, "hello");
     bean1->setProperty(testHelper.p_int, 1);
     bean1->setProperty(testHelper.p_uint, 1U);
     bean1->setProperty(testHelper.p_int64, 101);
     bean1->setProperty(testHelper.p_uint64, 101U);
 
-    bean2->setProperty(testHelper.p_double, 2.0);
+    bean2->setProperty(testHelper.p_real, 2.0);
     bean2->setProperty(testHelper.p_str, "my");
     bean2->setProperty(testHelper.p_int, 2);
     bean2->setProperty(testHelper.p_uint, 2U);
     bean2->setProperty(testHelper.p_int64, 102);
     bean2->setProperty(testHelper.p_uint64, 102U);
 
-    bean3->setProperty(testHelper.p_double, 3.0);
+    bean3->setProperty(testHelper.p_real, 3.0);
     bean3->setProperty(testHelper.p_str, "world");
     bean3->setProperty(testHelper.p_int, 3);
     bean3->setProperty(testHelper.p_uint, 3U);
@@ -955,25 +955,25 @@ void test_findLessThan_common(TestHelper& testHelper, BeanWorld& world, Bean* be
     bean3->setProperty(testHelper.p_uint64, 103U);
 
 
-    testHelper.p_double->findLessThan(1.0, beans);
+    testHelper.p_real->findLessThan(1.0, beans);
    EXPECT_TRUE(beans.size() == 0);
-    testHelper.p_double->findLessThan(2.0, beans);
+    testHelper.p_real->findLessThan(2.0, beans);
    EXPECT_TRUE(beans.size() == 1);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) < 2.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) < 2.0);
     }
-    testHelper.p_double->findLessThan(3.0, beans);
+    testHelper.p_real->findLessThan(3.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) < 3.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) < 3.0);
     }
-    testHelper.p_double->findLessThan(4.0, beans);
+    testHelper.p_real->findLessThan(4.0, beans);
    EXPECT_TRUE(beans.size() == 3);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) < 4.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) < 4.0);
     }
 
     testHelper.p_str->findLessThan("hello", beans);
@@ -1065,7 +1065,7 @@ TEST(Property, findLessThan_with_index)
     Bean* bean2 = world.createBean();
     Bean* bean3 = world.createBean();
 
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -1073,7 +1073,7 @@ TEST(Property, findLessThan_with_index)
     testHelper.p_uint64->createIndex();
     test_findLessThan_common(testHelper, world, bean1, bean2, bean3);
 
-    testHelper.p_double->removeIndex();
+    testHelper.p_real->removeIndex();
     testHelper.p_str->removeIndex();
     testHelper.p_int->removeIndex();
     testHelper.p_uint->removeIndex();
@@ -1081,7 +1081,7 @@ TEST(Property, findLessThan_with_index)
     testHelper.p_uint64->removeIndex();
     test_findLessThan_common(testHelper, world, bean1, bean2, bean3);
 
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -1094,21 +1094,21 @@ void test_findGreaterThan_common(TestHelper& testHelper, BeanWorld& world, Bean*
 {
     std::list<oidType> beans;
 
-    bean1->setProperty(testHelper.p_double, 1.0);
+    bean1->setProperty(testHelper.p_real, 1.0);
     bean1->setProperty(testHelper.p_str, "hello");
     bean1->setProperty(testHelper.p_int, 1);
     bean1->setProperty(testHelper.p_uint, 1U);
     bean1->setProperty(testHelper.p_int64, 101);
     bean1->setProperty(testHelper.p_uint64, 101U);
 
-    bean2->setProperty(testHelper.p_double, 2.0);
+    bean2->setProperty(testHelper.p_real, 2.0);
     bean2->setProperty(testHelper.p_str, "my");
     bean2->setProperty(testHelper.p_int, 2);
     bean2->setProperty(testHelper.p_uint, 2U);
     bean2->setProperty(testHelper.p_int64, 102);
     bean2->setProperty(testHelper.p_uint64, 102U);
 
-    bean3->setProperty(testHelper.p_double, 3.0);
+    bean3->setProperty(testHelper.p_real, 3.0);
     bean3->setProperty(testHelper.p_str, "world");
     bean3->setProperty(testHelper.p_int, 3);
     bean3->setProperty(testHelper.p_uint, 3U);
@@ -1116,25 +1116,25 @@ void test_findGreaterThan_common(TestHelper& testHelper, BeanWorld& world, Bean*
     bean3->setProperty(testHelper.p_uint64, 103U);
 
 
-    testHelper.p_double->findGreaterThan(0.0, beans);
+    testHelper.p_real->findGreaterThan(0.0, beans);
    EXPECT_TRUE(beans.size() == 3);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) > 0.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) > 0.0);
     }
-    testHelper.p_double->findGreaterThan(1.0, beans);
+    testHelper.p_real->findGreaterThan(1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) > 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) > 1.0);
     }
-    testHelper.p_double->findGreaterThan(2.0, beans);
+    testHelper.p_real->findGreaterThan(2.0, beans);
    EXPECT_TRUE(beans.size() == 1);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) > 2.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) > 2.0);
     }
-    testHelper.p_double->findGreaterThan(3.0, beans);
+    testHelper.p_real->findGreaterThan(3.0, beans);
    EXPECT_TRUE(beans.size() == 0);
 
     testHelper.p_str->findGreaterThan("a", beans);
@@ -1232,7 +1232,7 @@ TEST(Property, findGreaterThan_with_index)
     Bean* bean2 = world.createBean();
     Bean* bean3 = world.createBean();
 
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -1240,7 +1240,7 @@ TEST(Property, findGreaterThan_with_index)
     testHelper.p_uint64->createIndex();
     test_findGreaterThan_common(testHelper, world, bean1, bean2 ,bean3);
 
-    testHelper.p_double->removeIndex();
+    testHelper.p_real->removeIndex();
     testHelper.p_str->removeIndex();
     testHelper.p_int->removeIndex();
     testHelper.p_uint->removeIndex();
@@ -1248,7 +1248,7 @@ TEST(Property, findGreaterThan_with_index)
     testHelper.p_uint64->removeIndex();
     test_findGreaterThan_common(testHelper, world, bean1, bean2 ,bean3);
 
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
@@ -1270,7 +1270,7 @@ TEST(Property, index_more_complicated)
     //createIndex()
     ///////////////////////////////////////////////////////
     Bean* bean1 = world.createBean();
-    bean1->setProperty(testHelper.p_double, 1.0);
+    bean1->setProperty(testHelper.p_real, 1.0);
     bean1->setProperty(testHelper.p_str, "hello");
     bean1->setProperty(testHelper.p_bool_0, false);
     bean1->setProperty(testHelper.p_bool_1, true);
@@ -1278,25 +1278,25 @@ TEST(Property, index_more_complicated)
     bean1->setProperty(testHelper.p_uint, 2U);
 
     Bean* bean2 = world.createBean();
-    bean2->setProperty(testHelper.p_double, 1.0);
+    bean2->setProperty(testHelper.p_real, 1.0);
     bean2->setProperty(testHelper.p_str, "hello");
     bean2->setProperty(testHelper.p_bool_0, false);
     bean2->setProperty(testHelper.p_bool_1, true);
     bean2->setProperty(testHelper.p_int, 1);
     bean2->setProperty(testHelper.p_uint, 2U);
 
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_bool_0->createIndex();
     testHelper.p_bool_1->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
 
-    testHelper.p_double->findEqual(1.0, beans);
+    testHelper.p_real->findEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) == 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) == 1.0);
     }
 
     testHelper.p_bool_0->findEqual(false, beans);
@@ -1337,17 +1337,17 @@ TEST(Property, index_more_complicated)
     ///////////////////////////////////////////////////////
     //removeIndex()
     ///////////////////////////////////////////////////////
-    testHelper.p_double->removeIndex();
+    testHelper.p_real->removeIndex();
     testHelper.p_str->removeIndex();
     testHelper.p_bool_0->removeIndex();
     testHelper.p_int->removeIndex();
     testHelper.p_uint->removeIndex();
 
-    testHelper.p_double->findEqual(1.0, beans);
+    testHelper.p_real->findEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) == 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) == 1.0);
     }
 
     testHelper.p_bool_0->findEqual(false, beans);
@@ -1388,25 +1388,25 @@ TEST(Property, index_more_complicated)
     ///////////////////////////////////////////////////////
     //reset property after createIndex()
     ///////////////////////////////////////////////////////
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_bool_0->createIndex();
     testHelper.p_bool_1->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
     
-    bean1->setProperty(testHelper.p_double, 1.0);
+    bean1->setProperty(testHelper.p_real, 1.0);
     bean1->setProperty(testHelper.p_str, "hello");
     bean1->setProperty(testHelper.p_bool_0, false);
     bean1->setProperty(testHelper.p_bool_1, true);
     bean1->setProperty(testHelper.p_int, 1);
     bean1->setProperty(testHelper.p_uint, 2U);
 
-   testHelper.p_double->findEqual(1.0, beans);
+   testHelper.p_real->findEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) == 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) == 1.0);
     }
 
     testHelper.p_bool_0->findEqual(false, beans);
@@ -1447,25 +1447,25 @@ TEST(Property, index_more_complicated)
     ///////////////////////////////////////////////////////
     //remove property after createIndex()
     ///////////////////////////////////////////////////////
-    testHelper.p_double->createIndex();
+    testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
     testHelper.p_bool_0->createIndex();
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
 
-    bean1->removeProperty(testHelper.p_double);
-    testHelper.p_double->findEqual(1.0, beans);
+    bean1->removeProperty(testHelper.p_real);
+    testHelper.p_real->findEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 1);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_double) == 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) == 1.0);
     }
 
     ///////////////////////////////////////////////////////
     //remove bean after createIndex()
     ///////////////////////////////////////////////////////
     world.removeBean(bean2->getId());
-    testHelper.p_double->findEqual(1.0, beans);
+    testHelper.p_real->findEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 0);
 
 }

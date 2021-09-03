@@ -64,9 +64,9 @@ TEST(Bean, isMember)
     EXPECT_TRUE(bean1->isMember(testHelper.p2));
     EXPECT_TRUE(bean1->getMemberNames().size() == 2);
 
-    EXPECT_TRUE(!bean1->isMember(testHelper.pArray_1));
-    bean1->createArrayProperty(testHelper.pArray_1);
-    EXPECT_TRUE(bean1->isMember(testHelper.pArray_1));
+    EXPECT_TRUE(!bean1->isMember(testHelper.p_array_int));
+    bean1->createArrayProperty(testHelper.p_array_int);
+    EXPECT_TRUE(bean1->isMember(testHelper.p_array_int));
     EXPECT_TRUE(bean1->getMemberNames().size() == 3);
 
     Bean* bean2 = world.createBean();
@@ -78,9 +78,9 @@ TEST(Bean, isMember)
     EXPECT_TRUE(bean1->isMember(testHelper.r1));
     EXPECT_TRUE(bean1->getMemberNames().size() == 4);
 
-    EXPECT_TRUE(!bean1->isMember(testHelper.rArray_1));
-    bean1->createArrayRelation(testHelper.rArray_1);
-    EXPECT_TRUE(bean1->isMember(testHelper.rArray_1));
+    EXPECT_TRUE(!bean1->isMember(testHelper.r_array_1));
+    bean1->createArrayRelation(testHelper.r_array_1);
+    EXPECT_TRUE(bean1->isMember(testHelper.r_array_1));
     EXPECT_TRUE(bean1->getMemberNames().size() == 5);
 }
 
@@ -111,13 +111,13 @@ TEST(Bean, create_has_remove)
     EXPECT_TRUE(!bean1->hasRelation(testHelper.p1));
     EXPECT_TRUE(!bean1->hasArrayRelation(testHelper.p1));
 
-    EXPECT_TRUE(!bean1->hasArrayProperty(testHelper.pArray_1));
-    err = bean1->createArrayProperty(testHelper.pArray_1);
+    EXPECT_TRUE(!bean1->hasArrayProperty(testHelper.p_array_int));
+    err = bean1->createArrayProperty(testHelper.p_array_int);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(!bean1->hasProperty(testHelper.pArray_1));
-    EXPECT_TRUE(bean1->hasArrayProperty(testHelper.pArray_1));
-    EXPECT_TRUE(!bean1->hasRelation(testHelper.pArray_1));
-    EXPECT_TRUE(!bean1->hasArrayRelation(testHelper.pArray_1));
+    EXPECT_TRUE(!bean1->hasProperty(testHelper.p_array_int));
+    EXPECT_TRUE(bean1->hasArrayProperty(testHelper.p_array_int));
+    EXPECT_TRUE(!bean1->hasRelation(testHelper.p_array_int));
+    EXPECT_TRUE(!bean1->hasArrayRelation(testHelper.p_array_int));
 
     Bean* bean2 = world.createBean();
 
@@ -130,13 +130,13 @@ TEST(Bean, create_has_remove)
     EXPECT_TRUE(bean1->hasRelation(testHelper.r1));
     EXPECT_TRUE(!bean1->hasArrayRelation(testHelper.r1));
 
-    EXPECT_TRUE(!bean1->hasArrayRelation(testHelper.rArray_1));
-    bean1->createArrayRelation(testHelper.rArray_1);
+    EXPECT_TRUE(!bean1->hasArrayRelation(testHelper.r_array_1));
+    bean1->createArrayRelation(testHelper.r_array_1);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(!bean1->hasProperty(testHelper.rArray_1));
-    EXPECT_TRUE(!bean1->hasArrayProperty(testHelper.rArray_1));
-    EXPECT_TRUE(!bean1->hasRelation(testHelper.rArray_1));
-    EXPECT_TRUE(bean1->hasArrayRelation(testHelper.rArray_1));
+    EXPECT_TRUE(!bean1->hasProperty(testHelper.r_array_1));
+    EXPECT_TRUE(!bean1->hasArrayProperty(testHelper.r_array_1));
+    EXPECT_TRUE(!bean1->hasRelation(testHelper.r_array_1));
+    EXPECT_TRUE(bean1->hasArrayRelation(testHelper.r_array_1));
 
     value = bean1->removeProperty(nullptr);
     EXPECT_TRUE(value.isNull());
@@ -146,9 +146,9 @@ TEST(Bean, create_has_remove)
     EXPECT_TRUE(value == 1);
     EXPECT_TRUE(bean1->hasProperty(testHelper.p1) == false);
 
-    bean1->createArrayProperty(testHelper.pArray_1);
-    bean1->appendProperty(testHelper.pArray_1, 1);
-    value = bean1->removeProperty(testHelper.pArray_1);
+    bean1->createArrayProperty(testHelper.p_array_int);
+    bean1->appendProperty(testHelper.p_array_int, 1);
+    value = bean1->removeProperty(testHelper.p_array_int);
     EXPECT_TRUE(value[0] == 1);
     EXPECT_TRUE(bean1->hasArrayProperty(testHelper.p1) == false);
 
@@ -161,11 +161,11 @@ TEST(Bean, create_has_remove)
     bean1->removeProperty(testHelper.r1);
     EXPECT_TRUE(bean1->hasRelation(testHelper.r1) == false);
 
-    bean1->createArrayRelation(testHelper.rArray_1);
-    bean1->appendRelation(testHelper.rArray_1, bean2);
-    EXPECT_TRUE(bean1->hasArrayRelation(testHelper.rArray_1) == true);
-    bean1->removeProperty(testHelper.rArray_1);
-    EXPECT_TRUE(bean1->hasArrayRelation(testHelper.rArray_1) == false);
+    bean1->createArrayRelation(testHelper.r_array_1);
+    bean1->appendRelation(testHelper.r_array_1, bean2);
+    EXPECT_TRUE(bean1->hasArrayRelation(testHelper.r_array_1) == true);
+    bean1->removeProperty(testHelper.r_array_1);
+    EXPECT_TRUE(bean1->hasArrayRelation(testHelper.r_array_1) == false);
 }
 
 TEST(Bean, property)
@@ -298,64 +298,64 @@ TEST(Bean, array_property)
     init_world(testHelper, world);
 
     Bean &bean = *world.createBean();
-    EXPECT_TRUE(bean.hasArrayProperty(testHelper.pArray_1) == false);
-    EXPECT_TRUE(bean.getArraySize(testHelper.pArray_1) == 0);
-    Value value2 = bean.getArrayProperty(testHelper.pArray_1, 0);
+    EXPECT_TRUE(bean.hasArrayProperty(testHelper.p_array_int) == false);
+    EXPECT_TRUE(bean.getArraySize(testHelper.p_array_int) == 0);
+    Value value2 = bean.getArrayProperty(testHelper.p_array_int, 0);
     EXPECT_TRUE(value2.isNull());
 
-    err = bean.appendProperty(testHelper.pArray_1, Value::null);
+    err = bean.appendProperty(testHelper.p_array_int, Value::null);
     EXPECT_TRUE(err == -1);
     err = bean.appendProperty(nullptr, 0);
     EXPECT_TRUE(err == -2);
 
-    err = bean.setProperty(testHelper.pArray_1, 0, Value::null);
+    err = bean.setProperty(testHelper.p_array_int, 0, Value::null);
     EXPECT_TRUE(err == -1);
     err = bean.setProperty(nullptr, 0, 1);
     EXPECT_TRUE(err == -2);
 
-    property = world.defineArrayProperty("pArray_1", Property::IntType);
-    EXPECT_TRUE(property == world.getProperty("pArray_1"));
-    err = bean.appendProperty(testHelper.pArray_1, 1);
+    property = world.defineArrayProperty("p_array_int", Property::IntType);
+    EXPECT_TRUE(property == world.getProperty("p_array_int"));
+    err = bean.appendProperty(testHelper.p_array_int, 1);
     EXPECT_TRUE(err == -4);
-    err = bean.setProperty(testHelper.pArray_1, 0, 1);
+    err = bean.setProperty(testHelper.p_array_int, 0, 1);
     EXPECT_TRUE(err == -4);
 
     //create empty array
-    err = bean.createArrayProperty(testHelper.pArray_1);
+    err = bean.createArrayProperty(testHelper.p_array_int);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean.hasArrayProperty(testHelper.pArray_1) == true);
-    EXPECT_TRUE(bean.getArraySize(testHelper.pArray_1) == 0);
-    value = bean.getArrayProperty(testHelper.pArray_1, 0);
+    EXPECT_TRUE(bean.hasArrayProperty(testHelper.p_array_int) == true);
+    EXPECT_TRUE(bean.getArraySize(testHelper.p_array_int) == 0);
+    value = bean.getArrayProperty(testHelper.p_array_int, 0);
     EXPECT_TRUE(value.isNull());
 
     //append
-    err = bean.appendProperty(testHelper.pArray_1, "0");
+    err = bean.appendProperty(testHelper.p_array_int, "0");
     EXPECT_TRUE(err == -3);
-    err = bean.appendProperty(testHelper.pArray_1, 0);
+    err = bean.appendProperty(testHelper.p_array_int, 0);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean.getArraySize(testHelper.pArray_1) == 1);
-    value = bean.getArrayProperty(testHelper.pArray_1, 0);
+    EXPECT_TRUE(bean.getArraySize(testHelper.p_array_int) == 1);
+    value = bean.getArrayProperty(testHelper.p_array_int, 0);
     EXPECT_TRUE(value == 0);
-    value = bean.getArrayProperty(testHelper.pArray_1, 1);
+    value = bean.getArrayProperty(testHelper.p_array_int, 1);
     EXPECT_TRUE(value.isNull());
-    err = bean.appendProperty(testHelper.pArray_1, 1);
+    err = bean.appendProperty(testHelper.p_array_int, 1);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean.getArraySize(testHelper.pArray_1) == 2);
-    value = bean.getArrayProperty(testHelper.pArray_1, 1);
+    EXPECT_TRUE(bean.getArraySize(testHelper.p_array_int) == 2);
+    value = bean.getArrayProperty(testHelper.p_array_int, 1);
     EXPECT_TRUE(value == 1);
 
     //setProperty()
-    err = bean.setProperty(testHelper.pArray_1, 99, 99);
+    err = bean.setProperty(testHelper.p_array_int, 99, 99);
     EXPECT_TRUE(err == -5);
-    err = bean.setProperty(testHelper.pArray_1, 0, 99);
+    err = bean.setProperty(testHelper.p_array_int, 0, 99);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean.getArraySize(testHelper.pArray_1) == 2);
-    value = bean.getArrayProperty(testHelper.pArray_1, 0);
+    EXPECT_TRUE(bean.getArraySize(testHelper.p_array_int) == 2);
+    value = bean.getArrayProperty(testHelper.p_array_int, 0);
     EXPECT_TRUE(value == 99);
-    err = bean.setProperty(testHelper.pArray_1, 1, 999);
+    err = bean.setProperty(testHelper.p_array_int, 1, 999);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean.getArraySize(testHelper.pArray_1) == 2);
-    value = bean.getArrayProperty(testHelper.pArray_1, 1);
+    EXPECT_TRUE(bean.getArraySize(testHelper.p_array_int) == 2);
+    value = bean.getArrayProperty(testHelper.p_array_int, 1);
     EXPECT_TRUE(value == 999);
 
     //removeProperty()
@@ -366,14 +366,14 @@ TEST(Bean, array_property)
     bean.setProperty(testHelper.p1, 1);
     value = bean.removeProperty(testHelper.p1, 0);
     EXPECT_TRUE(value.isNull());
-    value = bean.removeProperty(testHelper.pArray_1, 3);
+    value = bean.removeProperty(testHelper.p_array_int, 3);
     EXPECT_TRUE(value.isNull());
-    value = bean.removeProperty(testHelper.pArray_1, 0);
+    value = bean.removeProperty(testHelper.p_array_int, 0);
     EXPECT_TRUE(value == 99);
-    EXPECT_TRUE(bean.getArraySize(testHelper.pArray_1) == 1);
-    value = bean.removeProperty(testHelper.pArray_1, 0);
+    EXPECT_TRUE(bean.getArraySize(testHelper.p_array_int) == 1);
+    value = bean.removeProperty(testHelper.p_array_int, 0);
     EXPECT_TRUE(value == 999);
-    EXPECT_TRUE(bean.getArraySize(testHelper.pArray_1) == 0);
+    EXPECT_TRUE(bean.getArraySize(testHelper.p_array_int) == 0);
 }
 
 TEST(Bean, relation)
@@ -394,9 +394,9 @@ TEST(Bean, relation)
     bean1->setProperty(testHelper.p1, 1);
     EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p1));
 
-    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.pArray_1));
-    bean1->createArrayProperty(testHelper.pArray_1);
-    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.pArray_1));
+    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p_array_int));
+    bean1->createArrayProperty(testHelper.p_array_int);
+    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p_array_int));
 
     Bean* bean2 = world.createBean();
 
@@ -428,48 +428,48 @@ TEST(Bean, array_relation)
     Bean* bean2 = world.createBean();
     Bean* bean3 = world.createBean();
 
-    err = bean1->appendRelation(testHelper.rArray_1, nullptr);
+    err = bean1->appendRelation(testHelper.r_array_1, nullptr);
     EXPECT_TRUE(err == -1);
     err = bean1->appendRelation(nullptr, bean2);
     EXPECT_TRUE(err == -2);
     err = bean1->appendRelation(testHelper.p1, bean2);
     EXPECT_TRUE(err == -2);
-    err = bean1->appendRelation(testHelper.rArray_1, bean2);
+    err = bean1->appendRelation(testHelper.r_array_1, bean2);
     EXPECT_TRUE(err == -4);
 
-    err = bean1->setRelation(testHelper.rArray_1, 0, nullptr);
+    err = bean1->setRelation(testHelper.r_array_1, 0, nullptr);
     EXPECT_TRUE(err == -1);
     err = bean1->setRelation(nullptr, 0, bean2);
     EXPECT_TRUE(err == -2);
     err = bean1->setRelation(testHelper.p1, 0, bean2);
     EXPECT_TRUE(err == -3);
-    err = bean1->setRelation(testHelper.rArray_1, 0, bean2);
+    err = bean1->setRelation(testHelper.r_array_1, 0, bean2);
     EXPECT_TRUE(err == -4);
 
-    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.rArray_1, 0));
+    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.r_array_1, 0));
     err = bean1->createArrayRelation(nullptr);
     EXPECT_TRUE(err == -2);
     err = bean1->createArrayRelation(testHelper.p1);
     EXPECT_TRUE(err == -2);
-    err = bean1->createArrayRelation(testHelper.rArray_1);
+    err = bean1->createArrayRelation(testHelper.r_array_1);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean1->getArraySize(testHelper.rArray_1) == 0);
+    EXPECT_TRUE(bean1->getArraySize(testHelper.r_array_1) == 0);
 
-    err = bean1->appendRelation(testHelper.rArray_1, bean2);
+    err = bean1->appendRelation(testHelper.r_array_1, bean2);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean1->getArraySize(testHelper.rArray_1) == 1);
+    EXPECT_TRUE(bean1->getArraySize(testHelper.r_array_1) == 1);
 
-    err = bean1->setRelation(testHelper.rArray_1, 1, bean2);
+    err = bean1->setRelation(testHelper.r_array_1, 1, bean2);
     EXPECT_TRUE(err == -5);
-    err = bean1->setRelation(testHelper.rArray_1, 0, bean2);
+    err = bean1->setRelation(testHelper.r_array_1, 0, bean2);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_1, 0) == bean2->getId());
-    err = bean1->setRelation(testHelper.rArray_1, 0, bean3);
+    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean2->getId());
+    err = bean1->setRelation(testHelper.r_array_1, 0, bean3);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_1, 0) == bean3->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean3->getId());
     bean1->setProperty(testHelper.p1, 1);
     EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p1, 0));
-    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.rArray_1, 1));
+    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.r_array_1, 1));
 
     //getArraySize()
     EXPECT_TRUE(bean1->getArraySize(nullptr) == 0);
@@ -483,20 +483,20 @@ TEST(Bean, array_relation)
     bean3->setProperty(testHelper.p1, 1);
     value = bean3->removeProperty(testHelper.p1, 0);
     EXPECT_TRUE(value.isNull());
-    value = bean3->removeProperty(testHelper.pArray_1, 3);
+    value = bean3->removeProperty(testHelper.p_array_int, 3);
     EXPECT_TRUE(value.isNull());
 
-    err = bean3->createArrayRelation(testHelper.rArray_1);
-    err = bean3->appendRelation(testHelper.rArray_1, bean1);
-    err = bean3->appendRelation(testHelper.rArray_1, bean2);
-    EXPECT_TRUE(bean3->getArraySize(testHelper.rArray_1) == 2);
+    err = bean3->createArrayRelation(testHelper.r_array_1);
+    err = bean3->appendRelation(testHelper.r_array_1, bean1);
+    err = bean3->appendRelation(testHelper.r_array_1, bean2);
+    EXPECT_TRUE(bean3->getArraySize(testHelper.r_array_1) == 2);
 
-    value = bean3->removeProperty(testHelper.rArray_1, 0);
+    value = bean3->removeProperty(testHelper.r_array_1, 0);
     EXPECT_TRUE(value == bean1->getId());
-    EXPECT_TRUE(bean3->getArraySize(testHelper.rArray_1) == 1);
-    value = bean3->removeProperty(testHelper.rArray_1, 0);
+    EXPECT_TRUE(bean3->getArraySize(testHelper.r_array_1) == 1);
+    value = bean3->removeProperty(testHelper.r_array_1, 0);
     EXPECT_TRUE(value == bean2->getId());
-    EXPECT_TRUE(bean3->getArraySize(testHelper.rArray_1) == 0);
+    EXPECT_TRUE(bean3->getArraySize(testHelper.r_array_1) == 0);
 }
 
 

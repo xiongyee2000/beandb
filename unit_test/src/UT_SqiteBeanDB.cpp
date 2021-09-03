@@ -396,34 +396,15 @@ TEST(SqliteBeanDB, saveBean)
     Bean* bean = nullptr;
     Bean* bean1 = nullptr;
     Bean* bean2 = nullptr;
+    Bean* bean3 = nullptr;
     oidType beanId_1 = 0;
     oidType beanId_2 = 0;
+    oidType beanId_3 = 0;
 
     testdb.reInit();
     testdb.connect();
 
     initTestHelper(testHelper, testdb, false);
-
-    // Property* p1 = testdb.getProperty("p1");
-    // Property* p2 = testdb.getProperty("p2");
-    // Property* p3 = testdb.getProperty("p3");
-    // Property* p4 = testdb.getProperty("p4");
-    // Property* p5 = testdb.getProperty("p5");
-    // Property* ap1 = testdb.getProperty("ap1");
-    // Property* ap2 = testdb.getProperty("ap2");
-    // Property* ap3 = testdb.getProperty("ap3");
-    // Property* ap4 = testdb.getProperty("ap4");
-    // Property* ap5 = testdb.getProperty("ap5");
-    // Property* r1 = testdb.getProperty("r1");
-    // Property* r2 = testdb.getProperty("r2");
-    // Property* r3 = testdb.getProperty("r3");
-    // Property* r4 = testdb.getProperty("r4");
-    // Property* r5 = testdb.getProperty("r5");
-    // Property* ar1 = testdb.getProperty("ar1");
-    // Property* ar2= testdb.getProperty("ar2");
-    // Property* ar3 = testdb.getProperty("ar3");
-    // Property* ar4 = testdb.getProperty("ar4");
-    // Property* ar5 = testdb.getProperty("ar5");
 
     bean1 = testdb.createBean();
     beanId_1 = bean1->getId();
@@ -433,14 +414,21 @@ TEST(SqliteBeanDB, saveBean)
     beanId_2 = bean2->getId();
     setBean(testHelper, bean2);
 
-    bean1->setRelation(testHelper.r1, bean2);
-    bean1->createArrayRelation(testHelper.rArray_1);
-    bean1->appendRelation(testHelper.rArray_1, bean2);
-    bean1->appendRelation(testHelper.rArray_1, bean2);
+    bean3 = testdb.createBean();
+    beanId_3 = bean3->getId();
+    setBean(testHelper, bean3);
+
+    bean3->setRelation(testHelper.r1, bean1);
+    bean3->setRelation(testHelper.r2, bean2);
+    bean3->createArrayRelation(testHelper.rArray_1);
+    bean3->appendRelation(testHelper.rArray_1, bean1);
+    bean3->appendRelation(testHelper.rArray_1, bean2);
 
     err = testdb.saveBean(bean1);
     EXPECT_TRUE(err == 0);
     err = testdb.saveBean(bean2);
+    EXPECT_TRUE(err == 0);
+    err = testdb.saveBean(bean3);
     EXPECT_TRUE(err == 0);
 
     testdb.disconnect();
@@ -449,12 +437,15 @@ TEST(SqliteBeanDB, saveBean)
 
     bean1 = testdb.getBean(beanId_1);
     bean2 = testdb.getBean(beanId_2);
+    bean3 = testdb.getBean(beanId_3);
 
     validateBean(testHelper, bean1);
     validateBean(testHelper, bean2);
 
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_1, 0) ==beanId_2);
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_1, 1) ==beanId_2);
+    EXPECT_TRUE(bean3->getRelationBeanId(testHelper.r1) ==beanId_1);
+    EXPECT_TRUE(bean3->getRelationBeanId(testHelper.r2) ==beanId_2);
+    EXPECT_TRUE(bean3->getRelationBeanId(testHelper.rArray_1, 0) ==beanId_1);
+    EXPECT_TRUE(bean3->getRelationBeanId(testHelper.rArray_1, 1) ==beanId_2);
 
     testdb.reInit();
     testdb.disconnect();

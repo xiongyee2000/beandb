@@ -267,6 +267,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
     Json::Reader reader; 
     Json::Value jsonBean;  
     bool found = false;
+    Json::Value* v = nullptr;
 
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
@@ -291,7 +292,57 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
             if (property == nullptr) continue; //it's not a defined property
             //filter out delay load properties
             if (isDelayLoad(*property)) {
-                value[pname] = Json::Value();
+                value[pname] = Json::Value::nullRef;
+            } else {
+                if (property->getType() == Property::ArrayPrimaryType || 
+                     property->getType() == Property::ArrayRelationType) {
+                         for (Json::ArrayIndex i = 0; i < value.size(); i++) {
+                             v = &value[pname][i];
+                            switch (property->getValueType())
+                            {
+                            case Property::IntType:
+                                *v= (*v).asInt64();
+                                break;
+                            case Property::UIntType:
+                                *v= (*v).asUInt64();
+                                 break;
+                            case Property::RealType:
+                                *v= (*v).asDouble();
+                                 break;
+                            case Property::BoolType:
+                                break;
+                            //do nothing
+                            case Property::StringType:
+                                //do nothing
+                                break;
+                            default:
+                                break;
+                            }
+                         }
+                } else {
+                    Json::Value* v = &value[pname];
+                    switch (property->getValueType())
+                    {
+                    case Property::IntType:
+                        (*v) = (*v).asInt64();
+                         break;
+                    case Property::UIntType:
+                        (*v) = (*v).asUInt64();
+                         break;
+                    case Property::RealType:
+                        (*v) = (*v).asDouble();
+                         break;
+                    case Property::BoolType:
+                         //do nothing
+                        break;
+                    case Property::StringType:
+                        //do nothing
+                        break;
+                    default:
+                        break;
+                    }
+                }
+
             }
         }
 
@@ -390,7 +441,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     int i = 0;
 
     //set to null first
-    value = Json::Value::null;
+    value = Json::Value::nullRef;
 
     if (isDelayLoad(*property)) {
         snprintf(buff, 64, "SELECT VALUE from p_%s WHERE SID = ?;", 
@@ -406,7 +457,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
                  property->getType() == Property::ArrayRelationType)  {
                     if (value.isNull())  
                         value = Json::Value(Json::arrayValue);
-                    value.append(Json::Value::null);
+                    value.append(Json::Value::nullRef);
                     v = &value[value.size() - 1];
             } else {
                 v = &value;
@@ -446,7 +497,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
-        value = Json::Value::null;
+        value = Json::Value::nullRef;
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     } else {
         err = 0;
@@ -1039,6 +1090,7 @@ int SqliteBeanDB::rollbackTransaction_()
 int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue)
 {
     if (m_sqlite3Db_ == nullptr) return -1;
+    if (managedValue.isNull()) return -2;
 
     int err = 0;
     sqlite3_int64 beanId_ = (sqlite3_int64)beanId;
@@ -1049,18 +1101,26 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue,
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     char* tmpStr = nullptr;
+     std::string valueStr;
+     const Property* property = nullptr;
     static const char *sql = "UPDATE OTABLE SET  VALUE = ?, UNMANAGED_VALUE = ? WHERE ID = ?;";
 
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto _out;
 
-    if (managedValue.isNull()) {
-        goto _out; //shall not happen
-    }  else {
-        std::string valueStr = jsonWriter.write(managedValue);
-        tmpStr = sqlite3_mprintf("%q", valueStr.c_str());
-        err = sqlite3_bind_text(pstmt, 1, tmpStr , -1, nullptr);
+    for (auto& pname : managedValue.getMemberNames()) {
+        property = getProperty(pname.c_str());
+        if (property == nullptr) continue; //todo: error here?
+        if (!isDelayLoad(*property)) {
+            tmpValue[pname] = managedValue[pname];
+        } else {
+            tmpValue[pname] = Json::Value::nullRef;
+        }
     }
+
+    valueStr = jsonWriter.write(tmpValue);
+    tmpStr = sqlite3_mprintf("%q", valueStr.c_str());
+    err = sqlite3_bind_text(pstmt, 1, tmpStr , -1, nullptr);
     if (err != SQLITE_OK) goto _out;
 
     if (unmanagedValue.isNull()) {
@@ -1113,8 +1173,6 @@ int SqliteBeanDB::loadUnmanagedValue_(oidType beanId, Json::Value& value)
     if (err != SQLITE_OK) goto _out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
-        //retrieve properties
-        Json::Value& v = (Json::Value&)Json::Value::null;
         //retrieve unmanaged value
         if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
             valueStr = (const char*)sqlite3_column_text(pstmt, 1);

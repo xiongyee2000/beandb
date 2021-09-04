@@ -46,8 +46,8 @@ private:
     int saveAll() override;
 
     // virtual Bean* getBean(oidType id) override;
-    virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) override;
-    virtual int saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue) override;
+    virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) override;
+    virtual int saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& nativeData) override;
     virtual int deleteBean_(Bean* bean) override;
     virtual int loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value) override;
     virtual int insertBeanProperty_(oidType beanId, 
@@ -66,16 +66,16 @@ private:
         const Property* property, 
         Json::Value::ArrayIndex index) override;
 
-    virtual int insertBeanUnmanagedValue_(oidType beanId, 
+    virtual int insertBeanNativeData_(oidType beanId, 
         const Json::Value& value) override;
 
-    virtual int updateUnmanagedValue_(oidType beanId, 
+    virtual int updateBeanNativeData_(oidType beanId, 
         const Json::Value& value) override;
 
-    virtual int deleteBeanUnmanagedValue_(oidType beanId, 
+    virtual int deleteBeanNativeData_(oidType beanId, 
         const Json::Value& value) override;
     
-    virtual int loadUnmanagedValue_(oidType beanId, Json::Value& value) override;
+    virtual int loadBeanNativeData_(oidType beanId, Json::Value& value) override;
 
     virtual int beginTransaction_() override;
     virtual int commitTransaction_() override;

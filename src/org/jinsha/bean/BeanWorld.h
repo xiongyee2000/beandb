@@ -161,17 +161,6 @@ public:
      */
     virtual const std::unordered_map<std::string, Property*>& getProperties();
 
-public:
-    /**
-     * See AbstractBeanDB::loadAll().
-     */
-    int loadAll();
-
-    /**
-     * Remove all beans/properties from this world.
-     */
-    int unloadAll();
-
     /**
      * Remove all beans from this world.
      */

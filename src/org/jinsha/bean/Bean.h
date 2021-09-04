@@ -358,27 +358,34 @@ public:
     // void removeRelation( Property* relation);
 
     /**
-     * Get unmanaged value of a bean.
+     * Get native data of a bean.
      * 
-     * @return the unmanaged value
+     * @return the native data as json value
      */
-    Json::Value getUnmanagedValue();
-    Json::Value getUnmanagedValue() const;
+    Json::Value getNativeData();
+    Json::Value getNativeData() const;
 
     /**
-     * Set unmanaged value of a bean.
+     * Set native data of a bean.
      * 
-     * Unmanaged value of bean is a json value that is
-     * out of Bean's property control.  User can set arbitrary
-     * value without defining any property in advance. This 
-     * is very useful and flexible for a bean to hold private data.
-     * However, no member of the unmanaged value 
-     * can be used as condition in the find/search operation.
+     * Native data are data bound to this bean
+     * but out of property control.
      * 
-     * @param the unmanaged value
+     * User can freely set/get native data
+     * with setNativeData()/getNativeData()
+     * without defining any property (actually 
+     * the native data have nothing to do with
+     * those defined properties).
+     * 
+     * This provides a way for user to easily 
+     * store/access arbitrary data as they want.
+     * However, the native data won't be helpful
+     * in any search/find operations.
+     *  
+     * @param data the native data
      * @param syncToDB if sync to db
      */
-    int setUnmanagedValue(Json::Value& value, bool syncToDB = true);
+    int setNativeData(Json::Value& data, bool syncToDB = true);
 
     /**
      * Save data of this bean into database storage.
@@ -440,9 +447,9 @@ private:
 
 private:
     Json::Value m_json_;
-    Json::Value m_unmanaged_json_;
+    Json::Value m_native_data_json_;
     Json::Value m_pst_json_;
-    Json::Value m_unmanaged_pst_json_;
+    Json::Value m_native_data_pst_json_;
     BeanWorld* m_world_;
 
     // otype classId_ = 0;

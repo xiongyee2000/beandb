@@ -171,14 +171,13 @@ public:
     virtual int loadBeanProperty_(oidType beanId,  const Property* property, Json::Value& value) = 0;
 
     /**
-     * Load bean's unmanaged value. This method is used in case "delay-load"
-     * is needed.
+     * Load bean's native data. 
      * 
      * @param beanId the bean id
-     * @param value the value loaded to
+     * @param data the data loaded to
      * @return 0 on success, or an error code
      */
-    virtual int loadUnmanagedValue_(oidType beanId, Json::Value& value) = 0;
+    virtual int loadBeanNativeData_(oidType beanId, Json::Value& data) = 0;
 
     /**
      * Load bean data from database into memory.
@@ -186,15 +185,15 @@ public:
      * All bean's direct-load properies must be loaded in this method, 
      * while delay-load properties shall be set to null in the value.
      * 
-     * Note the bean's unmanaged value is regarded as delay-load, 
-     * but can also be loaded into unmanagedValue.
+     * Note the bean's native data is regarded as delay-load, 
+     * but can also be loaded into nativeData.
      * 
      * @param id id of the bean to be leaded
      * @param value the value that holds all bean's properties
-     * @param unmanagedValue the value that holds the bean's unmanagedValue
+     * @param nativeData the value that holds the bean's nativeData
      * @return 0 on success, or an error code
      */
-    virtual int loadBeanBase_(oidType id, Json::Value& value, Json::Value& unmanagedValue) = 0;
+    virtual int loadBeanBase_(oidType id, Json::Value& value, Json::Value& nativeData) = 0;
 
     /**
      * Save bean data into database.
@@ -202,15 +201,15 @@ public:
      * All bean's direct-load properies must be saved in this method, 
      * while delay-load properties may or may not be saved in this method.
      * 
-     * Note the bean's unmanaged value is regarded as delay-load, 
+     * Note the bean's native data is regarded as delay-load, 
      * but can also be saved also.
      * 
      * @param id id of the bean to be leaded
      * @param value the value that holds all bean's properties
-     * @param unmanagedValue the value that holds the bean's unmanagedValue
+     * @param nativeData the value that holds the bean's nativeData
      * @return 0 on success, or an error code
      */
-    virtual int saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue) = 0;
+    virtual int saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& nativeData) = 0;
 
     virtual int insertBeanProperty_(oidType beanId, 
         const Property* property, 
@@ -232,13 +231,13 @@ public:
         const Property* property, 
         Json::Value::ArrayIndex index) = 0;
 
-    virtual int insertBeanUnmanagedValue_(oidType beanId, 
+    virtual int insertBeanNativeData_(oidType beanId, 
         const Json::Value& value) = 0;
 
-    virtual int updateUnmanagedValue_(oidType beanId, 
+    virtual int updateBeanNativeData_(oidType beanId, 
         const Json::Value& value) = 0;
 
-    virtual int deleteBeanUnmanagedValue_(oidType beanId, 
+    virtual int deleteBeanNativeData_(oidType beanId, 
         const Json::Value& value) = 0;
 
 };

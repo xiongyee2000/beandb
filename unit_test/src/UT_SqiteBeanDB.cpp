@@ -284,6 +284,9 @@ TEST(SqliteBeanDB, getBean)
 {
     char buff[128] = {0};
     char* cmd = &buff[0];
+    Bean* bean1 = nullptr;
+    Bean* bean2 = nullptr;
+    Bean* bean3 = nullptr;
     sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
     system(cmd);
 
@@ -297,8 +300,12 @@ TEST(SqliteBeanDB, getBean)
     TestHelper testHelper;
     initTestHelper(testHelper, testdb, false);
 
-    bean = testdb.getBean(1);
-    EXPECT_TRUE(bean != nullptr && bean->getProperty(testHelper.p_int).asInt() == -1);
+    bean1 = testdb.getBean(1);
+    bean2 = testdb.getBean(1);
+    bean3 = testdb.getBean(1);
+    validateBean(testHelper, bean1);
+    validateBean(testHelper, bean2);
+    validateBean(testHelper, bean3);
 }
 
 TEST(SqliteBeanDB, saveBean)

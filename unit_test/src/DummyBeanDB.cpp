@@ -65,7 +65,7 @@ int DummyBeanDB::deleteBean_(Bean* bean)
     return 0;
 }
 
-int DummyBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) 
+int DummyBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) 
 {
     return 0;
 }
@@ -172,29 +172,29 @@ int DummyBeanDB::rollbackTransaction_()
 }
 
 
-int DummyBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue)
+int DummyBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& nativeData)
 {
      return 0;
 }
 
-int DummyBeanDB::loadUnmanagedValue_(oidType beanId, Json::Value& value)
+int DummyBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& value)
 {
     return 0;
 }
 
-int DummyBeanDB::insertBeanUnmanagedValue_(oidType beanId, 
+int DummyBeanDB::insertBeanNativeData_(oidType beanId, 
     const Json::Value& value)
 {
     return 0;
 }
 
-int DummyBeanDB::updateUnmanagedValue_(oidType beanId, 
+int DummyBeanDB::updateBeanNativeData_(oidType beanId, 
     const Json::Value& value)
 {
     return 0;
 }
 
-int DummyBeanDB::deleteBeanUnmanagedValue_(oidType beanId, 
+int DummyBeanDB::deleteBeanNativeData_(oidType beanId, 
     const Json::Value& value)
 {
     return 0;

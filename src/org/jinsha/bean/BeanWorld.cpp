@@ -232,20 +232,6 @@ const std::unordered_map<std::string, Property*>& BeanWorld::getProperties()
 };
 
 
-int BeanWorld::loadAll()
-{
-    //todo
-    return -1;
-}
-
-
-int BeanWorld::unloadAll()
-{
-    //todo
-    return -1;
-}
-
-
 int BeanWorld::reloadProperties()
 {
     int err = 0;

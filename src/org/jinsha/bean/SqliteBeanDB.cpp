@@ -252,7 +252,7 @@ out:
 //     return bean;
 // }
 
-int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& unmanagedValue) 
+int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) 
 {
     if (m_sqlite3Db_ == nullptr) return -1;
     
@@ -346,18 +346,18 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
             }
         }
 
-        //retrieve unmanaged value
+        //retrieve native data
         if (sqlite3_column_type(pstmt, 1) != SQLITE_NULL) {
             valueStr = (const char*)sqlite3_column_text(pstmt, 1);
             if (valueStr == nullptr) valueStr = "{}";
-            if (!reader.parse(valueStr, unmanagedValue, false))
+            if (!reader.parse(valueStr, nativeData, false))
             {
                 err = -2;
                 elog("error parsing json string: %s", valueStr);
                 break;
             }
         } else {
-            unmanagedValue = Json::Value(Json::ValueType::objectValue);
+            nativeData = Json::Value(Json::ValueType::objectValue);
         }
         
         found = true;
@@ -488,8 +488,8 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
         }
     } else  {
         Json::Value managedValue;
-        Json::Value unmanagedValue;
-        err = loadBeanBase_(beanId, managedValue, unmanagedValue);
+        Json::Value nativeData;
+        err = loadBeanBase_(beanId, managedValue, nativeData);
         if (err)  goto out;
         if (managedValue.isMember(pname))
             value = managedValue[pname];
@@ -1087,7 +1087,7 @@ int SqliteBeanDB::rollbackTransaction_()
 }
 
 
-int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& unmanagedValue)
+int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& nativeData)
 {
     if (m_sqlite3Db_ == nullptr) return -1;
     if (managedValue.isNull()) return -2;
@@ -1123,11 +1123,11 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue,
     err = sqlite3_bind_text(pstmt, 1, tmpStr , -1, nullptr);
     if (err != SQLITE_OK) goto _out;
 
-    if (unmanagedValue.isNull()) {
+    if (nativeData.isNull()) {
         err = sqlite3_bind_null(pstmt, 2);
     }  else {
-        std::string unmanagedValueStr = jsonWriter.write(unmanagedValue);
-        tmpStr = sqlite3_mprintf("%q", unmanagedValueStr.c_str());
+        std::string nativeDataStr = jsonWriter.write(nativeData);
+        tmpStr = sqlite3_mprintf("%q", nativeDataStr.c_str());
         err = sqlite3_bind_text(pstmt, 2, tmpStr , -1, nullptr);
     }
     if (err != SQLITE_OK) goto _out;
@@ -1151,7 +1151,7 @@ _out:
     return err; 
 }
 
-int SqliteBeanDB::loadUnmanagedValue_(oidType beanId, Json::Value& value)
+int SqliteBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& value)
 {
    if (m_sqlite3Db_ == nullptr) return -1;
     
@@ -1173,7 +1173,7 @@ int SqliteBeanDB::loadUnmanagedValue_(oidType beanId, Json::Value& value)
     if (err != SQLITE_OK) goto _out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
-        //retrieve unmanaged value
+        //retrieve native data
         if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
             valueStr = (const char*)sqlite3_column_text(pstmt, 1);
             if (valueStr == nullptr) valueStr = "{}";
@@ -1204,7 +1204,7 @@ _out:
     return err;
 }
 
-int SqliteBeanDB::insertBeanUnmanagedValue_(oidType beanId, 
+int SqliteBeanDB::insertBeanNativeData_(oidType beanId, 
     const Json::Value& value)
 {
     int err = 0;
@@ -1212,7 +1212,7 @@ int SqliteBeanDB::insertBeanUnmanagedValue_(oidType beanId,
     return err;
 }
 
-int SqliteBeanDB::updateUnmanagedValue_(oidType beanId, 
+int SqliteBeanDB::updateBeanNativeData_(oidType beanId, 
     const Json::Value& value)
 {
    if (m_sqlite3Db_ == nullptr) return -1;
@@ -1259,7 +1259,7 @@ _out:
     return err; 
 }
 
-int SqliteBeanDB::deleteBeanUnmanagedValue_(oidType beanId, 
+int SqliteBeanDB::deleteBeanNativeData_(oidType beanId, 
     const Json::Value& value)
 {
     int err = 0;

@@ -15,9 +15,9 @@ m_world_(nullptr)
 , m_id_(id)
 {
     m_json_= Json::Value(Json::ValueType::objectValue);
-    m_unmanaged_json_ = Json::Value(Json::ValueType::objectValue);
+    m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
     m_pst_json_ = Json::Value(Json::ValueType::objectValue);
-    m_unmanaged_pst_json_ = PST_NSY;
+    m_native_data_pst_json_ = PST_NSY;
 }
 
 
@@ -25,9 +25,9 @@ Bean::Bean(BeanWorld* world) :
 m_world_(world)
 {
     m_json_= Json::Value(Json::ValueType::objectValue);
-    m_unmanaged_json_ = Json::Value(Json::ValueType::objectValue);
+    m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
     m_pst_json_ = Json::Value(Json::ValueType::objectValue);
-    m_unmanaged_pst_json_ = PST_NSY;
+    m_native_data_pst_json_ = PST_NSY;
 }
 
 
@@ -802,47 +802,47 @@ Json::Value* Bean::getMemberPtr(const Property* property)
     return (m_json_.isMember(pname)) ? &m_json_[pname] : nullptr;
 }
 
-Json::Value Bean::getUnmanagedValue()
+Json::Value Bean::getNativeData()
 {       
-    if (m_unmanaged_pst_json_.asInt() == PST_NSY) {
+    if (m_native_data_pst_json_.asInt() == PST_NSY) {
     //not loaded yet, load it first
         if (m_world_->m_db != nullptr) {
             int err = m_world_->m_db->
-                loadUnmanagedValue_(m_id_, m_unmanaged_json_);
+                loadBeanNativeData_(m_id_, m_native_data_json_);
             if (!err) {
-                m_unmanaged_pst_json_ = PST_SYN;
+                m_native_data_pst_json_ = PST_SYN;
             } else {
-                m_unmanaged_json_ = Json::Value(Json::ValueType::objectValue);
+                m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
             }
         } 
     } 
 
-    return m_unmanaged_json_;
+    return m_native_data_json_;
 }
 
-Json::Value Bean::getUnmanagedValue() const
+Json::Value Bean::getNativeData() const
 {
-    return ((Bean*)this)->getUnmanagedValue();
+    return ((Bean*)this)->getNativeData();
 }
 
-int Bean::setUnmanagedValue(Json::Value& value, bool syncToDB)
+int Bean::setNativeData(Json::Value& data, bool syncToDB)
 {
     int err = 0;
     if (syncToDB) {
         if (m_world_->m_db != nullptr) {
             //save to db
-            err = m_world_->m_db->updateUnmanagedValue_(m_id_, m_unmanaged_json_);
+            err = m_world_->m_db->updateBeanNativeData_(m_id_, m_native_data_json_);
             if (!err) {
-                m_unmanaged_json_ = value;
-                m_unmanaged_pst_json_ = PST_SYN;
+                m_native_data_json_ = data;
+                m_native_data_pst_json_ = PST_SYN;
             }
         } else {
             err = -1;
         }
     }   else
     {
-        m_unmanaged_json_ = value;
-        m_unmanaged_pst_json_ = PST_MOD;
+        m_native_data_json_ = data;
+        m_native_data_pst_json_ = PST_MOD;
     }
     
     return err;
@@ -886,16 +886,16 @@ int Bean::load()
     int err = 0;
     int size = 0;
     Property* property = nullptr;
-    Json::Value managedValue, unmanagedValue;
+    Json::Value managedValue, nativeData;
     Json::Value* pstValuePtr = nullptr;
 
     //unload first
     unload();
 
-    err = m_world_->m_db->loadBeanBase_(m_id_, managedValue, m_unmanaged_json_);
+    err = m_world_->m_db->loadBeanBase_(m_id_, managedValue, m_native_data_json_);
     if (err) {
         m_json_ = Json::Value(Json::ValueType::objectValue);
-        m_unmanaged_json_ = Json::Value(Json::ValueType::objectValue);
+        m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
     } else {
         //todo: 
         //check data validity, e.g.: property name consistency, 
@@ -960,11 +960,11 @@ int Bean::load()
             }
         }
 
-        if (unmanagedValue.isNull()) { //delay load
-            unmanagedValue = Json::Value(Json::ValueType::objectValue);
-            m_unmanaged_pst_json_ = PST_NSY;
+        if (nativeData.isNull()) { //delay load
+            nativeData = Json::Value(Json::ValueType::objectValue);
+            m_native_data_pst_json_ = PST_NSY;
         } else {
-            m_unmanaged_pst_json_ = PST_SYN;
+            m_native_data_pst_json_ = PST_SYN;
         }
     }
 
@@ -986,9 +986,9 @@ int Bean::unload()
     m_json_ = Json::Value(Json::objectValue);
     m_pst_json_ = Json::Value(Json::objectValue);
 
-    //remove all unmanaged values
-   m_unmanaged_json_ = Json::Value(Json::objectValue);
-   m_unmanaged_pst_json_ = PST_NSY;
+    //remove all native data
+   m_native_data_json_ = Json::Value(Json::objectValue);
+   m_native_data_pst_json_ = PST_NSY;
 
     return err;
 }
@@ -1041,7 +1041,7 @@ int Bean::save()
     err = m_world_->m_db->beginTransaction();
     if (err) return -3;
 
-    err = m_world_->m_db->saveBeanBase_(m_id_, m_json_, m_unmanaged_json_);
+    err = m_world_->m_db->saveBeanBase_(m_id_, m_json_, m_native_data_json_);
     if (err) goto out;
     
     for (auto& pname : m_pst_json_.getMemberNames()) {
@@ -1084,10 +1084,10 @@ int Bean::save()
         }
     }
 
-    if (m_unmanaged_pst_json_.asInt() == PST_MOD) {
-            err = m_world_->m_db->updateUnmanagedValue_(m_id_, m_unmanaged_json_);
+    if (m_native_data_pst_json_.asInt() == PST_MOD) {
+            err = m_world_->m_db->updateBeanNativeData_(m_id_, m_native_data_json_);
             if (err) goto out;
-            m_unmanaged_pst_json_ = PST_SYN;
+            m_native_data_pst_json_ = PST_SYN;
     }
 
 out:

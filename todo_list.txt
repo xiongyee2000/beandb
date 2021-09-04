@@ -1,3 +1,5 @@
 well define error codes
 
 windows line ending \r\n
+
+UndefineProperty() need to consider whether all related beans should be deleted.

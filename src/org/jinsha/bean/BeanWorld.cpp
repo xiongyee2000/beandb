@@ -47,7 +47,7 @@ void BeanWorld::clear()
 
 Bean* BeanWorld::createBean(oidType id)
 {
-    Bean* bean = new Bean(this);
+    Bean* bean = new Bean(id, this);
     assert(bean);
     if (id == 0)
         bean->m_id_ = generateBeanId();

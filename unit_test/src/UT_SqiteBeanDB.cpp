@@ -25,10 +25,7 @@ static const char* g_sqlite_db_1 = "./unit_test/data/sqlite_db_1";
 
 static void validate_testdb_1(SqliteBeanDB& testdb);
 static void validate_properties_testdb_1(std::unordered_map<std::string, Property*>& propertyMap);
-static void evaluate_testdb_empty_property(SqliteBeanDB& testdb);
-void initTestHelper(TestHelper& testHelper, AbstractBeanDB& db, bool needIndex);
-void setBean(TestHelper& testHelper, Bean* bean);
-void validateBean(TestHelper& testHelper, Bean* bean);
+
 
 TEST(SqliteBeanDB, constuctor_destructor)
 {
@@ -303,9 +300,9 @@ TEST(SqliteBeanDB, getBean)
     bean1 = testdb.getBean(1);
     bean2 = testdb.getBean(1);
     bean3 = testdb.getBean(1);
-    validateBean(testHelper, bean1);
-    validateBean(testHelper, bean2);
-    validateBean(testHelper, bean3);
+    validateBeanProperties(testHelper, bean1);
+    validateBeanProperties(testHelper, bean2);
+    validateBeanProperties(testHelper, bean3);
 }
 
 TEST(SqliteBeanDB, saveBean)
@@ -335,15 +332,18 @@ TEST(SqliteBeanDB, saveBean)
 
     bean1 = testdb.createBean();
     beanId_1 = bean1->getId();
-    setBean(testHelper, bean1);
+    setBeanProperties(testHelper, bean1);
+    setBeanNativeData(testHelper, bean1);
 
     bean2 = testdb.createBean();
     beanId_2 = bean2->getId();
-    setBean(testHelper, bean2);
+    setBeanProperties(testHelper, bean2);
+    setBeanNativeData(testHelper, bean2);
 
     bean3 = testdb.createBean();
     beanId_3 = bean3->getId();
-    setBean(testHelper, bean3);
+    setBeanProperties(testHelper, bean3);
+    setBeanNativeData(testHelper, bean3);
 
     bean3->setRelation(testHelper.r1, bean1);
     bean3->setRelation(testHelper.r2, bean2);
@@ -397,7 +397,9 @@ TEST(SqliteBeanDB, loadProperties_)
 }
 
 
-
+////////////////////////////////////////////////////////////////
+// helper functions
+////////////////////////////////////////////////////////////////
 
 static void validate_testdb_1(SqliteBeanDB& testdb)
 {
@@ -492,86 +494,3 @@ static void validate_properties_testdb_1(std::unordered_map<std::string, Propert
 }
 
 
-void evaluate_testdb_empty_property(SqliteBeanDB& testdb)
-{
-    testdb.connect();
-    std::unordered_map<std::string, Property*> propertyMap;
-    testdb.loadProperties_(propertyMap);
-    EXPECT_TRUE(propertyMap.size() == 0);
-    testdb.disconnect();
-}
-
-void initTestHelper(TestHelper& testHelper, AbstractBeanDB& db, bool needIndex)
-{
-    testHelper.p_int = db.defineProperty("p_int", Property::IntType);
-    testHelper.p_uint = db.defineProperty("p_uint", Property::UIntType);
-    testHelper.p_int64 = db.defineProperty("p_int64", Property::IntType);
-    testHelper.p_uint64 = db.defineProperty("p_uint64", Property::UIntType);
-    testHelper.p_real = db.defineProperty("p_real", Property::RealType);
-    testHelper.p_str = db.defineProperty("p_str", Property::StringType);
-    testHelper.p_bool_0 = db.defineProperty("p_bool_0", Property::BoolType);
-    testHelper.p_bool_1 = db.defineProperty("p_bool_1", Property::BoolType);
-
-    testHelper.p1 = db.defineProperty("p1", Property::IntType);
-    testHelper.p2 = db.defineProperty("p2", Property::IntType);
-    testHelper.p_array_int = db.defineArrayProperty("p_array_int", Property::IntType);
-    testHelper.p_array_uint = db.defineArrayProperty("p_array_uint", Property::UIntType);
-    testHelper.p_array_real = db.defineArrayProperty("p_array_real", Property::RealType);
-    testHelper.p_array_bool = db.defineArrayProperty("p_array_bool", Property::BoolType);
-    testHelper.p_array_str = db.defineArrayProperty("p_array_str", Property::StringType);
-    testHelper.r1 = db.defineRelation("r1");
-    testHelper.r2 = db.defineRelation("r2");
-    testHelper.r_array_1 =  db.defineArrayRelation("r_array_1");
-    testHelper.rArray_2 =  db.defineArrayRelation("r_array_2");
-
-    if (needIndex)
-    {
-        testHelper.p_real->createIndex();
-        testHelper.p_str->createIndex();
-        testHelper.p_int->createIndex();
-        testHelper.p_uint->createIndex();
-        testHelper.p_int64->createIndex();
-        testHelper.p_uint64->createIndex();
-        testHelper.p_bool_0->createIndex();
-        testHelper.p_bool_1->createIndex();
-        testHelper.p1->createIndex();
-        testHelper.p2->createIndex();
-        testHelper.p_array_int->createIndex();
-        testHelper.r1->createIndex();
-        testHelper.r2->createIndex();
-        testHelper.r_array_1->createIndex();
-        testHelper.rArray_2->createIndex();
-    }
-}
-
-void setBean(TestHelper& testHelper, Bean* bean)
-{
-    // bean->setProperty(testHelper.p_int, Json::Value::minInt);
-    bean->setProperty(testHelper.p_int, -1);
-    bean->setProperty(testHelper.p_uint, (Json::UInt)1);
-    bean->setProperty(testHelper.p_int64, -1);
-    bean->setProperty(testHelper.p_uint64, (Json::UInt64)1);
-    bean->setProperty(testHelper.p_real, 1.0);
-    bean->setProperty(testHelper.p_bool_0, false);
-    bean->setProperty(testHelper.p_bool_1, true);
-    bean->setProperty(testHelper.p_str, "foo");
-
-    bean->createArrayProperty(testHelper.p_array_int);
-    bean->appendProperty(testHelper.p_array_int, 101);
-    bean->appendProperty(testHelper.p_array_int, 102);
-}
-
-void validateBean(TestHelper& testHelper, Bean* bean)
-{
-    EXPECT_TRUE(bean->getProperty(testHelper.p_int).asInt() == -1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_uint).asUInt() == 1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_int64).asInt64() == -1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_uint64).asUInt64() == 1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_real).asDouble() == 1.0);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_bool_0).asBool() == false);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_bool_1).asBool() == true);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_str).asString() == "foo");
-
-    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_int, 0).asInt() == 101);
-    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_int, 1).asInt() == 102);
-}

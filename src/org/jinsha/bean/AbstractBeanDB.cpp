@@ -1,5 +1,6 @@
 #include "./AbstractBeanDB.h"
 #include "./common.h"
+#include "./internal_common.hxx"
 
 namespace org {
 namespace jinsha {
@@ -61,7 +62,9 @@ int AbstractBeanDB::beginTransaction()
     int err = 0;
     if (!m_inTransaction_) {
         err = beginTransaction_();
-        if (!err) {
+        if (err)  {
+            elog("%s", "Failed to begin transaction\n");
+        }  else {
             m_inTransaction_ = true;
         }
     } 
@@ -74,8 +77,11 @@ int AbstractBeanDB::commitTransaction()
     int err = 0;
     if (!m_inTransaction_) return -1;
     err = commitTransaction_();
-    if (!err) 
+    if (err)  {
+        elog("%s", "Failed to commit transaction\n");
+    }  else {
         m_inTransaction_ = false;
+    }
     return err;
 }
 
@@ -85,7 +91,9 @@ int AbstractBeanDB::rollbackTransaction()
     int err = 0;
     if (!m_inTransaction_) return -1;
     err = rollbackTransaction_();
-    if (!err) {
+    if (err)  {
+        elog("%s", "Failed to rollback transaction\n");
+    }  else {
         m_inTransaction_ = false;
     }
     return err;
@@ -174,96 +182,6 @@ int AbstractBeanDB::saveBean(Bean* bean)
     return bean->save();
 }
 
-// int AbstractBeanDB::saveBean(Bean* bean)
-// {
-//     if (bean == nullptr) return -1;
-//     if (!connected()) return -1;
-
-//     int err = 0;
-//     Json::Value value;
-//     const char* pname = nullptr;
-//     Property* property = nullptr;
-//     Json::ArrayIndex arraySize = 0;
-//     oidType beanId = bean->getId();
-//     bool isArray = false;
-//     Json::Value pstValue;
-//     bool alreadyInTransaction = false;
-
-//     alreadyInTransaction = inTransaction();
-//     if (!alreadyInTransaction) {
-//             if (beginTransaction() != 0) return -1;
-//     }
-
-//     err = saveBeanBase(bean);
-//     if (err) goto _out;
-
-//     for (const auto& pname : bean->m_pst_json_.getMemberNames()) {
-//         property = getWorld()->getProperty(pname.c_str());
-//         if (property == nullptr) {
-//             //todo
-//         } else {
-//             if (property->getType() == Property::ArrayPrimaryType ||
-//                 property->getType() == Property::ArrayRelationType) {
-//                     isArray = true;
-//                     arraySize = bean->m_pst_json_.size();
-//                     pstValue = Json::arrayValue;
-//                     for (int i = 0; i < arraySize; i++) {
-//                     pstValue.append(bean->m_pst_json_[pname][i]);
-//                 }                               
-//             } else {
-//                 isArray = false;
-//                 arraySize = 1;
-//                 pstValue = Json::arrayValue;
-//                 pstValue.append(bean->m_pst_json_[pname]);
-//             }
-//         }
-
-//         for (int i = 0; i < arraySize; i++) {
-//             switch (pstValue[i].asInt()) {
-//                 case Bean::PST_NSY:
-//                 case Bean::PST_SYN:
-//                     break; //no need to update
-//                 case Bean::PST_NEW:
-//                     err = insertBeanProperty(beanId, property, bean->m_json_[pname]);
-//                     if (err) goto _out;
-//                     break;
-//                 case Bean::PST_MOD:
-//                     if (isArray) {
-//                         err = updateBeanProperty(beanId, property, i, bean->m_json_[pname]);
-//                         if (err) goto _out;
-//                     } else {
-//                         err = updateBeanProperty(beanId, property, bean->m_json_[pname]);
-//                         if (err) goto _out;
-//                     }
-//                     break;
-//                 case Bean::PST_RMD:
-//                     if (isArray) {
-//                         err = deleteBeanProperty(beanId, property, i);
-//                         if (err) goto _out;
-//                     } else {
-//                         err = deleteBeanProperty(beanId, property);
-//                         if (err) goto _out;
-//                     }
-//                     break;
-//                 default:
-//                     break;
-//             } 
-//         }
-//     }
-
-// _out:
-//    if (err) {
-//         if (!alreadyInTransaction) {
-//              err = rollbackTransaction();
-//         }
-//     } else {
-//         if (!alreadyInTransaction) {
-//             err = commitTransaction();
-//         }
-//     }
-//     return err; 
-// }
-
 
 int AbstractBeanDB::deleteBean(Bean* bean)
 {
@@ -290,7 +208,7 @@ Property* AbstractBeanDB::newProperty(const char* name,
 
 Bean* AbstractBeanDB::newBean(oidType id) const
 {
-    return new Bean(id);
+    return new Bean(id, getWorld());
 }
 
 

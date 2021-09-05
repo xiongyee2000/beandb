@@ -172,7 +172,7 @@ int DummyBeanDB::rollbackTransaction_()
 }
 
 
-int DummyBeanDB::saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& nativeData)
+int DummyBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData)
 {
      return 0;
 }

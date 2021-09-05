@@ -399,8 +399,8 @@ public:
     int save();
 
 private:
-    Bean(oidType id);
-    Bean(BeanWorld* world);
+    // Bean(oidType id);
+    Bean(oidType id, BeanWorld* world);
     Bean(const Bean& bean) = delete;
     Bean& operator =(const Bean& bean) = delete;    
     virtual ~Bean();

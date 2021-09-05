@@ -47,7 +47,7 @@ private:
 
     // virtual Bean* getBean(oidType id) override;
     virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) override;
-    virtual int saveBeanBase_(oidType beanId, const Json::Value& managedValue, const Json::Value& nativeData) override;
+    virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData) override;
     virtual int deleteBean_(Bean* bean) override;
     virtual int loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value) override;
     virtual int insertBeanProperty_(oidType beanId, 

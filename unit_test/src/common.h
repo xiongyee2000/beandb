@@ -51,3 +51,12 @@ typedef struct TestHelper
 
 
 void init_world(TestHelper& testHelper, BeanWorld& world, bool needIndex = false);
+void initTestHelper(TestHelper& testHelper, AbstractBeanDB& db, bool needIndex = false);
+
+
+void setBeanProperties(TestHelper& testHelper, Bean* bean);
+void setBeanNativeData(TestHelper& testHelper, Bean* bean);
+void validateBeanProperties(TestHelper& testHelper, Bean* bean);
+void validateBeanNativeData(TestHelper& testHelper, Bean* bean);
+void validateBean(TestHelper& testHelper, Bean* bean);
+static void evaluate_testdb_empty_property(AbstractBeanDB& testdb);

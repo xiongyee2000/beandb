@@ -10,19 +10,20 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
-Bean::Bean(oidType id) : 
-m_world_(nullptr)
-, m_id_(id)
-{
-    m_json_= Json::Value(Json::ValueType::objectValue);
-    m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
-    m_pst_json_ = Json::Value(Json::ValueType::objectValue);
-    m_native_data_pst_json_ = PST_NSY;
-}
+// Bean::Bean(oidType id) : 
+// m_world_(nullptr)
+// , m_id_(id)
+// {
+//     m_json_= Json::Value(Json::ValueType::objectValue);
+//     m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
+//     m_pst_json_ = Json::Value(Json::ValueType::objectValue);
+//     m_native_data_pst_json_ = PST_NSY;
+// }
 
 
-Bean::Bean(BeanWorld* world) : 
-m_world_(world)
+Bean::Bean(oidType id, BeanWorld* world) : 
+m_id_(id)
+, m_world_(world)
 {
     m_json_= Json::Value(Json::ValueType::objectValue);
     m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
@@ -831,11 +832,11 @@ int Bean::setNativeData(Json::Value& data, bool syncToDB)
     if (syncToDB) {
         if (m_world_->m_db != nullptr) {
             //save to db
-            err = m_world_->m_db->updateBeanNativeData_(m_id_, m_native_data_json_);
+            err = m_world_->m_db->updateBeanNativeData_(m_id_, data);
             if (!err) {
                 m_native_data_json_ = data;
                 m_native_data_pst_json_ = PST_SYN;
-            }
+            } 
         } else {
             err = -1;
         }
@@ -886,13 +887,13 @@ int Bean::load()
     int err = 0;
     int size = 0;
     Property* property = nullptr;
-    Json::Value managedValue, nativeData;
+    Json::Value data, nativeData;
     Json::Value* pstValuePtr = nullptr;
 
     //unload first
     unload();
 
-    err = m_world_->m_db->loadBeanBase_(m_id_, managedValue, m_native_data_json_);
+    err = m_world_->m_db->loadBeanBase_(m_id_, data, m_native_data_json_);
     if (err) {
         m_json_ = Json::Value(Json::ValueType::objectValue);
         m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
@@ -902,7 +903,7 @@ int Bean::load()
         //delay load attribute etc...
 
         //set proper property value
-        auto pnames = managedValue.getMemberNames();
+        auto pnames = data.getMemberNames();
         for (auto& pname : pnames) {
             property = m_world_->getProperty(pname.c_str());
             if (property == nullptr) continue; //it's not a defined property
@@ -914,7 +915,7 @@ int Bean::load()
                 m_pst_json_[pname] = PST_SYN;
             }
 
-            pstValuePtr = &managedValue[pname];
+            pstValuePtr = &data[pname];
 
             if (pstValuePtr->isNull()) { //delay load
                 m_json_[pname] = Json::Value::nullRef;
@@ -1043,7 +1044,7 @@ int Bean::save()
 
     err = m_world_->m_db->saveBeanBase_(m_id_, m_json_, m_native_data_json_);
     if (err) goto out;
-    
+
     for (auto& pname : m_pst_json_.getMemberNames()) {
         property = m_world_->getProperty(pname.c_str());
         if (property == nullptr) continue;

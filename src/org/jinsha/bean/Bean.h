@@ -388,6 +388,16 @@ public:
     int setNativeData(Json::Value& data, bool syncToDB = true);
 
     /**
+     * Remove native data of this bean.
+     * 
+     * Notes:
+     * - The native data will be directly removed from database.
+     * 
+     * @return 0 if success, or an error code
+     */
+    int removeNativeData();
+
+    /**
      * Save data of this bean into database storage.
      * 
      * Note this method will call AbstractDB::saveBeanBase() firstly,
@@ -397,6 +407,16 @@ public:
      * @return 0 on success, or an error code
      */
     int save();
+
+    /**
+     * Clear all data of this bean, including all properties and native data.
+     * 
+     * Notes:
+     * - CAUTIOUS: this operation in unrevertable
+     * 
+     * @return 0 on success, or an error code
+     */
+    int clear();
 
 private:
     // Bean(oidType id);
@@ -418,7 +438,7 @@ private:
 
     void addSubject(Bean* subject, Property* relation);
     void removeSubject(Bean* subject, Property* relation);
-    int pstTransition(int currentPst, int desiredPst);
+    // int pstTransition(int currentPst, int desiredPst);
 
     ////////////////////////////////////////////////////////////////
     //DB related methods

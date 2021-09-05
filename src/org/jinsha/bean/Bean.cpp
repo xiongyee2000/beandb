@@ -3,6 +3,7 @@
 
 #include "./Bean.h"
 #include "./BeanWorld.h"
+#include "internal_common.hxx"
 
 using namespace std;
 
@@ -66,6 +67,7 @@ bool Bean::doHasProperty(const Property* property, Property::Type type) const
 
 void Bean::removeAllProperties()
 {
+    //todo: put them into  transaction, and handle exception
     for (auto& memberName : m_json_.getMemberNames())
     {
         removeProperty(m_world_->getProperty(memberName.c_str()));
@@ -604,6 +606,22 @@ Json::Value Bean::removeProperty(Property* property)
 }
 
 
+int Bean::removeNativeData()
+{
+    int err = 0;
+    if (m_world_->m_db != nullptr) {
+        err = m_world_->m_db->deleteBeanNativeData_(m_id_, m_native_data_json_);
+        if (err) {
+            elog("Failed to remove native data of bean (id=%ld) \n", m_id_);
+            return err;
+        }
+    }
+    m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
+    m_native_data_pst_json_ = PST_SYN;
+    return 0;
+}
+
+
 Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncToDB)
 {
     const auto& pname = property->getName();
@@ -850,35 +868,35 @@ int Bean::setNativeData(Json::Value& data, bool syncToDB)
 }
 
 
-int Bean::pstTransition(int currentPst, int desiredPst)
-{
-    if (currentPst < 0 || currentPst >= PST_MAX)  return -1;
-    if (desiredPst < 0 || desiredPst >= PST_MAX)  return -1;
+// int Bean::pstTransition(int currentPst, int desiredPst)
+// {
+//     if (currentPst < 0 || currentPst >= PST_MAX)  return -1;
+//     if (desiredPst < 0 || desiredPst >= PST_MAX)  return -1;
 
-    //transition table from curent pst to target pst.
-    //row index: current PST
-    //col index: argument status
-    //value: result status
-    //
-    //Example:
-    //When current pst is PST_NEW and status is  PST_MOD,
-    //the transition result will be PST_NEW, i.e. row #1 col. #2 
-    //will be 1 (index 0 based).
-    //This is rational because after modification, it will be 
-    //taken as a new property from DB perspective since
-    //it has not been synced to DB.
-    //
-    //Note -1 means to remove the pst record.
-    static const int pstTransitionTable[5][5]= {
-        {PST_NSY, PST_SYN,                  -2, PST_MOD, PST_RMD}, /*CURRENT PST_NSY*/
-        {PST_NSY, PST_SYN,                  -2, PST_MOD, PST_RMD},  /*current PST_SYN*/
-        {              -1, PST_SYN,                  -2, PST_NEW,                 -1},  /*current PST_NEW*/
-        {PST_NSY, PST_SYN,                  -2, PST_MOD, PST_RMD}, /*current PST_MOD*/
-        {PST_NSY,                -1, PST_MOD, PST_RMD, PST_RMD}  /*current PST_RMD*/
-    };
+//     //transition table from curent pst to target pst.
+//     //row index: current PST
+//     //col index: argument status
+//     //value: result status
+//     //
+//     //Example:
+//     //When current pst is PST_NEW and status is  PST_MOD,
+//     //the transition result will be PST_NEW, i.e. row #1 col. #2 
+//     //will be 1 (index 0 based).
+//     //This is rational because after modification, it will be 
+//     //taken as a new property from DB perspective since
+//     //it has not been synced to DB.
+//     //
+//     //Note -1 means to remove the pst record.
+//     static const int pstTransitionTable[5][5]= {
+//         {PST_NSY, PST_SYN,                  -2, PST_MOD, PST_RMD}, /*CURRENT PST_NSY*/
+//         {PST_NSY, PST_SYN,                  -2, PST_MOD, PST_RMD},  /*current PST_SYN*/
+//         {              -1, PST_SYN,                  -2, PST_NEW,                 -1},  /*current PST_NEW*/
+//         {PST_NSY, PST_SYN,                  -2, PST_MOD, PST_RMD}, /*current PST_MOD*/
+//         {PST_NSY,                -1, PST_MOD, PST_RMD, PST_RMD}  /*current PST_RMD*/
+//     };
 
-    return pstTransitionTable[currentPst][desiredPst];
-}
+//     return pstTransitionTable[currentPst][desiredPst];
+// }
 
 
 int Bean::load()
@@ -1132,6 +1150,15 @@ out:
     }
     
     return err;
+}
+
+
+int Bean::clear()
+{
+    //todo: put them into transaction and handle exception
+    removeAllProperties();
+    removeNativeData();
+    return 0;
 }
 
 }

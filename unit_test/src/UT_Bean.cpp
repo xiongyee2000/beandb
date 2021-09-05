@@ -499,8 +499,121 @@ TEST(Bean, array_relation)
     EXPECT_TRUE(bean3->getArraySize(testHelper.r_array_1) == 0);
 }
 
+TEST(Bean, nativeData)
+{
+    DummyBeanDB dummyDB;
+    BeanWorld world = *dummyDB.getWorld();
+    Value value;
+    int err = 0;
+    TestHelper testHelper;
+    Property* property = nullptr;
+
+    initTestHelper(testHelper, dummyDB);
+
+    Bean* bean = world.createBean();
+
+    setBeanNativeData(testHelper, bean);
+    validateBeanNativeData(testHelper, bean);
+}
+
 
 TEST(Bean, removeAllProperties)
+{
+    int err = 0;
+    DummyBeanDB testdb;
+    BeanWorld& world = *testdb.getWorld();
+
+   TestHelper testHelper;
+    Bean* bean = nullptr;
+    Bean* bean1 = nullptr;
+    Bean* bean2 = nullptr;
+    Bean* bean3 = nullptr;
+    oidType beanId_1 = 0;
+    oidType beanId_2 = 0;
+    oidType beanId_3 = 0;
+
+    testdb.reInit();
+    testdb.connect();
+
+    initTestHelper(testHelper, testdb, false);
+
+    bean1 = testdb.createBean();
+    beanId_1 = bean1->getId();
+    setBeanProperties(testHelper, bean1);
+
+    bean2 = testdb.createBean();
+    beanId_2 = bean2->getId();
+    setBeanProperties(testHelper, bean2);
+
+    bean3 = testdb.createBean();
+    beanId_3 = bean3->getId();
+    setBeanProperties(testHelper, bean3);
+
+    bean3->setRelation(testHelper.r1, bean1);
+    bean3->setRelation(testHelper.r2, bean2);
+    bean3->createArrayRelation(testHelper.r_array_1);
+    bean3->appendRelation(testHelper.r_array_1, bean1);
+    bean3->appendRelation(testHelper.r_array_1, bean2);
+
+    err = testdb.saveBean(bean1);
+    err = testdb.saveBean(bean2);
+    err = testdb.saveBean(bean3);
+
+    EXPECT_TRUE(bean1->getMemberNames().size() > 0);
+    EXPECT_TRUE(bean2->getMemberNames().size() > 0);
+    EXPECT_TRUE(bean3->getMemberNames().size() > 0);
+
+    bean1->removeAllProperties();
+    bean2->removeAllProperties();
+    bean3->removeAllProperties();
+
+    EXPECT_TRUE(bean1->getMemberNames().size() == 0);
+    EXPECT_TRUE(bean2->getMemberNames().size() == 0);
+    EXPECT_TRUE(bean3->getMemberNames().size() == 0);
+
+    testdb.reInit();
+    testdb.disconnect();
+}
+
+
+TEST(Bean, removeNativeData)
+{
+    int err = 0;
+    DummyBeanDB testdb;
+    BeanWorld& world = *testdb.getWorld();
+
+   TestHelper testHelper;
+    Bean* bean = nullptr;
+    Bean* bean1 = nullptr;
+    Bean* bean2 = nullptr;
+    Bean* bean3 = nullptr;
+    oidType beanId_1 = 0;
+    oidType beanId_2 = 0;
+    oidType beanId_3 = 0;
+
+    testdb.reInit();
+    testdb.connect();
+
+    initTestHelper(testHelper, testdb, false);
+
+    bean1 = testdb.createBean();
+    beanId_1 = bean1->getId();
+    setBeanNativeData(testHelper, bean1);
+
+    EXPECT_TRUE(bean1->getNativeData().getMemberNames().size() > 0);
+
+    bean1 = testdb.getBean(beanId_1);
+    err = bean1->removeNativeData();
+    EXPECT_TRUE(err == 0);
+
+    EXPECT_TRUE(bean1->getNativeData().getMemberNames().size() == 0);
+
+    testdb.reInit();
+    testdb.disconnect();
+}
+
+
+TEST(Bean, clear)
 {
     int err = 0;
     DummyBeanDB testdb;
@@ -548,22 +661,19 @@ TEST(Bean, removeAllProperties)
     EXPECT_TRUE(bean1->getMemberNames().size() > 0);
     EXPECT_TRUE(bean2->getMemberNames().size() > 0);
     EXPECT_TRUE(bean3->getMemberNames().size() > 0);
+    EXPECT_TRUE(bean1->getNativeData().getMemberNames().size() > 0);
 
-    testdb.disconnect();
-    testdb.connect();
-    initTestHelper(testHelper, testdb, false);
-
-    bean1 = testdb.getBean(beanId_1);
-    bean2 = testdb.getBean(beanId_2);
-    bean3 = testdb.getBean(beanId_3);
+    bean1->clear();
+    bean2->clear();
+    bean3->clear();
 
     EXPECT_TRUE(bean1->getMemberNames().size() == 0);
     EXPECT_TRUE(bean2->getMemberNames().size() == 0);
     EXPECT_TRUE(bean3->getMemberNames().size() == 0);
+    EXPECT_TRUE(bean1->getNativeData().getMemberNames().size() == 0);
 
     testdb.reInit();
     testdb.disconnect();
 }
-
 
 

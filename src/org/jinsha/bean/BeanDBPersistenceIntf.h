@@ -12,7 +12,7 @@ namespace bean {
 
 class BeanDBPersistenceIntf
 {
-public:
+protected:
     /**
      * Constructor
      */

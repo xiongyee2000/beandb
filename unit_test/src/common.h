@@ -50,8 +50,8 @@ typedef struct TestHelper
 
 
 
-void init_world(TestHelper& testHelper, BeanWorld& world, bool needIndex = false);
-void initTestHelper(TestHelper& testHelper, AbstractBeanDB& db, bool needIndex = false);
+void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex = false);
+// void initTestHelper(TestHelper& testHelper, AbstractBeanDB& db, bool needIndex = false);
 
 
 void setBeanProperties(TestHelper& testHelper, Bean* bean);

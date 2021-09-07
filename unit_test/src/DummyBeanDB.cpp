@@ -42,17 +42,6 @@ int DummyBeanDB::reInit_()
 }
 
 
-int DummyBeanDB::loadAll()
-{
-    return 0;
-}
-
-
-int DummyBeanDB::saveAll()
-{
-    return 0;
-}
-
 int DummyBeanDB::createBean_(oidType& id) 
 {
     id = m_maxOid++;
@@ -67,7 +56,9 @@ int DummyBeanDB::deleteBean_(Bean* bean)
 
 int DummyBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) 
 {
-    return 0;
+    auto& beans = m_world_->getBeans();
+    auto iter = beans.find(beanId);
+    return iter == beans.end() ? -1 : 0;
 }
 
 

@@ -73,7 +73,7 @@ TEST(Property, remove_index)
 void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<oidType>& beans, bool needIndex = false)
 {
     TestHelper testHelper;
-    init_world(testHelper, world, needIndex);
+    initTestHelper(testHelper, world, needIndex);
 
     testHelper.p_int->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
@@ -232,7 +232,7 @@ TEST(Property, getSubjects_without_index)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean &bean1 = *world.createBean();
     Bean& bean2 = *world.createBean();
@@ -247,7 +247,7 @@ TEST(Property, getSubjects_with_index)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean &bean1 = *world.createBean();
     Bean& bean2 = *world.createBean();
@@ -355,7 +355,7 @@ TEST(Property, findSubjects_without_index)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world, false);
+    initTestHelper(testHelper, world, false);
 
     Bean &bean1 = *world.createBean();
     Bean& bean2 = *world.createBean();
@@ -371,7 +371,7 @@ TEST(Property, findSubjects_with_index)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world, true);
+    initTestHelper(testHelper, world, true);
 
     Bean &bean1 = *world.createBean();
     Bean& bean2 = *world.createBean();
@@ -464,7 +464,7 @@ TEST(Property, findObjects_without_index)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean &bean1 = *world.createBean();
     Bean& bean2 = *world.createBean();
@@ -480,7 +480,7 @@ TEST(Property, findObjects_with_index)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world, true);
+    initTestHelper(testHelper, world, true);
 
     Bean &bean1 = *world.createBean();
     Bean& bean2 = *world.createBean();
@@ -564,7 +564,7 @@ TEST(Property, findEqual_without_index)
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
     Bean *bean1 = world.createBean();
     Bean *bean2 = world.createBean();
     test_findEqual_common(testHelper, world, bean1, bean2);
@@ -575,7 +575,7 @@ TEST(Property, findEqual_with_index)
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
     Bean *bean1 = world.createBean();
     Bean *bean2 = world.createBean();
 
@@ -711,7 +711,7 @@ TEST(Property, findLessEqual_without_index)
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean* bean1 = world.createBean();
     Bean* bean2 = world.createBean();
@@ -725,10 +725,10 @@ TEST(Property, findLessEqual_with_index)
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean* bean1 = world.createBean();
-    // bean1->setProperty(testHelper.p_double, 1.0);
+    // bean1->setProperty(testHelper.p_real, 1.0);
     // bean1->setProperty(testHelper.p_str, "hello");
     // bean1->setProperty(testHelper.p_int, 1);
     // bean1->setProperty(testHelper.p_uint, 1U);
@@ -736,7 +736,7 @@ TEST(Property, findLessEqual_with_index)
     // bean1->setProperty(testHelper.p_uint64, 101U);
 
     Bean* bean2 = world.createBean();
-    // bean2->setProperty(testHelper.p_double, 2.0);
+    // bean2->setProperty(testHelper.p_real, 2.0);
     // bean2->setProperty(testHelper.p_str, "my");
     // bean2->setProperty(testHelper.p_int, 2);
     // bean2->setProperty(testHelper.p_uint, 2U);
@@ -744,7 +744,7 @@ TEST(Property, findLessEqual_with_index)
     // bean2->setProperty(testHelper.p_uint64, 102U);
 
     Bean* bean3 = world.createBean();
-    // bean3->setProperty(testHelper.p_double, 3.0);
+    // bean3->setProperty(testHelper.p_real, 3.0);
     // bean3->setProperty(testHelper.p_str, "world");
     // bean3->setProperty(testHelper.p_int, 3);
     // bean3->setProperty(testHelper.p_uint, 3U);
@@ -882,7 +882,7 @@ TEST(Property, findGreaterEqual_without_index)
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean* bean1 = world.createBean();
     Bean* bean2 = world.createBean();
@@ -898,7 +898,7 @@ TEST(Property, findGreaterEqual_with_index)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean* bean1 = world.createBean();
     Bean* bean2 = world.createBean();
@@ -1045,7 +1045,7 @@ TEST(Property, findLessThan_without_index)
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean* bean1 = world.createBean();
     Bean* bean2 = world.createBean();
@@ -1059,7 +1059,7 @@ TEST(Property, findLessThan_with_index)
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean* bean1 = world.createBean();
     Bean* bean2 = world.createBean();
@@ -1213,7 +1213,7 @@ TEST(Property, findGreaterThan_without_index)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean* bean1 = world.createBean();
     Bean* bean2 = world.createBean();
@@ -1226,7 +1226,7 @@ TEST(Property, findGreaterThan_with_index)
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     TestHelper testHelper;
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean* bean1 = world.createBean();
     Bean* bean2 = world.createBean();
@@ -1264,7 +1264,7 @@ TEST(Property, index_more_complicated)
     std::list<oidType> beans;
     TestHelper testHelper;
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     ///////////////////////////////////////////////////////
     //createIndex()

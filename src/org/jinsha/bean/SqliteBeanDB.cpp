@@ -191,18 +191,6 @@ int SqliteBeanDB::closeDB()
 }
 
 
-int SqliteBeanDB::loadAll()
-{
-    return 0;
-}
-
-
-int SqliteBeanDB::saveAll()
-{
-    return 0;
-}
-
-
 int SqliteBeanDB::createBean_(oidType &beanId)
 {
     if (m_sqlite3Db_ == nullptr) return -1;
@@ -276,7 +264,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
         }
 
         for (auto& pname : value.getMemberNames()) {
-            property = m_world_->getProperty(pname.c_str());
+            property = getWorld()->getProperty(pname.c_str());
             if (property == nullptr) continue; //it's not a defined property
             //filter out delay load properties
             if (isDelayLoad(*property)) {
@@ -1051,7 +1039,7 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const J
     if (err != SQLITE_OK) goto _out;
 
     for (auto& pname : data.getMemberNames()) {
-        property = getProperty(pname.c_str());
+        property = getWorld()->getProperty(pname.c_str());
         if (property == nullptr) continue; //todo: error here?
         if (!isDelayLoad(*property)) {
             tmpValue[pname] = data[pname];

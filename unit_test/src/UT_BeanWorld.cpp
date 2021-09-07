@@ -85,22 +85,22 @@ TEST(BeanWorld, getBean)
 {
     DummyBeanDB dummyDB;
     BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
-    Bean* bean_ = nullptr;
+    Bean* bean = nullptr;
 
     std::vector<int>::const_iterator it;
 
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
     Bean *bean3 = world->createBean();
-    bean_ = world->getBean(bean1->getId());
-    EXPECT_TRUE(bean_ == bean1);
-    bean_ = world->getBean(bean2->getId());
-    EXPECT_TRUE(bean_ == bean2);
-    bean_ = world->getBean(bean3->getId());
-    EXPECT_TRUE(bean_ == bean3);
+    bean = world->getBean(bean1->getId());
+    EXPECT_TRUE(bean == bean1);
+    bean = world->getBean(bean2->getId());
+    EXPECT_TRUE(bean == bean2);
+    bean = world->getBean(bean3->getId());
+    EXPECT_TRUE(bean == bean3);
 
-    bean_ = world->getBean(555);
-    EXPECT_TRUE(bean_ == nullptr);
+    bean = world->getBean(555);
+    EXPECT_TRUE(bean == nullptr);
 
     delete world;
 }
@@ -213,7 +213,7 @@ TEST(BeanWorld, getProperty)
     const Property* property = nullptr;
     TestHelper testHelper;
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     property = world.getProperty(nullptr);
     EXPECT_TRUE(property == nullptr);
@@ -286,7 +286,7 @@ TEST(BeanWorld, removeBean)
     oidType oid = 0;
     TestHelper testHelper;
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, world);
 
     Bean* bean1 = world.createBean();
     Bean* bean2 = world.createBean();

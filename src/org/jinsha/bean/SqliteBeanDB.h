@@ -42,9 +42,6 @@ private:
     virtual int createBean_(oidType &id);
     virtual std::list<std::string> getBeanProperties_(oidType id) const override;
 
-    int loadAll() override;
-    int saveAll() override;
-
     // virtual Bean* getBean(oidType id) override;
     virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) override;
     virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData) override;

@@ -45,15 +45,19 @@ void BeanWorld::clear()
 }
 
 
-Bean* BeanWorld::createBean(oidType id)
+Bean* BeanWorld::createBean()
 {
-    Bean* bean = new Bean(id, this);
-    assert(bean);
-    if (id == 0)
-        bean->m_id_ = generateBeanId();
-    else 
-        bean->m_id_ = id;
-    m_beans_[bean->m_id_] = bean;
+    int err = 0;
+    oidType id = 0;
+    Bean* bean = nullptr;
+    err  = m_db->createBean_(id);
+    if (err) {
+        elog("Failed to create bean in database. (err=%d) \n", err);
+    } else {
+        bean = new Bean(id, this);
+        assert(bean);
+        m_beans_[id] = bean;
+    } 
     return bean;
 };
 
@@ -118,15 +122,38 @@ const unordered_map<oidType, Bean*>& BeanWorld::getBeans()
 
 Bean* BeanWorld::getBean(oidType id)
 {
+    int err = 0;
+    Bean* bean = nullptr;
     auto iter = m_beans_.find(id);
     if (iter == m_beans_.end())
-    {
-        return nullptr;
+    { //bean not found in this world, try to load it from db
+        bean = new Bean(id, this);
+        err = bean->load();
+        if (err) { //no such bean in db
+            delete bean;
+            bean = nullptr;
+        } else {
+            m_beans_[id] = bean;
+        }
+    } else {
+        bean = iter->second;
     }
-    else
-    {
-        return iter->second;
+
+    return bean;
+}
+
+
+int BeanWorld::deleteBean(Bean* bean)
+{
+    if (bean == nullptr) return 0;
+    
+    int err = 0;
+    err = m_db->deleteBean_(bean);
+    if (!err) {
+        removeBean(bean->getId());
     }
+    
+    return err;
 }
 
 
@@ -260,11 +287,18 @@ int BeanWorld::unloadBean(oidType id)
 }
 
 
-oidType BeanWorld::generateBeanId()
+int BeanWorld::loadAll()
 {
-    //todo: currently just return m_maxBeanId_++ assuming it is enough.
-    return m_maxBeanId_++;
-};
+    //todo:
+    return -1;
+}
+
+
+int BeanWorld::saveAll()
+{
+    //todo:
+    return -1;
+}
 
 
 }

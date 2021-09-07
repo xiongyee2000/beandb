@@ -7,6 +7,7 @@
 #include "./common.h"
 #include "./Property.h"
 #include "./Bean.h"
+#include "./BeanDBUserIntf.h"
 #include "./AbstractBeanDB.h"
 
 namespace org {
@@ -17,7 +18,7 @@ class Bean;
 class Property;
 class AbstractBeanDB;
 
-class BeanWorld
+class BeanWorld : public BeanDBUserIntf
 {
 public:
     /**
@@ -40,19 +41,89 @@ public:
      */
     virtual void clear();
 
+
+    /***********************************************************
+     * property related
+     ***********************************************************/
+public:
     /**
-     *  Create a bean.
-     * 
-     * @return the created bean
+     * @ref BeanDBUserIntf::defineProperty()
      */
-    virtual Bean *createBean(oidType id = 0);
+    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
+
+    /**
+     * @ref BeanDBUserIntf::defineArrayProperty()
+     */
+    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
+
+    /**
+     * @ref BeanDBUserIntf::defineRelation()
+     */
+    virtual Property* defineRelation(const char* name, bool needIndex = false) override;
+
+    /**
+     * @ref BeanDBUserIntf::defineArrayRelation()
+     */
+    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) override;
+
+    /**
+     * @ref BeanDBUserIntf::undefineProperty()
+     */
+     virtual int undefineProperty(const char* name) override;
+
+    /**
+     * @ref BeanDBUserIntf::undefineRelation()
+     */
+    virtual int undefineRelation(const char* name) override {return undefineProperty(name);};
+
+    /**
+     * @ref BeanDBUserIntf::getProperty()
+     */
+    // virtual const Property* getProperty(const char* name) const;
+    virtual Property* getProperty(const char* name) override;
+
+    /**
+     * @ref BeanDBUserIntf::getProperties()
+     */
+    virtual const std::unordered_map<std::string, Property*>& getProperties() override;
+
+
+    /***********************************************************
+     * bean related
+     ***********************************************************/
+public:
+    /**
+     * @ref BeanDBUserIntf::createBean()
+     */
+    virtual Bean* createBean() override;
+
+    /**
+     * @ref BeanDBUserIntf::getBean()
+     */
+    virtual Bean* getBean(oidType id) override;
+
+    /**
+     * @ref BeanDBUserIntf::deleteBean()
+     */
+    virtual int deleteBean(Bean* bean) override;
+
+
+    /**
+     * @ref BeanDBUserIntf::loadAll()
+     */
+    virtual int loadAll() override;
+
+    /**
+     * @ref BeanDBUserIntf::saveAll()
+     */
+    virtual int saveAll() override;
 
     /**
      * Remove a bean from this world. 
      * 
      * @param id the id of the bean
      */
-    virtual void removeBean(oidType id);
+    virtual void removeBean(oidType id) override;
 
     /**
      * Get total number of beans.
@@ -69,105 +140,11 @@ public:
     virtual const std::unordered_map<oidType, Bean*>& getBeans();
 
     /**
-     * Get bean by id.
-     * 
-     * @param id the bean id
-     * @return the bean, or nullptr
-     */
-    virtual Bean* getBean(oidType id);
-
-    /**
-     * Define a property.
-     * 
-     * Property must be defined before it can be used.
-     * 
-     * Notes:
-     * - Property is type sensitive: i.e. setting the property with a value of type other
-     *    than the one defined here will fail.
-     * 
-     * @param name the name of property
-     * @param valueType the value type of property
-     * @param needIndex if index is needed
-     * @return the pointer to the property instance
-     */
-    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
-
-    /**
-     * Define an array property.
-     * 
-     * Array property must be defined before it can be used.
-     * 
-     * Notes:
-     * - Array property is type sensitive: i.e. adding to the array property 
-     *   with a value of type other than the one defined here will fail.
-     * 
-     * @param name the name of property
-     * @param valueType the value type of the element of the array property
-     * @param needIndex if index is needed
-     * @return the pointer to the property instance
-     */
-    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false);
-
-    /**
-     * Define a relation property.
-     * 
-     * Relation is a special kind of property, which represents relationship between
-     * two beans, e.g. father/mother etc.
-     * 
-     * @param name the name of relation property
-     * @param needIndex if index is needed
-     * @return the pointer to the property instance
-     */
-    virtual Property* defineRelation(const char* name, bool needIndex = false);
-
-    /**
-     * Define an array relation property.
-     * 
-     * Array relation property must be defined before it can be used.
-     * 
-     * @param name the name of array relation property
-     * @param needIndex if index is needed
-     * @return the pointer to the property instance
-     */
-    virtual Property* defineArrayRelation(const char* name, bool needIndex = false);
-
-    /**
-     * Undefine a property.
-     * 
-     * Notes:
-     * - This method can be used to undefine either a property, an array property,
-     *    a relation, or an array relation;
-     * - All beans that have this property will remove the property with this id.
-     * 
-     * @param name the name of property
-     * @return 
-     */
-    virtual int undefineProperty(const char* name);
-    virtual int undefineRelation(const char* name) {return undefineProperty(name);};
-
-    /**
-     * Get property/relation/array property/array relation by name.
-     * 
-     * @param name property name
-     * @return property
-     */
-    // virtual const Property* getProperty(const char* name) const;
-    virtual Property* getProperty(const char* name);
-
-    /**
-     * Get all properties.
-     * 
-     * @return a map containing all properties.
-     */
-    virtual const std::unordered_map<std::string, Property*>& getProperties();
-
-    /**
      * Remove all beans from this world.
      */
     int unloadBean(oidType id);
 
 protected:
-    oidType generateBeanId();
     int reloadProperties();
     Property* definePropertyCommon_(const char* name, 
         Property::Type type, 
@@ -176,7 +153,6 @@ protected:
 
 protected:
     std::unordered_map<oidType, Bean*> m_beans_;
-    oidType m_maxBeanId_ = 1;
 
      //map from property name to property
     std::unordered_map<std::string, Property*> m_propertyMap_; 

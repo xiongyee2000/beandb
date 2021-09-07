@@ -12,30 +12,59 @@ namespace bean {
 
 class BeanDBPersistenceIntf
 {
-protected:
+    /***********************************************************
+     * connection related
+     ***********************************************************/
+ public:
     /**
-     * Constructor
+     * Connect to the database. 
+     * 
+     * @return 0 for success, or an error code
      */
-    BeanDBPersistenceIntf() {};
-    
+    virtual int connect() = 0;
+
     /**
-     * Destructor
+     * Disonnect to the database. 
+     * 
+     * CAUTION: 
+     * Once disconnected, all beans and properties
+     * previously loaded will be deleted!
+     * 
+     * @return 0 for success, or an error code
      */
-    virtual ~BeanDBPersistenceIntf() {};
+    virtual int disconnect() = 0;
+
+    /**
+     * Is the database connected.
+     * 
+     * @return true if connected, or false otherwise 
+     */
+    virtual bool connected() const = 0;
+
 
     /**
      * Re-initialize the database.
      * 
-     * CAUTION: all data will be removed
+     * Notes:
+     * - This method is used to re-initialize the database, 
+     *    e.g. recreate data structure etc.
+     * - This method must be called while the database
+     *    is disconnected.
+     * - CAUTION: all data stored will be unrecoverably deleted
+     * 
+     * @return 0 for success, or an error code
+     */
+    virtual int reInit() = 0;
+
+    /**
+     * Re-initialize the database.
+     *
      * 
      * @return 0 for success, or an error code
      */
     virtual int reInit_() = 0;
 
-    /***********************************************************
-     * connection related
-     ***********************************************************/
-    
+
     /**
      * Connect to the database. 
      * 

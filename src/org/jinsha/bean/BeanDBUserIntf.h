@@ -23,76 +23,6 @@ public:
      */
     virtual  ~BeanDBUserIntf() {};
 
-    /**
-     * Re-initialize the database.
-     * 
-     * CAUTION: all data will be removed
-     * 
-     * @return 0 for success, or an error code
-     */
-    virtual int reInit() = 0;
-
-    /***********************************************************
-     * connection related
-     ***********************************************************/
-public:
-    /**
-     * Connect to the database. 
-     * 
-     * @return 0 for success, or an error code
-     */
-    virtual int connect() = 0;
-
-    /**
-     * Disonnect to the database. 
-     * 
-     * CAUTION: 
-     * Once disconnected, all beans and properties
-     * previously loaded will be deleted!
-     * 
-     * @return 0 for success, or an error code
-     */
-    virtual int disconnect() = 0;
-
-    /**
-     * Is the database connected.
-     * 
-     * @return true if connected, or false otherwise 
-     */
-    virtual bool connected() const = 0;
-
-    /***********************************************************
-     * transaction related
-     ***********************************************************/
-    /**
-     * Begin a transaction.
-     * 
-     * @return 0 on success, or an error code
-     */
-    virtual int beginTransaction() = 0;
-
-    /**
-     * Commit a transaction.
-     * 
-     * @return 0 on success, or an error code
-     */
-    virtual int commitTransaction() = 0;
-
-    /**
-     * Rollback a transaction.
-     * 
-     * @return 0 on success, or an error code
-     */
-    virtual int rollbackTransaction() = 0;
-
-    /**
-     * Check if it is in a transaction
-     * 
-     * @return true if in a transaction, or false if not
-     */
-    virtual bool inTransaction() = 0;
-
-
     /***********************************************************
      * property related
      ***********************************************************/
@@ -228,12 +158,14 @@ public:
     virtual Bean* getBean(oidType id) = 0;
 
     /**
-     * Save a single bean into the storage.
+     * Remove a bean from this world. 
      * 
-     * @param bean the bean to be saved
-     * @return 0 for success, or an error code
+     * Notes:
+     * - The bean will NOT be deleted from the database.
+     * 
+     * @param id the id of the bean
      */
-    virtual int saveBean(Bean* bean) = 0;
+    virtual void removeBean(oidType id) = 0;
 
     /**
      * Remove a single bean from the storage.

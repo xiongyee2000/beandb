@@ -58,16 +58,13 @@ public:
     virtual int deleteBeanNativeData_(oidType beanId, 
         const Json::Value& value) override;
     virtual int loadBeanNativeData_(oidType beanId, Json::Value& value) override;
-    
-    virtual int loadAll() override;
-    virtual int saveAll() override;
 
     virtual int reInit_() override;
 
 private:
     int internalInit();
-    pidType m_maxPid = 0;
-    oidType m_maxOid = 0;
+    pidType m_maxPid = 1;
+    oidType m_maxOid = 1;
     std::unordered_map<std::string, Property*> m_properties;
 
 private:

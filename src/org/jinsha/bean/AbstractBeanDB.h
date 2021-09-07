@@ -8,7 +8,7 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
-class AbstractBeanDB : public BeanDBUserIntf, public BeanDBPersistenceIntf
+class AbstractBeanDB : public BeanDBPersistenceIntf
 {
 
     ////////////////////////////////////////////////////////////////////////
@@ -27,133 +27,73 @@ public:
     virtual ~AbstractBeanDB();
 
     /**
-     * @ref BeanDBUserIntf::reInit()
+     * @ref BeanDBPersistenceIntf::reInit()
      */
     virtual int reInit() override;
+
+
 
     /***********************************************************
      * connection related
      ***********************************************************/
 public:
     /**
-     * @ref BeanDBUserIntf::connect()
+     * Connect to the database. 
+     * 
+     * @return 0 for success, or an error code
      */
     virtual int connect() override;
 
     /**
-     * @ref BeanDBUserIntf::disconnect()
+     * Disonnect to the database. 
+     * 
+     * CAUTION: 
+     * Once disconnected, all beans and properties
+     * previously loaded will be deleted!
+     * 
+     * @return 0 for success, or an error code
      */
     virtual int disconnect() override;
 
     /**
-     * @ref BeanDBUserIntf::connected()
+     * Is the database connected.
+     * 
+     * @return true if connected, or false otherwise 
      */
     virtual bool connected() const override;
+
 
     /***********************************************************
      * transaction related
      ***********************************************************/
     /**
-     * @ref BeanDBUserIntf::beginTransaction()
+     * Begin a transaction.
+     * 
+     * @return 0 on success, or an error code
      */
-    virtual int beginTransaction() override;
+    virtual int beginTransaction();
 
     /**
-     * @ref BeanDBUserIntf::commitTransaction()
+     * Commit a transaction.
+     * 
+     * @return 0 on success, or an error code
      */
-    virtual int commitTransaction() override;
+    virtual int commitTransaction();
 
     /**
-     * @ref BeanDBUserIntf::rollbackTransaction()
+     * Rollback a transaction.
+     * 
+     * @return 0 on success, or an error code
      */
-    virtual int rollbackTransaction() override;
+    virtual int rollbackTransaction();
 
     /**
-     * @ref BeanDBUserIntf::inTransaction()
+     * Check if it is in a transaction
+     * 
+     * @return true if in a transaction, or false if not
      */
-    virtual bool inTransaction() override;
+    virtual bool inTransaction();
 
-
-    /***********************************************************
-     * property related
-     ***********************************************************/
-public:
-    /**
-     * @ref BeanDBUserIntf::defineProperty()
-     */
-    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
-
-    /**
-     * @ref BeanDBUserIntf::defineArrayProperty()
-     */
-    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
-
-    /**
-     * @ref BeanDBUserIntf::defineRelation()
-     */
-    virtual Property* defineRelation(const char* name, bool needIndex = false) override;
-
-    /**
-     * @ref BeanDBUserIntf::defineArrayRelation()
-     */
-    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) override;
-
-    /**
-     * @ref BeanDBUserIntf::undefineProperty()
-     */
-     virtual int undefineProperty(const char* name) override;
-
-    /**
-     * @ref BeanDBUserIntf::undefineRelation()
-     */
-    virtual int undefineRelation(const char* name) override {return undefineProperty(name);};
-
-    /**
-     * @ref BeanDBUserIntf::getProperty()
-     */
-    // virtual const Property* getProperty(const char* name) const;
-    virtual Property* getProperty(const char* name) override;
-
-    /**
-     * @ref BeanDBUserIntf::getProperties()
-     */
-    virtual const std::unordered_map<std::string, Property*>& getProperties() override;
-
-
-    /***********************************************************
-     * bean related
-     ***********************************************************/
-public:
-    /**
-     * @ref BeanDBUserIntf::createBean()
-     */
-    virtual Bean* createBean() override;
-
-    /**
-     * @ref BeanDBUserIntf::getBean()
-     */
-    virtual Bean* getBean(oidType id) override;
-
-    /**
-     * @ref BeanDBUserIntf::saveBean()
-     */
-    virtual int saveBean(Bean* bean) override;
-
-    /**
-     * @ref BeanDBUserIntf::deleteBean()
-     */
-    virtual int deleteBean(Bean* bean) override;
-
-
-    /**
-     * @ref BeanDBUserIntf::loadAll()
-     */
-    virtual int loadAll() override;
-
-    /**
-     * @ref BeanDBUserIntf::saveAll()
-     */
-    virtual int saveAll() override;
 
     ////////////////////////////////////////////////////////////////////////
     // Other methods that derived class may use

@@ -22,19 +22,25 @@ using namespace org::jinsha::bean;
 TEST(Bean, Constructor)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
+    BeanWorld* world = nullptr;
+    
+    dummyDB.connect();
+    world = dummyDB.getWorld();
 
-    Bean *bean = new Bean(0, &world);
+    Bean *bean = new Bean(0, world);
     EXPECT_TRUE(nullptr != bean);
 }
 
 TEST(Bean, getId)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
+    BeanWorld* world = nullptr;
+    
+    dummyDB.connect();
+    world = dummyDB.getWorld();
 
-    Bean *bean1 = world.createBean();
-    Bean *bean2 = world.createBean();
+    Bean *bean1 = world->createBean();
+    Bean *bean2 = world->createBean();
     EXPECT_TRUE(bean1->getId() >= 0);
     EXPECT_TRUE(bean2->getId() >= 0);
     EXPECT_TRUE(bean1->getId() != bean2->getId());
@@ -43,13 +49,16 @@ TEST(Bean, getId)
 TEST(Bean, isMember)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     TestHelper testHelper;
-
-    init_world(testHelper, world);
+    BeanWorld* world = nullptr;
     
-    Bean* bean1 = world.createBean();
+    dummyDB.connect();
+    world = dummyDB.getWorld();
+
+    initTestHelper(testHelper, *world);
+    
+    Bean* bean1 = world->createBean();
 
     EXPECT_TRUE(!bean1->isMember(nullptr));
 
@@ -69,7 +78,7 @@ TEST(Bean, isMember)
     EXPECT_TRUE(bean1->isMember(testHelper.p_array_int));
     EXPECT_TRUE(bean1->getMemberNames().size() == 3);
 
-    Bean* bean2 = world.createBean();
+    Bean* bean2 = world->createBean();
 
     EXPECT_TRUE(!bean1->isMember(testHelper.r1));
     bean1->setRelation(testHelper.r1, nullptr);
@@ -87,14 +96,17 @@ TEST(Bean, isMember)
 TEST(Bean, create_has_remove)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     int err = 0;
     TestHelper testHelper;
+    BeanWorld* world = nullptr;
     
-    init_world(testHelper, world);
+    dummyDB.connect();
+    world = dummyDB.getWorld();
 
-    Bean* bean1 = world.createBean();
+    initTestHelper(testHelper, *world);
+
+    Bean* bean1 = world->createBean();
 
     err = bean1->createArrayProperty(nullptr);
     EXPECT_TRUE(err == -2);
@@ -119,7 +131,7 @@ TEST(Bean, create_has_remove)
     EXPECT_TRUE(!bean1->hasRelation(testHelper.p_array_int));
     EXPECT_TRUE(!bean1->hasArrayRelation(testHelper.p_array_int));
 
-    Bean* bean2 = world.createBean();
+    Bean* bean2 = world->createBean();
 
     EXPECT_TRUE(!bean1->hasRelation(testHelper.r1));
     bean1->setRelation(testHelper.r1, nullptr);
@@ -171,15 +183,18 @@ TEST(Bean, create_has_remove)
 TEST(Bean, property)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     int err = 0;
     TestHelper testHelper;
     Property* property = nullptr;
+    BeanWorld* world = nullptr;
+    
+    dummyDB.connect();
+    world = dummyDB.getWorld();
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, *world);
 
-    Bean &bean = *world.createBean();
+    Bean &bean = *world->createBean();
 
     err = bean.setProperty(testHelper.p1, Json::Value());
     EXPECT_TRUE(err == -1);
@@ -202,8 +217,8 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.hasProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == Json::Value::minInt64);
 
-    world.undefineProperty("p1");
-    testHelper.p1 = world.defineProperty("p1", Property::UIntType);
+    world->undefineProperty("p1");
+    testHelper.p1 = world->defineProperty("p1", Property::UIntType);
 
     err = bean.setProperty(testHelper.p1, Json::Value::maxUInt);
     EXPECT_TRUE(err == 0);
@@ -219,8 +234,8 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.hasProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == Json::Value::maxUInt64);
 
-    world.undefineProperty("p1");
-    testHelper.p1 = world.defineProperty("p1", Property::RealType);
+    world->undefineProperty("p1");
+    testHelper.p1 = world->defineProperty("p1", Property::RealType);
 
     err = bean.setProperty(testHelper.p1, 8.8f);
     EXPECT_TRUE(err == 0);
@@ -236,8 +251,8 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.hasProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == 8.8);
 
-    world.undefineProperty("p1");
-    testHelper.p1 = world.defineProperty("p1", Property::StringType);
+    world->undefineProperty("p1");
+    testHelper.p1 = world->defineProperty("p1", Property::StringType);
 
     bean.setProperty(testHelper.p1, "v1");
     EXPECT_TRUE(bean.getProperty(testHelper.p1) == "v1");
@@ -246,8 +261,8 @@ TEST(Bean, property)
     EXPECT_TRUE(value == "v1");
 
     bean.setProperty(testHelper.p1, "v1");
-    world.undefineProperty("p2");
-    testHelper.p2 = world.defineProperty("p2", Property::StringType);
+    world->undefineProperty("p2");
+    testHelper.p2 = world->defineProperty("p2", Property::StringType);
     err = bean.setProperty(testHelper.p2, "v2");
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 2);
@@ -263,8 +278,8 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.getProperty(testHelper.p2).isNull());
 
-    world.undefineProperty("p1");
-    testHelper.p1 = world.defineProperty("p1", Property::BoolType);
+    world->undefineProperty("p1");
+    testHelper.p1 = world->defineProperty("p1", Property::BoolType);
     err = bean.setProperty(testHelper.p1, true);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
@@ -289,15 +304,18 @@ TEST(Bean, property)
 TEST(Bean, array_property)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
     Json::Value value;
     Property* property;
     int err = 0;
     TestHelper testHelper;
+    BeanWorld* world = nullptr;
+    
+    dummyDB.connect();
+    world = dummyDB.getWorld();
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, *world);
 
-    Bean &bean = *world.createBean();
+    Bean &bean = *world->createBean();
     EXPECT_TRUE(bean.hasArrayProperty(testHelper.p_array_int) == false);
     EXPECT_TRUE(bean.getArraySize(testHelper.p_array_int) == 0);
     Value value2 = bean.getArrayProperty(testHelper.p_array_int, 0);
@@ -313,8 +331,8 @@ TEST(Bean, array_property)
     err = bean.setProperty(nullptr, 0, 1);
     EXPECT_TRUE(err == -2);
 
-    property = world.defineArrayProperty("p_array_int", Property::IntType);
-    EXPECT_TRUE(property == world.getProperty("p_array_int"));
+    property = world->defineArrayProperty("p_array_int", Property::IntType);
+    EXPECT_TRUE(property == world->getProperty("p_array_int"));
     err = bean.appendProperty(testHelper.p_array_int, 1);
     EXPECT_TRUE(err == -4);
     err = bean.setProperty(testHelper.p_array_int, 0, 1);
@@ -379,14 +397,17 @@ TEST(Bean, array_property)
 TEST(Bean, relation)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     int err = 0;
     TestHelper testHelper;
+    BeanWorld* world = nullptr;
+    
+    dummyDB.connect();
+    world = dummyDB.getWorld();
 
-    init_world(testHelper, world);
+    initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world.createBean();
+    Bean* bean1 = world->createBean();
 
     EXPECT_TRUE(!bean1->getRelationBeanId(nullptr));
 
@@ -398,7 +419,7 @@ TEST(Bean, relation)
     bean1->createArrayProperty(testHelper.p_array_int);
     EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p_array_int));
 
-    Bean* bean2 = world.createBean();
+    Bean* bean2 = world->createBean();
 
     err = bean1->setRelation(testHelper.r1, nullptr);
     EXPECT_TRUE(err == -1);
@@ -417,16 +438,19 @@ TEST(Bean, relation)
 TEST(Bean, array_relation)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
     int err = 0;
     TestHelper testHelper;
+    BeanWorld* world = nullptr;
     
-    init_world(testHelper, world);
+    dummyDB.connect();
+    world = dummyDB.getWorld();
 
-    Bean* bean1 = world.createBean();
-    Bean* bean2 = world.createBean();
-    Bean* bean3 = world.createBean();
+    initTestHelper(testHelper, *world);
+
+    Bean* bean1 = world->createBean();
+    Bean* bean2 = world->createBean();
+    Bean* bean3 = world->createBean();
 
     err = bean1->appendRelation(testHelper.r_array_1, nullptr);
     EXPECT_TRUE(err == -1);
@@ -502,15 +526,18 @@ TEST(Bean, array_relation)
 TEST(Bean, nativeData)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world = *dummyDB.getWorld();
+    BeanWorld *world = nullptr;
     Value value;
     int err = 0;
     TestHelper testHelper;
     Property* property = nullptr;
 
-    initTestHelper(testHelper, dummyDB);
+    dummyDB.connect();
+    world = dummyDB.getWorld();
 
-    Bean* bean = world.createBean();
+    initTestHelper(testHelper, *world, false);
+
+    Bean* bean = world->createBean();
 
     setBeanNativeData(testHelper, bean);
     validateBeanNativeData(testHelper, bean);
@@ -521,7 +548,7 @@ TEST(Bean, removeAllProperties)
 {
     int err = 0;
     DummyBeanDB testdb;
-    BeanWorld& world = *testdb.getWorld();
+    BeanWorld* world = nullptr;
 
    TestHelper testHelper;
     Bean* bean = nullptr;
@@ -534,18 +561,19 @@ TEST(Bean, removeAllProperties)
 
     testdb.reInit();
     testdb.connect();
+    world = testdb.getWorld();
 
-    initTestHelper(testHelper, testdb, false);
+    initTestHelper(testHelper, *world, false);
 
-    bean1 = testdb.createBean();
+    bean1 = world->createBean();
     beanId_1 = bean1->getId();
     setBeanProperties(testHelper, bean1);
 
-    bean2 = testdb.createBean();
+    bean2 = world->createBean();
     beanId_2 = bean2->getId();
     setBeanProperties(testHelper, bean2);
 
-    bean3 = testdb.createBean();
+    bean3 = world->createBean();
     beanId_3 = bean3->getId();
     setBeanProperties(testHelper, bean3);
 
@@ -555,9 +583,9 @@ TEST(Bean, removeAllProperties)
     bean3->appendRelation(testHelper.r_array_1, bean1);
     bean3->appendRelation(testHelper.r_array_1, bean2);
 
-    err = testdb.saveBean(bean1);
-    err = testdb.saveBean(bean2);
-    err = testdb.saveBean(bean3);
+    err = bean1->save();
+    err = bean2->save();
+    err = bean3->save();
 
     EXPECT_TRUE(bean1->getMemberNames().size() > 0);
     EXPECT_TRUE(bean2->getMemberNames().size() > 0);
@@ -580,7 +608,7 @@ TEST(Bean, removeNativeData)
 {
     int err = 0;
     DummyBeanDB testdb;
-    BeanWorld& world = *testdb.getWorld();
+    BeanWorld* world = nullptr;
 
    TestHelper testHelper;
     Bean* bean = nullptr;
@@ -593,16 +621,17 @@ TEST(Bean, removeNativeData)
 
     testdb.reInit();
     testdb.connect();
+    world = testdb.getWorld();
 
-    initTestHelper(testHelper, testdb, false);
+    initTestHelper(testHelper, *world, false);
 
-    bean1 = testdb.createBean();
+    bean1 = world->createBean();
     beanId_1 = bean1->getId();
     setBeanNativeData(testHelper, bean1);
 
     EXPECT_TRUE(bean1->getNativeData().getMemberNames().size() > 0);
 
-    bean1 = testdb.getBean(beanId_1);
+    bean1 = world->getBean(beanId_1);
     err = bean1->removeNativeData();
     EXPECT_TRUE(err == 0);
 
@@ -617,7 +646,7 @@ TEST(Bean, clear)
 {
     int err = 0;
     DummyBeanDB testdb;
-    BeanWorld& world = *testdb.getWorld();
+    BeanWorld* world = nullptr;
 
    TestHelper testHelper;
     Bean* bean = nullptr;
@@ -630,20 +659,21 @@ TEST(Bean, clear)
 
     testdb.reInit();
     testdb.connect();
+    world = testdb.getWorld();
 
-    initTestHelper(testHelper, testdb, false);
+    initTestHelper(testHelper, *world, false);
 
-    bean1 = testdb.createBean();
+    bean1 = world->createBean();
     beanId_1 = bean1->getId();
     setBeanProperties(testHelper, bean1);
     setBeanNativeData(testHelper, bean1);
 
-    bean2 = testdb.createBean();
+    bean2 = world->createBean();
     beanId_2 = bean2->getId();
     setBeanProperties(testHelper, bean2);
     setBeanNativeData(testHelper, bean2);
 
-    bean3 = testdb.createBean();
+    bean3 = world->createBean();
     beanId_3 = bean3->getId();
     setBeanProperties(testHelper, bean3);
     setBeanNativeData(testHelper, bean3);
@@ -654,9 +684,9 @@ TEST(Bean, clear)
     bean3->appendRelation(testHelper.r_array_1, bean1);
     bean3->appendRelation(testHelper.r_array_1, bean2);
 
-    err = testdb.saveBean(bean1);
-    err = testdb.saveBean(bean2);
-    err = testdb.saveBean(bean3);
+    err = bean1->save();
+    err = bean2->save();
+    err = bean3->save();
 
     EXPECT_TRUE(bean1->getMemberNames().size() > 0);
     EXPECT_TRUE(bean2->getMemberNames().size() > 0);

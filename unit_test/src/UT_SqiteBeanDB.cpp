@@ -137,25 +137,26 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
     AbstractBeanDB* testdbPtr = &testdb;
-    BeanWorld world(*testdbPtr);
+    BeanWorld *world = nullptr;
     int err = 0;
     Property* property = nullptr;
     TestHelper testHelper;
 
     testdb.reInit();
     testdb.connect();
+    world = testdb.getWorld();
 
-    initTestHelper(testHelper, testdb, false);
+    initTestHelper(testHelper, *world, false);
     validate_testdb_1(testdb);
 
-    err = testdb.undefineProperty("p1");
+    err = world->undefineProperty("p1");
     EXPECT_TRUE(err == 0);
-    property = testdb.getProperty("p1");
+    property = world->getProperty("p1");
     EXPECT_TRUE(property == nullptr);
 
-    err = testdb.undefineProperty(nullptr);
+    err = world->undefineProperty(nullptr);
     EXPECT_TRUE(err == 0);
-    err = testdb.undefineProperty("");
+    err = world->undefineProperty("");
     EXPECT_TRUE(err == 0);
 
     testdb.disconnect();
@@ -167,60 +168,62 @@ TEST(SqliteBeanDB, getProperty)
 {
     const char* testdbDir = g_sqlite_db_1;
     SqliteBeanDB testdb(testdbDir);
+    BeanWorld *world = nullptr;
 
     testdb.connect();
+    world = testdb.getWorld();
 
-   EXPECT_TRUE(testdb.getProperty("p1")->getName() == "p1" && 
-        testdb.getProperty("p1")->getType() == Property::PrimaryType && 
-        testdb.getProperty("p1")->getValueType() == Property::IntType);
-    EXPECT_TRUE(testdb.getProperty("p2")->getName() == "p2" && 
-        testdb.getProperty("p2")->getType() == Property::PrimaryType && 
-        testdb.getProperty("p2")->getValueType() == Property::IntType);
+   EXPECT_TRUE(world->getProperty("p1")->getName() == "p1" && 
+        world->getProperty("p1")->getType() == Property::PrimaryType && 
+        world->getProperty("p1")->getValueType() == Property::IntType);
+    EXPECT_TRUE(world->getProperty("p2")->getName() == "p2" && 
+        world->getProperty("p2")->getType() == Property::PrimaryType && 
+        world->getProperty("p2")->getValueType() == Property::IntType);
 
-   EXPECT_TRUE(testdb.getProperty("p_int")->getName() == "p_int" && 
-        testdb.getProperty("p_int")->getType() == Property::PrimaryType && 
-        testdb.getProperty("p_int")->getValueType() == Property::IntType);
-   EXPECT_TRUE(testdb.getProperty("p_uint")->getName() == "p_uint" && 
-        testdb.getProperty("p_uint")->getType() == Property::PrimaryType && 
-        testdb.getProperty("p_uint")->getValueType() == Property::UIntType);
-    EXPECT_TRUE(testdb.getProperty("p_real")->getName() == "p_real" && 
-        testdb.getProperty("p_real")->getType() == Property::PrimaryType && 
-        testdb.getProperty("p_real")->getValueType() == Property::RealType);
-    EXPECT_TRUE(testdb.getProperty("p_str")->getName() == "p_str" && 
-        testdb.getProperty("p_str")->getType() == Property::PrimaryType && 
-        testdb.getProperty("p_str")->getValueType() == Property::StringType);
-    EXPECT_TRUE(testdb.getProperty("p_bool_0")->getName() == "p_bool_0" && 
-        testdb.getProperty("p_bool_0")->getType() == Property::PrimaryType && 
-        testdb.getProperty("p_bool_0")->getValueType() == Property::BoolType);
-    EXPECT_TRUE(testdb.getProperty("p_bool_1")->getName() == "p_bool_1" && 
-        testdb.getProperty("p_bool_1")->getType() == Property::PrimaryType && 
-        testdb.getProperty("p_bool_1")->getValueType() == Property::BoolType);
+   EXPECT_TRUE(world->getProperty("p_int")->getName() == "p_int" && 
+        world->getProperty("p_int")->getType() == Property::PrimaryType && 
+        world->getProperty("p_int")->getValueType() == Property::IntType);
+   EXPECT_TRUE(world->getProperty("p_uint")->getName() == "p_uint" && 
+        world->getProperty("p_uint")->getType() == Property::PrimaryType && 
+        world->getProperty("p_uint")->getValueType() == Property::UIntType);
+    EXPECT_TRUE(world->getProperty("p_real")->getName() == "p_real" && 
+        world->getProperty("p_real")->getType() == Property::PrimaryType && 
+        world->getProperty("p_real")->getValueType() == Property::RealType);
+    EXPECT_TRUE(world->getProperty("p_str")->getName() == "p_str" && 
+        world->getProperty("p_str")->getType() == Property::PrimaryType && 
+        world->getProperty("p_str")->getValueType() == Property::StringType);
+    EXPECT_TRUE(world->getProperty("p_bool_0")->getName() == "p_bool_0" && 
+        world->getProperty("p_bool_0")->getType() == Property::PrimaryType && 
+        world->getProperty("p_bool_0")->getValueType() == Property::BoolType);
+    EXPECT_TRUE(world->getProperty("p_bool_1")->getName() == "p_bool_1" && 
+        world->getProperty("p_bool_1")->getType() == Property::PrimaryType && 
+        world->getProperty("p_bool_1")->getValueType() == Property::BoolType);
 
-    EXPECT_TRUE(testdb.getProperty("p_array_int")->getName() == "p_array_int" && 
-        testdb.getProperty("p_array_int")->getType() == Property::ArrayPrimaryType && 
-        testdb.getProperty("p_array_int")->getValueType() == Property::IntType);
-    EXPECT_TRUE(testdb.getProperty("p_array_uint")->getName() == "p_array_uint" && 
-        testdb.getProperty("p_array_uint")->getType() == Property::ArrayPrimaryType && 
-        testdb.getProperty("p_array_uint")->getValueType() == Property::UIntType);
-    EXPECT_TRUE(testdb.getProperty("p_array_real")->getName() == "p_array_real" && 
-        testdb.getProperty("p_array_real")->getType() == Property::ArrayPrimaryType && 
-        testdb.getProperty("p_array_real")->getValueType() == Property::RealType);
-    EXPECT_TRUE(testdb.getProperty("p_array_str")->getName() == "p_array_str" && 
-        testdb.getProperty("p_array_str")->getType() == Property::ArrayPrimaryType && 
-        testdb.getProperty("p_array_str")->getValueType() == Property::StringType);
-    EXPECT_TRUE(testdb.getProperty("p_array_bool")->getName() == "p_array_bool" && 
-        testdb.getProperty("p_array_bool")->getType() == Property::ArrayPrimaryType && 
-        testdb.getProperty("p_array_bool")->getValueType() == Property::BoolType);
+    EXPECT_TRUE(world->getProperty("p_array_int")->getName() == "p_array_int" && 
+        world->getProperty("p_array_int")->getType() == Property::ArrayPrimaryType && 
+        world->getProperty("p_array_int")->getValueType() == Property::IntType);
+    EXPECT_TRUE(world->getProperty("p_array_uint")->getName() == "p_array_uint" && 
+        world->getProperty("p_array_uint")->getType() == Property::ArrayPrimaryType && 
+        world->getProperty("p_array_uint")->getValueType() == Property::UIntType);
+    EXPECT_TRUE(world->getProperty("p_array_real")->getName() == "p_array_real" && 
+        world->getProperty("p_array_real")->getType() == Property::ArrayPrimaryType && 
+        world->getProperty("p_array_real")->getValueType() == Property::RealType);
+    EXPECT_TRUE(world->getProperty("p_array_str")->getName() == "p_array_str" && 
+        world->getProperty("p_array_str")->getType() == Property::ArrayPrimaryType && 
+        world->getProperty("p_array_str")->getValueType() == Property::StringType);
+    EXPECT_TRUE(world->getProperty("p_array_bool")->getName() == "p_array_bool" && 
+        world->getProperty("p_array_bool")->getType() == Property::ArrayPrimaryType && 
+        world->getProperty("p_array_bool")->getValueType() == Property::BoolType);
 
-    EXPECT_TRUE(testdb.getProperty("r1")->getName() == "r1" && 
-        testdb.getProperty("r1")->getType() == Property::RelationType);
-    EXPECT_TRUE(testdb.getProperty("r2")->getName() == "r2" && 
-        testdb.getProperty("r2")->getType() == Property::RelationType);
+    EXPECT_TRUE(world->getProperty("r1")->getName() == "r1" && 
+        world->getProperty("r1")->getType() == Property::RelationType);
+    EXPECT_TRUE(world->getProperty("r2")->getName() == "r2" && 
+        world->getProperty("r2")->getType() == Property::RelationType);
 
-    EXPECT_TRUE(testdb.getProperty("r_array_1")->getName() == "r_array_1" && 
-        testdb.getProperty("r_array_1")->getType() == Property::ArrayRelationType);
-    EXPECT_TRUE(testdb.getProperty("r_array_2")->getName() == "r_array_2" && 
-        testdb.getProperty("r_array_2")->getType() == Property::ArrayRelationType);
+    EXPECT_TRUE(world->getProperty("r_array_1")->getName() == "r_array_1" && 
+        world->getProperty("r_array_1")->getType() == Property::ArrayRelationType);
+    EXPECT_TRUE(world->getProperty("r_array_2")->getName() == "r_array_2" && 
+        world->getProperty("r_array_2")->getType() == Property::ArrayRelationType);
 
    testdb.disconnect();
 }
@@ -232,9 +235,10 @@ TEST(SqliteBeanDB, getProperties)
     int err = 0;
 
     testdb.connect();
+    BeanWorld *world = testdb.getWorld();
 
-    const std::unordered_map<std::string, Property*>& pmap = testdb.getProperties();
-    testdb.m_world_->m_propertyMap_ = pmap;
+    const std::unordered_map<std::string, Property*>& pmap = world->getProperties();
+    world->m_propertyMap_ = pmap;
     validate_properties_testdb_1(testdb.m_world_->m_propertyMap_);
     
     testdb.disconnect();
@@ -246,31 +250,32 @@ TEST(SqliteBeanDB, createBean_deleteBean)
     Bean *bean = nullptr;
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
-    BeanWorld world((AbstractBeanDB&)testdb);
+    BeanWorld *world = nullptr;
     int err = 0;
 
     testdb.reInit();
     testdb.connect();
+    world = testdb.getWorld();
 
-    bean = testdb.createBean();
+    bean = world->createBean();
     EXPECT_TRUE(bean != nullptr);
     
-    err = testdb.deleteBean(bean);
+    err = world->deleteBean(bean);
     EXPECT_TRUE(err == 0);
 
-    bean = testdb.createBean();
+    bean = world->createBean();
     EXPECT_TRUE(bean != nullptr);
     
-    err = testdb.deleteBean(bean);
+    err = world->deleteBean(bean);
     EXPECT_TRUE(err == 0);
 
-    bean = testdb.createBean();
+    bean = world->createBean();
     EXPECT_TRUE(bean != nullptr);
     
-    err = testdb.deleteBean(bean);
+    err = world->deleteBean(bean);
     EXPECT_TRUE(err == 0);
 
-    err = testdb.deleteBean(nullptr);
+    err = world->deleteBean(nullptr);
     EXPECT_TRUE(err == 0);
 
     testdb.reInit();
@@ -289,17 +294,18 @@ TEST(SqliteBeanDB, getBean)
 
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
-    BeanWorld world((AbstractBeanDB&)testdb);
+    BeanWorld* world = nullptr;
     Bean* bean = nullptr;
 
     testdb.connect();
+    world = testdb.getWorld();
 
     TestHelper testHelper;
-    initTestHelper(testHelper, testdb, false);
+    initTestHelper(testHelper, *world, false);
 
-    bean1 = testdb.getBean(1);
-    bean2 = testdb.getBean(1);
-    bean3 = testdb.getBean(1);
+    bean1 = world->getBean(1);
+    bean2 = world->getBean(1);
+    bean3 = world->getBean(1);
     validateBeanProperties(testHelper, bean1);
     validateBeanProperties(testHelper, bean2);
     validateBeanProperties(testHelper, bean3);
@@ -315,7 +321,7 @@ TEST(SqliteBeanDB, saveBean)
 
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
-    BeanWorld world((AbstractBeanDB&)testdb);
+    BeanWorld *world = nullptr;
     TestHelper testHelper;
     Bean* bean = nullptr;
     Bean* bean1 = nullptr;
@@ -327,20 +333,21 @@ TEST(SqliteBeanDB, saveBean)
 
     testdb.reInit();
     testdb.connect();
+    world = testdb.getWorld();
 
-    initTestHelper(testHelper, testdb, false);
+    initTestHelper(testHelper, *world, false);
 
-    bean1 = testdb.createBean();
+    bean1 = world->createBean();
     beanId_1 = bean1->getId();
     setBeanProperties(testHelper, bean1);
     setBeanNativeData(testHelper, bean1);
 
-    bean2 = testdb.createBean();
+    bean2 = world->createBean();
     beanId_2 = bean2->getId();
     setBeanProperties(testHelper, bean2);
     setBeanNativeData(testHelper, bean2);
 
-    bean3 = testdb.createBean();
+    bean3 = world->createBean();
     beanId_3 = bean3->getId();
     setBeanProperties(testHelper, bean3);
     setBeanNativeData(testHelper, bean3);
@@ -351,20 +358,21 @@ TEST(SqliteBeanDB, saveBean)
     bean3->appendRelation(testHelper.r_array_1, bean1);
     bean3->appendRelation(testHelper.r_array_1, bean2);
 
-    err = testdb.saveBean(bean1);
+    err = bean1->save();
     EXPECT_TRUE(err == 0);
-    err = testdb.saveBean(bean2);
+    err = bean2->save();
     EXPECT_TRUE(err == 0);
-    err = testdb.saveBean(bean3);
+    err = bean3->save();
     EXPECT_TRUE(err == 0);
 
     testdb.disconnect();
     testdb.connect();
-    initTestHelper(testHelper, testdb, false);
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world, false);
 
-    bean1 = testdb.getBean(beanId_1);
-    bean2 = testdb.getBean(beanId_2);
-    bean3 = testdb.getBean(beanId_3);
+    bean1 = world->getBean(beanId_1);
+    bean2 = world->getBean(beanId_2);
+    bean3 = world->getBean(beanId_3);
 
     validateBean(testHelper, bean1);
     validateBean(testHelper, bean2);

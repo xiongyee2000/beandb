@@ -85,6 +85,28 @@ public:
     ValueType getValueType() const {return m_valueType_;};
 
     /**
+     * If this property is a delay-load property.
+     * 
+     * The delay-load property is a property the value of which
+     * won't be loaded from storage into memory (BeanWorld) 
+     * at loading phase (inside BeanWorld::getBean()), but will be 
+     * delayed to when getProperty() is called. 
+     * 
+     * The database backend provider shall determine whether a 
+     * property should be a direct-load or delay-load property 
+     * based on its implementation. This is purposed to achieve better 
+     * performance. 
+     * 
+     * General speaking, a simple and fixed lengthed property 
+     * (e.g. of int type) should be direct load, while a complex and 
+     * dynamic lengthed property (e.g. of string type) should be 
+     * delay-load.
+     * 
+     * @return true if this property is delay load property, or false.
+     */
+    bool isDelayLoad() const {return m_delayLoad_;};
+
+    /**
      * Create index for a property.
      * 
      * Notes:
@@ -232,10 +254,12 @@ public:
 private:
     Property(const char* name,  pidType id,
         Type type, ValueType valueType, 
-        bool needIndex = false);
+        bool delayLoad,
+        bool needIndex);
     Property(BeanWorld* world, const char* name,  pidType id,
         Type type, ValueType valueType, 
-        bool needIndex = false);
+        bool delayLoad,
+        bool needIndex);
 
     virtual ~Property();
 
@@ -250,10 +274,6 @@ private:
 
     void findCommon_(int type, const Json::Value& value, std::list<oidType>& beans) const;
     void trivialFind(int opType,  const Json::Value& value, std::list<oidType>& beans) const;
-
-    //used by AbstractBeanDB
-    bool isDelayLoad() const {return m_delayLoad_;};
-    void setDelayLoad(bool delayLoad) {m_delayLoad_ = delayLoad;};
 
 private:
     BeanWorld* m_world_;

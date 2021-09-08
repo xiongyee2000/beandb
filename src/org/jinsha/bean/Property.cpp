@@ -20,6 +20,7 @@ static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
 
 Property::Property(const char* name, pidType id,
     Type type, ValueType valueType, 
+    bool delayLoad,
     bool needIndex) 
     : m_world_(nullptr)
     , m_name_(name)
@@ -27,7 +28,7 @@ Property::Property(const char* name, pidType id,
     , m_propertyType_(type)
     , m_valueType_(valueType)
     , m_indexed_(needIndex)
-    , m_delayLoad_(false)
+    , m_delayLoad_(delayLoad)
 {
     if (valueType == StringType) m_delayLoad_ = true;
 };
@@ -35,6 +36,7 @@ Property::Property(const char* name, pidType id,
 
 Property::Property(BeanWorld* world, const char* name, pidType id,
     Type type, ValueType valueType, 
+    bool delayLoad,
     bool needIndex) 
     : m_world_(world)
     , m_name_(name)
@@ -42,7 +44,7 @@ Property::Property(BeanWorld* world, const char* name, pidType id,
     , m_propertyType_(type)
     , m_valueType_(valueType)
     , m_indexed_(needIndex)
-    , m_delayLoad_(false)
+    , m_delayLoad_(delayLoad)
 {
     if (valueType == StringType) m_delayLoad_ = true;
 };

@@ -120,13 +120,16 @@ public:
      * @param valueType the value type of property
      * @param isArray if it is an array property
      * @param needIndex if index is needed
+     * @param delayLoad [out] set to true if want this property delay-load,
+     *                                                     or false otherwise
      * @return the id of the property if successful (non-negative), 
      *                   or a  negative number as error code
      */
     virtual pidType defineProperty_(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
-        bool needIndex = false) = 0;
+        bool needIndex,
+        bool& delayLoad) = 0;
 
     /**
      * Undefine a property.

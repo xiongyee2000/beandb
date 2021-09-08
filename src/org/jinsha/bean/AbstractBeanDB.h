@@ -109,7 +109,8 @@ protected:
         pidType id,
         Property::Type type,
         Property::ValueType valueType, 
-        bool needIndex = false) const;
+        bool delayLoad,
+        bool needIndex) const;
 
     /**
      * This method is used for the implemenation method of 
@@ -117,18 +118,6 @@ protected:
      * instance.
      */
     Bean* newBean(oidType id) const;
-
-    /**
-     * This method is used for the derived class to get delayLoad
-     * flag of a property.
-     */
-    static bool isDelayLoad(const Property& property);
-
-    /**
-     * This method is used for the derived class to set delayLoad
-     * flag of a property.
-     */
-    static void setDelayLoad(Property& property, bool isDelayLoad);
 
     /**
      * Get the attached world.

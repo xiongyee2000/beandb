@@ -34,7 +34,8 @@ private:
     virtual pidType defineProperty_(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
-        bool needIndex = false) override;
+        bool needIndex,
+        bool& delayLoad) override;
     virtual int undefineProperty_(const char* name) override;
 
     virtual int loadProperties_(std::unordered_map<std::string, Property*>& properties) const override;

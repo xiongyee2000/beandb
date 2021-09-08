@@ -194,12 +194,13 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
     auto iter = m_propertyMap_.find(name);
     if (iter == m_propertyMap_.end())
     {
-        pid = m_db ->defineProperty_(name, type, valueType, needIndex);
+        bool delayLoad = false;
+        pid = m_db ->defineProperty_(name, type, valueType, needIndex, delayLoad);
         if (pid < 0) {
             elog("Failed to define property %s in database.", name);
             return nullptr;
         } else {
-            property = new Property(this, name, pid, type, valueType, needIndex);
+            property = new Property(this, name, pid, type, valueType, delayLoad, needIndex);
             m_propertyMap_[name] = property;
             property->m_id_ = pid;
         }

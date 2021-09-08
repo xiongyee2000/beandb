@@ -3,6 +3,7 @@
 #include "./internal_common.hxx"
 #include "./Bean.h"
 
+#include <assert.h>
 #include <unistd.h>
 #include <string.h>
 #include <sqlite3.h>
@@ -267,7 +268,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
             property = getWorld()->getProperty(pname.c_str());
             if (property == nullptr) continue; //it's not a defined property
             //filter out delay load properties
-            if (isDelayLoad(*property)) {
+            if (property->isDelayLoad()) {
                 value[pname] = Json::Value::nullRef;
             } else {
                 if (property->getType() == Property::ArrayPrimaryType || 
@@ -419,7 +420,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     //set to null first
     value = Json::Value::nullRef;
 
-    if (isDelayLoad(*property)) {
+    if (property->isDelayLoad()) {
         snprintf(buff, 64, "SELECT VALUE from p_%s WHERE SID = ?;", 
             pname);
         err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
@@ -831,13 +832,14 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
         type = sqlite3_column_int(pstmt, nCol++);
         valueType = sqlite3_column_int(pstmt, nCol++);
         indexed = (sqlite3_column_int(pstmt, nCol++) == 1 ? true : false);
-        Property* property = newProperty(name,  
+        bool delayLoad = (valueType == Property::StringType);
+        Property*  property = newProperty(name,  
             (pidType)id, 
             (Property::Type)type, 
             (Property::ValueType)valueType, 
+            delayLoad,
             indexed);
-        if (valueType == Property::StringType) 
-            setDelayLoad(*property, true);
+        assert(property);
         properties[name] = property;
 	}
     if (err == SQLITE_DONE) err = SQLITE_OK; 
@@ -906,7 +908,8 @@ _out:
 pidType SqliteBeanDB::defineProperty_(const char* name, 
     Property::Type type, 
     Property::ValueType valueType, 
-    bool needIndex)
+    bool needIndex,
+    bool& delayLoad)
 {
     if (name == nullptr || name[0] == 0) return -1;
 
@@ -977,6 +980,10 @@ _out:
     sqlite3_finalize(pstmt);
     if (errMsg  != nullptr) sqlite3_free(errMsg);
 
+    if (valueType == Property::StringType) 
+        delayLoad = true;
+    else 
+        delayLoad = false;
     return pid;
 }
 
@@ -1041,7 +1048,7 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const J
     for (auto& pname : data.getMemberNames()) {
         property = getWorld()->getProperty(pname.c_str());
         if (property == nullptr) continue; //todo: error here?
-        if (!isDelayLoad(*property)) {
+        if (!property->isDelayLoad()) {
             tmpValue[pname] = data[pname];
         } else {
             tmpValue[pname] = Json::Value::nullRef;

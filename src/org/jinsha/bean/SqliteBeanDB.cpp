@@ -430,8 +430,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
 
         while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
             //do some preparation for array
-            if (property->getType() == Property::ArrayPrimaryType ||
-                 property->getType() == Property::ArrayRelationType)  {
+            if (property->isArray())  {
                     if (value.isNull())  
                         value = Json::Value(Json::arrayValue);
                     value.append(Json::Value::nullRef);
@@ -499,9 +498,9 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
     if (property == nullptr) return -1;
     if (m_sqlite3Db_ == nullptr) return -1;
      //no need to do anything here for non-indexed
-     //and non-string-valued property
-    if (!property->indexed() && 
-        property->getValueType() != Property::StringType) 
+     //and non-delay-load property
+    if (!property->indexed() &&
+        !property->isDelayLoad()) 
     return 0; 
 
     BeanWorld *world = getWorld();
@@ -610,9 +609,9 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     if (property == nullptr) return -1;
     if (m_sqlite3Db_ == nullptr) return -1;
      //no need to do anything here for non-indexed
-     //and non-string-valued property
-    if (!property->indexed() && 
-        property->getValueType() != Property::StringType) 
+     //and non-delay-load property
+    if (!property->indexed() &&
+        !property->isDelayLoad()) 
     return 0; 
 
     BeanWorld *world = getWorld();
@@ -832,7 +831,14 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
         type = sqlite3_column_int(pstmt, nCol++);
         valueType = sqlite3_column_int(pstmt, nCol++);
         indexed = (sqlite3_column_int(pstmt, nCol++) == 1 ? true : false);
-        bool delayLoad = (valueType == Property::StringType);
+        bool delayLoad = false;
+        if (valueType == Property::StringType) {
+            delayLoad = true;
+        } else {
+            if (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) {
+                delayLoad = true;
+            }
+        }
         Property*  property = newProperty(name,  
             (pidType)id, 
             (Property::Type)type, 
@@ -905,10 +911,11 @@ _out:
 }
 
 
-pidType SqliteBeanDB::defineProperty_(const char* name, 
+int SqliteBeanDB::defineProperty_(const char* name, 
     Property::Type type, 
     Property::ValueType valueType, 
     bool needIndex,
+    pidType& pid,
     bool& delayLoad)
 {
     if (name == nullptr || name[0] == 0) return -1;
@@ -920,7 +927,6 @@ pidType SqliteBeanDB::defineProperty_(const char* name,
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int err = 0;
-    pidType pid = -1;
     char* errMsg = nullptr;
     char  buff[256] {0};
     int sizeOfBuff = sizeof(buff);
@@ -959,11 +965,21 @@ pidType SqliteBeanDB::defineProperty_(const char* name,
     //create property table
     snprintf(buff, sizeOfBuff - 1, create_property_table, 
     name,
-    (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) ? "UNIQUE" : "",
+    (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) ? "" : "UNIQUE",
     (valueType == Property::StringType) ? "TEXT" : "BIGINT" );
     sql = buff;
     err = sqlite3_exec ( m_sqlite3Db_ , sql , nullptr , nullptr , &errMsg ) ;
         if (err != SQLITE_OK)  goto _out;
+
+    if (valueType == Property::StringType) 
+        delayLoad = true;
+    else {
+        if (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) {
+            delayLoad = true;
+        } else {
+            delayLoad = false;
+        }
+    }
 
 _out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
@@ -980,11 +996,7 @@ _out:
     sqlite3_finalize(pstmt);
     if (errMsg  != nullptr) sqlite3_free(errMsg);
 
-    if (valueType == Property::StringType) 
-        delayLoad = true;
-    else 
-        delayLoad = false;
-    return pid;
+    return err;
 }
 
 

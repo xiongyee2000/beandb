@@ -120,6 +120,7 @@ public:
      * @param valueType the value type of property
      * @param isArray if it is an array property
      * @param needIndex if index is needed
+     * @param pid [out] the id of the property in the database
      * @param delayLoad [out] set to true if want this property delay-load,
      *                                                     or false otherwise
      * @return the id of the property if successful (non-negative), 
@@ -129,6 +130,7 @@ public:
         Property::Type type,
         Property::ValueType valueType, 
         bool needIndex,
+        pidType& pid,
         bool& delayLoad) = 0;
 
     /**

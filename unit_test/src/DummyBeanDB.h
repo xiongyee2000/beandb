@@ -23,6 +23,7 @@ public:
         Property::Type type,  
         Property::ValueType valueType, 
         bool needIndex,
+        pidType& pid,
         bool& delayLoad) override;
     virtual int undefineProperty_(const char* name) override;
 

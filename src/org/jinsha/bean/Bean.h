@@ -447,6 +447,7 @@ private:
     int load();
     int unload();
     int loadProperty(const Property* property);
+    // bool propertyLoaded(const Property* property);
 
     int doSetProperty(Property* property, const Json::Value& value, bool syncToDB = true);
     int doSetRelation(Property* relation, oidType objectBeanId, bool syncToDB = true);

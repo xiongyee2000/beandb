@@ -189,14 +189,15 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
     if (name == nullptr) return nullptr;
     if (name[0] == 0) return nullptr;
 
+    int err = 0;
     pidType pid = 0;
     Property* property = nullptr;
     auto iter = m_propertyMap_.find(name);
     if (iter == m_propertyMap_.end())
     {
         bool delayLoad = false;
-        pid = m_db ->defineProperty_(name, type, valueType, needIndex, delayLoad);
-        if (pid < 0) {
+        err = m_db ->defineProperty_(name, type, valueType, needIndex, pid, delayLoad);
+        if (err) {
             elog("Failed to define property %s in database.", name);
             return nullptr;
         } else {

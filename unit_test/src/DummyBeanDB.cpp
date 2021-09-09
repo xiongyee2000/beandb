@@ -132,23 +132,23 @@ int DummyBeanDB::undefineProperty_(const char* name)
 
 
 pidType DummyBeanDB::defineProperty_(const char* name, Property::Type type, 
-    Property::ValueType valueType, bool needIndex, bool& delayLoad)
+    Property::ValueType valueType, bool needIndex, pidType& pid, bool& delayLoad)
 {
     auto iter = m_properties.find(name);
     if (iter == m_properties.end()) {
-    pidType id = m_maxPid++;
-    delayLoad = (valueType == Property::StringType);
-    Property* property = newProperty(name,  
-                                                                            (pidType)id, 
-                                                                            (Property::Type)type, 
-                                                                            (Property::ValueType)valueType, 
-                                                                            delayLoad,
-                                                                            needIndex);
-    m_properties[name] = property;
-    return id;
+        pid = m_maxPid++;
+        delayLoad = (valueType == Property::StringType);
+        Property* property = newProperty(name,  
+                                                                                pid, 
+                                                                                (Property::Type)type, 
+                                                                                (Property::ValueType)valueType, 
+                                                                                delayLoad,
+                                                                                needIndex);
+        m_properties[name] = property;
     } else {
-        return iter->second->getId();
+        pid = iter->second->getId();
     }
+    return 0;
 }
 
 

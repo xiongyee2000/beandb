@@ -66,6 +66,13 @@ public:
     const std::string& getName() const {return m_name_;};
 
     /**
+     * If this property is an array property.
+     * 
+     * @return true if it is an array property, or false otherwise
+     */
+    bool isArray() const;
+
+    /**
      * Get the id of the property
      * 
      * @return property id
@@ -99,7 +106,7 @@ public:
      * 
      * General speaking, a simple and fixed lengthed property 
      * (e.g. of int type) should be direct load, while a complex and 
-     * dynamic lengthed property (e.g. of string type) should be 
+     * dynamic lengthed property (e.g. an array property) should be 
      * delay-load.
      * 
      * @return true if this property is delay load property, or false.

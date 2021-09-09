@@ -31,10 +31,11 @@ public:
 private:
     virtual int reInit_() override;
 
-    virtual pidType defineProperty_(const char* name, 
+    virtual int defineProperty_(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
         bool needIndex,
+        pidType& pid,
         bool& delayLoad) override;
     virtual int undefineProperty_(const char* name) override;
 

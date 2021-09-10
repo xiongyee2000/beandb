@@ -273,29 +273,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
             } else {
                 if (property->getType() == Property::ArrayPrimaryType || 
                      property->getType() == Property::ArrayRelationType) {
-                         for (Json::ArrayIndex i = 0; i < value.size(); i++) {
-                             v = &value[pname][i];
-                            switch (property->getValueType())
-                            {
-                            case Property::IntType:
-                                *v= (*v).asInt64();
-                                break;
-                            case Property::UIntType:
-                                *v= (*v).asUInt64();
-                                 break;
-                            case Property::RealType:
-                                *v= (*v).asDouble();
-                                 break;
-                            case Property::BoolType:
-                                break;
-                            //do nothing
-                            case Property::StringType:
-                                //do nothing
-                                break;
-                            default:
-                                break;
-                            }
-                         }
+                         //delay load, shall not reach here
                 } else {
                     Json::Value* v = &value[pname];
                     switch (property->getValueType())
@@ -443,13 +421,13 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
             switch (property->getValueType())
             {
             case Property::IntType:
-                (*v) = sqlite3_column_int64(pstmt, 0);
+                (*v) = (Json::Int64)sqlite3_column_int64(pstmt, 0);
                 break;
             case Property::UIntType:
                 (*v) = (Json::UInt64)sqlite3_column_int64(pstmt, 0);
                 break;
             case Property::RealType:
-                (*v) = sqlite3_column_double(pstmt, 0);
+                (*v) =  sqlite3_column_double(pstmt, 0);
                 break;
             case Property::BoolType:
                 (*v) = sqlite3_column_int(pstmt, 0) == 0 ? false : true;

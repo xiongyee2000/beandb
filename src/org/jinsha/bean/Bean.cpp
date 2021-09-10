@@ -407,10 +407,10 @@ int Bean::doSetRelation(Property* relation, oidType objectId, bool syncToDB)
     }
     relation->addObject(objectId);
 
-    //handle subject tracking
-    Bean* objectBean = m_world_->getBean(objectId);
-    if (objectBean != nullptr)
-        objectBean->addSubject(this, relation);
+    // //handle subject tracking
+    // Bean* objectBean = m_world_->getBean(objectId);
+    // if (objectBean != nullptr)
+    //     objectBean->addSubject(this, relation);
     relation->addSubject(m_id_);
     
     return 0;
@@ -484,10 +484,10 @@ int Bean::doCreateArrayRelation(Property* relation, bool syncToDB)
 }
 
 
-int Bean::appendRelation(Property* relation,  oidType objectBeanId)
-{
-    return doAppendRelation(relation, objectBeanId, true);
-}
+// int Bean::appendRelation(Property* relation,  oidType objectBeanId)
+// {
+//     return doAppendRelation(relation, objectBeanId, true);
+// }
 
 int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool syncToDB)
 {
@@ -526,9 +526,9 @@ int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool syncT
     //todo: do not index array property/relation for now
     // if (property->indexed())
     //     property->addIndex(this, value);
-    Bean* objectBean = m_world_->getBean(objectBeanId);
-    if (objectBean != nullptr) 
-        objectBean->addSubject(this, relation);
+    // Bean* objectBean = m_world_->getBean(objectBeanId);
+    // if (objectBean != nullptr) 
+        // objectBean->addSubject(this, relation);
     return 0;
 }
 
@@ -578,7 +578,7 @@ int Bean::setRelation(Property* relation,
 {
     if (bean == nullptr) return -1;
     if (relation == nullptr) return -2;
-    if (relation->getType() != Property::ArrayRelationType) return -3;
+    if (relation->getType() != Property::ArrayRelationType) return -2;
     const auto& pname = relation->getName();
     if (!m_pst_json_.isMember(pname)) return -4;
     if (m_pst_json_[pname] == PST_NEW) return -4;
@@ -924,7 +924,7 @@ int Bean::load()
     int size = 0;
     Property* property = nullptr;
     Json::Value data, nativeData;
-    Json::Value* pstValuePtr = nullptr;
+    Json::Value* dataValuePtr = nullptr;
 
     //unload first
     unload();
@@ -951,30 +951,30 @@ int Bean::load()
                 m_pst_json_[pname] = PST_SYN;
             }
 
-            pstValuePtr = &data[pname];
+            dataValuePtr = &data[pname];
 
-            if (pstValuePtr->isNull()) { //delay load
+            if (dataValuePtr->isNull()) { //delay load
                 m_json_[pname] = Json::Value::nullRef;
                 m_pst_json_[pname] = PST_NSY;
             } else {
                 switch (property->getType()) {
                     case Property::PrimaryType:
                         m_pst_json_.removeMember(pname);
-                        doSetProperty(property,  *pstValuePtr, false);
+                        doSetProperty(property,  *dataValuePtr, false);
                         m_pst_json_[pname] = PST_SYN;
                         break;
                     case Property::RelationType:
                         m_pst_json_.removeMember(pname);
-                        doSetRelation(property, pstValuePtr->asUInt64(), false);         
+                        doSetRelation(property, dataValuePtr->asUInt64(), false);         
                         m_pst_json_[pname] = PST_SYN;
                         break;
                     case Property::ArrayPrimaryType:
                         //override pst value
                         m_pst_json_.removeMember(pname);                 
                         doCreateArrayProperty(property, false);
-                        size = pstValuePtr->size();
+                        size = dataValuePtr->size();
                         for (int i = 0; i < size; i++) {
-                            doAppendProperty(property,  (*pstValuePtr)[i], false);
+                            doAppendProperty(property,  (*dataValuePtr)[i], false);
                             //set it again to ensure it's PST_SYN
                             m_pst_json_[pname][i] = PST_SYN;
                         }
@@ -983,9 +983,9 @@ int Bean::load()
                         //override pst value
                         m_pst_json_.removeMember(pname);         
                         doCreateArrayRelation(property, false);
-                        size = pstValuePtr->size();
+                        size = dataValuePtr->size();
                         for (int i = 0; i < size; i++) {
-                            doAppendRelation(property,  (*pstValuePtr)[i].asUInt64(), false);
+                            doAppendRelation(property,  (*dataValuePtr)[i].asUInt64(), false);
                             //set it again to ensure it's PST_SYN
                             m_pst_json_[pname][i] = PST_SYN;
                         } 

@@ -144,7 +144,7 @@ public:
      * @param property the array property
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -2: if property is null
+     *                   -2: if property is null or invalid
      */
     int createArrayProperty(Property* property);
 
@@ -156,7 +156,7 @@ public:
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if value is null
-     *                   -2: if property is null
+     *                   -2: if property is null or invalid
      *                   -3: if he value is of invalid type
      *                   -4: if the array property is not a member of this bean
      */
@@ -224,6 +224,9 @@ public:
     /**
      * Get relation bean of an array relation at specified index.
      * 
+     * Notes:
+     * - bean id shall not be 0, which reprents an error.
+     * 
      * @param relation the relation property
      * @param index the index in the array
      * @return the bean id, or 0 if it does not exist.
@@ -267,27 +270,27 @@ public:
      * @param relation the array relation
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -2: if property is null
+     *                   -2: if property is null or invalid
      */
     int createArrayRelation(Property* relation);
 
-    /**
-     * This method is used to append an item to an array relation.
-     * 
-     * Notes:
-     * - This method will internally add the counter part bean's id to the 
-     *    json array property created by setRelation(Property* property).
-     * 
-     * @param relation the array relation
-     * @param objectBeanId the id of the counter part bean of the relation 
-     *                    to be added
-     * @return 0 if success, or an error code
-     *                   error code:
-     *                   -1: if bean is null
-     *                   -2: if property is null
-     *                   -4: if the array relation is not a member of this bean
-     */
-    int appendRelation(Property* relation, oidType objectBeanId);
+    // /**
+    //  * This method is used to append an item to an array relation.
+    //  * 
+    //  * Notes:
+    //  * - This method will internally add the counter part bean's id to the 
+    //  *    json array property created by setRelation(Property* property).
+    //  * 
+    //  * @param relation the array relation
+    //  * @param objectBeanId the id of the counter part bean of the relation 
+    //  *                    to be added
+    //  * @return 0 if success, or an error code
+    //  *                   error code:
+    //  *                   -1: if bean is null
+    //  *                   -2: if property is null
+    //  *                   -4: if the array relation is not a member of this bean
+    //  */
+    // int appendRelation(Property* relation, oidType objectBeanId);
 
 
     /**
@@ -295,14 +298,14 @@ public:
      * 
      * Notes:
      * - This method will internally add the counter part bean's id to the 
-     *    json array property created by setRelation(Property* property).
+     *    json array property created by createArrayRelation(Property* property).
      * 
      * @param relation the array relation
      * @param bean the counter part bean of the relation to be added
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if bean is null
-     *                   -2: if property is null
+     *                   -2: if relation is null or invalid
      *                   -4: if the array relation is not a member of this bean
      */
     int appendRelation(Property* relation, Bean* bean);

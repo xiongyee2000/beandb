@@ -243,8 +243,7 @@ public:
      * @param objectBeanId the id of the counter part bean of the relation
      * @return 0 if success, or an error code:
      *                   -1: if bean is null
-     *                   -2: if relation is null
-     *                   -3: if the relation is not of Property::RelationType
+     *                   -2: if relation is null or invalid
      */
     int setRelation(Property* relation, oidType objectBeanId);
 
@@ -256,8 +255,7 @@ public:
      * @param bean the counter part bean of the relation
      * @return 0 if success, or an error code:
      *                   -1: if bean is null
-     *                   -2: if property is null
-     *                   -3: if the relation is not of Property::ArrayRelationType
+     *                   -2: if property is null or invalid
      */
     int setRelation(Property* relation, Bean* bean);
 
@@ -310,11 +308,8 @@ public:
      */
     int appendRelation(Property* relation, Bean* bean);
 
- 
      /**
      * Set the relation of an array relation at specified index. 
-     * 
-     * This method must be called after createArrayRelation();
      * 
      * @param relation the array relation
      * @param index the index in the array
@@ -322,12 +317,28 @@ public:
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if bean is null
-     *                   -2: if property is null
+     *                   -2: if relation is null or invalid
      *                   -4: if the array relation is not a member of this bean
      *                   -5: if the index is invalid
      */
     int setRelation(Property* relation, Json::Value::ArrayIndex index,
         Bean* bean);
+
+     /**
+     * Set the relation of an array relation at specified index. 
+     * 
+     * @param relation the array relation
+     * @param index the index in the array
+     * @param objectId the id of the counter part bean of the relation
+     * @return 0 if success, or an error code
+     *                   error code:
+     *                   -2: if relation is null or invalid
+     *                   -4: if the array relation is not a member of this bean
+     *                   -5: if the index is invalid
+     */
+    int setRelation(Property* relation, 
+        Json::Value::ArrayIndex index,
+        oidType objectId);
 
     /**
      * Remove property from this bean.

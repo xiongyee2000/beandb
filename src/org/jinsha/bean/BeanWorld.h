@@ -100,7 +100,7 @@ public:
     /**
      * @ref BeanDBUserIntf::getBean()
      */
-    virtual Bean* getBean(oidType id) override;
+    virtual Bean* getBean(oidType id, bool loadFromDB = true) override;
 
     /**
      * @ref BeanDBUserIntf::deleteBean()
@@ -150,6 +150,7 @@ protected:
         Property::Type type, 
         Property::ValueType valueType, 
         bool needIndex);
+    Bean* getBean();
 
 protected:
     std::unordered_map<oidType, Bean*> m_beans_;

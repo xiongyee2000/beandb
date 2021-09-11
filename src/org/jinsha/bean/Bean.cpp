@@ -370,16 +370,24 @@ oidType Bean::getRelationBeanId(const Property* relation,
 }
 
 
+int Bean::setRelation(Property* relation, Bean* bean)
+{
+    if (bean == nullptr) return -1;
+    return setRelation(relation, bean->getId());
+}
+
+
 int Bean::setRelation(Property* relation, oidType objectId)
 {
+    if (relation == nullptr) return -2;
     return doSetRelation(relation, objectId, true);
 }
 
 
 int Bean::doSetRelation(Property* relation, oidType objectId, bool syncToDB)
 {
-    if (relation == nullptr) return -2;
     if (relation->getType() != Property::RelationType) return -2;
+    Bean* object = nullptr;
     Json::Value *oldValue = nullptr;
     const auto& pname = relation->getName();
     if (m_pst_json_.isMember(pname)) {
@@ -399,56 +407,19 @@ int Bean::doSetRelation(Property* relation, oidType objectId, bool syncToDB)
     if (oldValue != nullptr) {
         oidType oldObjectId = (*oldValue).asUInt64();
         if (oldObjectId == objectId) return 0; //the same bean, do nothing
-        Bean* object = m_world_->getBean(oldObjectId);
+        object = m_world_->getBean(oldObjectId, false);
         if (object != nullptr) {
             object->removeSubject(this, relation);
         }
         relation->removeObject(oldObjectId);
     }
     relation->addObject(objectId);
-
-    // //handle subject tracking
-    // Bean* objectBean = m_world_->getBean(objectId);
-    // if (objectBean != nullptr)
-    //     objectBean->addSubject(this, relation);
     relation->addSubject(m_id_);
-    
-    return 0;
-}
-
-
-int Bean::setRelation(Property* relation, Bean* bean)
-{
-    if (bean == nullptr) return -1;
-    if (relation == nullptr) return -2;
-    if (relation->getType() != Property::RelationType) return -3;
-    Json::Value *oldValue = nullptr;
-    const auto& pname = relation->getName();
-    if (m_pst_json_.isMember(pname)) {
-        oldValue = getMemberPtr(relation);
-    }
-    int err = setPropertyBase_(relation, oldValue, bean->getId(), -1, true);
-    if (err) {
-        return err;
-    } else {
-        m_pst_json_[pname] = PST_SYN;
-    }
-
-    //handle object tracking
-    if (oldValue != nullptr) {
-        oidType objectId = (*oldValue).asUInt64();
-        if (objectId == bean->m_id_) return 0; //the same bean, do nothing
-        Bean* object = m_world_->getBean(objectId);
-        if (object != nullptr) {
-            object->removeSubject(this, relation);
-        }
-        relation->removeObject(objectId);
-    }
-    relation->addObject(bean->getId());
 
     //handle subject tracking
-    bean->addSubject(this, relation);
-    relation->addSubject(m_id_);
+    object = m_world_->getBean(objectId, false);
+    if (object != nullptr) 
+        object->addSubject(this, relation);
     
     return 0;
 }
@@ -577,12 +548,21 @@ int Bean::setRelation(Property* relation,
     Json::Value::ArrayIndex index, Bean* bean)
 {
     if (bean == nullptr) return -1;
+    return setRelation(relation, index, bean->getId());
+}
+
+
+int Bean::setRelation(Property* relation,  
+    Json::Value::ArrayIndex index, oidType objectId)
+{
     if (relation == nullptr) return -2;
     if (relation->getType() != Property::ArrayRelationType) return -2;
+    Bean* object = nullptr;
     const auto& pname = relation->getName();
     if (!m_pst_json_.isMember(pname)) return -4;
     if (m_pst_json_[pname] == PST_NEW) return -4;
-    if (!m_pst_json_[pname].isArray()) { 
+    if (!m_pst_json_[pname].isArray() && 
+        m_pst_json_[pname].asInt() == PST_NSY) { 
         //delay load
         if (0 != loadProperty(relation)) {
             return -11;
@@ -591,7 +571,7 @@ int Bean::setRelation(Property* relation,
     auto& array = m_json_[pname]; 
     if (index >= array.size()) return -5;
     Json::Value *oldValue = &array[index];
-    int err = setPropertyBase_(relation, oldValue, bean->getId(), index, true);
+    int err = setPropertyBase_(relation, oldValue, objectId, index, true);
     if (err) {
         return err;
     } else {
@@ -601,17 +581,19 @@ int Bean::setRelation(Property* relation,
     //handle object tracking
     if (oldValue != nullptr) {
         oidType objectId = (*oldValue).asUInt64();
-        if (objectId == bean->m_id_) return 0; //the same bean, do nothing
-        Bean* object = m_world_->getBean(objectId);
+        if (objectId == objectId) return 0; //the same bean, do nothing
+        object = m_world_->getBean(objectId, false);
         if (object != nullptr) {
             object->removeSubject(this, relation);
         }
         relation->removeObject(objectId);
     }
-    relation->addObject(bean->getId());
+    relation->addObject(objectId);
 
     //handle subject tracking
-    bean->addSubject(this, relation);
+    object = m_world_->getBean(objectId, false);
+    if (object != nullptr) 
+        object->addSubject(this, relation);
 
     return 0;
 }

@@ -148,14 +148,13 @@ public:
     /**
      * Get bean by id.
      * 
-     * The method will firstly try to get the bean by calling BeanWorld::getBean(),
-     * if it fails, it will then try to call loadBean().
-     * 
      * @param id the id of the bean
+     * @param loadFromDB if true, try to load the bean from db
+     *                    when the bean has not been loaded into this world.
      * @return the pointer pointing to the bean, or null if no such
      *                   bean exist.
      */
-    virtual Bean* getBean(oidType id) = 0;
+    virtual Bean* getBean(oidType id, bool loadFromDB = true) = 0;
 
     /**
      * Remove a bean from this world. 

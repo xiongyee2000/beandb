@@ -120,13 +120,15 @@ const unordered_map<oidType, Bean*>& BeanWorld::getBeans()
 }
 
 
-Bean* BeanWorld::getBean(oidType id)
+Bean* BeanWorld::getBean(oidType id,  bool loadFromDB)
 {
     int err = 0;
     Bean* bean = nullptr;
     auto iter = m_beans_.find(id);
     if (iter == m_beans_.end())
-    { //bean not found in this world, try to load it from db
+    { //bean not found in this world
+        if (!loadFromDB) return nullptr;
+        //try to load it from db
         bean = new Bean(id, this);
         err = bean->load();
         if (err) { //no such bean in db

@@ -64,9 +64,9 @@ void setBeanProperties(TestHelper& testHelper, Bean* bean)
     // bean->setProperty(testHelper.p_int, Json::Value::minInt);
     bean->setProperty(testHelper.p_int, -1);
     bean->setProperty(testHelper.p_uint, (Json::UInt)1);
-    bean->setProperty(testHelper.p_int64, -1);
+    bean->setProperty(testHelper.p_int64, (Json::Int64)-1);
     bean->setProperty(testHelper.p_uint64, (Json::UInt64)1);
-    bean->setProperty(testHelper.p_real, 1.0);
+    bean->setProperty(testHelper.p_real, (double)1.0);
     bean->setProperty(testHelper.p_bool_0, false);
     bean->setProperty(testHelper.p_bool_1, true);
     bean->setProperty(testHelper.p_str, "foo");
@@ -81,7 +81,7 @@ void validateBeanProperties(TestHelper& testHelper, Bean* bean)
 {
     EXPECT_TRUE(bean->getProperty(testHelper.p_int).asInt() == -1);
     EXPECT_TRUE(bean->getProperty(testHelper.p_uint).asUInt() == 1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_int64).asInt64() == -1);
+    EXPECT_TRUE(bean->getProperty(testHelper.p_int64).asInt64() == (Json::Int64)-1);
     EXPECT_TRUE(bean->getProperty(testHelper.p_uint64).asUInt64() == 1);
     EXPECT_TRUE(bean->getProperty(testHelper.p_real).asDouble() == 1.0);
     EXPECT_TRUE(bean->getProperty(testHelper.p_bool_0).asBool() == false);
@@ -113,15 +113,6 @@ void validateBeanNativeData(TestHelper& testHelper, Bean* bean)
 
 void validateBean(TestHelper& testHelper, Bean* bean)
 {
-    EXPECT_TRUE(bean->getProperty(testHelper.p_int).asInt() == -1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_uint).asUInt() == 1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_int64).asInt64() == -1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_uint64).asUInt64() == 1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_real).asDouble() == 1.0);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_bool_0).asBool() == false);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_bool_1).asBool() == true);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_str).asString() == "foo");
-
-    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_int, 0).asInt() == 101);
-    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_int, 1).asInt() == 102);
+    validateBeanProperties(testHelper,  bean);
+    validateBeanNativeData(testHelper, bean);
 }

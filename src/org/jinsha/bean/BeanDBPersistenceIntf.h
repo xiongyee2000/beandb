@@ -186,14 +186,6 @@ public:
     virtual int deleteBean_(Bean* bean) = 0;
 
     /**
-     * Load bean properties. 
-     * 
-     * @param id the id of the bean
-     * @return A list containing bean's property names
-     */
-    virtual std::list<std::string> getBeanProperties_(oidType id) const = 0;
-
-    /**
      * Load bean property. This method is used in case "delay-load"
      * is needed.
      * 

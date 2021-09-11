@@ -280,6 +280,7 @@ TEST(BeanWorld, getProperties)
 
 TEST(BeanWorld, removeBean)
 {
+    int err = 0;
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
@@ -295,7 +296,7 @@ TEST(BeanWorld, removeBean)
 
     oid = bean1->getId();
     world.removeBean(bean1->getId());
-    EXPECT_TRUE(world.getBean(oid) == nullptr);
+    EXPECT_TRUE(world.getBean(oid, false) == nullptr);
     bean1 = world.createBean();
 
     bean1->setRelation(testHelper.r1, bean2);
@@ -369,4 +370,44 @@ TEST(BeanWorld, removeBean)
     EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == 0);
     EXPECT_TRUE(bean3->m_subjectMap_.size() == 0);
 
+}
+
+
+TEST(BeanWorld, saveAll)
+{
+    int err = 0;
+    DummyBeanDB dummyDB;
+    BeanWorld* world = nullptr;
+    TestHelper testHelper;
+    Bean* bean1 = nullptr;
+    Bean* bean2 = nullptr;
+    oidType beanId_1 = 0;
+    oidType beanId_2 = 0;
+
+    dummyDB.connect();
+    world = dummyDB.getWorld();
+    initTestHelper(testHelper, *world);
+
+    bean1 = world->createBean();
+    beanId_1 = bean1->getId();
+    bean2 = world->createBean();
+    beanId_2 = bean2->getId();
+
+    setBeanProperties(testHelper, bean1);
+    setBeanProperties(testHelper, bean2);
+    setBeanNativeData(testHelper, bean1);
+    setBeanNativeData(testHelper, bean2);
+
+    err = world->saveAll();
+    EXPECT_TRUE(err == 0);
+
+    dummyDB.disconnect();
+    dummyDB.connect();
+    world = dummyDB.getWorld();
+
+    bean1 = world->getBean(beanId_1);
+    bean2 = world->getBean(beanId_2);
+
+    validateBean(testHelper, bean1);
+    validateBean(testHelper, bean2);
 }

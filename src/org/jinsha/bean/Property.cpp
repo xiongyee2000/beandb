@@ -56,7 +56,7 @@ Property::~Property()
     //remove property from beans that have this property
     for (auto& iter : m_subjectMap_)
     {
-        bean = m_world_->getBean(iter.first);
+        bean = m_world_->getBean(iter.first, false);
         if (bean != nullptr) {
             bean->m_json_.removeMember(m_name_);
             bean->m_pst_json_.removeMember(m_name_);
@@ -83,7 +83,7 @@ int Property::createIndex()
     Json::Value* value = nullptr;
     for (auto& iter : m_subjectMap_)
     {
-        bean = m_world_->getBean(iter.first);
+        bean = m_world_->getBean(iter.first, false);
         value = bean->getMemberPtr(this);
         addIndex(bean, *value);
     }
@@ -405,7 +405,7 @@ void Property::findSubjects(oidType objectId, std::list<oidType>& beans) const
         {
             for (auto& item : m_subjectMap_)
             {
-                bean = m_world_->getBean(item.first);
+                bean = m_world_->getBean(item.first, false);
                 if (bean == nullptr) continue;
                 value = bean->getMemberPtr(this);
                 objectId_ = value->asUInt64();
@@ -420,7 +420,7 @@ void Property::findSubjects(oidType objectId, std::list<oidType>& beans) const
         //take use of the index in future
         for (auto& item : m_subjectMap_)
         {
-            bean = m_world_->getBean(item.first);
+            bean = m_world_->getBean(item.first, false);
             if (bean == nullptr) continue;
             value = bean->getMemberPtr(this);
             for (Json::ArrayIndex index = 0; index < value->size(); index++)
@@ -563,7 +563,7 @@ void Property::trivialFind(int opType,  const Json::Value& value, std::list<oidT
     Json::Value* v = nullptr;
     for (auto& item : m_subjectMap_)
     {
-        bean = m_world_->getBean(item.first);
+        bean = m_world_->getBean(item.first, false);
         if (bean == nullptr) continue;
         v = bean->getMemberPtr(this);
         if (v == nullptr) continue; //not found or null

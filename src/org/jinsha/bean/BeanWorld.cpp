@@ -76,7 +76,7 @@ void BeanWorld::removeBean(oidType id)
         auto iter2 = bean->m_subjectMap_.begin();
         while (iter2 != bean->m_subjectMap_.end())
         {
-            subject = getBean(iter2->first);
+            subject = getBean(iter2->first, false);
             if (subject == nullptr) {
                 iter2 = bean->m_subjectMap_.erase(iter2);
                 continue;
@@ -284,13 +284,6 @@ int BeanWorld::reloadProperties()
 }
 
 
-int BeanWorld::unloadBean(oidType id)
-{
-    //todo
-    return -1;
-}
-
-
 int BeanWorld::loadAll()
 {
     //todo:
@@ -300,8 +293,16 @@ int BeanWorld::loadAll()
 
 int BeanWorld::saveAll()
 {
-    //todo:
-    return -1;
+    if (!m_db->connected()) return -1;
+    int err = 0;
+    for (auto& iter : m_beans_) {
+        err = iter.second->save();
+        if (err) {
+            elog("Failed in %s at bean: id=%d \n", __func__, iter.second->getId());
+            break;
+        } 
+    }
+    return err;
 }
 
 

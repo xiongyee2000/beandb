@@ -131,6 +131,29 @@ int Bean::setPropertyBase_(Property* property,
     bool syncToDB)
 {
     int err = 0;
+
+    // //json data type conversion
+    // switch (property->getValueType())
+    // {
+    // case Property::IntType:
+    //     newValue = newValue.asInt64();
+    //         break;
+    // case Property::UIntType:
+    //     newValue = newValue.asUInt64();
+    //         break;
+    // case Property::RealType:
+    //     newValue = newValue.asDouble();
+    //         break;
+    // case Property::BoolType:
+    //         //do nothing
+    //     break;
+    // case Property::StringType:
+    //     //do nothing
+    //     break;
+    // default:
+    //     break;
+    // }
+
     const auto& pname = property->getName();
     if (oldValue == nullptr)
     {   //property has not been set before
@@ -455,10 +478,11 @@ int Bean::doCreateArrayRelation(Property* relation, bool syncToDB)
 }
 
 
-// int Bean::appendRelation(Property* relation,  oidType objectBeanId)
-// {
-//     return doAppendRelation(relation, objectBeanId, true);
-// }
+int Bean::appendRelation(Property* relation,  oidType objectBeanId)
+{
+    return doAppendRelation(relation, objectBeanId, true);
+}
+
 
 int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool syncToDB)
 {
@@ -497,9 +521,9 @@ int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool syncT
     //todo: do not index array property/relation for now
     // if (property->indexed())
     //     property->addIndex(this, value);
-    // Bean* objectBean = m_world_->getBean(objectBeanId);
-    // if (objectBean != nullptr) 
-        // objectBean->addSubject(this, relation);
+    Bean* objectBean = m_world_->getBean(objectBeanId, false);
+    if (objectBean != nullptr) 
+        objectBean->addSubject(this, relation);
     return 0;
 }
 
@@ -507,40 +531,7 @@ int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool syncT
 int Bean::appendRelation(Property* relation,  Bean* bean)
 {
     if (bean == nullptr) return -1;
-    if (relation == nullptr) return -2;
-    if (relation->getType() != Property::ArrayRelationType) return -2;
-    if (!hasArrayRelation(relation)) return -4;
-
-    const auto& pname = relation->getName();
-    // if (!m_pst_json_.isMember(pname)) return -4;
-    int err = 0;
-    if (!m_pst_json_[pname].isArray()) {
-        if (m_pst_json_[pname].asInt() == PST_NEW) {
-            //new created array and first time append
-            m_pst_json_[pname] = Json::Value(Json::arrayValue);
-        } else {
-            //delay load
-            err = loadProperty(relation);
-            if (err) return -11;
-        }
-    } else {
-        //already loaded
-    }
-
-    //insert property record first
-    if (m_world_->m_db != nullptr) {
-        if (0 != m_world_->m_db->insertBeanProperty_(m_id_, relation, Json::Value(bean->m_id_)))
-            return -11;
-    }
-
-    auto& arrayValue = m_json_[pname];
-    arrayValue.append(bean->getId());
-    relation->addObject(bean->getId());
-    //todo: do not index array property/relation for now
-    // if (property->indexed())
-    //     property->addIndex(this, value);
-    bean->addSubject(this, relation);
-    return 0;
+    return appendRelation(relation, bean->getId());
 }
 
 
@@ -685,7 +676,7 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncT
             property->removeObject(oid);
 
             if (!internal) {
-                Bean* objectBean = m_world_->getBean(oid);
+                Bean* objectBean = m_world_->getBean(oid, false);
                 if (objectBean != nullptr)
                     objectBean->removeSubject(this, property);
             }
@@ -700,7 +691,7 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncT
             property->removeObject(oid);
 
             if (!internal) {
-                Bean* objectBean = m_world_->getBean(oid);
+                Bean* objectBean = m_world_->getBean(oid, false);
                 if (objectBean == nullptr) continue;
                 objectBean->removeSubject(this, property);
             }
@@ -770,7 +761,7 @@ Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex i
         oid = array[index].asUInt64();
         property->removeObject(oid);
         if (!internal) {
-            objectBean = m_world_->getBean(oid);
+            objectBean = m_world_->getBean(oid, false);
             if (objectBean != nullptr)
                 objectBean->removeSubject(this, property);
         }

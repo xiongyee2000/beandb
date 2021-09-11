@@ -139,10 +139,6 @@ public:
      */
     virtual const std::unordered_map<oidType, Bean*>& getBeans();
 
-    /**
-     * Remove all beans from this world.
-     */
-    int unloadBean(oidType id);
 
 protected:
     int reloadProperties();

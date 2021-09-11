@@ -335,45 +335,45 @@ _out:
 }
 
 
- std::list<std::string> SqliteBeanDB::getBeanProperties_(oidType id) const
-{
-    std::list<std::string> properties;
-    sqlite3_stmt *pstmt = nullptr;
-    Property* property = nullptr;
-    sqlite3_int64 value = 0;
-    const char* valueStr = nullptr;
-    static const char sql[] = "SELECT VALUE from OTABLE WHERE ID = ?;";
-    Json::Reader reader; 
-    Json::Value jsonBean;
-    int err = 0;
+//  std::list<std::string> SqliteBeanDB::getBeanProperties_(oidType id) const
+// {
+//     std::list<std::string> properties;
+//     sqlite3_stmt *pstmt = nullptr;
+//     Property* property = nullptr;
+//     sqlite3_int64 value = 0;
+//     const char* valueStr = nullptr;
+//     static const char sql[] = "SELECT VALUE from OTABLE WHERE ID = ?;";
+//     Json::Reader reader; 
+//     Json::Value jsonBean;
+//     int err = 0;
 
-	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto _out;
-    err = sqlite3_bind_int64(pstmt, 1, id);
-    if (err != SQLITE_OK) goto _out;
+// 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+//     if (err != SQLITE_OK) goto _out;
+//     err = sqlite3_bind_int64(pstmt, 1, id);
+//     if (err != SQLITE_OK) goto _out;
 
-	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
-        if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
-            valueStr = (const char*)sqlite3_column_text(pstmt, 0);
-            if (!reader.parse(valueStr, jsonBean))
-                break;
-            for (auto& item : jsonBean.getMemberNames()) {
-                properties.push_back(item);
-            }
-        }
-    }
+// 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+//         if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
+//             valueStr = (const char*)sqlite3_column_text(pstmt, 0);
+//             if (!reader.parse(valueStr, jsonBean))
+//                 break;
+//             for (auto& item : jsonBean.getMemberNames()) {
+//                 properties.push_back(item);
+//             }
+//         }
+//     }
 
-_out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-    } else {
-        err = 0;
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
-    return properties;
-}
+// _out:
+//     if (err != SQLITE_OK && err != SQLITE_DONE) {
+//         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+//     } else {
+//         err = 0;
+//     }
+//     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
+//     sqlite3_reset(pstmt);
+//     sqlite3_finalize(pstmt);
+//     return properties;
+// }
 
 
 int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value)
@@ -1102,7 +1102,7 @@ int SqliteBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& data)
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
         //retrieve native data
         if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
-            valueStr = (const char*)sqlite3_column_text(pstmt, 1);
+            valueStr = (const char*)sqlite3_column_text(pstmt, 0);
             if (valueStr == nullptr) valueStr = "{}";
             if (!reader.parse(valueStr, data, false))
             {

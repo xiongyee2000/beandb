@@ -35,7 +35,7 @@ public:
     virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) override;
     virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData) override;
 
-    virtual std::list<std::string> getBeanProperties_(oidType id) const override;
+    // virtual std::list<std::string> getBeanProperties_(oidType id) const override;
     virtual int loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value) override;
     virtual int insertBeanProperty_(oidType beanId, 
         const Property* property, 
@@ -65,11 +65,13 @@ public:
 
 private:
     int internalInit();
-    pidType m_maxPid = 1;
-    oidType m_maxOid = 1;
-    std::unordered_map<std::string, Property*> m_properties;
 
 private:
+    std::unordered_map<oidType, Json::Value> m_dataMap_;
+    std::unordered_map<oidType, Json::Value> m_nativeDataMap_;
+    pidType m_maxPid = 1;
+    oidType m_maxOid = 1;
+    std::unordered_map<std::string, Property*> m_properties_;
 
 };
 

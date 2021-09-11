@@ -239,6 +239,10 @@ public:
      * This method is used to set relation between two beans, e.g.
      * father/mather, etc. 
      * 
+     * Notes:
+     * - The caller of this method must ensure the objectId is a valid id
+     *   of an existing bean.
+     * 
      * @param relation the relation
      * @param objectBeanId the id of the counter part bean of the relation
      * @return 0 if success, or an error code:
@@ -272,23 +276,25 @@ public:
      */
     int createArrayRelation(Property* relation);
 
-    // /**
-    //  * This method is used to append an item to an array relation.
-    //  * 
-    //  * Notes:
-    //  * - This method will internally add the counter part bean's id to the 
-    //  *    json array property created by setRelation(Property* property).
-    //  * 
-    //  * @param relation the array relation
-    //  * @param objectBeanId the id of the counter part bean of the relation 
-    //  *                    to be added
-    //  * @return 0 if success, or an error code
-    //  *                   error code:
-    //  *                   -1: if bean is null
-    //  *                   -2: if property is null
-    //  *                   -4: if the array relation is not a member of this bean
-    //  */
-    // int appendRelation(Property* relation, oidType objectBeanId);
+    /**
+     * This method is used to append an item to an array relation.
+     * 
+     * Notes:
+     * - This method will internally add the counter part bean's id to the 
+     *    json array property created by setRelation(Property* property).
+     * - The caller of this method must ensure the objectId is a valid id
+     *   of an existing bean.
+     * 
+     * @param relation the array relation
+     * @param objectId the id of the counter part bean of the relation 
+     *                    to be added
+     * @return 0 if success, or an error code
+     *                   error code:
+     *                   -1: if bean is null
+     *                   -2: if relation is null or invalid
+     *                   -4: if the array relation is not a member of this bean
+     */
+    int appendRelation(Property* relation, oidType objectId);
 
 
     /**
@@ -326,6 +332,10 @@ public:
 
      /**
      * Set the relation of an array relation at specified index. 
+     * 
+     * Notes:
+     * - The caller of this method must ensure the objectId is a valid id
+     *   of an existing bean.
      * 
      * @param relation the array relation
      * @param index the index in the array

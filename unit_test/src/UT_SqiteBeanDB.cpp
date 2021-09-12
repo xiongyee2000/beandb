@@ -404,6 +404,48 @@ TEST(SqliteBeanDB, loadProperties_)
 
 }
 
+TEST(SqliteBeanDB, insertBeanProperty_)
+{
+    char buff[128] = {0};
+    char* cmd = &buff[0];
+    sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
+    system(cmd);
+
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world);
+
+    Bean* bean1 = world->createBean();
+    oidType beanId_1 = bean1->getId();
+    err = testdb.insertBeanProperty_(beanId_1, testHelper.p_int, 1);
+    EXPECT_TRUE(err == 0);
+
+    err = testdb.insertBeanProperty_(beanId_1, testHelper.p_array_int, 0);
+    EXPECT_TRUE(err == 0);
+    err = testdb.insertBeanProperty_(beanId_1, testHelper.p_array_int, 1);
+    EXPECT_TRUE(err == 0);
+
+    testdb.disconnect();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world);
+
+    testdb.loadBeanProperty_(beanId_1, testHelper.p_int, value);
+    EXPECT_TRUE(value == 1);
+    testdb.loadBeanProperty_(beanId_1, testHelper.p_array_int, value);
+    EXPECT_TRUE(value[0] == 0);
+    EXPECT_TRUE(value[1] == 1);
+
+    testdb.disconnect();
+
+}
+
 
 ////////////////////////////////////////////////////////////////
 // helper functions

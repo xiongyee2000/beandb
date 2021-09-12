@@ -131,29 +131,6 @@ int Bean::setPropertyBase_(Property* property,
     bool syncToDB)
 {
     int err = 0;
-
-    // //json data type conversion
-    // switch (property->getValueType())
-    // {
-    // case Property::IntType:
-    //     newValue = newValue.asInt64();
-    //         break;
-    // case Property::UIntType:
-    //     newValue = newValue.asUInt64();
-    //         break;
-    // case Property::RealType:
-    //     newValue = newValue.asDouble();
-    //         break;
-    // case Property::BoolType:
-    //         //do nothing
-    //     break;
-    // case Property::StringType:
-    //     //do nothing
-    //     break;
-    // default:
-    //     break;
-    // }
-
     const auto& pname = property->getName();
     if (oldValue == nullptr)
     {   //property has not been set before
@@ -167,8 +144,8 @@ int Bean::setPropertyBase_(Property* property,
         }
         //set the property (regardless of value)
         oldValue = &m_json_[pname];
-        //no old value, need to increment ref. count
 
+        //no old value, need to increment ref. count
         // property->m_refCount_++;
     }
     else
@@ -327,7 +304,7 @@ int Bean::doAppendProperty(Property* property,  const Json::Value& value, bool s
     } else {
         //do nothing
     }
-    Json::Value * array =  getMemberPtr(property);
+
     //insert property record first
     if (m_world_->m_db != nullptr && syncToDB) {
         if (0 != m_world_->m_db->insertBeanProperty_(m_id_, property, value)) {
@@ -336,12 +313,14 @@ int Bean::doAppendProperty(Property* property,  const Json::Value& value, bool s
             return -11;
         }
     }
-    array->append(value);
     if (syncToDB) {
         m_pst_json_[pname].append(PST_SYN);
     } else {
         m_pst_json_[pname].append(PST_NEW);
     }
+
+    Json::Value * array =  getMemberPtr(property);
+    array->append(value);
     
     //todo: do not index array property/relation for now
     // if (property->indexed())

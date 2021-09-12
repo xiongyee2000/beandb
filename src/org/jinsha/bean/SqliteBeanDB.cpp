@@ -398,7 +398,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     //set to null first
     value = Json::Value::nullRef;
 
-    if (property->isDelayLoad()) {
+    if (property->isDelayLoad() || property->indexed()) {
         snprintf(buff, 64, "SELECT VALUE from p_%s WHERE SID = ?;", 
             pname);
         err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
@@ -475,24 +475,54 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
 {
     if (property == nullptr) return -1;
     if (m_sqlite3Db_ == nullptr) return -1;
-     //no need to do anything here for non-indexed
-     //and non-delay-load property
-    if (!property->indexed() &&
-        !property->isDelayLoad()) 
-    return 0; 
+    //  //no need to do anything here for non-indexed
+    //  //and non-delay-load property
+    // if (!property->indexed() &&
+    //     !property->isDelayLoad()) 
+    // return 0; 
 
     BeanWorld *world = getWorld();
     if (world == nullptr) return -1;
 
     const char* pname = property->getName().c_str();
     char buff[128]{0};
-    snprintf(buff, sizeof(buff) - 1, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
     const char* sql = buff;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int err = 0;
     int nCol = 0;
 
+    Json::Value data, nativeData;
+    err = loadBeanBase_(beanId, data, nativeData);
+    if (err) {
+        elog("Failed in %s (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
+        return err;
+    }
+
+    if (data.isMember(pname)) {
+        if (!property->isArray()) {
+            elog("Failed to insert bean property for it already exists (beanId=%d, property name =%s) \n ", beanId, pname);
+            return 1001;
+        }
+    } else {
+        //add property to bean base record
+        if (property->isDelayLoad())
+        {
+            data[pname] = Json::Value::nullRef;
+        } else {
+            data[pname] = value;
+        }
+        err = saveBeanBase_(beanId, data, nativeData);
+        if (err) {
+            elog("Failed to insert bean property (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
+            return 1002;
+        }
+    }
+
+    //todo: handle index later
+    if (!property->isDelayLoad() && !property->indexed()) return 0;
+
+    snprintf(buff, sizeof(buff) - 1, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
     oidType sid = beanId;
     std::list<const Json::Value*> vlist;
     
@@ -586,11 +616,11 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
 {
     if (property == nullptr) return -1;
     if (m_sqlite3Db_ == nullptr) return -1;
-     //no need to do anything here for non-indexed
-     //and non-delay-load property
-    if (!property->indexed() &&
-        !property->isDelayLoad()) 
-    return 0; 
+    //  //no need to do anything here for non-indexed
+    //  //and non-delay-load property
+    // if (!property->indexed() &&
+    //     !property->isDelayLoad()) 
+    // return 0; 
 
     BeanWorld *world = getWorld();
     if (world == nullptr) return -1;

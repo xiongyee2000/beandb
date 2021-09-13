@@ -475,11 +475,6 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
 {
     if (property == nullptr) return -1;
     if (m_sqlite3Db_ == nullptr) return -1;
-    //  //no need to do anything here for non-indexed
-    //  //and non-delay-load property
-    // if (!property->indexed() &&
-    //     !property->isDelayLoad()) 
-    // return 0; 
 
     BeanWorld *world = getWorld();
     if (world == nullptr) return -1;
@@ -491,73 +486,87 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
     const char* pzTail = nullptr;
     int err = 0;
     int nCol = 0;
-
     Json::Value data, nativeData;
-    err = loadBeanBase_(beanId, data, nativeData);
-    if (err) {
-        elog("Failed in %s (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
-        return err;
-    }
+    oidType sid = beanId;
+    std::list<const Json::Value*> vlist;
 
-    if (data.isMember(pname)) {
-        if (!property->isArray()) {
-            elog("Failed to insert bean property for it already exists (beanId=%d, property name =%s) \n ", beanId, pname);
-            return 1001;
-        }
-    } else {
-        //add property to bean base record
-        if (property->isDelayLoad())
-        {
-            data[pname] = Json::Value::nullRef;
-        } else {
-            data[pname] = value;
-        }
-        err = saveBeanBase_(beanId, data, nativeData);
+   bool alreadyInTrasaction = inTransaction();
+   if (!alreadyInTrasaction) {
+       err = beginTransaction();
+       if (err) {
+           elog("Failed to insert bean property (beanId=%d, property name =%s) \n", beanId, pname);
+           return err;
+       }
+   }
+
+    if (!property->isArray()) {
+        err = loadBeanBase_(beanId, data, nativeData);
         if (err) {
-            elog("Failed to insert bean property (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
-            return 1002;
+            elog("Failed in %s (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
+            goto out;
+        }
+
+        if (data.isMember(pname)) {
+            wlog("Shall not reach here %s (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
+        } else {
+            //add property to bean base record
+            if (property->isDelayLoad())
+            {
+                data[pname] = Json::Value::nullRef;
+            } else {
+                data[pname] = value;
+            }
+            err = saveBeanBase_(beanId, data, nativeData);
+            if (err) {
+                elog("Failed to insert bean property (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
+                goto out;
+            }
         }
     }
 
     //todo: handle index later
-    if (!property->isDelayLoad() && !property->indexed()) return 0;
-
-    snprintf(buff, sizeof(buff) - 1, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
-    oidType sid = beanId;
-    std::list<const Json::Value*> vlist;
-    
-    if (value.isArray()) {
-        for (int i = 0; i < value.size(); i++) {
-            vlist.push_back(&value[i]);
-        }
-    } else {
-        vlist.push_back(&value);
-    }
-
-    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto out;
-    for (const auto& v : vlist) {
-        nCol = 1;
-        err = sqlite3_bind_null(pstmt, nCol++);
-        if (err != SQLITE_OK) goto out;
-        err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)sid);
-        if (err != SQLITE_OK) goto out;
-        if (property->getValueType() == Property::StringType) {
-            err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
+    if (property->isDelayLoad() || property->indexed()) {
+        snprintf(buff, sizeof(buff) - 1, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
+        if (value.isArray()) {
+            for (int i = 0; i < value.size(); i++) {
+                vlist.push_back(&value[i]);
+            }
         } else {
-            err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
+            vlist.push_back(&value);
         }
+
+        err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
         if (err != SQLITE_OK) goto out;
-        
-        err = sqlite3_step(pstmt);
-         if (err != SQLITE_OK) goto out;
+        for (const auto& v : vlist) {
+            nCol = 1;
+            err = sqlite3_bind_null(pstmt, nCol++);
+            if (err != SQLITE_OK) goto out;
+            err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)sid);
+            if (err != SQLITE_OK) goto out;
+            if (property->getValueType() == Property::StringType) {
+                err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
+            } else {
+                err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
+            }
+            if (err != SQLITE_OK) goto out;
+            
+            err = sqlite3_step(pstmt);
+            if (err != SQLITE_OK) goto out;
+        }
     }
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+        if (!alreadyInTrasaction) {
+            rollbackTransaction();
+        }
     } else {
-        err = 0;
+        if (!alreadyInTrasaction) {
+            err = commitTransaction();
+        } else {
+            err = 0;
+        }
     }
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -571,20 +580,24 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         const Property* property, 
         const Json::Value& value) 
 {
+    if (property == nullptr) return -1;
+    if (property->isArray()) return -1;
     return updateBeanProperty_(beanId, property, (Json::ArrayIndex)-1, value);
 }
 
 
-int SqliteBeanDB::getIdByPropertyIndex(const char* pname, Json::ArrayIndex index, sqlite3_int64& id)
+int SqliteBeanDB::getIdByPropertyIndex(const char* pname, oidType sid, Json::ArrayIndex index, sqlite3_int64& id)
 {
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
     Json::ArrayIndex i = 0;
     bool found = false;
-    static const char sql[] = "SELECT ID FROM p_? WHERE SID = ? ;";
+    char buff[128]{0};
+    char *sql = buff;
+    snprintf(buff, sizeof(buff) - 1, "SELECT ID FROM p_%s WHERE SID = ? ;", pname);
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto out;
-    err = sqlite3_bind_int64(pstmt, 1, id);
+    err = sqlite3_bind_int64(pstmt, 1, sid);
     if (err != SQLITE_OK) goto out;
 
     while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
@@ -614,67 +627,108 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         Json::Value::ArrayIndex  index,
         const Json::Value& value) 
 {
-    if (property == nullptr) return -1;
-    if (m_sqlite3Db_ == nullptr) return -1;
-    //  //no need to do anything here for non-indexed
-    //  //and non-delay-load property
-    // if (!property->indexed() &&
-    //     !property->isDelayLoad()) 
-    // return 0; 
-
-    BeanWorld *world = getWorld();
-    if (world == nullptr) return -1;
-
-    bool isArray = false;
-    if (property->getType() == Property::ArrayPrimaryType ||
-        property->getType() == Property::ArrayRelationType) 
-        isArray = true;
-
-    if (!isArray && (index != (Json::Value::ArrayIndex)-1)) return -1;
-
-    static const char sql[] = "UPDATE p_? SET VALUE = ? WHERE ? = ? ;";
+    char buff[128]{0};
+    const char* sql = buff;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int err = 0;
     int nCol = 0;
-    const char* pname = property->getName().c_str();
     oidType sid = beanId;
     sqlite3_int64 id = 0;
     std::list<const Json::Value*> vlist;
     const Json::Value* v = nullptr;
-    
-    if (isArray) {
-        err = getIdByPropertyIndex(pname, index, id);
-        if (err) return -12;
-        v = &value[index];
-    }  else {
+    BeanWorld *world = nullptr;
+   Json::Value data, nativeData;
+   const char* pname = nullptr;
+   bool isArray = false;
+   bool alreadyInTrasaction = false;
+
+    if (property == nullptr) return -1;
+    if (m_sqlite3Db_ == nullptr) return -1;
+
+    world = getWorld();
+    if (world == nullptr) return -1;
+
+    if (!property->isArray() && (index != (Json::Value::ArrayIndex)-1)) return -1;
+   pname = property->getName().c_str();
+   isArray = property->isArray();
+
+   alreadyInTrasaction = inTransaction();
+   if (!alreadyInTrasaction) {
+       err = beginTransaction();
+       if (err) {
+           elog("Failed to update bean property (beanId=%d, property name =%s) \n", beanId, pname);
+           return err;
+       }
+   }
+
+    if (!property->isDelayLoad()) {
+        err = loadBeanBase_(beanId, data, nativeData);
+        if (err) {
+            elog("Failed in %s (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
+            goto out;
+        }
+
+        if (!data.isMember(pname)) {
+            wlog("Shall not reach here %s (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
+        } else {
+            //update property to bean base record
+            data[pname] = value;
+            err = saveBeanBase_(beanId, data, nativeData);
+            if (err) {
+                elog("Failed to update bean property (beanId=%d, property name =%s) \n ", __func__, beanId, pname);
+                goto out;
+            }
+        }
+    }
+
+    //todo: handle index later
+    if (property->isDelayLoad() || property->indexed()) {
+        // if (isArray) {
+        //     err = getIdByPropertyIndex(pname, sid, index, id);
+        //     if (err) goto out;
+        //     v = &value[index];
+        // }  else {
+        //     v = &value;
+        // }
+        err = getIdByPropertyIndex(pname, sid, index, id);
+        if (err) goto out;
         v = &value;
-    }
 
-    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) return -2;
-    nCol = 0;
-    err = sqlite3_bind_text(pstmt, nCol++, pname, -1, nullptr);
-    if (err != SQLITE_OK) goto out;
-    if (property->getValueType() == Property::StringType) {
-        err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
-    } else {
-        err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
-    }
-    if (err != SQLITE_OK) goto out;
-    err = sqlite3_bind_text(pstmt, nCol++, isArray ? "ID" : "SID", -1, nullptr);
-    if (err != SQLITE_OK) goto out;
-    err = sqlite3_bind_int64(pstmt, nCol++, isArray ? (sqlite3_int64)id : (sqlite3_int64)sid);
-    if (err != SQLITE_OK) goto out;
+        if (isArray) {
+            snprintf(buff, sizeof(buff) - 1, "UPDATE p_%s SET VALUE = ? WHERE ID = ?  ;", pname);
+        } else {
+            snprintf(buff, sizeof(buff) - 1, "UPDATE p_%s SET VALUE = ? WHERE SID = ?  ;", pname);
+        }
 
-    err = sqlite3_step(pstmt);
+        err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
         if (err != SQLITE_OK) goto out;
+        nCol = 1;
+        if (property->getValueType() == Property::StringType) {
+            err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
+        } else {
+            err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
+        }
+        if (err != SQLITE_OK) goto out;
+        err = sqlite3_bind_int64(pstmt, nCol++, isArray ? (sqlite3_int64)id : (sqlite3_int64)sid);
+        if (err != SQLITE_OK) goto out;
+
+        err = sqlite3_step(pstmt);
+            if (err != SQLITE_OK) goto out;
+    }
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+        if (!alreadyInTrasaction) {
+            rollbackTransaction();
+        }
     } else {
-        err = 0;
+        if (!alreadyInTrasaction) {
+            err = commitTransaction();
+        } else {
+            err = 0;
+        }
     }
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -727,7 +781,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     const Json::Value* v = nullptr;
     
     if (isArray) {
-        err = getIdByPropertyIndex(pname, index, id);
+        err = getIdByPropertyIndex(pname, beanId, index, id);
         if (err) return -12;
     } 
 

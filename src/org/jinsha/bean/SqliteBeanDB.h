@@ -88,7 +88,7 @@ private:
     int checkDB();
     int openDB();
     int closeDB();
-    int getIdByPropertyIndex(const char* pname, Json::ArrayIndex index, sqlite3_int64& id);
+    int getIdByPropertyIndex(const char* pname, oidType sid, Json::ArrayIndex index, sqlite3_int64& id);
 
 
 private:

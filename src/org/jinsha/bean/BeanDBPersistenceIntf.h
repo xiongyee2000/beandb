@@ -257,14 +257,10 @@ public:
         const Property* property, 
         Json::Value::ArrayIndex index) = 0;
 
-    virtual int insertBeanNativeData_(oidType beanId, 
-        const Json::Value& value) = 0;
-
     virtual int updateBeanNativeData_(oidType beanId, 
         const Json::Value& value) = 0;
 
-    virtual int deleteBeanNativeData_(oidType beanId, 
-        const Json::Value& value) = 0;
+    virtual int deleteBeanNativeData_(oidType beanId) = 0;
 
 };
 

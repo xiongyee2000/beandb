@@ -197,17 +197,6 @@ int DummyBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& value)
     return 0;
 }
 
-int DummyBeanDB::insertBeanNativeData_(oidType beanId, 
-    const Json::Value& value)
-{
-    int err = 0;
-    if (m_nativeDataMap_.find(beanId) == m_nativeDataMap_.end()) {
-        m_nativeDataMap_[beanId] = value;
-    } else {
-        err = 1;
-    }
-    return err;
-}
 
 int DummyBeanDB::updateBeanNativeData_(oidType beanId, 
     const Json::Value& value)
@@ -221,8 +210,7 @@ int DummyBeanDB::updateBeanNativeData_(oidType beanId,
     return err;
 }
 
-int DummyBeanDB::deleteBeanNativeData_(oidType beanId, 
-    const Json::Value& value)
+int DummyBeanDB::deleteBeanNativeData_(oidType beanId)
 {
     int err = 0;
     auto iter = m_nativeDataMap_.find(beanId) ;

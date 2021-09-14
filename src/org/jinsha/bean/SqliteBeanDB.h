@@ -65,14 +65,10 @@ private:
         const Property* property, 
         Json::Value::ArrayIndex index) override;
 
-    virtual int insertBeanNativeData_(oidType beanId, 
-        const Json::Value& value) override;
-
     virtual int updateBeanNativeData_(oidType beanId, 
         const Json::Value& value) override;
 
-    virtual int deleteBeanNativeData_(oidType beanId, 
-        const Json::Value& value) override;
+    virtual int deleteBeanNativeData_(oidType beanId) override;
     
     virtual int loadBeanNativeData_(oidType beanId, Json::Value& value) override;
 

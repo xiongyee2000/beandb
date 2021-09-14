@@ -250,6 +250,12 @@ int Bean::doCreateArrayProperty(Property* property, bool syncToDB)
     } else {
         m_json_[pname] = Json::Value(Json::arrayValue);
         m_pst_json_[pname] = Json::Value(Json::arrayValue);
+        //save to db
+        err = m_world_->m_db->saveBeanBase_(m_id_, m_json_, m_native_data_json_);
+        if (err) {
+            m_json_.removeMember(pname);
+            m_pst_json_.removeMember(pname);
+        }
     }
     property->addSubject(m_id_); //todo: need this line?
     return 0;
@@ -451,6 +457,12 @@ int Bean::doCreateArrayRelation(Property* relation, bool syncToDB)
     } else {
         m_json_[pname] = Json::Value(Json::arrayValue);
         m_pst_json_[pname] = Json::Value(Json::arrayValue);
+        //save to db
+        err = m_world_->m_db->saveBeanBase_(m_id_, m_json_, m_native_data_json_);
+        if (err) {
+            m_json_.removeMember(pname);
+            m_pst_json_.removeMember(pname);
+        }
     }
     relation->addSubject(m_id_); //todo: need this line?
     return 0;
@@ -580,7 +592,7 @@ int Bean::removeNativeData()
 {
     int err = 0;
     if (m_world_->m_db != nullptr) {
-        err = m_world_->m_db->deleteBeanNativeData_(m_id_, m_native_data_json_);
+        err = m_world_->m_db->deleteBeanNativeData_(m_id_);
         if (err) {
             elog("Failed to remove native data of bean (id=%ld) \n", m_id_);
             return err;

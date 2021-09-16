@@ -159,34 +159,33 @@ int BeanWorld::deleteBean(Bean* bean)
 }
 
 
-Property* BeanWorld::defineProperty(const char* name, Property::ValueType valueType, bool needIndex)
+Property* BeanWorld::defineProperty(const char* name, Property::ValueType valueType)
 {
-    return definePropertyCommon_(name, Property::PrimaryType, valueType, needIndex);
+    return definePropertyCommon_(name, Property::PrimaryType, valueType);
 }
 
 
-Property* BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex)
+Property* BeanWorld::defineArrayProperty(const char* name, Property::ValueType valueType)
 {
-    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType, needIndex);
+    return definePropertyCommon_(name, Property::ArrayPrimaryType, valueType);
 }
 
 
-Property* BeanWorld::defineRelation(const char* name, bool needIndex)
+Property* BeanWorld::defineRelation(const char* name)
 {
-    return definePropertyCommon_(name, Property::RelationType, Property::UIntType, needIndex);
+    return definePropertyCommon_(name, Property::RelationType, Property::UIntType);
 }
 
 
-Property* BeanWorld::defineArrayRelation(const char* name, bool needIndex)
+Property* BeanWorld::defineArrayRelation(const char* name)
 {
-    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType, needIndex);
+    return definePropertyCommon_(name, Property::ArrayRelationType, Property::UIntType);
 }
 
 
 Property* BeanWorld::definePropertyCommon_(const char* name, 
     Property::Type type, 
-    Property::ValueType valueType, 
-    bool needIndex)
+    Property::ValueType valueType)
 {
     if (name == nullptr) return nullptr;
     if (name[0] == 0) return nullptr;
@@ -198,12 +197,13 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
     if (iter == m_propertyMap_.end())
     {
         bool delayLoad = false;
-        err = m_db ->defineProperty_(name, type, valueType, needIndex, pid, delayLoad);
+        // err = m_db ->defineProperty_(name, type, valueType, needIndex, pid, delayLoad);
+        err = m_db ->defineProperty_(name, type, valueType, pid, delayLoad);
         if (err) {
             elog("Failed to define property %s in database.", name);
             return nullptr;
         } else {
-            property = new Property(this, name, pid, type, valueType, delayLoad, needIndex);
+            property = new Property(this, name, pid, type, valueType, delayLoad);
             m_propertyMap_[name] = property;
             property->m_id_ = pid;
         }
@@ -212,9 +212,8 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
     {
         property = iter->second;
         if (property->getType() != type || 
-            property->getValueType() != valueType ||
-            property->indexed() != needIndex) {
-            elog("Property with name %s already exist but its type/valueType/indexFlag is inconsistent.", name);
+            property->getValueType() != valueType) {
+            elog("Property with name %s already exist but its type/valueType is inconsistent.", name);
             property = nullptr; 
         }
     }

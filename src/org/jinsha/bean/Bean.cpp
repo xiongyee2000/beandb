@@ -1049,50 +1049,43 @@ int Bean::save()
     Json::Value* pstValuePtr = nullptr;
     Property* property = nullptr;
 
-    err = m_world_->m_db->beginTransaction();
-    if (err) return -3;
-
     err = m_world_->m_db->saveBeanBase_(m_id_, m_json_, m_native_data_json_);
     if (err) goto out;
 
     for (auto& pname : m_pst_json_.getMemberNames()) {
         property = m_world_->getProperty(pname.c_str());
-        if (property == nullptr) continue;
-        if (property->isDelayLoad()) {
-            pstValuePtr = &m_pst_json_[pname];
-            if (pstValuePtr->isArray()) {
-                size = pstValuePtr->size();
-                for (i = 0; i < size; i++) {
-                    switch ((*pstValuePtr)[i].asInt()) {
-                        case PST_NSY:
-                            break;
-                        case PST_SYN:
-                            break;
-                        case PST_MOD:
-                            err = m_world_->m_db->updateBeanProperty_(m_id_, property, i, m_json_[pname][i]);
-                            if (err) goto out;
-                            break;
-                        // case PST_NEW:
-                        //     err = m_world_->m_db->insertBeanProperty(m_id_, property, m_json_[pname][i]);
-                        //     if (err) goto out;
-                        //     break;
-                        default:
-                            break;
-                    }
+        if (property == nullptr) continue; //shall not happen
+        pstValuePtr = &m_pst_json_[pname];
+        if (pstValuePtr->isArray()) {
+            size = pstValuePtr->size();
+            for (i = 0; i < size; i++) {
+                switch ((*pstValuePtr)[i].asInt()) {
+                    case PST_NSY:
+                        break;
+                    case PST_SYN:
+                        break;
+                    case PST_MOD:
+                        err = m_world_->m_db->updateBeanProperty_(m_id_, property, i, m_json_[pname][i]);
+                        if (err) goto out;
+                        break;
+                    // case PST_NEW:
+                    //     err = m_world_->m_db->insertBeanProperty(m_id_, property, m_json_[pname][i]);
+                    //     if (err) goto out;
+                    //     break;
+                    default:
+                        break;
                 }
-            } else { 
-                if (pstValuePtr->asInt() == PST_NEW) {
-                    //todo: do anything?
-                } else if (pstValuePtr->asInt() == PST_MOD) {
-                    err = m_world_->m_db->updateBeanProperty_(m_id_, property, m_json_[pname]);
-                    if (err) goto out;
-                } else {
-                    //do nothing
-                }
-            }            
-        } else {
-            //don't do anything for non-delay property here
-        }
+            }
+        } else { 
+            if (pstValuePtr->asInt() == PST_NEW) {
+                //todo: do anything?
+            } else if (pstValuePtr->asInt() == PST_MOD) {
+                err = m_world_->m_db->updateBeanProperty_(m_id_, property, m_json_[pname]);
+                if (err) goto out;
+            } else {
+                //do nothing
+            }
+        }            
     }
 
     if (m_native_data_pst_json_.asInt() == PST_MOD) {
@@ -1103,10 +1096,8 @@ int Bean::save()
 
 out:
     if (err) {
-        m_world_->m_db->rollbackTransaction();
+        elog("Failed to save bean (id=%llu) \n", m_id_);
     } else {
-        m_world_->m_db->commitTransaction();
-
         //set pst value
         for (auto& pname : m_pst_json_.getMemberNames()) {
             property = m_world_->getProperty(pname.c_str());

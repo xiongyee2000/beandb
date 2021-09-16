@@ -186,7 +186,6 @@ TEST(Bean, property)
     Value value;
     int err = 0;
     TestHelper testHelper;
-    Property* property = nullptr;
     BeanWorld* world = nullptr;
     
     dummyDB.connect();

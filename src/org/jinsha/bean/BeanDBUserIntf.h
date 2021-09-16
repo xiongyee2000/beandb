@@ -38,10 +38,9 @@ public:
      * 
      * @param name the name of property
      * @param valueType the value type of property
-     * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
+    virtual Property* defineProperty(const char* name, Property::ValueType valueType) = 0;
 
     /**
      * Define an array property.
@@ -54,10 +53,9 @@ public:
      * 
      * @param name the name of property
      * @param valueType the value type of the element of the array property
-     * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) = 0;
+    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType) = 0;
 
     /**
      * Define a relation property.
@@ -66,10 +64,9 @@ public:
      * two beans, e.g. father/mother etc.
      * 
      * @param name the name of relation property
-     * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* defineRelation(const char* name, bool needIndex = false) = 0;
+    virtual Property* defineRelation(const char* name) = 0;
 
     /**
      * Define an array relation property.
@@ -77,10 +74,9 @@ public:
      * Array relation property must be defined before it can be used.
      * 
      * @param name the name of array relation property
-     * @param needIndex if index is needed
      * @return the pointer to the property instance
      */
-    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) = 0;
+    virtual Property* defineArrayRelation(const char* name) = 0;
 
     /**
      * Undefine a property.

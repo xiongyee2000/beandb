@@ -136,7 +136,6 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
 {
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
-    AbstractBeanDB* testdbPtr = &testdb;
     BeanWorld *world = nullptr;
     int err = 0;
     Property* property = nullptr;
@@ -295,7 +294,6 @@ TEST(SqliteBeanDB, getBean)
     const char* testdbDir = g_tmpDBDir;
     SqliteBeanDB testdb(testdbDir);
     BeanWorld* world = nullptr;
-    Bean* bean = nullptr;
 
     testdb.connect();
     world = testdb.getWorld();
@@ -323,7 +321,6 @@ TEST(SqliteBeanDB, saveBean)
     SqliteBeanDB testdb(testdbDir);
     BeanWorld *world = nullptr;
     TestHelper testHelper;
-    Bean* bean = nullptr;
     Bean* bean1 = nullptr;
     Bean* bean2 = nullptr;
     Bean* bean3 = nullptr;

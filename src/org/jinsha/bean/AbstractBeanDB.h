@@ -109,8 +109,7 @@ protected:
         pidType id,
         Property::Type type,
         Property::ValueType valueType, 
-        bool delayLoad,
-        bool needIndex) const;
+        bool delayLoad) const;
 
     /**
      * This method is used for the implemenation method of 

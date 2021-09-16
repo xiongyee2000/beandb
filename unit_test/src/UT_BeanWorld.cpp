@@ -156,9 +156,9 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
     property = world.defineArrayProperty("p1", Property::IntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineRelation("p1", Property::IntType);
+    property = world.defineRelation("p1");
     EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayRelation("p1", Property::IntType);
+    property = world.defineArrayRelation("p1");
     EXPECT_TRUE(property == nullptr);
     world.undefineProperty("p1");
     EXPECT_TRUE(nullptr == world.getProperty("p1"));
@@ -171,9 +171,9 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
     property = world.defineProperty("p1", Property::IntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineRelation("p1", Property::IntType);
+    property = world.defineRelation("p1");
     EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayRelation("p1", Property::IntType);
+    property = world.defineArrayRelation("p1");
     EXPECT_TRUE(property == nullptr);
     world.undefineProperty("p1");
     EXPECT_TRUE(nullptr == world.getProperty("p1"));
@@ -186,7 +186,7 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     EXPECT_TRUE(property == nullptr);
     property = world.defineArrayProperty("p1", Property::IntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayRelation("p1", Property::IntType);
+    property = world.defineArrayRelation("p1");
     EXPECT_TRUE(property == nullptr);
     world.undefineProperty("p1");
     EXPECT_TRUE(nullptr == world.getProperty("p1"));
@@ -199,7 +199,7 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     EXPECT_TRUE(property == nullptr);
     property = world.defineArrayProperty("p1", Property::IntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineRelation("p1", Property::IntType);
+    property = world.defineRelation("p1");
     EXPECT_TRUE(property == nullptr);
     world.undefineProperty("p1");
     EXPECT_TRUE(nullptr == world.getProperty("p1"));

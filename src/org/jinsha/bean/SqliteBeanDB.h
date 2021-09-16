@@ -34,7 +34,6 @@ private:
     virtual int defineProperty_(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
-        bool needIndex,
         pidType& pid,
         bool& delayLoad) override;
     virtual int undefineProperty_(const char* name) override;

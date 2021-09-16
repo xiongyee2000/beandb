@@ -31,43 +31,43 @@ TEST(Property, getName)
     EXPECT_TRUE(property->getName() == "p1");
 }
 
-TEST(Property, indexed)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
+// TEST(Property, indexed)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
 
-    world.defineProperty("p1", Property::IntType);
-    Property* property = world.getProperty("p1");
-    EXPECT_TRUE(property->indexed() == false);
-    property->createIndex();
-    EXPECT_TRUE(property->indexed() == true);
-}
+//     world.defineProperty("p1", Property::IntType);
+//     Property* property = world.getProperty("p1");
+//     EXPECT_TRUE(property->indexed() == false);
+//     property->createIndex();
+//     EXPECT_TRUE(property->indexed() == true);
+// }
 
-TEST(Property, create_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
+// TEST(Property, create_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
 
-    world.defineProperty("p1", Property::IntType);
-    Property* property = world.getProperty("p1");
-    EXPECT_TRUE(property->indexed() == false);
-    property->createIndex();
-    EXPECT_TRUE(property->indexed() == true);
-}
+//     world.defineProperty("p1", Property::IntType);
+//     Property* property = world.getProperty("p1");
+//     EXPECT_TRUE(property->indexed() == false);
+//     property->createIndex();
+//     EXPECT_TRUE(property->indexed() == true);
+// }
 
-TEST(Property, remove_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
+// TEST(Property, remove_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
 
-    world.defineProperty("p1", Property::IntType);
-    Property* property = world.getProperty("p1");
-    EXPECT_TRUE(property->indexed() == false);
-    property->createIndex();
-    EXPECT_TRUE(property->indexed() == true);
-    property->removeIndex();
-    EXPECT_TRUE(property->indexed() == false);
-}
+//     world.defineProperty("p1", Property::IntType);
+//     Property* property = world.getProperty("p1");
+//     EXPECT_TRUE(property->indexed() == false);
+//     property->createIndex();
+//     EXPECT_TRUE(property->indexed() == true);
+//     property->removeIndex();
+//     EXPECT_TRUE(property->indexed() == false);
+// }
 
 
 void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<oidType>& beans, bool needIndex = false)
@@ -183,10 +183,10 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     EXPECT_TRUE(beans.size() == 1);
 }
 
-void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<oidType>& beans, bool needIndex)
+void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<oidType>& beans)
 {
     Property *pArray_1, *rArray_1;
-   pArray_1 =  world.defineArrayProperty("p_array_int", Property::IntType, needIndex);
+   pArray_1 =  world.defineArrayProperty("p_array_int", Property::IntType);
 
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
@@ -197,7 +197,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    pArray_1 = world.defineArrayProperty("p_array_int", Property::BoolType, needIndex);
+    pArray_1 = world.defineArrayProperty("p_array_int", Property::BoolType);
 
     bean1.createArrayProperty(pArray_1);
     pArray_1->getSubjects(beans);
@@ -225,20 +225,20 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
 
 }
 
-TEST(Property, getSubjects_without_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
-    std::list<oidType> beans;
-    TestHelper testHelper;
+// TEST(Property, getSubjects_without_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
+//     std::list<oidType> beans;
+//     TestHelper testHelper;
 
-    initTestHelper(testHelper, world);
+//     initTestHelper(testHelper, world);
 
-    Bean &bean1 = *world.createBean();
-    Bean& bean2 = *world.createBean();
+//     Bean &bean1 = *world.createBean();
+//     Bean& bean2 = *world.createBean();
 
-    test_getSubjects_common(world, bean1, bean2, beans, false);
-}
+//     test_getSubjects_common(world, bean1, bean2, beans, false);
+// }
 
 TEST(Property, getSubjects_with_index)
 {
@@ -255,17 +255,17 @@ TEST(Property, getSubjects_with_index)
     test_getSubjects_common(world, bean1, bean2, beans, true);
 }
 
-TEST(Property, getSubjects_array_without_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
-    std::list<oidType> beans;
+// TEST(Property, getSubjects_array_without_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
+//     std::list<oidType> beans;
 
-    Bean &bean1 = *world.createBean();
-    Bean& bean2 = *world.createBean();
+//     Bean &bean1 = *world.createBean();
+//     Bean& bean2 = *world.createBean();
 
-    test_getSubjects_common_array(world, bean1, bean2, beans, false);
-}
+//     test_getSubjects_common_array(world, bean1, bean2, beans, false);
+// }
 
 TEST(Property, getSubjects_array_with_index)
 {
@@ -276,7 +276,7 @@ TEST(Property, getSubjects_array_with_index)
     Bean &bean1 = *world.createBean();
     Bean& bean2 = *world.createBean();
 
-    test_getSubjects_common_array(world, bean1, bean2, beans, true);
+    test_getSubjects_common_array(world, bean1, bean2, beans);
 }
 
 
@@ -348,21 +348,21 @@ void test_findSubjects_common(TestHelper& testHelper, BeanWorld &world, Bean& be
 }
 
 
-TEST(Property, findSubjects_without_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
-    std::list<oidType> beans;
-    TestHelper testHelper;
+// TEST(Property, findSubjects_without_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
+//     std::list<oidType> beans;
+//     TestHelper testHelper;
 
-    initTestHelper(testHelper, world, false);
+//     initTestHelper(testHelper, world, false);
 
-    Bean &bean1 = *world.createBean();
-    Bean& bean2 = *world.createBean();
-    Bean& bean3 = *world.createBean();
+//     Bean &bean1 = *world.createBean();
+//     Bean& bean2 = *world.createBean();
+//     Bean& bean3 = *world.createBean();
 
-    test_findSubjects_common(testHelper, world, bean1, bean2, bean3, beans, false);
-}
+//     test_findSubjects_common(testHelper, world, bean1, bean2, bean3, beans, false);
+// }
 
 TEST(Property, findSubjects_with_index)
 {
@@ -457,21 +457,21 @@ void test_findObjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bea
 }
 
 
-TEST(Property, findObjects_without_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
-    std::list<oidType> beans;
-    TestHelper testHelper;
+// TEST(Property, findObjects_without_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
+//     std::list<oidType> beans;
+//     TestHelper testHelper;
 
-    initTestHelper(testHelper, world);
+//     initTestHelper(testHelper, world);
 
-    Bean &bean1 = *world.createBean();
-    Bean& bean2 = *world.createBean();
-    Bean& bean3 = *world.createBean();
+//     Bean &bean1 = *world.createBean();
+//     Bean& bean2 = *world.createBean();
+//     Bean& bean3 = *world.createBean();
 
-    test_findObjects_common(testHelper, world, bean1, bean2, bean3, beans, false);
-}
+//     test_findObjects_common(testHelper, world, bean1, bean2, bean3, beans, false);
+// }
 
 TEST(Property, findObjects_with_index)
 {
@@ -559,16 +559,16 @@ void test_findEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1
     }
 }
 
-TEST(Property, findEqual_without_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
-    TestHelper testHelper;
-    initTestHelper(testHelper, world);
-    Bean *bean1 = world.createBean();
-    Bean *bean2 = world.createBean();
-    test_findEqual_common(testHelper, world, bean1, bean2);
-}
+// TEST(Property, findEqual_without_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
+//     TestHelper testHelper;
+//     initTestHelper(testHelper, world);
+//     Bean *bean1 = world.createBean();
+//     Bean *bean2 = world.createBean();
+//     test_findEqual_common(testHelper, world, bean1, bean2);
+// }
 
 TEST(Property, findEqual_with_index)
 {
@@ -706,19 +706,19 @@ void test_findLessEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* b
     }
 }
 
-TEST(Property, findLessEqual_without_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
-    TestHelper testHelper;
-    initTestHelper(testHelper, world);
+// TEST(Property, findLessEqual_without_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
+//     TestHelper testHelper;
+//     initTestHelper(testHelper, world);
 
-    Bean* bean1 = world.createBean();
-    Bean* bean2 = world.createBean();
-    Bean* bean3 = world.createBean();
+//     Bean* bean1 = world.createBean();
+//     Bean* bean2 = world.createBean();
+//     Bean* bean3 = world.createBean();
 
-    test_findLessEqual_common(testHelper, world, bean1, bean2, bean3);
-}
+//     test_findLessEqual_common(testHelper, world, bean1, bean2, bean3);
+// }
 
 TEST(Property, findLessEqual_with_index)
 {
@@ -877,19 +877,19 @@ void test_FindGreaterEqual_common(TestHelper& testHelper, BeanWorld& world, Bean
     }
 }
 
-TEST(Property, findGreaterEqual_without_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
-    TestHelper testHelper;
-    initTestHelper(testHelper, world);
+// TEST(Property, findGreaterEqual_without_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
+//     TestHelper testHelper;
+//     initTestHelper(testHelper, world);
 
-    Bean* bean1 = world.createBean();
-    Bean* bean2 = world.createBean();
-    Bean* bean3 = world.createBean();
+//     Bean* bean1 = world.createBean();
+//     Bean* bean2 = world.createBean();
+//     Bean* bean3 = world.createBean();
 
-    test_FindGreaterEqual_common(testHelper, world, bean1, bean2, bean3);
-}
+//     test_FindGreaterEqual_common(testHelper, world, bean1, bean2, bean3);
+// }
 
 TEST(Property, findGreaterEqual_with_index)
 {
@@ -1040,19 +1040,19 @@ void test_findLessThan_common(TestHelper& testHelper, BeanWorld& world, Bean* be
     }
 }
 
-TEST(Property, findLessThan_without_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
-    TestHelper testHelper;
-    initTestHelper(testHelper, world);
+// TEST(Property, findLessThan_without_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
+//     TestHelper testHelper;
+//     initTestHelper(testHelper, world);
 
-    Bean* bean1 = world.createBean();
-    Bean* bean2 = world.createBean();
-    Bean* bean3 = world.createBean();
+//     Bean* bean1 = world.createBean();
+//     Bean* bean2 = world.createBean();
+//     Bean* bean3 = world.createBean();
     
-    test_findLessThan_common(testHelper, world, bean1, bean2, bean3);
-}
+//     test_findLessThan_common(testHelper, world, bean1, bean2, bean3);
+// }
 
 TEST(Property, findLessThan_with_index)
 {
@@ -1206,20 +1206,20 @@ void test_findGreaterThan_common(TestHelper& testHelper, BeanWorld& world, Bean*
     EXPECT_TRUE(beans.size() == 0);
 }
 
-TEST(Property, findGreaterThan_without_index)
-{
-    DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
-    std::list<oidType> beans;
-    TestHelper testHelper;
+// TEST(Property, findGreaterThan_without_index)
+// {
+//     DummyBeanDB dummyDB;
+//     BeanWorld world((AbstractBeanDB&)dummyDB);
+//     std::list<oidType> beans;
+//     TestHelper testHelper;
 
-    initTestHelper(testHelper, world);
+//     initTestHelper(testHelper, world);
 
-    Bean* bean1 = world.createBean();
-    Bean* bean2 = world.createBean();
-    Bean* bean3 = world.createBean();
-    test_findGreaterThan_common(testHelper, world, bean1, bean2 ,bean3);
-}
+//     Bean* bean1 = world.createBean();
+//     Bean* bean2 = world.createBean();
+//     Bean* bean3 = world.createBean();
+//     test_findGreaterThan_common(testHelper, world, bean1, bean2 ,bean3);
+// }
 
 TEST(Property, findGreaterThan_with_index)
 {

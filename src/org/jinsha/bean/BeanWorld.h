@@ -49,22 +49,22 @@ public:
     /**
      * @ref BeanDBUserIntf::defineProperty()
      */
-    virtual Property* defineProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
+    virtual Property* defineProperty(const char* name, Property::ValueType valueType) override;
 
     /**
      * @ref BeanDBUserIntf::defineArrayProperty()
      */
-    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType, bool needIndex = false) override;
+    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType) override;
 
     /**
      * @ref BeanDBUserIntf::defineRelation()
      */
-    virtual Property* defineRelation(const char* name, bool needIndex = false) override;
+    virtual Property* defineRelation(const char* name) override;
 
     /**
      * @ref BeanDBUserIntf::defineArrayRelation()
      */
-    virtual Property* defineArrayRelation(const char* name, bool needIndex = false) override;
+    virtual Property* defineArrayRelation(const char* name) override;
 
     /**
      * @ref BeanDBUserIntf::undefineProperty()
@@ -144,8 +144,7 @@ protected:
     int reloadProperties();
     Property* definePropertyCommon_(const char* name, 
         Property::Type type, 
-        Property::ValueType valueType, 
-        bool needIndex);
+        Property::ValueType valueType);
     Bean* getBean();
 
 protected:

@@ -259,14 +259,8 @@ public:
 
 
 private:
-    Property(const char* name,  pidType id,
-        Type type, ValueType valueType, 
-        bool delayLoad,
-        bool needIndex);
     Property(BeanWorld* world, const char* name,  pidType id,
-        Type type, ValueType valueType, 
-        bool delayLoad,
-        bool needIndex);
+        Type type, ValueType valueType, bool delayLoad);
 
     virtual ~Property();
 

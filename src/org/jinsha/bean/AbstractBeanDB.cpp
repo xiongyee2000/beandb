@@ -120,10 +120,9 @@ Property* AbstractBeanDB::newProperty(const char* name,
     pidType id,
     Property::Type type,
     Property::ValueType valueType, 
-    bool delayLoad,
-    bool needIndex) const
+    bool delayLoad) const
 {
-    return new Property(name, id, type, valueType, delayLoad, needIndex);
+    return new Property(getWorld(), name, id, type, valueType, delayLoad);
 }
 
 Bean* AbstractBeanDB::newBean(oidType id) const

@@ -17,36 +17,16 @@ static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std:
 template<typename ValueT, typename MapT>
 static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map);
 
-
-Property::Property(const char* name, pidType id,
-    Type type, ValueType valueType, 
-    bool delayLoad,
-    bool needIndex) 
-    : m_world_(nullptr)
-    , m_name_(name)
-    , m_id_(id)
-    , m_propertyType_(type)
-    , m_valueType_(valueType)
-    , m_indexed_(needIndex)
-    , m_delayLoad_(delayLoad)
-{
-    if (valueType == StringType) m_delayLoad_ = true;
-};
-
-
 Property::Property(BeanWorld* world, const char* name, pidType id,
-    Type type, ValueType valueType, 
-    bool delayLoad,
-    bool needIndex) 
+    Type type, ValueType valueType,  bool delayLoad) 
     : m_world_(world)
     , m_name_(name)
     , m_id_(id)
     , m_propertyType_(type)
     , m_valueType_(valueType)
-    , m_indexed_(needIndex)
+    , m_indexed_(true)
     , m_delayLoad_(delayLoad)
 {
-    if (valueType == StringType) m_delayLoad_ = true;
 };
 
 Property::~Property()

@@ -28,8 +28,8 @@ void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex)
     testHelper.r_array_1 =  world.defineArrayRelation("r_array_1");
     testHelper.rArray_2 =  world.defineArrayRelation("r_array_2");
 
-    if (needIndex)
-    {
+    // if (needIndex)
+    // {
 //         testHelper.p_real->createIndex();
 //         testHelper.p_str->createIndex();
 //         testHelper.p_int->createIndex();
@@ -45,7 +45,7 @@ void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex)
 //         testHelper.r2->createIndex();
 //         testHelper.r_array_1->createIndex();
 //         testHelper.rArray_2->createIndex();
-    }
+    // }
 }
 
 

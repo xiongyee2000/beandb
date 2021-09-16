@@ -150,8 +150,10 @@ int DummyBeanDB::undefineProperty_(const char* name)
 }
 
 
+// pidType DummyBeanDB::defineProperty_(const char* name, Property::Type type, 
+//     Property::ValueType valueType, bool needIndex, pidType& pid, bool& delayLoad)
 pidType DummyBeanDB::defineProperty_(const char* name, Property::Type type, 
-    Property::ValueType valueType, bool needIndex, pidType& pid, bool& delayLoad)
+    Property::ValueType valueType, pidType& pid, bool& delayLoad)
 {
     auto iter = m_properties_.find(name);
     if (iter == m_properties_.end()) {
@@ -161,8 +163,7 @@ pidType DummyBeanDB::defineProperty_(const char* name, Property::Type type,
                                                                                 pid, 
                                                                                 (Property::Type)type, 
                                                                                 (Property::ValueType)valueType, 
-                                                                                delayLoad,
-                                                                                needIndex);
+                                                                                delayLoad);
         m_properties_[name] = property;
     } else {
         pid = iter->second->getId();

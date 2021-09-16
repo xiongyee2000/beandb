@@ -537,35 +537,32 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
         }
     }
 
-    //todo: handle index later
-    if (property->isDelayLoad() || property->indexed()) {
-        snprintf(buff, sizeof(buff) - 1, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
-        if (value.isArray()) {
-            for (int i = 0; i < value.size(); i++) {
-                vlist.push_back(&value[i]);
-            }
-        } else {
-            vlist.push_back(&value);
+    snprintf(buff, sizeof(buff) - 1, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
+    if (value.isArray()) {
+        for (int i = 0; i < value.size(); i++) {
+            vlist.push_back(&value[i]);
         }
+    } else {
+        vlist.push_back(&value);
+    }
 
-        err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+    if (err != SQLITE_OK) goto out;
+    for (const auto& v : vlist) {
+        nCol = 1;
+        err = sqlite3_bind_null(pstmt, nCol++);
         if (err != SQLITE_OK) goto out;
-        for (const auto& v : vlist) {
-            nCol = 1;
-            err = sqlite3_bind_null(pstmt, nCol++);
-            if (err != SQLITE_OK) goto out;
-            err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)sid);
-            if (err != SQLITE_OK) goto out;
-            if (property->getValueType() == Property::StringType) {
-                err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
-            } else {
-                err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
-            }
-            if (err != SQLITE_OK) goto out;
-            
-            err = sqlite3_step(pstmt);
-            if (err != SQLITE_OK && err != SQLITE_DONE) goto out;
+        err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)sid);
+        if (err != SQLITE_OK) goto out;
+        if (property->getValueType() == Property::StringType) {
+            err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
+        } else {
+            err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
         }
+        if (err != SQLITE_OK) goto out;
+        
+        err = sqlite3_step(pstmt);
+        if (err != SQLITE_OK && err != SQLITE_DONE) goto out;
     }
 
 out:
@@ -696,32 +693,31 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         }
     }
 
-    //todo: handle index later
-    if (property->isDelayLoad() || property->indexed()) {
+    if (isArray) {
         err = getIdByPropertyIndex(pname, sid, index, id);
         if (err) goto out;
-        v = &value;
-
-        if (isArray) {
-            snprintf(buff, sizeof(buff) - 1, "UPDATE p_%s SET VALUE = ? WHERE ID = ?  ;", pname);
-        } else {
-            snprintf(buff, sizeof(buff) - 1, "UPDATE p_%s SET VALUE = ? WHERE SID = ?  ;", pname);
-        }
-
-        err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-        if (err != SQLITE_OK) goto out;
-        nCol = 1;
-        if (property->getValueType() == Property::StringType) {
-            err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
-        } else {
-            err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
-        }
-        if (err != SQLITE_OK) goto out;
-        err = sqlite3_bind_int64(pstmt, nCol++, isArray ? (sqlite3_int64)id : (sqlite3_int64)sid);
-        if (err != SQLITE_OK) goto out;
-
-        err = sqlite3_step(pstmt);
     }
+    v = &value;
+
+    if (isArray) {
+        snprintf(buff, sizeof(buff) - 1, "UPDATE p_%s SET VALUE = ? WHERE ID = ?  ;", pname);
+    } else {
+        snprintf(buff, sizeof(buff) - 1, "UPDATE p_%s SET VALUE = ? WHERE SID = ?  ;", pname);
+    }
+
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+    if (err != SQLITE_OK) goto out;
+    nCol = 1;
+    if (property->getValueType() == Property::StringType) {
+        err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
+    } else {
+        err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
+    }
+    if (err != SQLITE_OK) goto out;
+    err = sqlite3_bind_int64(pstmt, nCol++, isArray ? (sqlite3_int64)id : (sqlite3_int64)sid);
+    if (err != SQLITE_OK) goto out;
+
+    err = sqlite3_step(pstmt);
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
@@ -789,17 +785,15 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
         goto out;
     }
 
-    if (property->isDelayLoad() || property->indexed()) {
-        snprintf(buff, sizeof(buff) - 1, "DELETE FROM p_%s WHERE SID = ?;", pname);
-        err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-        if (err != SQLITE_OK) goto out;
-        nCol = 1;
-        err = sqlite3_bind_int64(pstmt, nCol++, sid);
-        if (err != SQLITE_OK) goto out;
+    snprintf(buff, sizeof(buff) - 1, "DELETE FROM p_%s WHERE SID = ?;", pname);
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+    if (err != SQLITE_OK) goto out;
+    nCol = 1;
+    err = sqlite3_bind_int64(pstmt, nCol++, sid);
+    if (err != SQLITE_OK) goto out;
 
-        err = sqlite3_step(pstmt);
-            if (err != SQLITE_OK) goto out;
-    }
+    err = sqlite3_step(pstmt);
+    if (err != SQLITE_OK) goto out;
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
@@ -987,8 +981,7 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
             (pidType)id, 
             (Property::Type)type, 
             (Property::ValueType)valueType, 
-            delayLoad,
-            indexed);
+            delayLoad);
         assert(property);
         properties[name] = property;
 	}
@@ -1020,6 +1013,7 @@ int SqliteBeanDB::undefineProperty_(const char* name)
     int buffSize = sizeof(buff);
     static const char *sql = "DELETE FROM  META_PTABLE WHERE NAME = ?;";
     static const char drop_table[] =   "DROP TABLE p_%s; ";
+    // static const char drop_index[] =   "DROP INDEX p_%s_index; ";
 
     err = beginTransaction();
     if (err) return err;
@@ -1036,6 +1030,9 @@ int SqliteBeanDB::undefineProperty_(const char* name)
     snprintf(buff, buffSize, drop_table, name);
     err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
     if (err != SQLITE_OK) goto _out;
+    // snprintf(buff, buffSize, drop_index, name);
+    // err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
+    // if (err != SQLITE_OK) goto _out;
 
     //todo: remove property value from beans
 
@@ -1054,11 +1051,15 @@ _out:
     return err;
 }
 
-
+// int SqliteBeanDB::defineProperty_(const char* name, 
+//     Property::Type type, 
+//     Property::ValueType valueType, 
+//     pidType& pid,
+//     bool needIndex,
+//     bool& delayLoad)
 int SqliteBeanDB::defineProperty_(const char* name, 
     Property::Type type, 
     Property::ValueType valueType, 
-    bool needIndex,
     pidType& pid,
     bool& delayLoad)
 {
@@ -1080,11 +1081,14 @@ int SqliteBeanDB::defineProperty_(const char* name,
     SID BIGINT %s NOT NULL, \
     VALUE  %s NOT NULL \
     ); ";
+    static const char create_property_index[] =   
+    "CREATE INDEX p_%s_index \
+    ON p_%s(VALUE); ";
+    static const char sql_insert_ptable[] = "INSERT INTO META_PTABLE VALUES(?, ?, ?, ?, ?) ;";
 
     err = beginTransaction();
     if (err) return err;
 
-    static const char sql_insert_ptable[] = "INSERT INTO META_PTABLE VALUES(?, ?, ?, ?, ?) ;";
     sql = sql_insert_ptable;
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) return -3;
@@ -1097,7 +1101,8 @@ int SqliteBeanDB::defineProperty_(const char* name,
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int(pstmt, 4, (int)valueType);
     if (err != SQLITE_OK) goto _out;
-    err = sqlite3_bind_int(pstmt, 5, needIndex ? 1 : 0);
+    // err = sqlite3_bind_int(pstmt, 5, needIndex ? 1 : 0);
+    err = sqlite3_bind_int(pstmt, 5, 1);
     if (err != SQLITE_OK) goto _out;
     
     err = sqlite3_step(pstmt);
@@ -1112,8 +1117,11 @@ int SqliteBeanDB::defineProperty_(const char* name,
     (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) ? "" : "UNIQUE",
     (valueType == Property::StringType) ? "TEXT" : "BIGINT" );
     sql = buff;
-    err = sqlite3_exec ( m_sqlite3Db_ , sql , nullptr , nullptr , &errMsg ) ;
-        if (err != SQLITE_OK)  goto _out;
+    err = sqlite3_exec ( m_sqlite3Db_ , sql , nullptr , nullptr , &errMsg );
+    if (err != SQLITE_OK)  goto _out;
+    snprintf(buff, sizeOfBuff - 1, create_property_index, name, name);
+    err = sqlite3_exec ( m_sqlite3Db_ , sql , nullptr , nullptr , &errMsg );
+    if (err != SQLITE_OK)  goto _out;
 
     if (valueType == Property::StringType) 
         delayLoad = true;
@@ -1127,6 +1135,7 @@ int SqliteBeanDB::defineProperty_(const char* name,
 
 _out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
+        if (errMsg != nullptr) elog("sqlite3 errormsg: %s \n", errMsg);
         err = rollbackTransaction();
     }  else {
         err = commitTransaction();
@@ -1148,10 +1157,10 @@ int SqliteBeanDB::beginTransaction_()
 {
     if (m_sqlite3Db_ == nullptr) return -1;
     int err = 0;
-    char* errmsg = nullptr;
+    char* errMsg = nullptr;
     err = sqlite3_exec(m_sqlite3Db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
     if (err != SQLITE_OK) 
-        elog("sqlite3 errormsg: %s \n", errmsg);
+        elog("sqlite3 errormsg: %s \n", errMsg);
     return err;
 }
 
@@ -1160,10 +1169,10 @@ int SqliteBeanDB::commitTransaction_()
 {
     if (m_sqlite3Db_ == nullptr) return -1;
     int err = 0;
-    char* errmsg = nullptr;
+    char* errMsg = nullptr;
     err = sqlite3_exec(m_sqlite3Db_, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
     if (err != SQLITE_OK) 
-        elog("sqlite3 errormsg: %s \n", errmsg);
+        elog("sqlite3 errormsg: %s \n", errMsg);
     return err;
 }
 
@@ -1172,10 +1181,10 @@ int SqliteBeanDB::rollbackTransaction_()
 {
     if (m_sqlite3Db_ == nullptr) return -1;
     int err = 0;
-    char* errmsg = nullptr;
-    err = sqlite3_exec(m_sqlite3Db_, "ROLLBACK TRANSACTION", nullptr, nullptr, &errmsg);
+    char* errMsg = nullptr;
+    err = sqlite3_exec(m_sqlite3Db_, "ROLLBACK TRANSACTION", nullptr, nullptr, &errMsg);
     if (err != SQLITE_OK) 
-        elog("sqlite3 errormsg: %s \n", errmsg);
+        elog("sqlite3 errormsg: %s \n", errMsg);
     return err;
 }
 

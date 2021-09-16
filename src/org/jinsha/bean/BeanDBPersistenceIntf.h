@@ -118,8 +118,6 @@ public:
      * @param name the name of property
      * @param type the type of property
      * @param valueType the value type of property
-     * @param isArray if it is an array property
-     * @param needIndex if index is needed
      * @param pid [out] the id of the property in the database
      * @param delayLoad [out] set to true if want this property delay-load,
      *                                                     or false otherwise
@@ -129,7 +127,6 @@ public:
     virtual pidType defineProperty_(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
-        bool needIndex,
         pidType& pid,
         bool& delayLoad) = 0;
 

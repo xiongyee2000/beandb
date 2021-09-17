@@ -803,7 +803,7 @@ Json::Value* Bean::getMemberPtr(const Property* property)
     return (m_json_.isMember(pname)) ? &m_json_[pname] : nullptr;
 }
 
-Json::Value Bean::getNativeData()
+Json::Value& Bean::getNativeData()
 {       
     if (m_native_data_pst_json_.asInt() == PST_NSY) {
     //not loaded yet, load it first
@@ -821,7 +821,7 @@ Json::Value Bean::getNativeData()
     return m_native_data_json_;
 }
 
-Json::Value Bean::getNativeData() const
+Json::Value& Bean::getNativeData() const
 {
     return ((Bean*)this)->getNativeData();
 }

@@ -386,8 +386,8 @@ public:
      * 
      * @return the native data as json value
      */
-    Json::Value getNativeData();
-    Json::Value getNativeData() const;
+    Json::Value& getNativeData();
+    Json::Value& getNativeData() const;
 
     /**
      * Set native data of a bean.

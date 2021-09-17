@@ -1278,12 +1278,15 @@ int SqliteBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& data)
         //retrieve native data
         if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
             valueStr = (const char*)sqlite3_column_text(pstmt, 0);
-            if (valueStr == nullptr) valueStr = "{}";
-            if (!reader.parse(valueStr, data, false))
-            {
-                err = -2;
-                elog("error parsing json string: %s \n", valueStr);
-                break;
+            if (valueStr == nullptr) {
+                data = Json::Value(Json::nullValue);
+            } else {
+                if (!reader.parse(valueStr, data, false))
+                {
+                    err = -2;
+                    elog("error parsing json string: %s \n", valueStr);
+                    break;
+                }
             }
         } else {
             data = Json::Value(Json::ValueType::objectValue);
@@ -1295,10 +1298,16 @@ int SqliteBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& data)
 	}
 
 _out:
-    if (err > 0 && err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-    } else {
-        err = 0;
+    if (err >= 0) {
+        if (err != SQLITE_OK && err != SQLITE_DONE) {
+            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+            elog("Failed in %s (err=%d) \n", __func__, err);
+        } else {
+            if (!found)
+                err = -1001;
+        }
+    } else { //err < 0
+        elog("Failed in %s (err=%d) \n", __func__, err);
     }
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
@@ -1326,13 +1335,15 @@ int SqliteBeanDB::updateBeanNativeData_(oidType beanId,
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto _out;
 
-    if (nativeData.isNull()) {
-        tmpStr = "{}";
-    }  else {
+    if (!nativeData.isNull()) {
         valueStr = jsonWriter.write(nativeData);
         tmpStr = sqlite3_mprintf("%q", valueStr.c_str());
     }
-    err = sqlite3_bind_text(pstmt, 1, tmpStr , -1, nullptr);
+    if (tmpStr == nullptr) {
+        err = sqlite3_bind_null(pstmt, 1);
+    } else {
+        err = sqlite3_bind_text(pstmt, 1, tmpStr , -1, nullptr);
+    }
     if (err != SQLITE_OK) goto _out;
 
     err = sqlite3_bind_int64(pstmt, 2, (sqlite3_int64)beanId);
@@ -1356,7 +1367,7 @@ _out:
 
 int SqliteBeanDB::deleteBeanNativeData_(oidType beanId)
 {
-    Json::Value value = Json::Value(Json::objectValue);
+    Json::Value value = Json::Value(Json::nullValue);
     return updateBeanNativeData_(beanId, value);
 }
 

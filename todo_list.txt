@@ -9,3 +9,5 @@ BeanWorld: can we have a better name?
 setRelation() //self to self allowed?
 
 getArrayProperty()/getArrayRelation() //Too big to load all array data into memory?
+
+enhance json

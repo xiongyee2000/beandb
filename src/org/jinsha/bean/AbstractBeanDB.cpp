@@ -37,8 +37,8 @@ int AbstractBeanDB::connect()
         } else {
             m_world_ = new BeanWorld(*this);
             assert(m_world_);
-            m_world_->reloadProperties();
             m_connected_ = true;
+            m_world_->reloadProperties();
         }
     } 
     return err;

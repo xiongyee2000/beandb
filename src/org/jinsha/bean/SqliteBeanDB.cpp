@@ -11,6 +11,8 @@
 #include "jsoncpp/json/reader.h"
 #include "jsoncpp/json/writer.h"
 
+#define CHECK_CONNECTED() {if (!connected()) {elog("%s", "db not connected\n"); return -1;}};
+
 namespace org {
 namespace jinsha {
 namespace bean {
@@ -63,7 +65,8 @@ SqliteBeanDB::SqliteBeanDB( const char* dir)
 
 SqliteBeanDB::~SqliteBeanDB()
 {
-    disconnect();
+    if (connected())
+        disconnect();
 }
 
 
@@ -75,15 +78,14 @@ int SqliteBeanDB::connect_()
     err = openDB();
     if (err) {
         elog("Failed to connect to db. err=%d", err);
-        return err;
     }
-    return 0;
+    return err;
 }
 
 
 int SqliteBeanDB::disconnect_()
 {
-    if (!m_sqlite3Db_) return 0;
+    if (!connected()) return 0;
     return closeDB();
 }
 
@@ -194,7 +196,7 @@ int SqliteBeanDB::closeDB()
 
 int SqliteBeanDB::createBean_(oidType &beanId)
 {
-    if (m_sqlite3Db_ == nullptr) return -1;
+    CHECK_CONNECTED();
 
     static const char sql[] = "INSERT INTO OTABLE VALUES(?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
@@ -231,7 +233,7 @@ out:
 
 int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) 
 {
-    if (m_sqlite3Db_ == nullptr) return -1;
+    CHECK_CONNECTED();
     
     BeanWorld *world = nullptr;
     const char* pname = nullptr;
@@ -378,13 +380,7 @@ _out:
 
 int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value)
 {
-    if (m_sqlite3Db_ == nullptr) return -1;
-    // bool connected = this->connected();
-    // if (!connected) {
-    //     if (0 != connect()) {
-    //         return -1;
-    //     }
-    // }
+    CHECK_CONNECTED();
 
     int err = 0;
     oidType id = 0; //id of the string in property table
@@ -486,6 +482,8 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
         const Property* property, 
         const Json::Value& value) 
 {
+    CHECK_CONNECTED();
+
     if (property == nullptr) return -1;
     if (m_sqlite3Db_ == nullptr) return -1;
 
@@ -589,6 +587,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         const Property* property, 
         const Json::Value& value) 
 {
+    CHECK_CONNECTED();
     if (property == nullptr) return -1;
     if (property->isArray()) return -1;
     return updateBeanProperty_(beanId, property, (Json::ArrayIndex)-1, value);
@@ -597,6 +596,8 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
 
 int SqliteBeanDB::getIdByPropertyIndex(const char* pname, oidType sid, Json::ArrayIndex index, sqlite3_int64& id)
 {
+    CHECK_CONNECTED();
+
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
     Json::ArrayIndex i = 0;
@@ -639,6 +640,8 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         Json::Value::ArrayIndex  index,
         const Json::Value& value) 
 {
+    CHECK_CONNECTED();
+
     char buff[128]{0};
     const char* sql = buff;
     sqlite3_stmt *pstmt = nullptr;
@@ -741,6 +744,8 @@ out:
 int SqliteBeanDB::deleteBeanProperty_(oidType beanId, 
     const Property* property) 
 {
+    CHECK_CONNECTED();
+
     if (property == nullptr) return -1;
     if (m_sqlite3Db_ == nullptr) return -1;
 
@@ -819,6 +824,8 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     const Property* property, 
     Json::Value::ArrayIndex index) 
 {
+    CHECK_CONNECTED();
+
     if (property == nullptr) return -1;
     if (m_sqlite3Db_ == nullptr) return -1;
 
@@ -891,6 +898,8 @@ out:
 
 int SqliteBeanDB::deleteBean_(Bean* bean)
 {
+    CHECK_CONNECTED();
+
     if (bean == nullptr) return 0;
     if (m_sqlite3Db_ == nullptr) return -1;
 
@@ -946,6 +955,8 @@ out:
 
 int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& properties) const
 {
+    CHECK_CONNECTED();
+
     static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM META_PTABLE;";
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
@@ -1002,6 +1013,8 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
 
 int SqliteBeanDB::undefineProperty_(const char* name)
 {
+    CHECK_CONNECTED();
+
     if (name == nullptr || name[0] == 0) return 0;
     if (m_sqlite3Db_ == nullptr) return -1;
 
@@ -1155,7 +1168,7 @@ _out:
 
 int SqliteBeanDB::beginTransaction_() 
 {
-    if (m_sqlite3Db_ == nullptr) return -1;
+    CHECK_CONNECTED();
     int err = 0;
     char* errMsg = nullptr;
     err = sqlite3_exec(m_sqlite3Db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
@@ -1167,7 +1180,7 @@ int SqliteBeanDB::beginTransaction_()
 
 int SqliteBeanDB::commitTransaction_() 
 {
-    if (m_sqlite3Db_ == nullptr) return -1;
+    CHECK_CONNECTED();
     int err = 0;
     char* errMsg = nullptr;
     err = sqlite3_exec(m_sqlite3Db_, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
@@ -1179,7 +1192,7 @@ int SqliteBeanDB::commitTransaction_()
 
 int SqliteBeanDB::rollbackTransaction_() 
 {
-    if (m_sqlite3Db_ == nullptr) return -1;
+    CHECK_CONNECTED();
     int err = 0;
     char* errMsg = nullptr;
     err = sqlite3_exec(m_sqlite3Db_, "ROLLBACK TRANSACTION", nullptr, nullptr, &errMsg);
@@ -1191,6 +1204,7 @@ int SqliteBeanDB::rollbackTransaction_()
 
 int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData)
 {
+    CHECK_CONNECTED();
     if (m_sqlite3Db_ == nullptr) return -1;
     if (data.isNull()) return -2;
 
@@ -1255,6 +1269,7 @@ _out:
 
 int SqliteBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& data)
 {
+    CHECK_CONNECTED();
    if (m_sqlite3Db_ == nullptr) return -1;
     
     BeanWorld *world = nullptr;
@@ -1319,7 +1334,7 @@ _out:
 int SqliteBeanDB::updateBeanNativeData_(oidType beanId, 
     const Json::Value& nativeData)
 {
-   if (m_sqlite3Db_ == nullptr) return -1;
+    CHECK_CONNECTED();
 
     int err = 0;
     char* errMsg = nullptr;
@@ -1367,6 +1382,7 @@ _out:
 
 int SqliteBeanDB::deleteBeanNativeData_(oidType beanId)
 {
+    CHECK_CONNECTED();
     Json::Value value = Json::Value(Json::nullValue);
     return updateBeanNativeData_(beanId, value);
 }

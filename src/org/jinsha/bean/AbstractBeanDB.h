@@ -111,12 +111,12 @@ protected:
         Property::ValueType valueType, 
         bool delayLoad) const;
 
-    /**
-     * This method is used for the implemenation method of 
-     * AbstractBeanDB::getBean() to create new Property
-     * instance.
-     */
-    Bean* newBean(oidType id) const;
+    // /**
+    //  * This method is used for the implemenation method of 
+    //  * AbstractBeanDB::getBean() to create new Property
+    //  * instance.
+    //  */
+    // Bean* newBean(oidType id) const;
 
     /**
      * Get the attached world.

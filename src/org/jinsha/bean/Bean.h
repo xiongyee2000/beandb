@@ -517,7 +517,6 @@ private:
     int doSetRelation(Property* relation, oidType objectBeanId, bool saveAtOnce);
     int doCreateArrayProperty(Property* property, bool saveAtOnce = true);
     int doAppendProperty(Property* property, const Json::Value& value, bool saveAtOnce); 
-    int doCreateArrayRelation(Property* relation, bool saveAtOnce = true);
     int doAppendRelation(Property* relation, oidType objectBeanId, bool saveAtOnce);
 
 private:

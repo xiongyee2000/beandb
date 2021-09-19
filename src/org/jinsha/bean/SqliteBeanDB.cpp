@@ -417,12 +417,12 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     Json::Value nativeData;
     err = loadBeanBase_(beanId, data, nativeData);
     if (err)  {
-        elog("Failed to load bean property (beanId=%llu, property name =%s) \n", beanId, pname);
+        elog("Failed to load bean property (beanId=%llu, property name=%s) \n", beanId, pname);
         return err;
     }
 
     if (!data.isMember(pname)) {
-        elog("Failed to load bean property for it does not contain the property (beanId=%llu, property name =%s) \n", beanId, pname);
+        elog("Failed to load bean property for it does not contain the property (beanId=%llu, property name=%s) \n", beanId, pname);
         return -1001;
     }
 
@@ -524,19 +524,19 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
 
     SMART_BEGIN_TRANSACTION();
     if (err) {
-        elog("Failed to insert bean property (beanId=%llu, property name =%s) \n", beanId, pname);
+        elog("Failed to insert bean property (beanId=%llu, property name=%s) \n", beanId, pname);
         return err;
     }
 
     if (!property->isArray()) {
         err = loadBeanBase_(beanId, data, nativeData);
         if (err) {
-            elog("Failed in %s (beanId=%llu, property name =%s) \n ", __func__, beanId, pname);
+            elog("Failed in %s (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
             goto out;
         }
 
         if (data.isMember(pname)) {
-            wlog("Shall not reach here %s (beanId=%llu, property name =%s) \n ", __func__, beanId, pname);
+            wlog("Shall not reach here %s (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
         } else {
             //add property to bean base record
             if (property->isDelayLoad())
@@ -547,20 +547,21 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
             }
             err = saveBeanBase_(beanId, data, nativeData);
             if (err) {
-                elog("Failed to insert bean property (beanId=%llu, property name =%s) \n ", __func__, beanId, pname);
+                elog("Failed to insert bean property (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
                 goto out;
             }
         }
     }
 
     snprintf(buff, sizeof(buff) - 1, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
-    if (value.isArray()) {
-        for (int i = 0; i < value.size(); i++) {
-            vlist.push_back(&value[i]);
-        }
-    } else {
-        vlist.push_back(&value);
-    }
+    // if (value.isArray()) {
+    //     for (int i = 0; i < value.size(); i++) {
+    //         vlist.push_back(&value[i]);
+    //     }
+    // } else {
+    //     vlist.push_back(&value);
+    // }
+    vlist.push_back(&value);
 
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto out;
@@ -684,25 +685,25 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     SMART_BEGIN_TRANSACTION();
     err = beginTransaction();
     if (err) {
-        elog("Failed to update bean property (beanId=%llu, property name =%s) \n", beanId, pname);
+        elog("Failed to update bean property (beanId=%llu, property name=%s) \n", beanId, pname);
         return err;
     }
 
     if (!property->isDelayLoad()) {
         err = loadBeanBase_(beanId, data, nativeData);
         if (err) {
-            elog("Failed in %s (beanId=%llu, property name =%s) \n ", __func__, beanId, pname);
+            elog("Failed in %s (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
             goto out;
         }
 
         if (!data.isMember(pname)) {
-            wlog("Shall not reach here %s (beanId=%llu, property name =%s) \n ", __func__, beanId, pname);
+            wlog("Shall not reach here %s (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
         } else {
             //update property to bean base record
             data[pname] = value;
             err = saveBeanBase_(beanId, data, nativeData);
             if (err) {
-                elog("Failed to update bean property (beanId=%llu, property name =%s) \n ", beanId, pname);
+                elog("Failed to update bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
                 goto out;
             }
         }
@@ -774,13 +775,13 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
 
     err = loadBeanBase_(beanId, data, nativeData);
     if (err) {
-        elog("Failed to delete bean property (beanId=%llu, property name =%s) \n ", beanId, pname);
+        elog("Failed to delete bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
         goto out;
     }
 
     SMART_BEGIN_TRANSACTION();
     if (err) {
-        elog("Failed to delete bean property (beanId=%llu, property name =%s) \n", beanId, pname);
+        elog("Failed to delete bean property (beanId=%llu, property name=%s) \n", beanId, pname);
         return err;
     }
 
@@ -788,11 +789,11 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
         data.removeMember(pname);
         err = saveBeanBase_(beanId, data, nativeData);
         if (err) {
-            elog("Failed to insert bean property (beanId=%llu, property name =%s) \n ", beanId, pname);
+            elog("Failed to insert bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
             goto out;
         }
     } else {
-        wlog("The bean has no such property to delete (beanId=%llu, property name =%s) \n ", beanId, pname);
+        wlog("The bean has no such property to delete (beanId=%llu, property name=%s) \n ", beanId, pname);
         goto out;
     }
 
@@ -853,7 +854,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     if (err == 0) {
         //found the record, but do nothing here
     } else if (err == -1001) {
-        wlog("Take %s as succeeded for no such record is found (beanId=%llu, property name =%s, index=%llu) \n", __func__, beanId, pname, index);
+        wlog("Take %s as succeeded for no such record is found (beanId=%llu, property name=%s, index=%llu) \n", __func__, beanId, pname, index);
         return 0;
     } else {
         //unexpected exceptions
@@ -862,7 +863,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
 
     SMART_BEGIN_TRANSACTION();
     if (err) {
-        elog("Failed to delete bean property (beanId=%llu, property name =%s, index=%llu) \n", beanId, pname, index);
+        elog("Failed to delete bean property (beanId=%llu, property name=%s, index=%llu) \n", beanId, pname, index);
         return err;
     }
 

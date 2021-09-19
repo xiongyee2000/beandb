@@ -125,10 +125,10 @@ Property* AbstractBeanDB::newProperty(const char* name,
     return new Property(getWorld(), name, id, type, valueType, delayLoad);
 }
 
-Bean* AbstractBeanDB::newBean(oidType id) const
-{
-    return new Bean(id, getWorld());
-}
+// Bean* AbstractBeanDB::newBean(oidType id) const
+// {
+//     return new Bean(id, getWorld());
+// }
 
 
 }

@@ -111,7 +111,7 @@ size_t Property::getNumOfSubjects()
 }
 
 
-size_t Property::getNumOfObjects()
+size_t Property::getNumOfObjects() const
 {
     size_t size = 0;
     if (m_propertyType_ == PrimaryType)

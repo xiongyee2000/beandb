@@ -49,27 +49,27 @@ void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex)
 }
 
 
-void evaluate_testdb_empty_property(AbstractBeanDB& testdb)
-{
-    testdb.connect();
-    std::unordered_map<std::string, Property*> propertyMap;
-    testdb.loadProperties_(propertyMap);
-    EXPECT_TRUE(propertyMap.size() == 0);
-    testdb.disconnect();
-}
+// void evaluate_testdb_empty_property(AbstractBeanDB& testdb)
+// {
+//     testdb.connect();
+//     std::unordered_map<std::string, Property*> propertyMap;
+//     testdb.loadProperties_(propertyMap);
+//     EXPECT_TRUE(propertyMap.size() == 0);
+//     testdb.disconnect();
+// }
 
 
-void setBeanProperties(TestHelper& testHelper, Bean* bean)
+void setBeanProperties(TestHelper& testHelper, Bean* bean, bool saveAtOnce)
 {
     // bean->setProperty(testHelper.p_int, Json::Value::minInt);
-    bean->setProperty(testHelper.p_int, -1);
-    bean->setProperty(testHelper.p_uint, (Json::UInt)1);
-    bean->setProperty(testHelper.p_int64, (Json::Int64)-1);
-    bean->setProperty(testHelper.p_uint64, (Json::UInt64)1);
-    bean->setProperty(testHelper.p_real, (double)1.0);
-    bean->setProperty(testHelper.p_bool_0, false);
-    bean->setProperty(testHelper.p_bool_1, true);
-    bean->setProperty(testHelper.p_str, "foo");
+    bean->setProperty(testHelper.p_int, -1, saveAtOnce);
+    bean->setProperty(testHelper.p_uint, (Json::UInt)1, saveAtOnce);
+    bean->setProperty(testHelper.p_int64, (Json::Int64)-1, saveAtOnce);
+    bean->setProperty(testHelper.p_uint64, (Json::UInt64)1, saveAtOnce);
+    bean->setProperty(testHelper.p_real, (double)1.0, saveAtOnce);
+    bean->setProperty(testHelper.p_bool_0, false, saveAtOnce);
+    bean->setProperty(testHelper.p_bool_1, true, saveAtOnce);
+    bean->setProperty(testHelper.p_str, "foo", saveAtOnce);
 
     bean->createArrayProperty(testHelper.p_array_int);
     bean->appendProperty(testHelper.p_array_int, 101);
@@ -93,12 +93,12 @@ void validateBeanProperties(TestHelper& testHelper, Bean* bean)
 }
 
 
-void setBeanNativeData(TestHelper& testHelper, Bean* bean)
+void setBeanNativeData(TestHelper& testHelper, Bean* bean, bool saveAtOnce)
 {
     Json::Value nativeData;
     nativeData["root"]["p1"] = 1;
     nativeData["root"]["p2"] = 2;
-    bean->setNativeData(nativeData);
+    bean->setNativeData(nativeData, saveAtOnce);
 }
 
 

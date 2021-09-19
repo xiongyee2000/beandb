@@ -85,15 +85,35 @@ public:
     /**
      * Set the value of a property of this bean. 
      * 
+     * Notes:
+     * - You may need to do explicit type conversion for the value. 
+     *    For example: setProperty(p1, (Json::Uint)99).
+     *    See more helpful hints in JsonCPP documentation.
+     * 
      * @param property the property
      * @param value value of the property
+     * @param saveAtOnce whether save change to database immediately
+     *                   If set to false, the change will not be saved to database
+     *                   until save().
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if value is null
      *                   -2: if property is null
      *                   -3: if the property or value is of invalid type
      */
-    int setProperty(Property* property, const Json::Value& value);
+    int setProperty(Property* property, const Json::Value& value, bool saveAtOnce = true);
+
+    /**
+     * This is a special version of setProperty() purposed to 
+     * avoid string copying.
+     */
+    int setProperty(Property* property, const char* value, bool saveAtOnce = true);
+
+    /**
+     * This is a special version of setProperty() purposed to 
+     * avoid string copying.
+     */
+    int setProperty(Property* property, const std::string& value, bool saveAtOnce = true);
 
     /**
      * Is the specified property an array property.
@@ -170,6 +190,9 @@ public:
      * @param property the array property
      * @param index the index in the array
      * @param value value to be set
+     * @param saveAtOnce whether save change to database immediately
+     *                   If set to false, the change will not be saved to database
+     *                   until save().
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if value is null
@@ -178,8 +201,22 @@ public:
      *                   -4: if the array property is not a member of this bean
      *                   -5: if the index is invalid
      */
-    int setProperty(Property* property, Json::Value::ArrayIndex index,
-        const Json::Value& value);
+    int setArrayProperty(Property* property, Json::Value::ArrayIndex index,
+        const Json::Value& value, bool saveAtOnce = true);
+
+    /**
+     * This is a special version of setArrayProperty() purposed to 
+     * avoid string copying.
+     */
+    int setArrayProperty(Property* property, Json::Value::ArrayIndex index,
+        const char* value, bool saveAtOnce = true);
+
+    /**
+     * This is a special version of setArrayProperty() purposed to 
+     * avoid string copying.
+     */
+    int setArrayProperty(Property* property, Json::Value::ArrayIndex index,
+        const std::string& value, bool saveAtOnce = true);
 
     //  /**
     //  * Remove an item from an array property at specified index.
@@ -327,7 +364,7 @@ public:
      *                   -4: if the array relation is not a member of this bean
      *                   -5: if the index is invalid
      */
-    int setRelation(Property* relation, Json::Value::ArrayIndex index,
+    int setArrayRelation(Property* relation, Json::Value::ArrayIndex index,
         Bean* bean);
 
      /**
@@ -346,7 +383,7 @@ public:
      *                   -4: if the array relation is not a member of this bean
      *                   -5: if the index is invalid
      */
-    int setRelation(Property* relation, 
+    int setArrayRelation(Property* relation, 
         Json::Value::ArrayIndex index,
         oidType objectId);
 
@@ -407,9 +444,11 @@ public:
      * in any search/find operations.
      *  
      * @param data the native data
-     * @param syncToDB if sync to db
+     * @param saveAtOnce whether save change to database immediately
+     *                   If set to false, the change will not be saved to database
+     *                   until save().
      */
-    int setNativeData(Json::Value& data, bool syncToDB = true);
+    int setNativeData(Json::Value& data, bool saveAtOnce = true);
 
     /**
      * Remove native data of this bean.
@@ -455,10 +494,10 @@ private:
     int setPropertyBase_(Property* property, 
         Json::Value *oldValue,  
         const Json::Value&  newValue, 
-        Json::Value::ArrayIndex index = (Json::Value::ArrayIndex)-1, bool syncToDB = true);
+        Json::Value::ArrayIndex index = (Json::Value::ArrayIndex)-1, bool saveAtOnce = true);
 
-    Json::Value doRemoveProperty( Property* property, bool internal = false, bool syncToDB = true);
-    Json::Value doRemoveProperty( Property* property, Json::Value::ArrayIndex index,  bool internal = false, bool syncToDB = true);
+    Json::Value doRemoveProperty( Property* property, bool internal = false, bool saveAtOnce = true);
+    Json::Value doRemoveProperty( Property* property, Json::Value::ArrayIndex index,  bool internal = false, bool saveAtOnce = true);
 
     void addSubject(Bean* subject, Property* relation);
     void removeSubject(Bean* subject, Property* relation);
@@ -473,12 +512,13 @@ private:
     int loadProperty(const Property* property);
     // bool propertyLoaded(const Property* property);
 
-    int doSetProperty(Property* property, const Json::Value& value, bool syncToDB = true);
-    int doSetRelation(Property* relation, oidType objectBeanId, bool syncToDB = true);
-    int doCreateArrayProperty(Property* property, bool syncToDB = true);
-    int doAppendProperty(Property* property, const Json::Value& value, bool syncToDB = true); 
-    int doCreateArrayRelation(Property* relation, bool syncToDB = true);
-    int doAppendRelation(Property* relation, oidType objectBeanId, bool syncToDB = true);      
+    int doSetProperty(Property* property, const Json::Value& value, bool saveAtOnce);
+    int doSetArrayProperty(Property* property, const Json::Value& value, bool saveAtOnce);
+    int doSetRelation(Property* relation, oidType objectBeanId, bool saveAtOnce);
+    int doCreateArrayProperty(Property* property, bool saveAtOnce = true);
+    int doAppendProperty(Property* property, const Json::Value& value, bool saveAtOnce); 
+    int doCreateArrayRelation(Property* relation, bool saveAtOnce = true);
+    int doAppendRelation(Property* relation, oidType objectBeanId, bool saveAtOnce);
 
 private:
     typedef enum {

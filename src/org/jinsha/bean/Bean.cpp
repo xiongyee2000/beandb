@@ -89,18 +89,35 @@ Json::Value Bean::getProperty(const Property* property) const
 }
 
 
-int Bean::setProperty(Property* property,  const Json::Value& value)
+int Bean::setProperty(Property* property,  const Json::Value& value, bool saveAtOnce)
 {
-    return doSetProperty(property, value, true);
+    return doSetProperty(property, value, saveAtOnce);
 }
 
 
-int Bean::doSetProperty(Property* property,  const Json::Value& value, bool syncToDB)
+int Bean::setProperty(Property* property,  const char* value, bool saveAtOnce)
+{
+    Json::StaticString sv(value);
+    Json::Value v(sv);
+    return doSetProperty(property, v, saveAtOnce);
+}
+
+
+int Bean::setProperty(Property* property,  const std::string& value, bool saveAtOnce)
+{
+    Json::StaticString sv(value.c_str());
+    Json::Value v(sv);
+    return doSetProperty(property, v, saveAtOnce);
+}
+
+
+int Bean::doSetProperty(Property* property,  const Json::Value& value, bool saveAtOnce)
 {
     if (value.isNull()) return -1;
     if (property == nullptr) return -2;
     if (property->getType() != Property::PrimaryType) return -3;
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
+
     int err = 0;
     const auto& pname = property->getName();
     Json::Value *oldValue = nullptr;
@@ -109,11 +126,11 @@ int Bean::doSetProperty(Property* property,  const Json::Value& value, bool sync
     }
     // if (oldValue != nullptr && (*oldValue) == value) return 0;
 
-    err = setPropertyBase_(property,  oldValue, value, -1, syncToDB);
+    err = setPropertyBase_(property,  oldValue, value, -1, saveAtOnce);
     if (err) {
         return err;
     } else {
-        if ( syncToDB)
+        if ( saveAtOnce)
             m_pst_json_[pname] = PST_SYN;
         else 
             m_pst_json_[pname] = PST_MOD;
@@ -128,13 +145,13 @@ int Bean::doSetProperty(Property* property,  const Json::Value& value, bool sync
 int Bean::setPropertyBase_(Property* property, 
     Json::Value *oldValue, const Json::Value&  newValue, 
     Json::Value::ArrayIndex index,
-    bool syncToDB)
+    bool saveAtOnce)
 {
     int err = 0;
     const auto& pname = property->getName();
     if (oldValue == nullptr)
     {   //property has not been set before
-            if (syncToDB) {
+            if (saveAtOnce) {
                 // insert property record first
                 if (m_world_->m_db != nullptr) {
                     err = m_world_->m_db->insertBeanProperty_(m_id_, property, newValue);
@@ -151,7 +168,7 @@ int Bean::setPropertyBase_(Property* property,
     else
     {
         if (*oldValue == newValue) return 0; 
-        if (syncToDB) {
+        if (saveAtOnce) {
             //update db first
             if (m_world_->m_db != nullptr) {
                 if (index == (Json::Value::ArrayIndex)-1) {
@@ -234,7 +251,7 @@ int Bean::createArrayProperty(Property* property)
 }
 
 
-int Bean::doCreateArrayProperty(Property* property, bool syncToDB)
+int Bean::doCreateArrayProperty(Property* property, bool saveAtOnce)
 {
     int err = 0;
     const auto& pname = property->getName();
@@ -262,8 +279,8 @@ int Bean::doCreateArrayProperty(Property* property, bool syncToDB)
 }
 
 
-int Bean::setProperty(Property* property,  
-    Json::Value::ArrayIndex index, const Json::Value& value)
+int Bean::setArrayProperty(Property* property,  
+    Json::Value::ArrayIndex index, const Json::Value& value, bool saveAtOnce)
 {
     if (value.isNull()) return -1;
     if (property == nullptr) return -2;
@@ -281,9 +298,27 @@ int Bean::setProperty(Property* property,
     Json::Value* array = getMemberPtr(property);
     if (index >= array->size()) return -5;
     Json::Value *oldValue = &((*array)[index]);
-    int err = setPropertyBase_(property,  oldValue, value, index, true);
+    int err = setPropertyBase_(property,  oldValue, value, index, saveAtOnce);
     if (!err) m_pst_json_[pname][index] = PST_SYN;
     return err;
+}
+
+
+int Bean::setArrayProperty(Property* property,  
+    Json::Value::ArrayIndex index, const char* value, bool saveAtOnce)
+{
+    Json::StaticString sv(value);
+    Json::Value v(sv);
+    return setArrayProperty(property, index, v, saveAtOnce);
+}
+
+
+int Bean::setArrayProperty(Property* property,  
+    Json::Value::ArrayIndex index, const std::string& value, bool saveAtOnce)
+{
+    Json::StaticString sv(value.c_str());
+    Json::Value v(sv);
+    return setArrayProperty(property, index, v, saveAtOnce);
 }
 
 
@@ -293,7 +328,7 @@ int Bean::appendProperty(Property* property,  const Json::Value& value)
 }
 
 
-int Bean::doAppendProperty(Property* property,  const Json::Value& value, bool syncToDB)
+int Bean::doAppendProperty(Property* property,  const Json::Value& value, bool saveAtOnce)
 {
     if (value.isNull()) return -1;
     if (property == nullptr) return -2;
@@ -312,14 +347,14 @@ int Bean::doAppendProperty(Property* property,  const Json::Value& value, bool s
     }
 
     //insert property record first
-    if (m_world_->m_db != nullptr && syncToDB) {
+    if (m_world_->m_db != nullptr && saveAtOnce) {
         if (0 != m_world_->m_db->insertBeanProperty_(m_id_, property, value)) {
             if (m_pst_json_.isArray() && m_pst_json_[pname].size() == 0)
                 m_pst_json_[pname] = PST_NEW; //resume to PST_NEW
             return -11;
         }
     }
-    if (syncToDB) {
+    if (saveAtOnce) {
         m_pst_json_[pname].append(PST_SYN);
     } else {
         m_pst_json_[pname].append(PST_NEW);
@@ -392,7 +427,7 @@ int Bean::setRelation(Property* relation, oidType objectId)
 }
 
 
-int Bean::doSetRelation(Property* relation, oidType objectId, bool syncToDB)
+int Bean::doSetRelation(Property* relation, oidType objectId, bool saveAtOnce)
 {
     if (relation->getType() != Property::RelationType) return -2;
     Bean* object = nullptr;
@@ -401,11 +436,11 @@ int Bean::doSetRelation(Property* relation, oidType objectId, bool syncToDB)
     if (m_pst_json_.isMember(pname)) {
         oldValue = getMemberPtr(relation);
     }
-    int err =setPropertyBase_(relation, oldValue, objectId, -1, syncToDB);
+    int err =setPropertyBase_(relation, oldValue, objectId, -1, saveAtOnce);
     if (err) {
         return err;
     } else {
-        if ( syncToDB)
+        if ( saveAtOnce)
             m_pst_json_[pname] = PST_SYN;
         else 
             m_pst_json_[pname] = PST_MOD;
@@ -441,7 +476,7 @@ int Bean::createArrayRelation(Property* relation)
 }
 
 
-int Bean::doCreateArrayRelation(Property* relation, bool syncToDB)
+int Bean::doCreateArrayRelation(Property* relation, bool saveAtOnce)
 {
     int err = 0;
     const char* pname = relation->getName().c_str();
@@ -475,7 +510,7 @@ int Bean::appendRelation(Property* relation,  oidType objectBeanId)
 }
 
 
-int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool syncToDB)
+int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool saveAtOnce)
 {
     if (relation == nullptr) return -2;
     if (relation->getType() != Property::ArrayRelationType) return -2;
@@ -493,7 +528,7 @@ int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool syncT
     }
 
     //insert property record first
-    if (m_world_->m_db != nullptr && syncToDB) {
+    if (m_world_->m_db != nullptr && saveAtOnce) {
         if (0 != m_world_->m_db->insertBeanProperty_(m_id_, relation, Json::Value(objectBeanId))) {
             if (m_pst_json_[pname].size() == 0)
                 m_pst_json_[pname] = PST_NEW; //resume to PST_NEW
@@ -503,7 +538,7 @@ int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool syncT
 
     auto& arrayValue = m_json_[pname];
     arrayValue.append(objectBeanId);
-    if (syncToDB) {
+    if (saveAtOnce) {
         m_pst_json_[pname].append(PST_SYN);
     } else {
         m_pst_json_[pname].append(PST_NEW);
@@ -526,15 +561,15 @@ int Bean::appendRelation(Property* relation,  Bean* bean)
 }
 
 
-int Bean::setRelation(Property* relation,  
+int Bean::setArrayRelation(Property* relation,  
     Json::Value::ArrayIndex index, Bean* bean)
 {
     if (bean == nullptr) return -1;
-    return setRelation(relation, index, bean->getId());
+    return setArrayRelation(relation, index, bean->getId());
 }
 
 
-int Bean::setRelation(Property* relation,  
+int Bean::setArrayRelation(Property* relation,  
     Json::Value::ArrayIndex index, oidType objectId)
 {
     if (relation == nullptr) return -2;
@@ -604,7 +639,7 @@ int Bean::removeNativeData()
 }
 
 
-Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncToDB)
+Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool saveAtOnce)
 {
     const auto& pname = property->getName();
     Json::Value rtnValue;
@@ -618,7 +653,7 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncT
         rtnValue = *valuePtr;
         Json::Value::ArrayIndex size = array.size();
         for (Json::Value::ArrayIndex i = 0; i < size; i++) {
-            doRemoveProperty(property, i, false, syncToDB);
+            doRemoveProperty(property, i, false, saveAtOnce);
         }
     }
     else  if (pstValue.asInt() == PST_NEW) {
@@ -630,7 +665,7 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool syncT
             return Json::Value::nullRef;
     }
 
-    if (syncToDB) {
+    if (saveAtOnce) {
         //delete from db first
         if (m_world_->m_db != nullptr) {
             if (0 != m_world_->m_db->deleteBeanProperty_(m_id_, property))
@@ -706,7 +741,7 @@ Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex ind
     return doRemoveProperty(property, index, false, true);
 }
 
-Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex index, bool internal, bool syncToDB)
+Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex index, bool internal, bool saveAtOnce)
 {
     Json::Value rtn; //null
     const auto& pname = property->getName();
@@ -728,7 +763,7 @@ Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex i
     if (!array.isArray()) return Json::Value::nullRef; //if property is array, array.isArray() shall be true
     if (index >= array.size()) return Json::Value::nullRef;
 
-    if (syncToDB) {
+    if (saveAtOnce) {
         //delete from db first
         if (m_world_->m_db != nullptr) {
             if (0 != m_world_->m_db->deleteBeanProperty_(m_id_, property, index))
@@ -826,10 +861,10 @@ Json::Value& Bean::getNativeData() const
     return ((Bean*)this)->getNativeData();
 }
 
-int Bean::setNativeData(Json::Value& data, bool syncToDB)
+int Bean::setNativeData(Json::Value& data, bool saveAtOnce)
 {
     int err = 0;
-    if (syncToDB) {
+    if (saveAtOnce) {
         if (m_world_->m_db != nullptr) {
             //save to db
             err = m_world_->m_db->updateBeanNativeData_(m_id_, data);
@@ -1125,7 +1160,7 @@ out:
             } else if (pstValuePtr->asInt() == PST_NEW) {
                 //todo: do anything?
             } else if (pstValuePtr->asInt() == PST_MOD) {
-                (*pstValuePtr)[i] = PST_SYN;
+                (*pstValuePtr) = PST_SYN;
             } else {
                 //do nothing
             }

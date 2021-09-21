@@ -33,6 +33,12 @@
         err = beginTransaction();                                    \
     };
 
+static const char* STR_INT = "INT";
+static const char* STR_BIGINT = "BIGINT";
+static const char* STR_INT8 = "INT8";
+static const char* STR_REAL= "REAL";
+static const char* STR_TEXT= "TEXT";
+
 namespace org {
 namespace jinsha {
 namespace bean {
@@ -178,7 +184,7 @@ int SqliteBeanDB::reInit_()
     if (err != 0) return err;
 
     char buff[256] = {0};
-    snprintf(buff, 255, "rm -rf %s/*.db", m_dir );
+    snprintf(buff, 256, "rm -rf %s/*.db", m_dir );
     //todo: check if command is executed successfully
     system(buff);
     err = internalInit();
@@ -293,8 +299,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
             if (property->isDelayLoad()) {
                 value[pname] = Json::Value::nullRef;
             } else {
-                if (property->getType() == Property::ArrayPrimaryType || 
-                     property->getType() == Property::ArrayRelationType) {
+                if (property->isArray()) {
                          //delay load, shall not reach here
                 } else {
                     Json::Value* v = &value[pname];
@@ -312,9 +317,9 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
                     case Property::BoolType:
                          //do nothing
                         break;
-                    case Property::StringType:
-                        //do nothing
-                        break;
+                    // case Property::StringType:
+                    //     //delay load type
+                    //     break;
                     default:
                         break;
                     }
@@ -456,10 +461,18 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
         switch (property->getValueType())
         {
         case Property::IntType:
+#if defined(JSON_NO_INT64)
+            (*v) = (Json::Int)sqlite3_column_int(pstmt, 0);
+#else
             (*v) = (Json::Int64)sqlite3_column_int64(pstmt, 0);
+#endif
             break;
         case Property::UIntType:
+#if defined(JSON_NO_INT64)
+            (*v) = (Json::UInt)sqlite3_column_int(pstmt, 0);
+#else
             (*v) = (Json::UInt64)sqlite3_column_int64(pstmt, 0);
+#endif
             break;
         case Property::RealType:
             (*v) =  sqlite3_column_double(pstmt, 0);
@@ -547,13 +560,13 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
             }
             err = saveBeanBase_(beanId, data, nativeData);
             if (err) {
-                elog("Failed to insert bean property (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
+                elog("Failed to insert bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
                 goto out;
             }
         }
     }
 
-    snprintf(buff, sizeof(buff) - 1, "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
+    snprintf(buff, sizeof(buff), "INSERT INTO p_%s  (ID, SID, VALUE) VALUES(?, ?, ?) ;", pname);
     // if (value.isArray()) {
     //     for (int i = 0; i < value.size(); i++) {
     //         vlist.push_back(&value[i]);
@@ -573,6 +586,10 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
         if (err != SQLITE_OK) goto out;
         if (property->getValueType() == Property::StringType) {
             err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
+        } else if (property->getValueType() == Property::RealType) {
+            err = sqlite3_bind_double(pstmt, nCol++, v->asDouble());
+        } else if (property->getValueType() == Property::BoolType) {
+            err = sqlite3_bind_int(pstmt, nCol++, v->asBool() ? 1 : 0);
         } else {
             err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
         }
@@ -619,7 +636,7 @@ int SqliteBeanDB::getIdByPropertyIndex(const char* pname, oidType sid, Json::Arr
     bool found = false;
     char buff[128]{0};
     char *sql = buff;
-    snprintf(buff, sizeof(buff) - 1, "SELECT ID FROM p_%s WHERE SID = ? ;", pname);
+    snprintf(buff, sizeof(buff), "SELECT ID FROM p_%s WHERE SID = ? ;", pname);
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int64(pstmt, 1, sid);
@@ -679,8 +696,17 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     if (world == nullptr) return -1;
 
     if (!property->isArray() && (index != (Json::Value::ArrayIndex)-1)) return -1;
+
    pname = property->getName().c_str();
    isArray = property->isArray();
+
+    if (isArray) {
+        err = getIdByPropertyIndex(pname, sid, index, id);
+        if (err) {
+            elog("Failed to upate property (name=%s) for bean (id=%llu), for index (%llu) is invalid \n", pname, beanId, index);
+            return err;
+        }
+    }
 
     SMART_BEGIN_TRANSACTION();
     err = beginTransaction();
@@ -709,16 +735,12 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         }
     }
 
-    if (isArray) {
-        err = getIdByPropertyIndex(pname, sid, index, id);
-        if (err) goto out;
-    }
     v = &value;
 
     if (isArray) {
-        snprintf(buff, sizeof(buff) - 1, "UPDATE p_%s SET VALUE = ? WHERE ID = ?  ;", pname);
+        snprintf(buff, sizeof(buff), "UPDATE p_%s SET VALUE = ? WHERE ID = ?  ;", pname);
     } else {
-        snprintf(buff, sizeof(buff) - 1, "UPDATE p_%s SET VALUE = ? WHERE SID = ?  ;", pname);
+        snprintf(buff, sizeof(buff), "UPDATE p_%s SET VALUE = ? WHERE SID = ?  ;", pname);
     }
 
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
@@ -726,6 +748,10 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     nCol = 1;
     if (property->getValueType() == Property::StringType) {
         err = sqlite3_bind_text(pstmt, nCol++, v->asCString(), -1, nullptr);
+    } else if (property->getValueType() == Property::RealType) {
+        err = sqlite3_bind_double(pstmt, nCol++, v->asDouble());
+    } else if (property->getValueType() == Property::BoolType) {
+        err = sqlite3_bind_int(pstmt, nCol++, v->asBool() ? 1 : 0);
     } else {
         err = sqlite3_bind_int64(pstmt, nCol++, (sqlite3_int64)v->asInt64());
     }
@@ -797,7 +823,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
         goto out;
     }
 
-    snprintf(buff, sizeof(buff) - 1, "DELETE FROM p_%s WHERE SID = ?;", pname);
+    snprintf(buff, sizeof(buff), "DELETE FROM p_%s WHERE SID = ?;", pname);
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto out;
     nCol = 1;
@@ -867,7 +893,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
         return err;
     }
 
-    snprintf(buff, sizeof(buff) - 1, "DELETE FROM p_%s WHERE ID = ?;", pname);
+    snprintf(buff, sizeof(buff), "DELETE FROM p_%s WHERE ID = ?;", pname);
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto out;
     nCol = 1;
@@ -1086,6 +1112,7 @@ int SqliteBeanDB::defineProperty_(const char* name,
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int err = 0;
+    const char* vtype_str = nullptr;
     bool alreadyInTransaction = false;
     char* errMsg = nullptr;
     char  buff[256] {0};
@@ -1130,14 +1157,28 @@ int SqliteBeanDB::defineProperty_(const char* name,
     sqlite3_reset(pstmt);
 
     //create property table
-    snprintf(buff, sizeOfBuff - 1, create_property_table, 
+    switch (valueType)
+    {
+    case Property::BoolType:
+        vtype_str = STR_INT8;
+        break;
+    case Property::RealType:
+        vtype_str = STR_REAL;
+        break;
+    case Property::StringType:
+        vtype_str = STR_TEXT;
+    default:
+        vtype_str = STR_BIGINT;
+        break;
+    }
+    snprintf(buff, sizeOfBuff, create_property_table, 
     name,
     (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) ? "" : "UNIQUE",
-    (valueType == Property::StringType) ? "TEXT" : "BIGINT" );
+    vtype_str);
     sql = buff;
     err = sqlite3_exec ( m_sqlite3Db_ , sql , nullptr , nullptr , &errMsg );
     if (err != SQLITE_OK)  goto _out;
-    snprintf(buff, sizeOfBuff - 1, create_property_index, name, name);
+    snprintf(buff, sizeOfBuff, create_property_index, name, name);
     err = sqlite3_exec ( m_sqlite3Db_ , sql , nullptr , nullptr , &errMsg );
     if (err != SQLITE_OK)  goto _out;
 
@@ -1300,7 +1341,7 @@ int SqliteBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& data)
         if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
             valueStr = (const char*)sqlite3_column_text(pstmt, 0);
             if (valueStr == nullptr) {
-                data = Json::Value(Json::nullValue);
+                // data = Json::Value(Json::nullValue); //can reach here?
             } else {
                 if (!reader.parse(valueStr, data, false))
                 {
@@ -1310,7 +1351,7 @@ int SqliteBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& data)
                 }
             }
         } else {
-            data = Json::Value(Json::ValueType::objectValue);
+            data = Json::Value::nullRef;
         }
         
         found = true;

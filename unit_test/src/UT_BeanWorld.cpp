@@ -404,7 +404,8 @@ TEST(BeanWorld, saveAll)
     dummyDB.disconnect();
     dummyDB.connect();
     world = dummyDB.getWorld();
-
+    initTestHelper(testHelper, *world);
+    
     bean1 = world->getBean(beanId_1);
     bean2 = world->getBean(beanId_2);
 

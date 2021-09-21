@@ -74,6 +74,22 @@ void setBeanProperties(TestHelper& testHelper, Bean* bean, bool saveAtOnce)
     bean->createArrayProperty(testHelper.p_array_int);
     bean->appendProperty(testHelper.p_array_int, 101);
     bean->appendProperty(testHelper.p_array_int, 102);
+
+    bean->createArrayProperty(testHelper.p_array_uint);
+    bean->appendProperty(testHelper.p_array_uint, (Json::UInt)101);
+    bean->appendProperty(testHelper.p_array_uint, (Json::UInt)102);
+
+    bean->createArrayProperty(testHelper.p_array_real);
+    bean->appendProperty(testHelper.p_array_real, (double)555.555);
+    bean->appendProperty(testHelper.p_array_real, (double)888.888);
+
+    bean->createArrayProperty(testHelper.p_array_bool);
+    bean->appendProperty(testHelper.p_array_bool, true);
+    bean->appendProperty(testHelper.p_array_bool, false);
+
+    bean->createArrayProperty(testHelper.p_array_str);
+    bean->appendProperty(testHelper.p_array_str, "str0");
+    bean->appendProperty(testHelper.p_array_str, "str1");
 }
 
 
@@ -82,7 +98,7 @@ void validateBeanProperties(TestHelper& testHelper, Bean* bean)
     EXPECT_TRUE(bean->getProperty(testHelper.p_int).asInt() == -1);
     EXPECT_TRUE(bean->getProperty(testHelper.p_uint).asUInt() == 1);
     EXPECT_TRUE(bean->getProperty(testHelper.p_int64).asInt64() == (Json::Int64)-1);
-    EXPECT_TRUE(bean->getProperty(testHelper.p_uint64).asUInt64() == 1);
+    EXPECT_TRUE(bean->getProperty(testHelper.p_uint64).asUInt64() == (Json::UInt64)1);
     EXPECT_TRUE(bean->getProperty(testHelper.p_real).asDouble() == 1.0);
     EXPECT_TRUE(bean->getProperty(testHelper.p_bool_0).asBool() == false);
     EXPECT_TRUE(bean->getProperty(testHelper.p_bool_1).asBool() == true);
@@ -90,6 +106,15 @@ void validateBeanProperties(TestHelper& testHelper, Bean* bean)
 
     EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_int, 0).asInt() == 101);
     EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_int, 1).asInt() == 102);
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_uint, 0).asUInt() ==  (Json::UInt)101);
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_uint, 1).asUInt() ==  (Json::UInt)102);
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_real, 0).asDouble() == 555.555);
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_real, 1).asDouble() == 888.888);
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_bool, 0).asBool() == true);
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_bool, 1).asBool() == false);
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_str, 0).asString() == "str0");
+    EXPECT_TRUE(bean->getArrayProperty(testHelper.p_array_str, 1).asString() == "str1");
+
 }
 
 

@@ -617,6 +617,10 @@ TEST(SqliteBeanDB, insertBeanProperty_)
 
     Bean* bean1 = world->createBean();
     oidType beanId_1 = bean1->getId();
+
+    err = testdb.insertBeanProperty_(9999, testHelper.p_int, 1);
+    EXPECT_TRUE(err == 0);
+
     bean1->createArrayProperty(testHelper.p_array_int);
     err = testdb.insertBeanProperty_(beanId_1, testHelper.p_int, 1);
     EXPECT_TRUE(err == 0);
@@ -662,21 +666,40 @@ TEST(SqliteBeanDB, updateBeanProperty_)
     Bean* bean1 = world->createBean();
     oidType beanId_1 = bean1->getId();
 
+    err = testdb.updateBeanProperty_(9999, testHelper.p_str, "foo");
+    EXPECT_TRUE(err == 0);
+    err = testdb.updateBeanProperty_(beanId_1, testHelper.p_array_int, 9999, 1);
+    EXPECT_TRUE(err == -1001);
+
     bean1->setProperty(testHelper.p_str, "xxx");
     err = testdb.updateBeanProperty_(beanId_1, testHelper.p_str, "foo");
     EXPECT_TRUE(err == 0);
 
     bean1->createArrayProperty(testHelper.p_array_int);
+    bean1->createArrayProperty(testHelper.p_array_bool);
+    bean1->createArrayProperty(testHelper.p_array_real);
 
     testdb.insertBeanProperty_(beanId_1, testHelper.p_int, 1);
     testdb.insertBeanProperty_(beanId_1, testHelper.p_array_int, 0);
     testdb.insertBeanProperty_(beanId_1, testHelper.p_array_int, 1);
+    testdb.insertBeanProperty_(beanId_1, testHelper.p_array_bool, false);
+    testdb.insertBeanProperty_(beanId_1, testHelper.p_array_bool, false);
+    testdb.insertBeanProperty_(beanId_1, testHelper.p_array_real, 1.0);
+    testdb.insertBeanProperty_(beanId_1, testHelper.p_array_real, 1.1);
 
     err = testdb.updateBeanProperty_(beanId_1, testHelper.p_int, 99);
     EXPECT_TRUE(err == 0);
     err = testdb.updateBeanProperty_(beanId_1, testHelper.p_array_int, 0, 10);
     EXPECT_TRUE(err == 0);
     err = testdb.updateBeanProperty_(beanId_1, testHelper.p_array_int, 1, 11);
+    EXPECT_TRUE(err == 0);
+    err = testdb.updateBeanProperty_(beanId_1, testHelper.p_array_bool, 0, true);
+    EXPECT_TRUE(err == 0);
+    err = testdb.updateBeanProperty_(beanId_1, testHelper.p_array_bool, 1, true);
+    EXPECT_TRUE(err == 0);
+    err = testdb.updateBeanProperty_(beanId_1, testHelper.p_array_real, 0, 555.555);
+    EXPECT_TRUE(err == 0);
+    err = testdb.updateBeanProperty_(beanId_1, testHelper.p_array_real, 1, 888.888);
     EXPECT_TRUE(err == 0);
 
     testdb.disconnect();
@@ -692,6 +715,12 @@ TEST(SqliteBeanDB, updateBeanProperty_)
     testdb.loadBeanProperty_(beanId_1, testHelper.p_array_int, value);
     EXPECT_TRUE(value[0] == 10);
     EXPECT_TRUE(value[1] == 11);
+    testdb.loadBeanProperty_(beanId_1, testHelper.p_array_bool, value);
+    EXPECT_TRUE(value[0] == true);
+    EXPECT_TRUE(value[1] == true);
+    testdb.loadBeanProperty_(beanId_1, testHelper.p_array_real, value);
+    EXPECT_TRUE(value[0] == 555.555);
+    EXPECT_TRUE(value[1] == 888.888);
 
     testdb.disconnect();
 
@@ -716,11 +745,19 @@ TEST(SqliteBeanDB, deleteBeanProperty_)
 
     Bean* bean1 = world->createBean();
     oidType beanId_1 = bean1->getId();
+    
     bean1->createArrayProperty(testHelper.p_array_int);
 
     testdb.insertBeanProperty_(beanId_1, testHelper.p_int, 1);
     testdb.insertBeanProperty_(beanId_1, testHelper.p_array_int, 0);
     testdb.insertBeanProperty_(beanId_1, testHelper.p_array_int, 1);
+
+    err = testdb.deleteBeanProperty_(9999, testHelper.p_int);
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteBeanProperty_(9999, testHelper.p_array_int, 0);
+    EXPECT_TRUE(err == 0);
+    err = testdb.deleteBeanProperty_(beanId_1, testHelper.p_array_int, 9999);
+    EXPECT_TRUE(err == 0);
 
     err = testdb.deleteBeanProperty_(beanId_1, testHelper.p_int);
     EXPECT_TRUE(err == 0);
@@ -762,10 +799,10 @@ TEST(SqliteBeanDB, deleteBeanProperty_)
 
 TEST(SqliteBeanDB, nativeData)
 {
-    char buff[128] = {0};
-    char* cmd = &buff[0];
-    sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
-    system(cmd);
+    // char buff[128] = {0};
+    // char* cmd = &buff[0];
+    // sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
+    // system(cmd);
 
     SqliteBeanDB testdb(g_tmpDBDir);
     BeanWorld *world = nullptr;
@@ -782,8 +819,20 @@ TEST(SqliteBeanDB, nativeData)
 
     err = testdb.loadBeanNativeData_(beanId_1, value);
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(value.getMemberNames().size() == 0);
+    // EXPECT_TRUE(value.getMemberNames().size() == 0);
+    EXPECT_TRUE(value.isNull());
 
+    err = testdb.updateBeanNativeData_(beanId_1, Json::Value::nullRef);
+    EXPECT_TRUE(err == 0);
+
+    testdb.disconnect();
+    testdb.connect();
+    err = testdb.loadBeanNativeData_(beanId_1, value);
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(value.isNull());
+
+    testdb.disconnect();
+    testdb.connect();
     value["root"][0] = 0;
     value["root"][1] = 1;
     err = testdb.updateBeanNativeData_(beanId_1, value);
@@ -791,10 +840,6 @@ TEST(SqliteBeanDB, nativeData)
     
     testdb.disconnect();
     testdb.connect();
-    world = testdb.getWorld();
-    initTestHelper(testHelper, *world);
-    bean1 = world->getBean(beanId_1);
-
     err = testdb.loadBeanNativeData_(beanId_1, value);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(value["root"][0] == 0);
@@ -802,11 +847,12 @@ TEST(SqliteBeanDB, nativeData)
 
     err = testdb.deleteBeanNativeData_(beanId_1);
     EXPECT_TRUE(err == 0);
+
     testdb.disconnect();
     testdb.connect();
     err = testdb.loadBeanNativeData_(beanId_1, value);
-    EXPECT_TRUE(value.getMemberNames().size() == 0);
     EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(value.isNull());
 
     testdb.disconnect();
 

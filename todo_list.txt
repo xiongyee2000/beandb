@@ -1,12 +1,14 @@
 well define error codes
 
+multi-threading support
+
 windows line ending \r\n
 
 UndefineProperty() need to consider whether all related beans should be deleted.
 
 BeanWorld: can we have a better name?
+smart bean capacity management
 
-setRelation() //self to self allowed?
 
 getArrayProperty()/getArrayRelation() //Too big to load all array data into memory?
 

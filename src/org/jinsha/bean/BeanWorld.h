@@ -22,22 +22,7 @@ class BeanWorld : public BeanDBUserIntf
 {
 public:
     /**
-     * Constructor
-     * 
-     * @param db the database attached with this world
-     */
-    BeanWorld(AbstractBeanDB& db);
-
-    /**
-     * Destructor
-     */
-    virtual ~BeanWorld();
-
-    /**
-     * Delete all means/properties from the world.
-     * 
-     * CAUTION: If this world is attached with a database, 
-     * all data will be erased from the attached database.
+     * Remove all beans from this world.
      */
     virtual void clear();
 
@@ -107,7 +92,6 @@ public:
      */
     virtual int deleteBean(Bean* bean) override;
 
-
     /**
      * @ref BeanDBUserIntf::loadAll()
      */
@@ -133,28 +117,39 @@ public:
     virtual int getNumOfBeans();
 
     /**
-     * Get all beans.
+     * Get all beans in this world.
      * 
      * @return a map containing all beans
      */
     virtual const std::unordered_map<oidType, Bean*>& getBeans();
 
 
-protected:
+private:
+    /**
+     * Constructor
+     * 
+     * @param db the database attached with this world
+     */
+    BeanWorld(AbstractBeanDB& db);
+
+    /**
+     * Destructor
+     */
+    virtual ~BeanWorld();
+
     int reloadProperties();
     Property* definePropertyCommon_(const char* name, 
         Property::Type type, 
         Property::ValueType valueType);
-    Bean* getBean();
 
-protected:
+private:
     std::unordered_map<oidType, Bean*> m_beans_;
 
      //map from property name to property
     std::unordered_map<std::string, Property*> m_propertyMap_; 
     bool m_properties_loaded_ = false;
 
-    AbstractBeanDB *m_db;
+    AbstractBeanDB *m_db_;
 
 friend class Bean;
 friend class Property;

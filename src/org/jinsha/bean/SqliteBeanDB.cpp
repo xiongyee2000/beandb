@@ -709,7 +709,6 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     }
 
     SMART_BEGIN_TRANSACTION();
-    err = beginTransaction();
     if (err) {
         elog("Failed to update bean property (beanId=%llu, property name=%s) \n", beanId, pname);
         return err;

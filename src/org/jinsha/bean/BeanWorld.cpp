@@ -14,16 +14,23 @@ namespace bean {
 
 
 BeanWorld::BeanWorld(AbstractBeanDB& db) 
-    : m_db(&db)
+    : m_db_(&db)
 {
     setlocale(LC_ALL, "");
-    m_db->m_world_ = this;
+    m_db_->m_world_ = this;
 }
 
 
 BeanWorld::~BeanWorld()
 {
     clear();
+    
+    for (auto& item : m_propertyMap_) 
+    {
+        delete item.second;
+    }
+   m_propertyMap_.clear();
+   m_properties_loaded_ = false;
 };
 
 
@@ -35,13 +42,6 @@ void BeanWorld::clear()
         item.second = nullptr;
     }
     m_beans_.clear();
-
-    for (auto& item : m_propertyMap_) 
-    {
-        delete item.second;
-    }
-   m_propertyMap_.clear();
-   m_properties_loaded_ = false;
 }
 
 
@@ -50,7 +50,7 @@ Bean* BeanWorld::createBean()
     int err = 0;
     oidType id = 0;
     Bean* bean = nullptr;
-    err  = m_db->createBean_(id);
+    err  = m_db_->createBean_(id);
     if (err) {
         elog("Failed to create bean in database. (err=%d) \n", err);
     } else {
@@ -150,7 +150,7 @@ int BeanWorld::deleteBean(Bean* bean)
     if (bean == nullptr) return 0;
     
     int err = 0;
-    err = m_db->deleteBean_(bean);
+    err = m_db_->deleteBean_(bean);
     if (!err) {
         removeBean(bean->getId());
     }
@@ -198,7 +198,7 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
     {
         bool delayLoad = false;
         // err = m_db ->defineProperty_(name, type, valueType, needIndex, pid, delayLoad);
-        err = m_db ->defineProperty_(name, type, valueType, pid, delayLoad);
+        err = m_db_ ->defineProperty_(name, type, valueType, pid, delayLoad);
         if (err) {
             elog("Failed to define property %s in database.", name);
             return nullptr;
@@ -226,7 +226,7 @@ int BeanWorld::undefineProperty(const char* name)
     if (name == nullptr) return 0;
     if (name[0] == 0) return 0;
 
-    if (0 != m_db->undefineProperty_(name)) {
+    if (0 != m_db_->undefineProperty_(name)) {
         elog("Failed to undefine property %s in database.", name);
         return -1;
     }
@@ -267,7 +267,7 @@ int BeanWorld::reloadProperties()
     int err = 0;
     if (m_properties_loaded_)
         clear();
-    err = m_db->loadProperties_(m_propertyMap_);
+    err = m_db_->loadProperties_(m_propertyMap_);
     if (err) {
         elog("%s", "Failed to load properties from database");
         clear();
@@ -292,7 +292,7 @@ int BeanWorld::loadAll()
 
 int BeanWorld::saveAll()
 {
-    if (!m_db->connected()) return -1;
+    if (!m_db_->connected()) return -1;
     int err = 0;
     for (auto& iter : m_beans_) {
         err = iter.second->save();

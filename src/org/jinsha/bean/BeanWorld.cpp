@@ -24,7 +24,7 @@ BeanWorld::BeanWorld(AbstractBeanDB& db)
 BeanWorld::~BeanWorld()
 {
     clear();
-    
+
     for (auto& item : m_propertyMap_) 
     {
         delete item.second;
@@ -256,10 +256,17 @@ Property* BeanWorld::getProperty(const char* name)
     }
 }
 
+
 const std::unordered_map<std::string, Property*>& BeanWorld::getProperties() 
 {
     return m_propertyMap_;
 };
+
+
+// const std::unordered_map<std::string, Property*>& BeanWorld::getRelations() 
+// {
+//     return m_relationMap_;
+// };
 
 
 int BeanWorld::reloadProperties()

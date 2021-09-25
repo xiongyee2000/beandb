@@ -72,6 +72,11 @@ public:
      */
     virtual const std::unordered_map<std::string, Property*>& getProperties() override;
 
+    // /**
+    //  * @ref BeanDBUserIntf::getRelations()
+    //  */
+    // virtual const std::unordered_map<std::string, Property*>& getRelations() override;
+
 
     /***********************************************************
      * bean related

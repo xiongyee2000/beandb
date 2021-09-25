@@ -129,6 +129,12 @@ public:
      */
     virtual const std::unordered_map<std::string, Property*>& getProperties() = 0;
 
+    // /**
+    //  * Get all relations.
+    //  * 
+    //  * @return a map containing all properties.
+    //  */
+    // virtual const std::unordered_map<std::string, Property*>& getRelations() = 0;
 
     /***********************************************************
      * bean related

@@ -40,7 +40,7 @@ public:
     /**
      * Is the bean is empty, i.e has none property/relation.
      */
-    bool empty () const {return m_json_.empty();};
+    bool empty () const {return m_pst_json_.empty();};
 
     /**
      * Does the bean have the named property/relation/
@@ -54,7 +54,7 @@ public:
      * @return a collection of names
      */
     Json::Value::Members getMemberNames () const 
-        {return m_json_.getMemberNames();};
+        {return m_pst_json_.getMemberNames();};
 
     /**
      * Remove all properties/relations of this bean.

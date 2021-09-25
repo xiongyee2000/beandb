@@ -53,6 +53,13 @@ bool Property::isArray() const
 }
 
 
+bool Property::isRelation() const
+{
+    return (m_propertyType_ == Property::RelationType) || 
+        (m_propertyType_ == Property::ArrayRelationType);
+}
+
+
 int Property::createIndex()
 {
     if (m_indexed_) return -1;

@@ -73,6 +73,13 @@ public:
     bool isArray() const;
 
     /**
+     * If this property is a relation.
+     * 
+     * @return true if it is a relation, or false otherwise
+     */
+    bool isRelation() const;
+
+    /**
      * Get the id of the property
      * 
      * @return property id

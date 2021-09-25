@@ -1,5 +1,7 @@
 well define error codes
 
+32 bits system
+
 multi-threading support
 
 windows line ending \r\n

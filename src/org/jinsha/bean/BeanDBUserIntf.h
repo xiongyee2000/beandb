@@ -112,6 +112,14 @@ public:
     virtual Property* getProperty(const char* name) = 0;
 
     /**
+     * Get property/relation/array property/array relation by id.
+     * 
+     * @param id property id
+     * @return property
+     */
+    virtual Property* getProperty(pidType id) = 0;
+
+    /**
      * Get relation.
      * 
      * Notes:

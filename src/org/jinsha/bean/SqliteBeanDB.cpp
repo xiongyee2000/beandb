@@ -68,7 +68,7 @@ static const char* CREATE_TRIPLE_TABLE =
 ID INTEGER PRIMARY KEY NOT NULL, \
 SID INTEGER NOT NULL,  \
 PID INTEGER NULL, \
-OID INTEGER NULL, \
+OID INTEGER NULL \
 ); ";
 
 // static const char* CREATE_STRING_TABLE =  
@@ -317,28 +317,30 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
 {
     CHECK_CONNECTED();
     
-    BeanWorld *world = nullptr;
+    BeanWorld *world = getWorld();
     const char* pname = nullptr;
     sqlite3_stmt *pstmt = nullptr;
     int err = 0;
     int size = 0;
     Property* property = nullptr;
     const char* valueStr = nullptr;
-    static const char sql[] = "SELECT VALUE, NATIVE_DATA from BEAN WHERE ID = ?;";
+    static const char SELECT_BEAN[] = "SELECT VALUE, NATIVE_DATA from BEAN WHERE ID = ?;";
+    static const char SELECT_TRIPLE[] = "SELECT PID, OID from TRIPLE WHERE SID = ?;";
+    const char *sql = nullptr;
     Json::Reader reader; 
     Json::Value jsonBean;  
     bool found = false;
     Json::Value* v = nullptr;
+    oidType oid = 0;
+    pidType pid = 0;
 
+    sql = SELECT_BEAN;
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int64(pstmt, 1, beanId);
     if (err != SQLITE_OK) goto _out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
-        //retrieve properties
-        if (sqlite3_column_type(pstmt, 0) == SQLITE_NULL) continue;
-
         valueStr = (const char*)sqlite3_column_text(pstmt, 0);
         if (valueStr == nullptr) valueStr = "{}";
         if (!reader.parse(valueStr, value, false))
@@ -349,7 +351,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
         }
 
         for (auto& pname : value.getMemberNames()) {
-            property = getWorld()->getProperty(pname.c_str());
+            property = world->getProperty(pname.c_str());
             if (property == nullptr) continue; //it's not a defined property
             //filter out delay load properties
             if (property->isDelayLoad()) {
@@ -358,7 +360,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
                 if (property->isArray()) {
                          //delay load, shall not reach here
                 } else {
-                    Json::Value* v = &value[pname];
+                    v = &value[pname];
                     switch (property->getValueType())
                     {
                     case Property::IntType:
@@ -392,7 +394,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
             {
                 err = -2;
                 elog("error parsing json string: %s", valueStr);
-                break;
+                goto _out;
             }
         } else {
             nativeData = Json::Value(Json::ValueType::objectValue);
@@ -402,6 +404,33 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
         err = 0;
         break;
 	}
+
+    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+
+    sql = SELECT_TRIPLE;
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int64(pstmt, 1, beanId);
+    if (err != SQLITE_OK) goto _out;
+
+	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+        pid = sqlite3_column_int(pstmt, 0);
+        oid = sqlite3_column_int64(pstmt, 1);
+        property = world->getProperty(pid);
+        // if (property == nullptr) continue; //shall not happen
+        // if (!property->isRelation()) continue; //shall not happen
+        pname = property->getName().c_str();
+        if (property->isArray()) {
+            if (!value[pname].isArray()) {
+                value = Json::Value(Json::arrayValue);
+            }
+            value[pname].append(oid);
+        } else {
+            value[pname] = oid;
+        }
+    }
 
 _out:
     if (err > 0) {
@@ -470,7 +499,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     char * sql = &buff[0];
     sqlite3_stmt *pstmt = nullptr;
     Json::Value* v = nullptr;
-    int i = 0;
+    bool found = false;
 
     value = Json::Value::nullRef;
 
@@ -509,6 +538,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     if (err != SQLITE_OK) goto out;
 
     while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+        found = true;
         //do some preparation for array
         if (property->isArray())  {
                 if (value.isNull()) value = Json::Value(Json::arrayValue); 
@@ -555,15 +585,33 @@ out:
         value = Json::Value::nullRef;
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     } else {
-        err = 0;
+        if (found) {
+            err = 0;
+        } else {
+            if (property->isRelation()) {
+                 err = -1001;
+                 value = Json::Value::nullRef;
+                 ilog("Bean relation not found  (beanId=%lld, pname=%s) \n", beanId, property->getName().c_str());
+            } else {
+                if (property->isArray()) {
+                    err = 0;
+                    value = Json::Value(Json::arrayValue);
+                    ilog("Bean's array property is empty  (beanId=%lld, pname=%s) \n", beanId, property->getName().c_str());
+                } else {
+                    if (property->isDelayLoad()) {
+                        err = -1001;
+                        value = Json::Value::nullRef;
+                        ilog("Strange: Bean's property is missing  (beanId=%lld, pname=%s) \n", beanId, property->getName().c_str());
+                    }
+                }
+            }
+        }
     }
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
 
-    if (err) value = nullptr;
     return err;
-
 }
 
 
@@ -574,7 +622,6 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
     CHECK_CONNECTED();
 
     if (property == nullptr) return -1;
-    if (m_sqlite3Db_ == nullptr) return -1;
 
     BeanWorld *world = getWorld();
     if (world == nullptr) return -1;
@@ -689,7 +736,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
 }
 
 
-int SqliteBeanDB::getIdByPropertyIndex(const char* pname, oidType sid, Json::ArrayIndex index, sqlite3_int64& id)
+int SqliteBeanDB::getIdByPropertyIndex(const Property* property, oidType sid, Json::ArrayIndex index, sqlite3_int64& id) const
 {
     CHECK_CONNECTED();
 
@@ -697,9 +744,16 @@ int SqliteBeanDB::getIdByPropertyIndex(const char* pname, oidType sid, Json::Arr
     sqlite3_stmt *pstmt = nullptr;
     Json::ArrayIndex i = 0;
     bool found = false;
+    const char* pname = property->getName().c_str();
+    pidType pid = property->getId();
     char buff[128]{0};
     char *sql = buff;
-    snprintf(buff, sizeof(buff), "SELECT ID FROM p_%s WHERE SID = ? ;", pname);
+
+    if (property->isRelation()) {
+        snprintf(buff, sizeof(buff), "SELECT ID FROM TRIPLE WHERE SID = ? AND PID = %d ;", property->getId());
+    } else {
+        snprintf(buff, sizeof(buff), "SELECT ID FROM p_%s WHERE SID = ? ;", pname);
+    }
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int64(pstmt, 1, sid);
@@ -753,7 +807,6 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
    bool alreadyInTransaction = false;
 
     if (property == nullptr) return -1;
-    if (m_sqlite3Db_ == nullptr) return -1;
 
     world = getWorld();
     if (world == nullptr) return -1;
@@ -764,7 +817,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
    isArray = property->isArray();
 
     if (isArray) {
-        err = getIdByPropertyIndex(pname, sid, index, id);
+        err = getIdByPropertyIndex(property, sid, index, id);
         if (err) {
             elog("Failed to upate property (name=%s) for bean (id=%llu), for index (%llu) is invalid \n", pname, beanId, index);
             return err;
@@ -853,7 +906,6 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     CHECK_CONNECTED();
 
     if (property == nullptr) return -1;
-    if (m_sqlite3Db_ == nullptr) return -1;
 
     BeanWorld *world = getWorld();
     if (world == nullptr) return -1;
@@ -938,7 +990,6 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     CHECK_CONNECTED();
 
     if (property == nullptr) return -1;
-    if (m_sqlite3Db_ == nullptr) return -1;
 
     BeanWorld *world = getWorld();
     if (world == nullptr) return -1;
@@ -958,7 +1009,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     const char* pname = property->getName().c_str();
     bool alreadyInTransaction = false;
 
-    err = getIdByPropertyIndex(pname, beanId, index, id);
+    err = getIdByPropertyIndex(property, beanId, index, id);
     if (err == 0) {
         //found the record, but do nothing here
     } else if (err == -1001) {
@@ -1005,7 +1056,6 @@ int SqliteBeanDB::deleteBean_(Bean* bean)
     CHECK_CONNECTED();
 
     if (bean == nullptr) return 0;
-    if (m_sqlite3Db_ == nullptr) return -1;
 
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
@@ -1071,8 +1121,7 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
     bool indexed = false;
     const char *name = nullptr;
     int id = 0;
-
-    if (m_sqlite3Db_ == nullptr) return -1;
+    bool delayLoad = false;
 
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto out;
@@ -1084,14 +1133,7 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
         type = sqlite3_column_int(pstmt, nCol++);
         valueType = sqlite3_column_int(pstmt, nCol++);
         indexed = (sqlite3_column_int(pstmt, nCol++) == 1 ? true : false);
-        bool delayLoad = false;
-        if (valueType == Property::StringType) {
-            delayLoad = true;
-        } else {
-            if (type == Property::ArrayPrimaryType || type == Property::ArrayRelationType) {
-                delayLoad = true;
-            }
-        }
+        delayLoad = determineDelayLoad((Property::Type)type, (Property::ValueType)valueType);
         Property*  property = newProperty(name,  
             (pidType)id, 
             (Property::Type)type, 
@@ -1120,7 +1162,6 @@ int SqliteBeanDB::undefineProperty_(const char* name)
     CHECK_CONNECTED();
 
     if (name == nullptr || name[0] == 0) return 0;
-    if (m_sqlite3Db_ == nullptr) return -1;
 
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
@@ -1266,15 +1307,7 @@ int SqliteBeanDB::defineProperty_(const char* name,
         if (err != SQLITE_OK)  goto _out;
     }
 
-    if (valueType == Property::StringType) 
-        delayLoad = true;
-    else {
-        if (isArray) {
-            delayLoad = true;
-        } else {
-            delayLoad = false;
-        }
-    }
+    delayLoad = determineDelayLoad(type, valueType);
 
 _out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
@@ -1336,7 +1369,6 @@ int SqliteBeanDB::rollbackTransaction_()
 int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData)
 {
     CHECK_CONNECTED();
-    if (m_sqlite3Db_ == nullptr) return -1;
     if (data.isNull()) return -2;
 
     int err = 0;
@@ -1401,7 +1433,6 @@ _out:
 int SqliteBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& data)
 {
     CHECK_CONNECTED();
-   if (m_sqlite3Db_ == nullptr) return -1;
     
     BeanWorld *world = nullptr;
     const char* pname = nullptr;
@@ -1516,6 +1547,24 @@ int SqliteBeanDB::deleteBeanNativeData_(oidType beanId)
     CHECK_CONNECTED();
     Json::Value value = Json::Value(Json::nullValue);
     return updateBeanNativeData_(beanId, value);
+}
+
+bool SqliteBeanDB::determineDelayLoad(Property::Type type, Property::ValueType valueType)
+{
+    bool delayLoad = false;
+    if (type == Property::RelationType || 
+         type == Property::ArrayRelationType) {
+        delayLoad = false;
+    } else if (type == Property::PrimaryType) {
+        if (valueType == Property::StringType) 
+            delayLoad = true;
+        else {
+            delayLoad = false;
+        }
+    } else { //type == Property::ArrayPrimaryType
+        delayLoad = true;
+    }
+    return delayLoad;
 }
 
 }

@@ -257,6 +257,17 @@ Property* BeanWorld::getProperty(const char* name)
 }
 
 
+Property* BeanWorld::getProperty(pidType id)
+{
+    for (auto& item : m_propertyMap_) {
+        if (item.second->getId() == id) {
+            return item.second;
+        }
+    }
+    return nullptr;
+}
+
+
 const std::unordered_map<std::string, Property*>& BeanWorld::getProperties() 
 {
     return m_propertyMap_;

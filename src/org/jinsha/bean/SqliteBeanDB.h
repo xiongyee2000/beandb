@@ -77,13 +77,12 @@ private:
 
 private:
     int internalInit();
-
-private:
     const char* getDir()  {return m_dir;};
     int checkDB();
     int openDB();
     int closeDB();
-    int getIdByPropertyIndex(const char* pname, oidType sid, Json::ArrayIndex index, sqlite3_int64& id);
+    int getIdByPropertyIndex(const Property* property, oidType sid, Json::ArrayIndex index, sqlite3_int64& id) const;
+    static bool determineDelayLoad(Property::Type type, Property::ValueType valueType);
 
 
 private:

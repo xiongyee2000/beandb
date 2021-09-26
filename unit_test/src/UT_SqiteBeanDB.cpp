@@ -442,7 +442,7 @@ TEST(SqliteBeanDB, delayLoad)
 
     bean3= world->getBean(3);
     size = bean3->getArraySize(testHelper.r_array_1);
-    EXPECT_TRUE(size == 2);
+    EXPECT_TRUE(size == 4);
 
     testdb.disconnect();
 

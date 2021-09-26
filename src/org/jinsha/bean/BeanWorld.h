@@ -62,10 +62,14 @@ public:
     virtual int undefineRelation(const char* name) override {return undefineProperty(name);};
 
     /**
-     * @ref BeanDBUserIntf::getProperty()
+     * @ref BeanDBUserIntf::getProperty(const char* name)
      */
-    // virtual const Property* getProperty(const char* name) const;
     virtual Property* getProperty(const char* name) override;
+
+    /**
+     * @ref BeanDBUserIntf::getProperty(pidType pid)
+     */
+    virtual Property* getProperty(pidType id) override;
 
     /**
      * @ref BeanDBUserIntf::getProperties()

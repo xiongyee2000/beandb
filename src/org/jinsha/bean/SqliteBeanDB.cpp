@@ -11,27 +11,35 @@
 #include "jsoncpp/json/reader.h"
 #include "jsoncpp/json/writer.h"
 
-#define CHECK_CONNECTED()                 \
-    if (!connected()) {                                        \
-        elog("%s", "db not connected\n"); \
-        return -1;                                                    \
-    }
+#define CHECK_CONNECTED()                     \
+    do {                                                                        \
+        if (!connected()) {                                        \
+            elog("%s", "db not connected\n"); \
+            return -1;                                                    \
+        }                                                                          \
+    } while (0);
 
-#define SMART_ROLLBACK() \
-    if (!alreadyInTransaction) { \
-            rollbackTransaction();  \
-    }
+#define SMART_ROLLBACK()                         \
+        do {                                                                    \
+        if (!alreadyInTransaction) {                     \
+                rollbackTransaction();                      \
+        }                                                                          \
+    } while (0);
 
-#define SMART_COMMIT()           \
-    if (!alreadyInTransaction) {      \
-        err = commitTransaction(); \
-    }
+#define SMART_COMMIT()                              \
+    do {                                                                        \
+        if (!alreadyInTransaction) {                     \
+            err = commitTransaction();                \
+        }                                                                         \
+    } while (0);
 
 #define SMART_BEGIN_TRANSACTION()             \
-   alreadyInTransaction = inTransaction(); \
-    if (!alreadyInTransaction) {                                     \
-        err = beginTransaction();                                    \
-    };
+    do {                                                                                   \
+        alreadyInTransaction = inTransaction();       \
+        if (!alreadyInTransaction) {                                 \
+            err = beginTransaction();                                 \
+        };                                                                                    \
+    } while (0);
 
 static const char* STR_INT = "INT";
 static const char* STR_BIGINT = "BIGINT";
@@ -70,19 +78,6 @@ SID INTEGER NOT NULL,  \
 PID INTEGER NULL, \
 OID INTEGER NULL \
 ); ";
-
-// static const char* CREATE_STRING_TABLE =  
-//  "CREATE TABLE STABLE ( \
-// ID INTEGER PRIMARY KEY NOT NULL, \
-// VALUE TEXT NOT NULL \
-// ); ";
-
-// static const char* CREATE_NDTABLE =  
-//  "CREATE TABLE NATIVE_DATA ( \
-// ID INTEGER PRIMARY KEY NOT NULL, \
-// SID BIGINT NOT NULL, \
-// VALUE TEXT NOT NULL \
-// ); ";
 
 static const char* CREATE_TRIPLE_INDEX_SP =
 "CREATE INDEX TRIPLE_SP \
@@ -1051,43 +1046,40 @@ out:
 }
 
 
-int SqliteBeanDB::deleteBean_(Bean* bean)
+int SqliteBeanDB::deleteBean_(oidType id)
 {
     CHECK_CONNECTED();
-
-    if (bean == nullptr) return 0;
 
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
+    bool alreadyInTransaction = false;
     static const char *sql = "DELETE FROM  BEAN WHERE ID = ?;";
+
+    SMART_BEGIN_TRANSACTION();
     
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto out;
-    err = sqlite3_bind_int64(pstmt, 1, (sqlite3_int64)bean->getId());
+    err = sqlite3_bind_int64(pstmt, 1, (sqlite3_int64)id);
     if (err != SQLITE_OK) goto out;
 
 	err = sqlite3_step( pstmt );
-    if (err == SQLITE_DONE) {
-        err = 0;
-    }
+    if (err != SQLITE_DONE) goto out;
+
+    err = deleteRelationByObject(id);
+    if (err != SQLITE_DONE) goto out;
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+        SMART_ROLLBACK();
     } else {
         err = 0;
+        SMART_COMMIT();
     }
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
-
-    ////
-    //todo
-    ////
-    // bean->removeAllProperties();
-    // //handle relations: remove relation from subject that has
-    // //relation to this bean (as object)
 
     return err;
 }
@@ -1565,6 +1557,32 @@ bool SqliteBeanDB::determineDelayLoad(Property::Type type, Property::ValueType v
         delayLoad = true;
     }
     return delayLoad;
+}
+
+int SqliteBeanDB::deleteRelationByObject(oidType id)
+{
+    int err = 0;
+    sqlite3_stmt *pstmt = nullptr;
+    const char* pzTail = nullptr;
+    static const char *sql = "DELETE FROM  TRIPLE WHERE OID = ?;";
+    
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
+    if (err != SQLITE_OK) goto out;
+    err = sqlite3_bind_int64(pstmt, 1, id);
+    if (err != SQLITE_OK) goto out;
+
+	err = sqlite3_step( pstmt );
+
+out:
+    if (err != SQLITE_OK && err != SQLITE_DONE) {
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+    } else {
+        err = 0;
+    }
+    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+    return err;
 }
 
 }

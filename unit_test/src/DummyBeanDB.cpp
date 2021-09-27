@@ -51,11 +51,10 @@ int DummyBeanDB::createBean_(oidType& id)
 }
 
 
-int DummyBeanDB::deleteBean_(Bean* bean) 
+int DummyBeanDB::deleteBean_(oidType id) 
 {
-    oidType beanId = bean->getId();
-    m_dataMap_.erase(beanId);
-    m_nativeDataMap_.erase(beanId);
+    m_dataMap_.erase(id);
+    m_nativeDataMap_.erase(id);
     return 0;
 }
 

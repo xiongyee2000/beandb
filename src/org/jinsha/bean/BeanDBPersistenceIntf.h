@@ -177,10 +177,10 @@ public:
     /**
      * Remove a single bean from the storage.
      * 
-     * @param bean the bean to be removed
+     * @param id the id of the bean to be removed
      * @return 0 for success, or an error code
      */
-    virtual int deleteBean_(Bean* bean) = 0;
+    virtual int deleteBean_(oidType id) = 0;
 
     /**
      * Load bean property. This method is used in case "delay-load"

@@ -29,7 +29,7 @@ public:
     virtual int loadProperties_(std::unordered_map<std::string, Property*>& properties) const override;
 
     virtual int createBean_(oidType& id) override;
-    virtual int deleteBean_(Bean* bean) override;
+    virtual int deleteBean_(oidType id) override;
 
     virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) override;
     virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData) override;

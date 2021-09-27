@@ -150,7 +150,7 @@ int BeanWorld::deleteBean(Bean* bean)
     if (bean == nullptr) return 0;
     
     int err = 0;
-    err = m_db_->deleteBean_(bean);
+    err = m_db_->deleteBean_(bean->getId());
     if (!err) {
         removeBean(bean->getId());
     }

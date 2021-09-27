@@ -46,7 +46,7 @@ private:
     // virtual Bean* getBean(oidType id) override;
     virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) override;
     virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData) override;
-    virtual int deleteBean_(Bean* bean) override;
+    virtual int deleteBean_(oidType id) override;
     virtual int loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value) override;
     virtual int insertBeanProperty_(oidType beanId, 
         const Property* property, 
@@ -76,13 +76,14 @@ private:
     virtual int rollbackTransaction_() override;
 
 private:
+    static bool determineDelayLoad(Property::Type type, Property::ValueType valueType);
     int internalInit();
     const char* getDir()  {return m_dir;};
     int checkDB();
     int openDB();
     int closeDB();
     int getIdByPropertyIndex(const Property* property, oidType sid, Json::ArrayIndex index, sqlite3_int64& id) const;
-    static bool determineDelayLoad(Property::Type type, Property::ValueType valueType);
+    int deleteRelationByObject(oidType id);    
 
 
 private:

@@ -138,8 +138,10 @@ int DummyBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pro
 }
 
 
-int DummyBeanDB::undefineProperty_(const char* name)
+int DummyBeanDB::undefineProperty_(Property* property)
 {
+    if (property == nullptr) return 0;
+    const auto& name = property->getName();
     auto iter = m_properties_.find(name);
     if (iter != m_properties_.end()) {
         //todo: delete iter->second

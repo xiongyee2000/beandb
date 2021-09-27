@@ -36,7 +36,7 @@ private:
         Property::ValueType valueType, 
         pidType& pid,
         bool& delayLoad) override;
-    virtual int undefineProperty_(const char* name) override;
+    virtual int undefineProperty_(Property* property) override;
 
     virtual int loadProperties_(std::unordered_map<std::string, Property*>& properties) const override;
 
@@ -84,6 +84,7 @@ private:
     int closeDB();
     int getIdByPropertyIndex(const Property* property, oidType sid, Json::ArrayIndex index, sqlite3_int64& id) const;
     int deleteRelationByObject(oidType id);    
+    int deletePropertyFromAllBeans(Property* property);
 
 
 private:

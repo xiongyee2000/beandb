@@ -54,12 +54,7 @@ public:
     /**
      * @ref BeanDBUserIntf::undefineProperty()
      */
-     virtual int undefineProperty(const char* name) override;
-
-    /**
-     * @ref BeanDBUserIntf::undefineRelation()
-     */
-    virtual int undefineRelation(const char* name) override {return undefineProperty(name);};
+     virtual int undefineProperty(Property* property) override;
 
     /**
      * @ref BeanDBUserIntf::getProperty(const char* name)

@@ -176,9 +176,8 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.hasProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == Json::Value::minInt64);
 
-    world->undefineProperty("p1");
+    world->undefineProperty(testHelper.p1);
     testHelper.p1 = world->defineProperty("p1", Property::UIntType);
-
 
     err = bean.setProperty(testHelper.p1, (Json::UInt)1);
     EXPECT_TRUE(err == 0);
@@ -200,7 +199,7 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.hasProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == Json::Value::maxUInt64);
 
-    world->undefineProperty("p1");
+    world->undefineProperty(testHelper.p1);
     testHelper.p1 = world->defineProperty("p1", Property::RealType);
 
     err = bean.setProperty(testHelper.p1, 1.1f);
@@ -220,7 +219,7 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.hasProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == 8.8);
 
-    world->undefineProperty("p1");
+    world->undefineProperty(testHelper.p1);
     testHelper.p1 = world->defineProperty("p1", Property::StringType);
 
 
@@ -238,7 +237,7 @@ TEST(Bean, property)
     EXPECT_TRUE(value == "str2");
 
     bean.setProperty(testHelper.p1, "v1");
-    world->undefineProperty("p2");
+    world->undefineProperty(testHelper.p2);
     testHelper.p2 = world->defineProperty("p2", Property::StringType);
     err = bean.setProperty(testHelper.p2, "v2");
     EXPECT_TRUE(err == 0);
@@ -255,7 +254,7 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.getMemberNames().size() == 0);
     EXPECT_TRUE(bean.getProperty(testHelper.p2).isNull());
 
-    world->undefineProperty("p1");
+    world->undefineProperty(testHelper.p1);
     testHelper.p1 = world->defineProperty("p1", Property::BoolType);
     err = bean.setProperty(testHelper.p1, true);
     EXPECT_TRUE(err == 0);

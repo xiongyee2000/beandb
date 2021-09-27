@@ -931,16 +931,18 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
         return err;
     }
 
-    if (data.isMember(pname)) {
-        data.removeMember(pname);
-        err = saveBeanBase_(beanId, data, nativeData);
-        if (err) {
-            elog("Failed to insert bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
+    if (!property->isRelation()) {
+        if (data.isMember(pname)) {
+            data.removeMember(pname);
+            err = saveBeanBase_(beanId, data, nativeData);
+            if (err) {
+                elog("Failed to insert bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
+                goto out;
+            }
+        } else {
+            wlog("The bean has no such property to delete (beanId=%llu, property name=%s) \n ", beanId, pname);
             goto out;
         }
-    } else {
-        wlog("The bean has no such property to delete (beanId=%llu, property name=%s) \n ", beanId, pname);
-        goto out;
     }
 
     if (property->isRelation()) {
@@ -1149,21 +1151,23 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
 }
 
 
-int SqliteBeanDB::undefineProperty_(const char* name)
+int SqliteBeanDB::undefineProperty_(Property* property)
 {
     CHECK_CONNECTED();
 
-    if (name == nullptr || name[0] == 0) return 0;
+    if (property == nullptr) return 0;
 
     int err = 0;
+    const char* name = property->getName().c_str();
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     char* errMsg = nullptr;
     bool alreadyInTransaction = false;
     char buff[256]{0};
     int buffSize = sizeof(buff);
-    static const char *sql = "DELETE FROM  PROPERTY WHERE NAME = ?;";
-    static const char drop_table[] =   "DROP TABLE p_%s; ";
+    static const char *sql_delete_property = "DELETE FROM  PROPERTY WHERE NAME = ?;";
+    static const char *sql_delete_rtable = "DELETE FROM  TRIPLE WHERE PID = %d;";
+    static const char drop_ptable[] =   "DROP TABLE p_%s; ";
     // static const char drop_index[] =   "DROP INDEX p_%s_index; ";
 
     SMART_BEGIN_TRANSACTION();
@@ -1172,23 +1176,25 @@ int SqliteBeanDB::undefineProperty_(const char* name)
         return err;
     }
 
-	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
+    err = deletePropertyFromAllBeans(property);
+    if (err != 0) goto _out;
+
+    if (property->isRelation()) {
+        // snprintf(buff, buffSize, sql_delete_rtable, property->getId());
+        // err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
+        // if (err != SQLITE_OK) goto _out;
+    } else {
+        snprintf(buff, buffSize, drop_ptable, name);
+        err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
+        if (err != SQLITE_OK) goto _out;
+    }
+    
+	err = sqlite3_prepare_v2(m_sqlite3Db_, sql_delete_property, strlen(sql_delete_property), &pstmt,nullptr);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_text(pstmt, 1, name, -1, nullptr);
     if (err != SQLITE_OK) goto _out;
 	err = sqlite3_step( pstmt );
     if (err != SQLITE_DONE) goto _out;
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-
-    snprintf(buff, buffSize, drop_table, name);
-    err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
-    if (err != SQLITE_OK) goto _out;
-    // snprintf(buff, buffSize, drop_index, name);
-    // err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
-    // if (err != SQLITE_OK) goto _out;
-
-    //todo: remove property value from beans
 
 _out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
@@ -1578,6 +1584,76 @@ out:
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     } else {
         err = 0;
+    }
+    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+    return err;
+}
+
+int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
+{
+    int err = 0;
+    sqlite3_stmt *pstmt = nullptr;
+    const char* pzTail = nullptr;
+    bool alreadyInTransaction = false;
+    const char* pname = property->getName().c_str();
+    static const char SELECT_PTABLE[] = "SELECT SID from p_%s";
+    static const char SELECT_TRIPLE[] = "SELECT SID from TRIPLE WHERE PID = %d;";
+    char buff[128]{0};
+    const char* sql = buff;
+    const int COUNT = 1;
+    int countdown = 0;
+    oidType sid = 0;
+    std::list<oidType> sidList;
+    bool finished = false;
+
+    SMART_BEGIN_TRANSACTION();
+    if (err) {
+        elog("Failed in deletePropertyFromAllBeans() (property name=%s) \n", pname);
+        return err;
+    }
+
+    if (property->isRelation()) {
+        snprintf(buff, sizeof(buff), SELECT_TRIPLE, property->getId());
+    } else {
+        snprintf(buff, sizeof(buff), SELECT_PTABLE, pname);
+    }
+
+    while (!finished) {
+        err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
+        if (err != SQLITE_OK) goto out;
+
+        countdown = COUNT;
+        sidList.clear();
+        while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+            sid = sqlite3_column_int64(pstmt, 0);
+            sidList.push_back(sid);
+            countdown--;
+            if (countdown == 0) break;
+        }
+        if (err != SQLITE_ROW) finished = true;
+
+        sqlite3_clear_bindings(pstmt);
+        sqlite3_reset(pstmt);
+        sqlite3_finalize(pstmt);
+        pstmt = nullptr;
+        
+        //delete bean property
+        for (auto& item : sidList) {
+            err = deleteBeanProperty_(item, property);
+            if (err) goto out;
+        }
+
+    }
+
+out:
+    if (err != SQLITE_OK && err != SQLITE_DONE) {
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+        SMART_ROLLBACK();
+    } else {
+        err = 0;
+        SMART_COMMIT();
     }
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);

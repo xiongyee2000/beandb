@@ -193,7 +193,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
     bean1.createArrayProperty(pArray_1);
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    world.undefineProperty("p_array_int");
+    world.undefineProperty(pArray_1);
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
@@ -219,7 +219,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
     bean1.createArrayRelation(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    world.undefineRelation("r_array_1");
+    world.undefineRelation(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 

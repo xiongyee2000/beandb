@@ -24,7 +24,7 @@ public:
         Property::ValueType valueType, 
         pidType& pid,
         bool& delayLoad) override;
-    virtual int undefineProperty_(const char* name) override;
+    virtual int undefineProperty_(Property* property) override;
 
     virtual int loadProperties_(std::unordered_map<std::string, Property*>& properties) const override;
 

@@ -137,10 +137,10 @@ public:
      * - CAUTION: the property value will also be removed from all beans 
      *   that have this property.
      * 
-     * @param name the name of property
+     * @param property the property to be undefined
      * @return 0 on success, or an error code
      */
-    virtual int undefineProperty_(const char* name) = 0;
+    virtual int undefineProperty_(Property* propety) = 0;
 
     /**
      * Load all defined properties from storage to memory.

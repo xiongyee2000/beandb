@@ -126,7 +126,7 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     DummyBeanDB dummyDB;
     BeanWorld world((AbstractBeanDB&)dummyDB);
     Value value;
-    const Property* property = nullptr;
+    Property* property = nullptr;
 
     property = world.defineProperty(nullptr, Property::IntType);
     EXPECT_TRUE(property == nullptr);
@@ -160,7 +160,7 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     EXPECT_TRUE(property == nullptr);
     property = world.defineArrayRelation("p1");
     EXPECT_TRUE(property == nullptr);
-    world.undefineProperty("p1");
+    world.undefineProperty(world.getProperty("p1"));
     EXPECT_TRUE(nullptr == world.getProperty("p1"));
 
     property = world.defineArrayProperty("p1", Property::IntType);
@@ -175,7 +175,7 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     EXPECT_TRUE(property == nullptr);
     property = world.defineArrayRelation("p1");
     EXPECT_TRUE(property == nullptr);
-    world.undefineProperty("p1");
+    world.undefineProperty(world.getProperty("p1"));
     EXPECT_TRUE(nullptr == world.getProperty("p1"));
 
     property = world.defineRelation("p1");
@@ -188,7 +188,7 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     EXPECT_TRUE(property == nullptr);
     property = world.defineArrayRelation("p1");
     EXPECT_TRUE(property == nullptr);
-    world.undefineProperty("p1");
+    world.undefineProperty(world.getProperty("p1"));
     EXPECT_TRUE(nullptr == world.getProperty("p1"));
 
     property = world.defineArrayRelation("p1");
@@ -201,7 +201,7 @@ TEST(BeanWorld, defineProperty_undefineProperty)
     EXPECT_TRUE(property == nullptr);
     property = world.defineRelation("p1");
     EXPECT_TRUE(property == nullptr);
-    world.undefineProperty("p1");
+    world.undefineProperty(world.getProperty("p1"));
     EXPECT_TRUE(nullptr == world.getProperty("p1"));
 }
 
@@ -269,10 +269,10 @@ TEST(BeanWorld, getProperties)
     bean1->setProperty(p1, 1);
     bean2->setProperty(p1, 2);
 
-    world->undefineProperty("p1");
+    world->undefineProperty(p1);
     EXPECT_TRUE(world->getProperties().size() == 1);
     EXPECT_TRUE(bean1->hasProperty(p1) == false);
-    world->undefineProperty("p2");
+    world->undefineProperty(p2);
     EXPECT_TRUE(world->getProperties().size() == 0);
     EXPECT_TRUE(bean2->hasProperty(p1) == false);
     delete world;

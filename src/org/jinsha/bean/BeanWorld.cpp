@@ -221,20 +221,20 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
  }
 
 
-int BeanWorld::undefineProperty(const char* name)
+int BeanWorld::undefineProperty(Property* property)
 {
-    if (name == nullptr) return 0;
-    if (name[0] == 0) return 0;
+    if (property == nullptr) return 0;
+    const auto& name = property->getName();
+    auto iter = m_propertyMap_.find(name);
+    if (iter == m_propertyMap_.end()) return 0;
 
-    if (0 != m_db_->undefineProperty_(name)) {
+    if (0 != m_db_->undefineProperty_(property)) {
         elog("Failed to undefine property %s in database.", name);
         return -1;
     }
-    auto iter = m_propertyMap_.find(name);
-    if (iter == m_propertyMap_.end()) return 0;
-    Property* property = iter->second;
-    delete property;
+
     m_propertyMap_.erase(iter);
+    delete property;
     return 0;
 }
 

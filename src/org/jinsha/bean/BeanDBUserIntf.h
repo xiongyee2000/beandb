@@ -86,10 +86,10 @@ public:
      *    a relation, or an array relation;
      * - CAUTION: All beans that have this property will remove the property with this id.
      * 
-     * @param name the name of property
+     * @param property the property to be undefined
      * @return 0 on success, or an error code
      */
-     virtual int undefineProperty(const char* name) = 0;
+    virtual int undefineProperty(Property* property) = 0;
 
     /**
      * Undefine a relation.
@@ -97,10 +97,10 @@ public:
      * Notes:
      * - Same as undefineProperty() (just an alias).
      * 
-     * @param name the name of relation
+     * @param relation the relation to be undefined
      * @return 0 on success, or an error code
      */
-    virtual int undefineRelation(const char* name) {return undefineProperty(name);};
+    virtual int undefineRelation(Property* relation) {return undefineProperty(relation);};
 
     /**
      * Get property/relation/array property/array relation by name.

@@ -93,6 +93,7 @@ private:
     sqlite3* m_sqlite3Db_;
     // int m_status = INIT;
     bool m_initialized;
+    bool m_deletePropertyFromBeans_;
 
 };
 

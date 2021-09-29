@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <unistd.h>
 #include <string.h>
+#include <set>
 #include <sqlite3.h>
 #include "jsoncpp/json/value.h"
 #include "jsoncpp/json/reader.h"
@@ -96,6 +97,7 @@ SqliteBeanDB::SqliteBeanDB( const char* dir)
     , m_dir(dir)
     ,m_sqlite3Db_(nullptr)
     ,m_initialized(false)
+    ,m_deletePropertyFromBeans_(false)
 {
     if (dir == nullptr ||  dir[0] == 0) return;
     m_dbFullPath.append(m_dir).append("/").append(DB_PATH);
@@ -773,7 +775,9 @@ int SqliteBeanDB::getIdByPropertyIndex(const Property* property, oidType sid, Js
         err = -1001;
 
 out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
+    if (err == -1001) {
+        //do nothing
+    } else if (err != SQLITE_OK && err != SQLITE_DONE) {
         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
     }
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
@@ -957,17 +961,20 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
         nCol = 1;
         err = sqlite3_bind_int64(pstmt, nCol++, sid);
         if (err != SQLITE_OK) goto out;
+        err = sqlite3_step(pstmt);
+        if (err != SQLITE_OK) goto out;
     } else {
-        snprintf(buff, sizeof(buff), "DELETE FROM p_%s WHERE SID = ?;", pname);
-        err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-        if (err != SQLITE_OK) goto out;
-        nCol = 1;
-        err = sqlite3_bind_int64(pstmt, nCol++, sid);
-        if (err != SQLITE_OK) goto out;
+        if (!m_deletePropertyFromBeans_) {
+            snprintf(buff, sizeof(buff), "DELETE FROM p_%s WHERE SID = ?;", pname);
+            err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+            if (err != SQLITE_OK) goto out;
+            nCol = 1;
+            err = sqlite3_bind_int64(pstmt, nCol++, sid);
+            if (err != SQLITE_OK) goto out;
+            err = sqlite3_step(pstmt);
+            if (err != SQLITE_OK) goto out;
+        }
     }
-
-    err = sqlite3_step(pstmt);
-    if (err != SQLITE_OK) goto out;
 
 out:
     if (err != SQLITE_OK && err != SQLITE_DONE) {
@@ -1185,9 +1192,9 @@ int SqliteBeanDB::undefineProperty_(Property* property)
     if (err != 0) goto _out;
 
     if (property->isRelation()) {
-        // snprintf(buff, buffSize, sql_delete_rtable, property->getId());
-        // err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
-        // if (err != SQLITE_OK) goto _out;
+        snprintf(buff, buffSize, sql_delete_rtable, property->getId());
+        err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
+        if (err != SQLITE_OK) goto _out;
     } else {
         snprintf(buff, buffSize, drop_ptable, name);
         err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
@@ -1621,9 +1628,8 @@ int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
     char buff[128]{0};
     const char* sql = buff;
     const int COUNT = 128; //todo: what should be the best optimzed number?
-    int countdown = 0;
     oidType sid = 0;
-    std::list<oidType> sidList;
+    std::set<oidType> sids;
     bool finished = false;
 
     SMART_BEGIN_TRANSACTION();
@@ -1642,13 +1648,11 @@ int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
         err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
         if (err != SQLITE_OK) goto out;
 
-        countdown = COUNT;
-        sidList.clear();
+        sids.clear();
         while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
             sid = sqlite3_column_int64(pstmt, 0);
-            sidList.push_back(sid);
-            countdown--;
-            if (countdown == 0) break;
+            sids.insert(sid);
+            if (sids.size() >= COUNT) break;
         }
         if (err != SQLITE_ROW) finished = true;
 
@@ -1658,10 +1662,12 @@ int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
         pstmt = nullptr;
         
         //delete bean property
-        for (auto& item : sidList) {
+        m_deletePropertyFromBeans_ = true;
+        for (auto& item : sids) {
             err = deleteBeanProperty_(item, property);
             if (err) goto out;
         }
+        m_deletePropertyFromBeans_ = false;
 
     }
 

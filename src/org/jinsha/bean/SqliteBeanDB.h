@@ -29,7 +29,7 @@ public:
      * 
      * @return the directory
      */
-    const char* getDir() const  {return m_dir_;};
+    const std::string& getDir() const  {return m_dir_;};
 
 
 private:
@@ -165,7 +165,7 @@ private:
 
 
 private:
-    int internalInit();
+    int initDB();
     int checkDB();
     int openDB();
     int closeDB();
@@ -176,7 +176,7 @@ private:
 
 
 private:
-    const char* m_dir_;
+    std::string m_dir_;
     std::string m_dbFullPath_;
     sqlite3* m_sqlite3Db_;
     bool m_initialized_;

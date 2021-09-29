@@ -33,14 +33,14 @@ TEST(SqliteBeanDB, constuctor_destructor)
     SqliteBeanDB* testdb;
     
     testdb = new SqliteBeanDB(testdbDir);
-    EXPECT_TRUE(testdb->getDir() == testdbDir);
-    EXPECT_TRUE(testdb->checkDB() != 0);
+    EXPECT_TRUE(testdb->getDir() == ".");
+    EXPECT_TRUE(testdb->checkDB() == 0);
     delete testdb;
 
     testdbDir = "";
     testdb = new SqliteBeanDB(testdbDir);
-    EXPECT_TRUE(testdb->getDir() == testdbDir);
-    EXPECT_TRUE(testdb->checkDB() != 0);
+    EXPECT_TRUE(testdb->getDir() == ".");
+    EXPECT_TRUE(testdb->checkDB() == 0);
     delete testdb;
 
     testdbDir = "invalid";

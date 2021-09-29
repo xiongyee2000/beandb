@@ -1,6 +1,4 @@
-delete related relation when a bean is deleted
-
-delete property of bean when a property is undefined
+check world is the same (for bean/world methods)
 
 well define error codes
 

@@ -95,15 +95,24 @@ ON " TTABLE "(OID, SID); ";
 
 SqliteBeanDB::SqliteBeanDB( const char* dir) 
     : AbstractBeanDB()
-    , m_dir_(dir)
     ,m_sqlite3Db_(nullptr)
     ,m_initialized_(false)
     ,m_deletePropertyFromBeans_(false)
 {
-    if (dir == nullptr ||  dir[0] == 0) return;
+    int err = 0;
+    if (dir == nullptr ||  dir[0] == 0) 
+        m_dir_ = ".";
+    else 
+        m_dir_ = dir;
     m_dbFullPath_.append(m_dir_).append("/").append(DB_FNAME);
-    if (checkDB() >= 0)
-        m_initialized_ = internalInit() == 0 ? true : false;
+    err = checkDB();
+    if (err == 0) {
+        m_initialized_ = true;
+    } else if (err == 1) {
+        m_initialized_ = initDB() == 0 ? true : false;
+    } else {
+        m_initialized_ = false;
+    }
 }
 
 
@@ -135,23 +144,21 @@ int SqliteBeanDB::disconnect_()
 
 int SqliteBeanDB::checkDB()
 {
-    if (m_dir_ == nullptr || m_dir_[0] == 0) return -1;
-    if (access(m_dir_, 0) != 0) return -1; //dir does not exist
-    if (access(m_dir_, 7)) return -2; //not enough permission on this dir
+    if (m_dir_.empty()) return -1;
+    if (access(m_dir_.c_str(), 0) != 0) return -1; //dir does not exist
+    if (access(m_dir_.c_str(), 7)) return -2; //not enough permission on this dir
 
     if (access(m_dbFullPath_.c_str(), 0) != 0) return 1; //db file does not exist
-    if (access(m_dbFullPath_.c_str(), 6)) return 2; //not enough permission on the db file
+    // if (access(m_dbFullPath_.c_str(), 6)) return 2; //not enough permission on the db file
 
     //todo: check database schema, data consistency etc. in future
     return 0;
 }
 
 
-int SqliteBeanDB::internalInit()
+int SqliteBeanDB::initDB()
 {
     int err = 0;
-
-    if (access(m_dbFullPath_.c_str(), 0) == 0) return 0; //db file exists
 
     if (openDB()  !=  0) {
         elog("Failed to create database %s.\n", m_dbFullPath_.c_str());
@@ -214,15 +221,6 @@ int SqliteBeanDB::internalInit()
         return err;
     } 
     ilog("%s", "Index TRIPLE_OS created successfully. \n");
-
-    // sql = CREATE_STRING_TABLE;
-    // err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
-    // if( err != SQLITE_OK ){
-    //     elog("SQL error: %s\n", zErrMsg);
-    //     sqlite3_free(zErrMsg);
-    //     return err;
-    // }
-    // ilog("%s", "STABLE created successfully\n");
     
     closeDB();
     return 0;
@@ -231,17 +229,40 @@ int SqliteBeanDB::internalInit()
 
 int SqliteBeanDB::reInit_()
 {
-    if (m_dir_ == nullptr || m_dir_[0] == 0) return -1;
-
     int err = 0;
-    err = closeDB();
-    if (err != 0) return err;
-
     char buff[256] = {0};
-    snprintf(buff, 256, "rm -rf %s/*.db", m_dir_ );
-    //todo: check if command is executed successfully
-    system(buff);
-    err = internalInit();
+
+    if (access(m_dir_.c_str(), 0) != 0)  { //dir does not exist
+        elog("Failed to reinit db for %s can not be accessed. \n",  m_dir_.c_str());
+        return -1;
+    }
+    if (access(m_dir_.c_str(), 7)) { //not enough permission on this dir
+        elog("Failed to reinit db for lack of write permission to %s. \n",  m_dir_.c_str());
+        return -2; 
+    }
+
+    if (access(m_dbFullPath_.c_str(), 0) == 0)  //db file exists
+    {
+        // if (access(m_dbFullPath_.c_str(), 6)) { //not enough permission on the db file
+        //     elog("Failed to reinit db for lack of permisson to write %s \n",  m_dbFullPath_.c_str());
+        //     return 2;
+        // }
+        if (m_sqlite3Db_ != nullptr) {
+            err = closeDB();
+            if (err) {
+                elog("%s", "Failed to reinit db for it cannot be closed. \n");
+                return err;
+            }
+        }
+        snprintf(buff, 256, "rm -rf \"%s\"", m_dbFullPath_.c_str() );
+        err = system(buff);
+        if (err) {
+            elog("Failed to remove %s for reinit. (err=%d)\n",  m_dbFullPath_.c_str(), err);
+            return err;
+        }
+    }
+
+    err = initDB();
     m_initialized_ = err == 0 ? true : false;
     return err;
 }

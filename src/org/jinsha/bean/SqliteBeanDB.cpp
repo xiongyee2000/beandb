@@ -52,12 +52,13 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
-const char* SqliteBeanDB::DB_PATH  =  "beandb.db";
-// const char* SqliteBeanDB::PTABLE_NAME = "PTABLE";
-// const char* SqliteBeanDB::OTABLE_NAME = "BEAN";
+#define DB_FNAME  "beandb.db"
+#define PTABLE "PROPERTIES"
+#define BTABLE "BEANS"
+#define TTABLE "TRIPLES"
 
-static const char* CREATE_PROPERTY_TABLE =  
- "CREATE TABLE PROPERTY ( \
+static const char* CREATE_PTABLE =  
+ "CREATE TABLE " PTABLE " ( \
 ID INTEGER PRIMARY KEY NOT NULL, \
 NAME VARCHAR(64) UNIQUE NOT NULL, \
 PTYPE INT NOT NULL, \
@@ -65,44 +66,44 @@ VTYPE INT NOT NULL, \
 INDEXED INT8 NOT NULL \
 ); ";
 
-static const char* CREATE_BEAN_TABLE =  
- "CREATE TABLE BEAN ( \
+static const char* CREATE_BTABLE =  
+ "CREATE TABLE " BTABLE " ( \
 ID INTEGER PRIMARY KEY NOT NULL, \
 VALUE TEXT DEFALT NULL,  \
 NATIVE_DATA DEFALT NULL \
 ); ";
 
-static const char* CREATE_TRIPLE_TABLE =  
- "CREATE TABLE TRIPLE ( \
+static const char* CREATE_TTABLE =  
+ "CREATE TABLE " TTABLE " ( \
 ID INTEGER PRIMARY KEY NOT NULL, \
 SID INTEGER NOT NULL,  \
 PID INTEGER NULL, \
 OID INTEGER NULL \
 ); ";
 
-static const char* CREATE_TRIPLE_INDEX_SP =
-"CREATE INDEX TRIPLE_SP \
-ON TRIPLE(SID, PID); ";
+static const char* CREATE_INDEX_TRIPLES_SP =
+"CREATE INDEX INDEX_TRIPLES_SP \
+ON " TTABLE "(SID, PID); ";
 
-static const char* CREATE_TRIPLE_INDEX_PO =
-"CREATE INDEX TRIPLE_PO \
-ON TRIPLE(PID, OID); ";
+static const char* CREATE_INDEX_TRIPLES_PO =
+"CREATE INDEX INDEX_TRIPLES_PO \
+ON " TTABLE "(PID, OID); ";
 
-static const char* CREATE_TRIPLE_INDEX_OS =
-"CREATE INDEX TRIPLE_OS \
-ON TRIPLE(OID, SID); ";
+static const char* CREATE_INDEX_TRIPLES_OS =
+"CREATE INDEX INDEX_TRIPLES_OS \
+ON " TTABLE "(OID, SID); ";
 
 SqliteBeanDB::SqliteBeanDB( const char* dir) 
     : AbstractBeanDB()
-    , m_dir(dir)
+    , m_dir_(dir)
     ,m_sqlite3Db_(nullptr)
-    ,m_initialized(false)
+    ,m_initialized_(false)
     ,m_deletePropertyFromBeans_(false)
 {
     if (dir == nullptr ||  dir[0] == 0) return;
-    m_dbFullPath.append(m_dir).append("/").append(DB_PATH);
+    m_dbFullPath_.append(m_dir_).append("/").append(DB_FNAME);
     if (checkDB() >= 0)
-        m_initialized = internalInit() == 0 ? true : false;
+        m_initialized_ = internalInit() == 0 ? true : false;
 }
 
 
@@ -115,7 +116,7 @@ SqliteBeanDB::~SqliteBeanDB()
 
 int SqliteBeanDB::connect_()
 {
-    if (!m_initialized) return -1;
+    if (!m_initialized_) return -1;
     if (m_sqlite3Db_ != nullptr) return 0;
     int err = 0;
     err = openDB();
@@ -134,12 +135,12 @@ int SqliteBeanDB::disconnect_()
 
 int SqliteBeanDB::checkDB()
 {
-    if (m_dir == nullptr || m_dir[0] == 0) return -1;
-    if (access(m_dir, 0) != 0) return -1; //dir does not exist
-    if (access(m_dir, 7)) return -2; //not enough permission on this dir
+    if (m_dir_ == nullptr || m_dir_[0] == 0) return -1;
+    if (access(m_dir_, 0) != 0) return -1; //dir does not exist
+    if (access(m_dir_, 7)) return -2; //not enough permission on this dir
 
-    if (access(m_dbFullPath.c_str(), 0) != 0) return 1; //db file does not exist
-    if (access(m_dbFullPath.c_str(), 6)) return 2; //not enough permission on the db file
+    if (access(m_dbFullPath_.c_str(), 0) != 0) return 1; //db file does not exist
+    if (access(m_dbFullPath_.c_str(), 6)) return 2; //not enough permission on the db file
 
     //todo: check database schema, data consistency etc. in future
     return 0;
@@ -150,44 +151,44 @@ int SqliteBeanDB::internalInit()
 {
     int err = 0;
 
-    if (access(m_dbFullPath.c_str(), 0) == 0) return 0; //db file exists
+    if (access(m_dbFullPath_.c_str(), 0) == 0) return 0; //db file exists
 
     if (openDB()  !=  0) {
-        elog("Failed to create database %s.\n", m_dbFullPath.c_str());
+        elog("Failed to create database %s.\n", m_dbFullPath_.c_str());
         return -1;
     } 
 
     char *zErrMsg = nullptr;
     const char *sql = nullptr;
 
-    sql = CREATE_PROPERTY_TABLE;
+    sql = CREATE_PTABLE;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
         elog("SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
         return err;
     } 
-    ilog("%s", "Table PROPERTY created successfully. \n");
+    ilog("%s", "Table " PTABLE " created successfully. \n");
 
-    sql = CREATE_BEAN_TABLE;
+    sql = CREATE_BTABLE;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
         elog("SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
         return err;
     }
-    ilog("%s", "Table BEAN created successfully. \n");
+    ilog("%s", "Table " BTABLE " created successfully. \n");
     
-    sql = CREATE_TRIPLE_TABLE;
+    sql = CREATE_TTABLE;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
         elog("SQL error: %s\n", zErrMsg);
         sqlite3_free(zErrMsg);
         return err;
     } 
-    ilog("%s", "Table TRIPLE created successfully. \n");
+    ilog("%s", "Table " TTABLE " created successfully. \n");
 
-    sql = CREATE_TRIPLE_INDEX_SP;
+    sql = CREATE_INDEX_TRIPLES_SP;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
         elog("SQL error: %s\n", zErrMsg);
@@ -196,7 +197,7 @@ int SqliteBeanDB::internalInit()
     } 
     ilog("%s", "Index TRIPLE_SP created successfully. \n");
 
-    sql = CREATE_TRIPLE_INDEX_PO;
+    sql = CREATE_INDEX_TRIPLES_PO;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
         elog("SQL error: %s\n", zErrMsg);
@@ -205,7 +206,7 @@ int SqliteBeanDB::internalInit()
     } 
     ilog("%s", "Index TRIPLE_PO created successfully. \n");
 
-    sql = CREATE_TRIPLE_INDEX_OS;
+    sql = CREATE_INDEX_TRIPLES_OS;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
         elog("SQL error: %s\n", zErrMsg);
@@ -230,18 +231,18 @@ int SqliteBeanDB::internalInit()
 
 int SqliteBeanDB::reInit_()
 {
-    if (m_dir == nullptr || m_dir[0] == 0) return -1;
+    if (m_dir_ == nullptr || m_dir_[0] == 0) return -1;
 
     int err = 0;
     err = closeDB();
     if (err != 0) return err;
 
     char buff[256] = {0};
-    snprintf(buff, 256, "rm -rf %s/*.db", m_dir );
+    snprintf(buff, 256, "rm -rf %s/*.db", m_dir_ );
     //todo: check if command is executed successfully
     system(buff);
     err = internalInit();
-    m_initialized = err == 0 ? true : false;
+    m_initialized_ = err == 0 ? true : false;
     return err;
 }
 
@@ -250,7 +251,7 @@ int SqliteBeanDB::openDB()
 {
     int err = 0;
     if (m_sqlite3Db_ == nullptr)  {
-        err = sqlite3_open(m_dbFullPath.c_str(), &m_sqlite3Db_);
+        err = sqlite3_open(m_dbFullPath_.c_str(), &m_sqlite3Db_);
         if( err )  {
             elog("Failed to open database: %s\n", sqlite3_errmsg(m_sqlite3Db_));
             m_sqlite3Db_ = nullptr;
@@ -277,7 +278,7 @@ int SqliteBeanDB::createBean_(oidType &beanId)
 {
     CHECK_CONNECTED();
 
-    static const char sql[] = "INSERT INTO BEAN VALUES(?, ?, ?) ;";
+    static const char sql[] = "INSERT INTO " BTABLE " VALUES(?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
     int err = 0;
 
@@ -321,9 +322,9 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value*
     int size = 0;
     Property* property = nullptr;
     const char* valueStr = nullptr;
-    static const char SELECT_BEAN_1[] = "SELECT VALUE from BEAN WHERE ID = ?;";
-    static const char SELECT_BEAN_2[] = "SELECT VALUE, NATIVE_DATA from BEAN WHERE ID = ?;";
-    static const char SELECT_TRIPLE[] = "SELECT PID, OID from TRIPLE WHERE SID = ?;";
+    static const char SELECT_BEAN_1[] = "SELECT VALUE from " BTABLE " WHERE ID = ?;";
+    static const char SELECT_BEAN_2[] = "SELECT VALUE, NATIVE_DATA from " BTABLE " WHERE ID = ?;";
+    static const char SELECT_TRIPLE[] = "SELECT PID, OID from " TTABLE " WHERE SID = ?;";
     Json::Reader reader; 
     Json::Value jsonBean;  
     bool found = false;
@@ -457,7 +458,7 @@ _out:
 //     Property* property = nullptr;
 //     sqlite3_int64 value = 0;
 //     const char* valueStr = nullptr;
-//     static const char sql[] = "SELECT VALUE from BEAN WHERE ID = ?;";
+//     static const char sql[] = "SELECT VALUE from " BTABLE " WHERE ID = ?;";
 //     Json::Reader reader; 
 //     Json::Value jsonBean;
 //     int err = 0;
@@ -527,7 +528,7 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     }
 
     if (property->isRelation()) {
-        snprintf(buff, 64, "SELECT OID from TRIPLE WHERE SID = ? AND PID = %d;", 
+        snprintf(buff, 64, "SELECT OID from " TTABLE " WHERE SID = ? AND PID = %d;", 
             property->getId());
     } else {
         snprintf(buff, 64, "SELECT VALUE from p_%s WHERE SID = ?;", 
@@ -672,7 +673,7 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
     }
 
     if (property->isRelation()) {
-        sql = "INSERT INTO TRIPLE  (ID, SID, PID, OID) VALUES(?, ?, ?, ?) ;";
+        sql = "INSERT INTO " TTABLE "  (ID, SID, PID, OID) VALUES(?, ?, ?, ?) ;";
        err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
         if (err != SQLITE_OK) goto out;
         nCol = 1;
@@ -752,7 +753,7 @@ int SqliteBeanDB::getIdByPropertyIndex(const Property* property, oidType sid, Js
     char *sql = buff;
 
     if (property->isRelation()) {
-        snprintf(buff, sizeof(buff), "SELECT ID FROM TRIPLE WHERE SID = ? AND PID = %d ;", property->getId());
+        snprintf(buff, sizeof(buff), "SELECT ID FROM " TTABLE " WHERE SID = ? AND PID = %d ;", property->getId());
     } else {
         snprintf(buff, sizeof(buff), "SELECT ID FROM p_%s WHERE SID = ? ;", pname);
     }
@@ -859,9 +860,9 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
 
     if (property->isRelation()) {
         if (isArray) {
-            sql = "UPDATE TRIPLE SET OID = ? WHERE ID = ?  ;";
+            sql = "UPDATE " TTABLE " SET OID = ? WHERE ID = ?  ;";
         } else {
-            sql =  "UPDATE TRIPLE SET OID = ? WHERE SID = ?  ;";
+            sql =  "UPDATE " TTABLE " SET OID = ? WHERE SID = ?  ;";
         }
     } else {
         if (isArray) {
@@ -955,7 +956,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     }
 
     if (property->isRelation()) {
-        sql = "DELETE FROM TRIPLE WHERE SID = ?;";
+        sql = "DELETE FROM " TTABLE " WHERE SID = ?;";
         err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
         if (err != SQLITE_OK) goto out;
         nCol = 1;
@@ -1068,7 +1069,7 @@ int SqliteBeanDB::deleteBean_(oidType id)
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     bool alreadyInTransaction = false;
-    static const char *sql = "DELETE FROM  BEAN WHERE ID = ?;";
+    static const char *sql = "DELETE FROM  " BTABLE " WHERE ID = ?;";
 
     SMART_BEGIN_TRANSACTION();
     
@@ -1117,7 +1118,7 @@ int SqliteBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& pr
 {
     CHECK_CONNECTED();
 
-    static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM PROPERTY;";
+    static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM " PTABLE ";";
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     int nCol = 0;
@@ -1177,8 +1178,8 @@ int SqliteBeanDB::undefineProperty_(Property* property)
     bool alreadyInTransaction = false;
     char buff[256]{0};
     int buffSize = sizeof(buff);
-    static const char *sql_delete_property = "DELETE FROM  PROPERTY WHERE NAME = ?;";
-    static const char *sql_delete_rtable = "DELETE FROM  TRIPLE WHERE PID = %d;";
+    static const char *sql_delete_property = "DELETE FROM  " PTABLE " WHERE NAME = ?;";
+    static const char *sql_delete_rtable = "DELETE FROM  " TTABLE " WHERE PID = %d;";
     static const char drop_ptable[] =   "DROP TABLE p_%s; ";
     // static const char drop_index[] =   "DROP INDEX p_%s_index; ";
 
@@ -1252,9 +1253,9 @@ int SqliteBeanDB::defineProperty_(const char* name,
     VALUE  %s NOT NULL \
     ); ";
     static const char create_property_index[] =   
-    "CREATE INDEX p_%s_index \
+    "CREATE INDEX index_p_%s \
     ON p_%s(VALUE); ";
-    static const char sql_insert_ptable[] = "INSERT INTO PROPERTY VALUES(?, ?, ?, ?, ?) ;";
+    static const char sql_insert_ptable[] = "INSERT INTO " PTABLE " VALUES(?, ?, ?, ?, ?) ;";
 
     bool isRelation = ((type == Property::RelationType || 
         type == Property::ArrayRelationType) ? true : false);
@@ -1395,8 +1396,8 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const J
      std::string valueStr;
      const Property* property = nullptr;
      int nCol = 0;
-    static const char *sql_1 = "UPDATE BEAN SET  VALUE = ? WHERE ID = ?;";
-    static const char *sql_2 = "UPDATE BEAN SET  VALUE = ?, NATIVE_DATA = ? WHERE ID = ?;";
+    static const char *sql_1 = "UPDATE " BTABLE " SET  VALUE = ? WHERE ID = ?;";
+    static const char *sql_2 = "UPDATE " BTABLE " SET  VALUE = ?, NATIVE_DATA = ? WHERE ID = ?;";
 
     if (nativeData == nullptr) {
         err = sqlite3_prepare_v2(m_sqlite3Db_, sql_1, strlen(sql_1), &pstmt,nullptr);
@@ -1464,7 +1465,7 @@ int SqliteBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& data)
     int size = 0;
     Property* property = nullptr;
     const char* valueStr = nullptr;
-    static const char sql[] = "SELECT NATIVE_DATA from BEAN WHERE ID = ?;";
+    static const char sql[] = "SELECT NATIVE_DATA from " BTABLE " WHERE ID = ?;";
     Json::Reader reader; 
     Json::Value jsonBean;  
     bool found = false;
@@ -1530,7 +1531,7 @@ int SqliteBeanDB::updateBeanNativeData_(oidType beanId,
     const char* pzTail = nullptr;
     std::string valueStr;
     char* tmpStr = nullptr;
-    static const char *sql = "UPDATE BEAN SET  NATIVE_DATA = ? WHERE ID = ?;";
+    static const char *sql = "UPDATE " BTABLE " SET  NATIVE_DATA = ? WHERE ID = ?;";
 
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto _out;
@@ -1595,7 +1596,7 @@ int SqliteBeanDB::deleteRelationByObject(oidType id)
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
-    static const char *sql = "DELETE FROM  TRIPLE WHERE OID = ?;";
+    static const char *sql = "DELETE FROM  " TTABLE " WHERE OID = ?;";
     
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto out;
@@ -1624,7 +1625,7 @@ int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
     bool alreadyInTransaction = false;
     const char* pname = property->getName().c_str();
     static const char SELECT_PTABLE[] = "SELECT SID from p_%s";
-    static const char SELECT_TRIPLE[] = "SELECT SID from TRIPLE WHERE PID = %d;";
+    static const char SELECT_TRIPLE[] = "SELECT SID from " TTABLE " WHERE PID = %d;";
     char buff[128]{0};
     const char* sql = buff;
     const int COUNT = 128; //todo: what should be the best optimzed number?

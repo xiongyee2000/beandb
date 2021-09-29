@@ -214,9 +214,10 @@ public:
      * @param id id of the bean to be leaded
      * @param value the value that holds all bean's properties
      * @param nativeData the value that holds the bean's nativeData
+     *                    If set to null, ignore native data.
      * @return 0 on success, or an error code
      */
-    virtual int loadBeanBase_(oidType id, Json::Value& value, Json::Value& nativeData) = 0;
+    virtual int loadBeanBase_(oidType id, Json::Value& value, Json::Value* nativeData = nullptr) = 0;
 
     /**
      * Save bean data into database.
@@ -230,9 +231,10 @@ public:
      * @param id id of the bean to be leaded
      * @param data the data that holds all bean's property values
      * @param nativeData the value that holds the bean's nativeData
+     *                    If set to null, ignore native data.
      * @return 0 on success, or an error code
      */
-    virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData) = 0;
+    virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value* nativeData = nullptr) = 0;
 
     virtual int insertBeanProperty_(oidType beanId, 
         const Property* property, 

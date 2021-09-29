@@ -258,7 +258,7 @@ int Bean::createArrayProperty(Property* property)
     if (property->getType() != Property::ArrayPrimaryType) return -2;
     
     if (hasArrayProperty(property)) return 0;
-    return doCreateArrayProperty(property, false);
+    return doCreateArrayProperty(property, true);
 }
 
 
@@ -268,11 +268,12 @@ int Bean::doCreateArrayProperty(Property* property, bool saveAtOnce)
     const auto& pname = property->getName();
     m_json_[pname] = Json::Value(Json::arrayValue);
     m_pst_json_[pname] = Json::Value(Json::arrayValue);
-    //save to db
-    err = m_world_->m_db_->saveBeanBase_(m_id_, m_json_, m_native_data_json_);
-    if (err) {
-        m_json_.removeMember(pname);
-        m_pst_json_.removeMember(pname);
+    if (saveAtOnce) {
+        err = m_world_->m_db_->saveBeanBase_(m_id_, m_json_);
+        if (err) {
+            m_json_.removeMember(pname);
+            m_pst_json_.removeMember(pname);
+        }
     }
     property->addSubject(m_id_); //todo: need this line?
     return 0;
@@ -876,16 +877,17 @@ int Bean::load()
     int err = 0;
     int size = 0;
     Property* property = nullptr;
-    Json::Value data, nativeData;
+    Json::Value data;
     Json::Value* dataValuePtr = nullptr;
 
     //unload first
     unload();
 
-    err = m_world_->m_db_->loadBeanBase_(m_id_, data, m_native_data_json_);
+    err = m_world_->m_db_->loadBeanBase_(m_id_, data, &m_native_data_json_);
     if (err) {
         m_json_ = Json::Value(Json::ValueType::objectValue);
-        m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
+        m_native_data_json_ = Json::Value::nullRef;
+        m_native_data_pst_json_ = PST_NSY;
     } else {
         //todo: 
         //check data validity, e.g.: property name consistency, 
@@ -950,8 +952,7 @@ int Bean::load()
             }
         }
 
-        if (nativeData.isNull()) { //delay load
-            nativeData = Json::Value(Json::ValueType::objectValue);
+        if (m_native_data_json_.isNull()) { //delay load
             m_native_data_pst_json_ = PST_NSY;
         } else {
             m_native_data_pst_json_ = PST_SYN;
@@ -1038,7 +1039,7 @@ int Bean::save()
     Json::Value* pstValuePtr = nullptr;
     Property* property = nullptr;
 
-    err = m_world_->m_db_->saveBeanBase_(m_id_, m_json_, m_native_data_json_);
+    err = m_world_->m_db_->saveBeanBase_(m_id_, m_json_, &m_native_data_json_);
     if (err) goto out;
 
     for (auto& pname : m_pst_json_.getMemberNames()) {

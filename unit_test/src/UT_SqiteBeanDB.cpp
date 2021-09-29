@@ -212,15 +212,15 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
     EXPECT_TRUE(bean3->getProperty(testHelper.r1).isNull());
     EXPECT_TRUE(bean3->getProperty(testHelper.r_array_1).isNull());
 
-    testdb.loadBeanBase_(beanId_1, value, nativeData);
+    testdb.loadBeanBase_(beanId_1, value);
     EXPECT_TRUE(!value.isMember(testHelper.p_int->getName()));
     EXPECT_TRUE(!value.isMember(testHelper.p_array_int->getName()));
 
-    testdb.loadBeanBase_(beanId_2, value, nativeData);
+    testdb.loadBeanBase_(beanId_2, value);
     EXPECT_TRUE(!value.isMember(testHelper.p_int->getName()));
     EXPECT_TRUE(!value.isMember(testHelper.p_array_int->getName()));
 
-    testdb.loadBeanBase_(beanId_3, value, nativeData);
+    testdb.loadBeanBase_(beanId_3, value);
     EXPECT_TRUE(!value.isMember(testHelper.r1->getName()));
     EXPECT_TRUE(!value.isMember(testHelper.r_array_1->getName()));
 
@@ -509,7 +509,7 @@ TEST(SqliteBeanDB, delayLoad)
 
     bean3= world->getBean(3);
     size = bean3->getArraySize(testHelper.r_array_1);
-    EXPECT_TRUE(size == 4);
+    EXPECT_TRUE(size == 2);
 
     testdb.disconnect();
 

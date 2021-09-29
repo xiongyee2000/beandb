@@ -59,22 +59,23 @@ int DummyBeanDB::deleteBean_(oidType id)
 }
 
 
-int DummyBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData)
+int DummyBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value* nativeData)
 {
 
     m_dataMap_[beanId] = data;
-    m_nativeDataMap_[beanId] = nativeData;
+    if (nativeData != nullptr)
+        m_nativeDataMap_[beanId] = *nativeData;
     return 0;
 }
 
 
-int DummyBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) 
+int DummyBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value* nativeData) 
 {
     int err = 0;
     auto iter = m_dataMap_.find(beanId);
     if (iter == m_dataMap_.end()) return 1;
     value = iter->second;
-    nativeData = m_nativeDataMap_[beanId];
+    if (nativeData != nullptr) *nativeData = m_nativeDataMap_[beanId];
     return 0;
 }
 

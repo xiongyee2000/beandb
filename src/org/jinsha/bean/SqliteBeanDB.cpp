@@ -308,7 +308,7 @@ out:
 }
 
 
-int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value& nativeData) 
+int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value* nativeData) 
 {
     CHECK_CONNECTED();
     
@@ -319,9 +319,9 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
     int size = 0;
     Property* property = nullptr;
     const char* valueStr = nullptr;
-    static const char SELECT_BEAN[] = "SELECT VALUE, NATIVE_DATA from BEAN WHERE ID = ?;";
+    static const char SELECT_BEAN_1[] = "SELECT VALUE from BEAN WHERE ID = ?;";
+    static const char SELECT_BEAN_2[] = "SELECT VALUE, NATIVE_DATA from BEAN WHERE ID = ?;";
     static const char SELECT_TRIPLE[] = "SELECT PID, OID from TRIPLE WHERE SID = ?;";
-    const char *sql = nullptr;
     Json::Reader reader; 
     Json::Value jsonBean;  
     bool found = false;
@@ -329,9 +329,14 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
     oidType oid = 0;
     pidType pid = 0;
 
-    sql = SELECT_BEAN;
-	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (nativeData == nullptr) {
+        err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_BEAN_1, strlen(SELECT_BEAN_1), &pstmt, nullptr);
+        if (err != SQLITE_OK) goto _out;
+    } else {
+        err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_BEAN_2, strlen(SELECT_BEAN_2), &pstmt, nullptr);
+        if (err != SQLITE_OK) goto _out;
+    }
+
     err = sqlite3_bind_int64(pstmt, 1, beanId);
     if (err != SQLITE_OK) goto _out;
 
@@ -377,22 +382,23 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
                         break;
                     }
                 }
-
             }
         }
 
         //retrieve native data
-        if (sqlite3_column_type(pstmt, 1) != SQLITE_NULL) {
-            valueStr = (const char*)sqlite3_column_text(pstmt, 1);
-            if (valueStr == nullptr) valueStr = "{}";
-            if (!reader.parse(valueStr, nativeData, false))
-            {
-                err = -2;
-                elog("error parsing json string: %s", valueStr);
-                goto _out;
+        if (nativeData != nullptr) {
+            if (sqlite3_column_type(pstmt, 1) != SQLITE_NULL) {
+                valueStr = (const char*)sqlite3_column_text(pstmt, 1);
+                if (valueStr == nullptr) valueStr = "{}";
+                if (!reader.parse(valueStr, *nativeData, false))
+                {
+                    err = -2;
+                    elog("error parsing json string: %s", valueStr);
+                    goto _out;
+                }
+            } else {
+                *nativeData = Json::Value(Json::ValueType::objectValue);
             }
-        } else {
-            nativeData = Json::Value(Json::ValueType::objectValue);
         }
         
         found = true;
@@ -403,9 +409,9 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
+    pstmt = nullptr;
 
-    sql = SELECT_TRIPLE;
-	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+	err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_TRIPLE, strlen(SELECT_TRIPLE), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int64(pstmt, 1, beanId);
     if (err != SQLITE_OK) goto _out;
@@ -419,7 +425,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value&
         pname = property->getName().c_str();
         if (property->isArray()) {
             if (!value[pname].isArray()) {
-                value = Json::Value(Json::arrayValue);
+                value[pname] = Json::Value(Json::arrayValue);
             }
             value[pname].append(oid);
         } else {
@@ -499,10 +505,9 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     value = Json::Value::nullRef;
 
     Json::Value data;
-    Json::Value nativeData;
 
     if (!property->isRelation()) {
-        err = loadBeanBase_(beanId, data, nativeData);
+        err = loadBeanBase_(beanId, data);
         if (err)  {
             elog("Failed to load bean property (beanId=%llu, property name=%s) \n", beanId, pname);
             return err;
@@ -628,7 +633,7 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
     const char* pzTail = nullptr;
     int err = 0;
     int nCol = 0;
-    Json::Value data, nativeData;
+    Json::Value data;
     oidType sid = beanId;
     bool alreadyInTransaction = false;
 
@@ -639,7 +644,7 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
     }
 
     if (!property->isArray() && !property->isRelation()) {
-        err = loadBeanBase_(beanId, data, nativeData);
+        err = loadBeanBase_(beanId, data);
         if (err) {
             elog("Failed in %s (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
             goto out;
@@ -656,7 +661,7 @@ int SqliteBeanDB::insertBeanProperty_(oidType beanId,
             } else {
                 data[pname] = value;
             }
-            err = saveBeanBase_(beanId, data, nativeData);
+            err = saveBeanBase_(beanId, data);
             if (err) {
                 elog("Failed to insert bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
                 goto out;
@@ -796,7 +801,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     std::list<const Json::Value*> vlist;
     const Json::Value* v = nullptr;
     BeanWorld *world = nullptr;
-   Json::Value data, nativeData;
+   Json::Value data;
    const char* pname = nullptr;
    bool isArray = false;
    bool alreadyInTransaction = false;
@@ -814,7 +819,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     if (isArray) {
         err = getIdByPropertyIndex(property, sid, index, id);
         if (err) {
-            elog("Failed to upate property (name=%s) for bean (id=%llu), for index (%llu) is invalid \n", pname, beanId, index);
+            elog("Failed to upate property (name=%s) for bean (id=%llu), for index (%u) is invalid \n", pname, beanId, index);
             return err;
         }
     }
@@ -826,7 +831,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     }
 
     if (!property->isDelayLoad() && !property->isRelation()) {
-        err = loadBeanBase_(beanId, data, nativeData);
+        err = loadBeanBase_(beanId, data);
         if (err) {
             elog("Failed in %s (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
             goto out;
@@ -838,7 +843,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         } else {
             //update property to bean base record
             data[pname] = value;
-            err = saveBeanBase_(beanId, data, nativeData);
+            err = saveBeanBase_(beanId, data);
             if (err) {
                 elog("Failed to update bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
                 goto out;
@@ -912,13 +917,13 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     const char* pzTail = nullptr;
     int err = 0;
     int nCol = 0;
-    Json::Value data, nativeData;
+    Json::Value data;
     oidType sid = beanId;
     const char* pname = property->getName().c_str();
     bool alreadyInTransaction = false;
 
     if (!property->isRelation()) {
-        err = loadBeanBase_(beanId, data, nativeData);
+        err = loadBeanBase_(beanId, data);
         if (err) {
             elog("Failed to delete bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
             goto out;
@@ -934,7 +939,7 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
     if (!property->isRelation()) {
         if (data.isMember(pname)) {
             data.removeMember(pname);
-            err = saveBeanBase_(beanId, data, nativeData);
+            err = saveBeanBase_(beanId, data);
             if (err) {
                 elog("Failed to insert bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
                 goto out;
@@ -1276,6 +1281,8 @@ int SqliteBeanDB::defineProperty_(const char* name,
 
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
     sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+    pstmt = nullptr;
 
     if (!isRelation) {
         //create property table
@@ -1364,7 +1371,7 @@ int SqliteBeanDB::rollbackTransaction_()
 }
 
 
-int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value& nativeData)
+int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value* nativeData)
 {
     CHECK_CONNECTED();
     if (data.isNull()) return -2;
@@ -1380,14 +1387,22 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const J
     char* tmpStr = nullptr;
      std::string valueStr;
      const Property* property = nullptr;
-    static const char *sql = "UPDATE BEAN SET  VALUE = ?, NATIVE_DATA = ? WHERE ID = ?;";
+     int nCol = 0;
+    static const char *sql_1 = "UPDATE BEAN SET  VALUE = ? WHERE ID = ?;";
+    static const char *sql_2 = "UPDATE BEAN SET  VALUE = ?, NATIVE_DATA = ? WHERE ID = ?;";
 
-	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (nativeData == nullptr) {
+        err = sqlite3_prepare_v2(m_sqlite3Db_, sql_1, strlen(sql_1), &pstmt,nullptr);
+        if (err != SQLITE_OK) goto _out;
+    } else {
+        err = sqlite3_prepare_v2(m_sqlite3Db_, sql_2, strlen(sql_2), &pstmt,nullptr);
+        if (err != SQLITE_OK) goto _out;
+    }
 
     for (auto& pname : data.getMemberNames()) {
         property = getWorld()->getProperty(pname.c_str());
         if (property == nullptr) continue; //todo: error here?
+        if (property->isRelation()) continue; //do not save relation info.
         if (!property->isDelayLoad()) {
             tmpValue[pname] = data[pname];
         } else {
@@ -1397,19 +1412,22 @@ int SqliteBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const J
 
     valueStr = jsonWriter.write(tmpValue);
     tmpStr = sqlite3_mprintf("%q", valueStr.c_str());
-    err = sqlite3_bind_text(pstmt, 1, tmpStr , -1, nullptr);
+    nCol = 1;
+    err = sqlite3_bind_text(pstmt, nCol++, tmpStr , -1, nullptr);
     if (err != SQLITE_OK) goto _out;
 
-    if (nativeData.isNull()) {
-        err = sqlite3_bind_null(pstmt, 2);
-    }  else {
-        std::string nativeDataStr = jsonWriter.write(nativeData);
-        tmpStr = sqlite3_mprintf("%q", nativeDataStr.c_str());
-        err = sqlite3_bind_text(pstmt, 2, tmpStr , -1, nullptr);
+    if (nativeData != nullptr) {
+        if (nativeData->isNull()) {
+            err = sqlite3_bind_null(pstmt, nCol++);
+        }  else {
+            std::string nativeDataStr = jsonWriter.write(*nativeData);
+            tmpStr = sqlite3_mprintf("%q", nativeDataStr.c_str());
+            err = sqlite3_bind_text(pstmt, nCol++, tmpStr , -1, nullptr);
+        }
+        if (err != SQLITE_OK) goto _out;
     }
-    if (err != SQLITE_OK) goto _out;
 
-    err = sqlite3_bind_int64(pstmt, 3, beanId_);
+    err = sqlite3_bind_int64(pstmt, nCol++, beanId_);
     if (err != SQLITE_OK) goto _out;
 
     err = sqlite3_step(pstmt);
@@ -1602,7 +1620,7 @@ int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
     static const char SELECT_TRIPLE[] = "SELECT SID from TRIPLE WHERE PID = %d;";
     char buff[128]{0};
     const char* sql = buff;
-    const int COUNT = 1;
+    const int COUNT = 128; //todo: what should be the best optimzed number?
     int countdown = 0;
     oidType sid = 0;
     std::list<oidType> sidList;

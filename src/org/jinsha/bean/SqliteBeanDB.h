@@ -5,6 +5,8 @@
 #include <sqlite3.h>
 #include <unordered_map>
 
+#include "./SqlitePage.h"
+
 namespace org {
 namespace jinsha {
 namespace bean {
@@ -162,6 +164,21 @@ private:
      * @ref BeanDBPersistenceIntf
      */
     virtual int deleteBeanNativeData_(oidType beanId) override;
+
+
+    /**
+     * Find beans whose property values are equal to the given one.
+     * 
+     * @param value the value of the property
+     * @param beans the results
+     * 
+     * Notes:
+     * 1. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered. 
+     */
+     AbstractPage<oidType>* findEqual(Property* property, Json::Value& value);
+
+    int relationFindEqualFunc(Property* property, Json::Value& value, unsigned int pageSize, uint_t pageIndex, std::vector<oidType>& ids);
 
 
 private:

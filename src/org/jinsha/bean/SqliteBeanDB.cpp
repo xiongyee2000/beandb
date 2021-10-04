@@ -48,6 +48,8 @@ static const char* STR_INT8 = "INT8";
 static const char* STR_REAL= "REAL";
 static const char* STR_TEXT= "TEXT";
 
+using namespace std;
+
 namespace org {
 namespace jinsha {
 namespace bean {
@@ -1705,6 +1707,76 @@ out:
     sqlite3_reset(pstmt);
     sqlite3_finalize(pstmt);
     return err;
+}
+
+int SqliteBeanDB::relationFindEqualFunc(Property* property, Json::Value& value, unsigned int pageSize, uint_t pageIndex,  std::vector<oidType>& ids)
+{
+    if (property == nullptr) return 0; 
+
+    static const char SELECT_TRIPLE[] = "SELECT SID from " TTABLE " WHERE PID = ? AND OID= ? limit ?,? ;";
+    sqlite3_stmt *pstmt = nullptr;
+    int err = 0;
+    int size = 0;
+    oidType sid = 0, oid = 0;
+    sqlite3_int64 limitFrom = pageSize * pageIndex;
+
+    auto& pname = property->getName();
+    pidType pid = property->getId();
+    bool isRelation = property->isRelation();
+    bool isArray = property->isArray();
+
+    err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_TRIPLE, strlen(SELECT_TRIPLE), &pstmt, nullptr);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int64(pstmt, 1, pid);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int64(pstmt, 2, value.asInt64());
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int64(pstmt, 3, limitFrom);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int(pstmt, 4, pageSize);
+    if (err != SQLITE_OK) goto _out;
+
+    ids.clear();
+	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+        sid = sqlite3_column_int64(pstmt, 0);
+        ids.push_back(sid);
+    }
+
+_out:
+    if (err > 0) {
+        if (err != SQLITE_OK && err != SQLITE_DONE) {
+            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+        } else {
+            err = 0;
+        }
+    }
+    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+    return err;
+}
+
+AbstractPage<oidType>* SqliteBeanDB::findEqual(Property* property, Json::Value& value)
+{
+    if (property == nullptr) return 0; 
+
+    auto& pname = property->getName();
+    pidType pid = property->getId();
+    bool isRelation = property->isRelation();
+    bool isArray = property->isArray();
+    int err = 0;
+
+    SqlitePage* page = nullptr;
+    page = new SqlitePage(10u, 0u, this, nullptr);
+
+    if (isRelation) {
+        page->m_loadPageFunc_ = std::bind(&SqliteBeanDB::relationFindEqualFunc, this, property, value, placeholders::_1, placeholders::_2, placeholders::_3);
+    }
+    
+    //get first page
+    page->next();
+
+    return page;
 }
 
 }

@@ -5,7 +5,7 @@
 #include <sqlite3.h>
 #include <unordered_map>
 
-#include "./SqlitePage.h"
+#include "./Page.hpp"
 
 namespace org {
 namespace jinsha {
@@ -176,9 +176,16 @@ private:
      * 1. the search is type restricted, i.e. only those beans with the property value
      *     having the same type will be considered. 
      */
-     AbstractPage<oidType>* findEqual(Property* property, Json::Value& value);
+     BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = 16) const;
 
-    int relationFindEqualFunc(Property* property, Json::Value& value, unsigned int pageSize, uint_t pageIndex, std::vector<oidType>& ids);
+    int findSubject(pidType pid, oidType oid, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
+
+
+private:
+    class SqliteBeanIdPage : public BeanIdPage {
+        public:
+        SqliteBeanIdPage(unsigned int pageSize, BeanIdPage::LoadPageFuncType func) : BeanIdPage(pageSize, func) {};
+    };
 
 
 private:

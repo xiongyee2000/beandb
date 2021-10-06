@@ -26,7 +26,7 @@ void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex)
     testHelper.r1 = world.defineRelation("r1");
     testHelper.r2 = world.defineRelation("r2");
     testHelper.r_array_1 =  world.defineArrayRelation("r_array_1");
-    testHelper.rArray_2 =  world.defineArrayRelation("r_array_2");
+    testHelper.r_array_2 =  world.defineArrayRelation("r_array_2");
 
     // if (needIndex)
     // {

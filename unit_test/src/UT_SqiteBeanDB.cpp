@@ -27,6 +27,103 @@ static void validate_testdb_1(SqliteBeanDB& testdb);
 static void validate_properties_testdb_1(std::unordered_map<std::string, Property*>& propertyMap);
 
 
+////////////////////////////////////////////////////////////////
+// helper functions
+////////////////////////////////////////////////////////////////
+
+static void validate_testdb_1(SqliteBeanDB& testdb)
+{
+    validate_properties_testdb_1(testdb.m_world_->m_propertyMap_);
+}
+
+static void validate_properties_testdb_1(std::unordered_map<std::string, Property*>& propertyMap)
+{
+    Property *property = nullptr;
+
+    property = propertyMap.at("p1");
+    EXPECT_TRUE(property->getName() == "p1" && 
+        property->getType() == Property::PrimaryType && 
+        property->getValueType() == Property::IntType);
+
+    property = propertyMap.at("p2");
+    EXPECT_TRUE(property->getName() == "p2" && 
+        property->getType() == Property::PrimaryType && 
+        property->getValueType() == Property::IntType);
+
+    property = propertyMap.at("p_int");
+    EXPECT_TRUE(property->getName() == "p_int" && 
+        property->getType() == Property::PrimaryType && 
+        property->getValueType() == Property::IntType);
+
+    property = propertyMap.at("p_uint");
+    EXPECT_TRUE(property->getName() == "p_uint" && 
+        property->getType() == Property::PrimaryType && 
+        property->getValueType() == Property::UIntType);
+
+    property = propertyMap.at("p_real");
+    EXPECT_TRUE(property->getName() == "p_real" && 
+        property->getType() == Property::PrimaryType && 
+        property->getValueType() == Property::RealType);
+    
+    property = propertyMap.at("p_str");
+    EXPECT_TRUE(property->getName() == "p_str" && 
+        property->getType() == Property::PrimaryType && 
+        property->getValueType() == Property::StringType);
+
+    property = propertyMap.at("p_bool_0");
+    EXPECT_TRUE(property->getName() == "p_bool_0" && 
+        property->getType() == Property::PrimaryType && 
+        property->getValueType() == Property::BoolType);
+
+    property = propertyMap.at("p_bool_1");
+    EXPECT_TRUE(property->getName() == "p_bool_1" && 
+        property->getType() == Property::PrimaryType && 
+        property->getValueType() == Property::BoolType);
+
+    property = propertyMap.at("p_array_int");
+    EXPECT_TRUE(property->getName() == "p_array_int" && 
+        property->getType() == Property::ArrayPrimaryType && 
+        property->getValueType() == Property::IntType);
+
+    property = propertyMap.at("p_array_uint");
+    EXPECT_TRUE(property->getName() == "p_array_uint" && 
+        property->getType() == Property::ArrayPrimaryType && 
+        property->getValueType() == Property::UIntType);
+
+    property = propertyMap.at("p_array_real");
+    EXPECT_TRUE(property->getName() == "p_array_real" && 
+        property->getType() == Property::ArrayPrimaryType && 
+        property->getValueType() == Property::RealType);
+
+    property = propertyMap.at("p_array_str");
+    EXPECT_TRUE(property->getName() == "p_array_str" && 
+        property->getType() == Property::ArrayPrimaryType && 
+        property->getValueType() == Property::StringType);
+
+    property = propertyMap.at("p_array_bool");
+    EXPECT_TRUE(property->getName() == "p_array_bool" && 
+        property->getType() == Property::ArrayPrimaryType && 
+        property->getValueType() == Property::BoolType);
+
+    property = propertyMap.at("r1");
+    EXPECT_TRUE(property->getName() == "r1" && 
+        property->getType() == Property::RelationType);
+
+    property = propertyMap.at("r2");
+    EXPECT_TRUE(property->getName() == "r2" && 
+        property->getType() == Property::RelationType);
+
+    property = propertyMap.at("r_array_1");
+    EXPECT_TRUE(property->getName() == "r_array_1" && 
+        property->getType() == Property::ArrayRelationType);
+
+    property = propertyMap.at("r_array_2");
+    EXPECT_TRUE(property->getName() == "r_array_2" && 
+        property->getType() == Property::ArrayRelationType);
+
+}
+
+
 TEST(SqliteBeanDB, constuctor_destructor)
 {
     const char* testdbDir = nullptr;
@@ -985,100 +1082,160 @@ TEST(SqliteBeanDB, nativeData)
 }
 
 
-////////////////////////////////////////////////////////////////
-// helper functions
-////////////////////////////////////////////////////////////////
 
-static void validate_testdb_1(SqliteBeanDB& testdb)
+TEST(SqliteBeanDB, findEqual)
 {
-    validate_properties_testdb_1(testdb.m_world_->m_propertyMap_);
-}
+    char buff[128] = {0};
+    char* cmd = &buff[0];
+    sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
+    system(cmd);
 
-static void validate_properties_testdb_1(std::unordered_map<std::string, Property*>& propertyMap)
-{
-    Property *property = nullptr;
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+    // vector<oidType>* beanIds;
 
-    property = propertyMap.at("p1");
-    EXPECT_TRUE(property->getName() == "p1" && 
-        property->getType() == Property::PrimaryType && 
-        property->getValueType() == Property::IntType);
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world);
 
-    property = propertyMap.at("p2");
-    EXPECT_TRUE(property->getName() == "p2" && 
-        property->getType() == Property::PrimaryType && 
-        property->getValueType() == Property::IntType);
+    Bean* bean1 = world->getBean(1);
+    Bean* bean2 = world->getBean(2);
+    Bean* bean3 = world->getBean(3);
+    oidType beanId_1 = bean1->getId();
+    oidType beanId_2 = bean2->getId();
+    oidType beanId_3 = bean3->getId();
 
-    property = propertyMap.at("p_int");
-    EXPECT_TRUE(property->getName() == "p_int" && 
-        property->getType() == Property::PrimaryType && 
-        property->getValueType() == Property::IntType);
-
-    property = propertyMap.at("p_uint");
-    EXPECT_TRUE(property->getName() == "p_uint" && 
-        property->getType() == Property::PrimaryType && 
-        property->getValueType() == Property::UIntType);
-
-    property = propertyMap.at("p_real");
-    EXPECT_TRUE(property->getName() == "p_real" && 
-        property->getType() == Property::PrimaryType && 
-        property->getValueType() == Property::RealType);
+    bean1->setRelation(testHelper.r1, bean3);
+    bean2->setRelation(testHelper.r1, bean3);
+    bean3->setRelation(testHelper.r1, bean3);
+    bean1->createArrayRelation(testHelper.r_array_1);
+    bean2->createArrayRelation(testHelper.r_array_1);
+    bean1->appendRelation(testHelper.r_array_1, bean1);
+    bean1->appendRelation(testHelper.r_array_1, bean2);
+    bean1->appendRelation(testHelper.r_array_1, bean3);
+    bean2->appendRelation(testHelper.r_array_1, bean1);
+    bean2->appendRelation(testHelper.r_array_1, bean2);
+    bean2->appendRelation(testHelper.r_array_1, bean3);
     
-    property = propertyMap.at("p_str");
-    EXPECT_TRUE(property->getName() == "p_str" && 
-        property->getType() == Property::PrimaryType && 
-        property->getValueType() == Property::StringType);
+    page = testdb.findEqual(nullptr, 1);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findEqual(testHelper.r1, 1, 0);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findEqual(testHelper.r1, Json::Value::nullRef);
+    EXPECT_TRUE(page == nullptr);
+    value = Json::Value(Json::arrayValue);
+    page = testdb.findEqual(testHelper.r1, value);
+    EXPECT_TRUE(page == nullptr);
+    value = Json::Value(Json::objectValue);
+    page = testdb.findEqual(testHelper.r1, value);
+    EXPECT_TRUE(page == nullptr);
 
-    property = propertyMap.at("p_bool_0");
-    EXPECT_TRUE(property->getName() == "p_bool_0" && 
-        property->getType() == Property::PrimaryType && 
-        property->getValueType() == Property::BoolType);
+    page = testdb.findEqual(testHelper.r1, 3, 3);
+    EXPECT_TRUE(page != nullptr);
+    EXPECT_TRUE(page->getPageSize() == 3);
+    EXPECT_TRUE(page->getPageIndex() == 0);
+    // beanIds = &page->getElements();
+    EXPECT_TRUE(page->size() == 3);
+    EXPECT_TRUE(page->at(0) == 3);
+    EXPECT_TRUE(page->at(1) == 1);
+    EXPECT_TRUE(page->at(2) == 2);
+    delete page;
+ 
+    page = testdb.findEqual(testHelper.r1, 3, 1);
+    EXPECT_TRUE(page != nullptr);
+    EXPECT_TRUE(page->getPageSize() == 1);
+    EXPECT_TRUE(page->getPageIndex() == 0);
+    // beanIds = page->getElements();
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == 3);
+    err = page->next();
+    EXPECT_TRUE(err == 0);
+    // beanIds = page->getElements();
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == 1);
+    err = page->next();
+    EXPECT_TRUE(err == 0);
+    // beanIds = page->getElements();
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == 2);
+    err = page->next();
+    EXPECT_TRUE(err == -1001);
+    delete page;
 
-    property = propertyMap.at("p_bool_1");
-    EXPECT_TRUE(property->getName() == "p_bool_1" && 
-        property->getType() == Property::PrimaryType && 
-        property->getValueType() == Property::BoolType);
+    page = testdb.findEqual(testHelper.r1, 3, 2);
+    EXPECT_TRUE(page != nullptr);
+    EXPECT_TRUE(page->getPageSize() == 2);
+    EXPECT_TRUE(page->getPageIndex() == 0);
+    // beanIds = page->getElements();
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == 3);
+    EXPECT_TRUE(page->at(1) == 1);
+    err = page->next();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(page->getPageIndex() == 1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == 2);
+    err = page->next();
+    EXPECT_TRUE(page->getPageIndex() == 1);
+    EXPECT_TRUE(err == -1001);
+    err = page->prev();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(page->getPageIndex() == 0);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == 3);
+    EXPECT_TRUE(page->at(1) == 1);
+    err = page->prev();
+    EXPECT_TRUE(page->getPageIndex() == 0);
+    EXPECT_TRUE(err == -2);
+    err = page->gotoPage(0);
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(page->getPageIndex() == 0);
+    err = page->gotoPage(1);
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(page->getPageIndex() == 1);
+    err = page->gotoPage(2);
+    EXPECT_TRUE(err != 0);
+    EXPECT_TRUE(page->getPageIndex() == 1);
+    
+    delete page;
 
-    property = propertyMap.at("p_array_int");
-    EXPECT_TRUE(property->getName() == "p_array_int" && 
-        property->getType() == Property::ArrayPrimaryType && 
-        property->getValueType() == Property::IntType);
+    page = testdb.findEqual(testHelper.r_array_1, 1, 3);
+    EXPECT_TRUE(page != nullptr);
+    // beanIds = page->getElements();
+    EXPECT_TRUE(page->size() == 3);
+    EXPECT_TRUE(page->at(0) == 3);
+    EXPECT_TRUE(page->at(1) == 1);
+    EXPECT_TRUE(page->at(2) == 2);
+    delete page;
 
-    property = propertyMap.at("p_array_uint");
-    EXPECT_TRUE(property->getName() == "p_array_uint" && 
-        property->getType() == Property::ArrayPrimaryType && 
-        property->getValueType() == Property::UIntType);
+    page = testdb.findEqual(testHelper.r_array_1, 1, 2);
+    EXPECT_TRUE(page != nullptr);
+    EXPECT_TRUE(page->getPageSize() == 2);
+    EXPECT_TRUE(page->getPageIndex() == 0);
+    // beanIds = page->getElements();
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == 3);
+    EXPECT_TRUE(page->at(1) == 1);
+    err = page->next();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(page->getPageIndex() == 1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == 2);
+    err = page->prev();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(page->getPageIndex() == 0);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == 3);
+    EXPECT_TRUE(page->at(1) == 1);
+    delete page;
 
-    property = propertyMap.at("p_array_real");
-    EXPECT_TRUE(property->getName() == "p_array_real" && 
-        property->getType() == Property::ArrayPrimaryType && 
-        property->getValueType() == Property::RealType);
+    testdb.disconnect();
 
-    property = propertyMap.at("p_array_str");
-    EXPECT_TRUE(property->getName() == "p_array_str" && 
-        property->getType() == Property::ArrayPrimaryType && 
-        property->getValueType() == Property::StringType);
-
-    property = propertyMap.at("p_array_bool");
-    EXPECT_TRUE(property->getName() == "p_array_bool" && 
-        property->getType() == Property::ArrayPrimaryType && 
-        property->getValueType() == Property::BoolType);
-
-    property = propertyMap.at("r1");
-    EXPECT_TRUE(property->getName() == "r1" && 
-        property->getType() == Property::RelationType);
-
-    property = propertyMap.at("r2");
-    EXPECT_TRUE(property->getName() == "r2" && 
-        property->getType() == Property::RelationType);
-
-    property = propertyMap.at("r_array_1");
-    EXPECT_TRUE(property->getName() == "r_array_1" && 
-        property->getType() == Property::ArrayRelationType);
-
-    property = propertyMap.at("r_array_2");
-    EXPECT_TRUE(property->getName() == "r_array_2" && 
-        property->getType() == Property::ArrayRelationType);
-
+    page = testdb.findEqual(testHelper.r1, 1);
+    EXPECT_TRUE(page == nullptr);
+    delete page;
 }
-
-

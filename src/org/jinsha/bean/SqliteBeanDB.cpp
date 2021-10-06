@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <set>
+#include <vector>
 #include <sqlite3.h>
 #include "jsoncpp/json/value.h"
 #include "jsoncpp/json/reader.h"
@@ -825,6 +826,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     int err = 0;
     int nCol = 0;
     oidType sid = beanId;
+    pidType pid = 0;
     sqlite3_int64 id = 0;
     std::list<const Json::Value*> vlist;
     const Json::Value* v = nullptr;
@@ -832,6 +834,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
    Json::Value data;
    const char* pname = nullptr;
    bool isArray = false;
+   bool isRelation = false;
    bool alreadyInTransaction = false;
 
     if (property == nullptr) return -1;
@@ -843,6 +846,8 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
 
    pname = property->getName().c_str();
    isArray = property->isArray();
+   isRelation = property->isRelation();
+   pid = property->getId();
 
     if (isArray) {
         err = getIdByPropertyIndex(property, sid, index, id);
@@ -858,7 +863,7 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
         return err;
     }
 
-    if (!property->isDelayLoad() && !property->isRelation()) {
+    if (!property->isDelayLoad() && !isRelation) {
         err = loadBeanBase_(beanId, data);
         if (err) {
             elog("Failed in %s (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
@@ -881,11 +886,11 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
 
     v = &value;
 
-    if (property->isRelation()) {
+    if (isRelation) {
         if (isArray) {
             sql = "UPDATE " TTABLE " SET OID = ? WHERE ID = ?  ;";
         } else {
-            sql =  "UPDATE " TTABLE " SET OID = ? WHERE SID = ?  ;";
+            sql =  "UPDATE " TTABLE " SET OID = ? WHERE SID = ? AND PID = ?  ;";
         }
     } else {
         if (isArray) {
@@ -910,6 +915,11 @@ int SqliteBeanDB::updateBeanProperty_(oidType beanId,
     if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int64(pstmt, nCol++, isArray ? (sqlite3_int64)id : (sqlite3_int64)sid);
     if (err != SQLITE_OK) goto out;
+
+    if (isRelation && !isArray) {
+        err = sqlite3_bind_int(pstmt, nCol++, pid);
+        if (err != SQLITE_OK) goto out;
+    }
 
     err = sqlite3_step(pstmt);
 
@@ -1709,37 +1719,34 @@ out:
     return err;
 }
 
-int SqliteBeanDB::relationFindEqualFunc(Property* property, Json::Value& value, unsigned int pageSize, uint_t pageIndex,  std::vector<oidType>& ids)
+int SqliteBeanDB::findSubject(pidType pid, oidType oid, unsigned int pageSize, unsigned long pageIndex,  std::vector<oidType>& sids)
 {
-    if (property == nullptr) return 0; 
+    CHECK_CONNECTED();
 
     static const char SELECT_TRIPLE[] = "SELECT SID from " TTABLE " WHERE PID = ? AND OID= ? limit ?,? ;";
     sqlite3_stmt *pstmt = nullptr;
     int err = 0;
     int size = 0;
-    oidType sid = 0, oid = 0;
+    oidType sid = 0;
     sqlite3_int64 limitFrom = pageSize * pageIndex;
-
-    auto& pname = property->getName();
-    pidType pid = property->getId();
-    bool isRelation = property->isRelation();
-    bool isArray = property->isArray();
+    bool found = false;
 
     err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_TRIPLE, strlen(SELECT_TRIPLE), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int64(pstmt, 1, pid);
     if (err != SQLITE_OK) goto _out;
-    err = sqlite3_bind_int64(pstmt, 2, value.asInt64());
+    err = sqlite3_bind_int64(pstmt, 2, oid);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int64(pstmt, 3, limitFrom);
     if (err != SQLITE_OK) goto _out;
     err = sqlite3_bind_int(pstmt, 4, pageSize);
     if (err != SQLITE_OK) goto _out;
 
-    ids.clear();
+    sids.clear();
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
         sid = sqlite3_column_int64(pstmt, 0);
-        ids.push_back(sid);
+        sids.push_back(sid);
+        found = true;
     }
 
 _out:
@@ -1747,7 +1754,10 @@ _out:
         if (err != SQLITE_OK && err != SQLITE_DONE) {
             elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
         } else {
-            err = 0;
+            if (found)
+                err = 0;
+            else 
+                err = -1001;
         }
     }
     if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
@@ -1756,25 +1766,38 @@ _out:
     return err;
 }
 
-AbstractPage<oidType>* SqliteBeanDB::findEqual(Property* property, Json::Value& value)
+BeanIdPage* SqliteBeanDB::findEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
 {
-    if (property == nullptr) return 0; 
+    if (property == nullptr) return nullptr; 
+    if (pageSize == 0) return nullptr;
+    if (value.isNull()) return nullptr; 
+    if (value.isArray()) return nullptr; 
+    if (value.isObject()) return nullptr; 
+    if (!connected()) return nullptr;
 
     auto& pname = property->getName();
     pidType pid = property->getId();
     bool isRelation = property->isRelation();
     bool isArray = property->isArray();
     int err = 0;
-
-    SqlitePage* page = nullptr;
-    page = new SqlitePage(10u, 0u, this, nullptr);
+    SqliteBeanIdPage* page = nullptr;
 
     if (isRelation) {
-        page->m_loadPageFunc_ = std::bind(&SqliteBeanDB::relationFindEqualFunc, this, property, value, placeholders::_1, placeholders::_2, placeholders::_3);
+        auto func = std::bind(&SqliteBeanDB::findSubject, 
+            (SqliteBeanDB*)this, 
+            property->getId(), 
+#if defined(JSON_NO_INT64)
+            (oidType)value.asInt(), 
+#else
+            (oidType)value.asInt64(), 
+#endif
+            placeholders::_1, 
+            placeholders::_2,
+            placeholders::_3);
+        page = new SqliteBeanIdPage(pageSize, func);
+    } else {
+        //todo
     }
-    
-    //get first page
-    page->next();
 
     return page;
 }

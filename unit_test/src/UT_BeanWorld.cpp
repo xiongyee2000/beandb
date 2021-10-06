@@ -332,33 +332,33 @@ TEST(BeanWorld, removeBean)
 
     //array
     bean1->createArrayRelation(testHelper.r_array_1);
-    bean1->createArrayRelation(testHelper.rArray_2);
+    bean1->createArrayRelation(testHelper.r_array_2);
     bean1->appendRelation(testHelper.r_array_1, bean3);
     bean1->appendRelation(testHelper.r_array_1, bean4);
-    bean1->appendRelation(testHelper.rArray_2, bean3);
-    bean1->appendRelation(testHelper.rArray_2, bean4);
+    bean1->appendRelation(testHelper.r_array_2, bean3);
+    bean1->appendRelation(testHelper.r_array_2, bean4);
     EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean3->getId());
     EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 1) == bean4->getId());
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_2, 0) == bean3->getId());
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_2, 1) == bean4->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_2, 0) == bean3->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_2, 1) == bean4->getId());
     world.removeBean(bean3->getId());
     EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean4->getId());
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_2, 0) == bean4->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_2, 0) == bean4->getId());
     bean3 = world.createBean();
 
     bean2->createArrayRelation(testHelper.r_array_1);
-    bean2->createArrayRelation(testHelper.rArray_2);    
+    bean2->createArrayRelation(testHelper.r_array_2);    
     bean2->appendRelation(testHelper.r_array_1, bean4);
-    bean2->appendRelation(testHelper.rArray_2, bean4);
+    bean2->appendRelation(testHelper.r_array_2, bean4);
     EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean4->getId());
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_2, 0) == bean4->getId());
+    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_2, 0) == bean4->getId());
     EXPECT_TRUE(bean2->getRelationBeanId(testHelper.r_array_1, 0) == bean4->getId());
-    EXPECT_TRUE(bean2->getRelationBeanId(testHelper.rArray_2, 0) == bean4->getId());
+    EXPECT_TRUE(bean2->getRelationBeanId(testHelper.r_array_2, 0) == bean4->getId());
     world.removeBean(bean4->getId());
     EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == 0);
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.rArray_2, 0) == 0);
+    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_2, 0) == 0);
     EXPECT_TRUE(bean2->getRelationBeanId(testHelper.r_array_1, 0) == 0);
-    EXPECT_TRUE(bean2->getRelationBeanId(testHelper.rArray_2, 0) == 0);
+    EXPECT_TRUE(bean2->getRelationBeanId(testHelper.r_array_2, 0) == 0);
     bean4 = world.createBean();
 
     bean1->appendRelation(testHelper.r_array_1, bean2);

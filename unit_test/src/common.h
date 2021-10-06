@@ -45,7 +45,7 @@ typedef struct TestHelper
     Property* r1;
     Property* r2;
     Property* r_array_1;
-    Property* rArray_2;
+    Property* r_array_2;
 } TestHelper;
 
 

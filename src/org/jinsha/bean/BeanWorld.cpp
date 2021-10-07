@@ -197,7 +197,6 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
     if (iter == m_propertyMap_.end())
     {
         bool delayLoad = false;
-        // err = m_db ->defineProperty_(name, type, valueType, needIndex, pid, delayLoad);
         err = m_db_ ->defineProperty_(name, type, valueType, pid, delayLoad);
         if (err) {
             elog("Failed to define property %s in database.", name);

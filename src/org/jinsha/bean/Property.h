@@ -127,10 +127,48 @@ public:
      */
     bool indexed() const {return m_indexed_;};
 
+////////////////////////////////////////////////////////////////
+// Load-all-into-memory related features. 
+// Make them private for now.
+////////////////////////////////////////////////////////////////
+private:
+    /**
+     * Create index for a property.
+     * 
+     * Notes:
+     * - This method is aimed to improve time performance during search, 
+     *   yet by using more memory space as a price. So create index when 
+     *   it is really needed.
+     * - This method will create index entries for all beans that have this 
+     *   property. So it may result the time complexity of this method O(n) 
+     *   where n is the number of beans in this world.
+     * - Once created, the index will be updated each time when  the property 
+     *    is set.
+     * - You can call this method at any time. However If index is desired 
+     *    for a property, It is strongly  sugguested to call this method right 
+     *    after the property is dfined.
+     * - Currently index is supported only on property of PrimaryType.
+     * 
+     * @return 0 if success, or  an error code
+     *                   -1: unable to create index
+     */
+    int createIndex();
+
+    /**
+     * Remove index of a property.
+     * 
+     * Note this method will delete all index entries, which may result 
+     * the time complexity of this method O(n) where n is the number 
+     * of beans in this world.
+     * 
+     * @return 0 for success, or -1 if the index doesn't exist
+     */
+    int removeIndex();
+
     /**
      * Get number of subjects.
      */
-    size_t getNumOfSubjects();
+    size_t getNumOfSubjects() const;
 
     /**
      * Get number of objects.
@@ -230,6 +268,9 @@ public:
      *     having the same type will be considered. 
      */
     void findGreaterThan(const Json::Value& value, std::list<oidType>& beans) const;
+////////////////////////////////////////////////////////////////
+// End of load-all-into-memory related features.
+////////////////////////////////////////////////////////////////
 
 
 private:
@@ -238,46 +279,11 @@ private:
 
     virtual ~Property();
 
-private:
     void addSubject(oidType id); 
     void removeSubject(oidType id); 
     void addObject(oidType id); 
     void removeObject(oidType id); 
 
-
-    /**
-     * Create index for a property.
-     * 
-     * Notes:
-     * - This method is aimed to improve time performance during search, 
-     *   yet by using more memory space as a price. So create index when 
-     *   it is really needed.
-     * - This method will create index entries for all beans that have this 
-     *   property. So it may result the time complexity of this method O(n) 
-     *   where n is the number of beans in this world.
-     * - Once created, the index will be updated each time when  the property 
-     *    is set.
-     * - You can call this method at any time. However If index is desired 
-     *    for a property, It is strongly  sugguested to call this method right 
-     *    after the property is dfined.
-     * - Currently index is supported only on property of PrimaryType.
-     * 
-     * @return 0 if success, or  an error code
-     *                   -1: unable to create index
-     */
-    int createIndex();
-
-    /**
-     * Remove index of a property.
-     * 
-     * Note this method will delete all index entries, which may result 
-     * the time complexity of this method O(n) where n is the number 
-     * of beans in this world.
-     * 
-     * @return 0 for success, or -1 if the index doesn't exist
-     */
-    int removeIndex();
-    
     void addIndex(Bean* bean, const Json::Value& value);
     bool removeIndex(Bean* bean, const Json::Value& value);
 
@@ -299,7 +305,6 @@ private:
 
     //keep all object beans for better performance
     std::map<oidType, unsigned int> m_objectMap_; 
-
 
     //index for true values
     std::map<oidType, Bean*> m_trueValueMap_;

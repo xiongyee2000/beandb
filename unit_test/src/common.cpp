@@ -1,5 +1,13 @@
-#include "./common.h"
 #include <gmock/gmock.h>
+
+
+//This is used to test private methods
+#define private public
+//This is used to test protected methods
+#define protected public
+
+#include "org/jinsha/bean/Property.h"
+#include "./common.h"
 
 ////////////////////////////////////////////////////////
 //global variables
@@ -28,24 +36,24 @@ void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex)
     testHelper.r_array_1 =  world.defineArrayRelation("r_array_1");
     testHelper.r_array_2 =  world.defineArrayRelation("r_array_2");
 
-    // if (needIndex)
-    // {
-//         testHelper.p_real->createIndex();
-//         testHelper.p_str->createIndex();
-//         testHelper.p_int->createIndex();
-//         testHelper.p_uint->createIndex();
-//         testHelper.p_int64->createIndex();
-//         testHelper.p_uint64->createIndex();
-//         testHelper.p_bool_0->createIndex();
-//         testHelper.p_bool_1->createIndex();
-//         testHelper.p1->createIndex();
-//         testHelper.p2->createIndex();
-//         testHelper.p_array_int->createIndex();
-//         testHelper.r1->createIndex();
-//         testHelper.r2->createIndex();
-//         testHelper.r_array_1->createIndex();
-//         testHelper.rArray_2->createIndex();
-    // }
+    if (needIndex)
+    {
+        testHelper.p_real->createIndex();
+        testHelper.p_str->createIndex();
+        testHelper.p_int->createIndex();
+        testHelper.p_uint->createIndex();
+        testHelper.p_int64->createIndex();
+        testHelper.p_uint64->createIndex();
+        testHelper.p_bool_0->createIndex();
+        testHelper.p_bool_1->createIndex();
+        testHelper.p1->createIndex();
+        testHelper.p2->createIndex();
+        testHelper.p_array_int->createIndex();
+        testHelper.r1->createIndex();
+        testHelper.r2->createIndex();
+        testHelper.r_array_1->createIndex();
+        testHelper.r_array_2->createIndex();
+    }
 }
 
 

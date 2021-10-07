@@ -1,6 +1,5 @@
 #pragma once
 
-#include "org/jinsha/bean/common.h"
 #include "org/jinsha/bean/BeanWorld.h"
 #include "./DummyBeanDB.h"
 
@@ -50,7 +49,7 @@ typedef struct TestHelper
 
 
 
-void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex = true);
+void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex = false);
 // void initTestHelper(TestHelper& testHelper, AbstractBeanDB& db, bool needIndex = false);
 
 

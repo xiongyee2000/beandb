@@ -152,8 +152,6 @@ int DummyBeanDB::undefineProperty_(Property* property)
 }
 
 
-// pidType DummyBeanDB::defineProperty_(const char* name, Property::Type type, 
-//     Property::ValueType valueType, bool needIndex, pidType& pid, bool& delayLoad)
 pidType DummyBeanDB::defineProperty_(const char* name, Property::Type type, 
     Property::ValueType valueType, pidType& pid, bool& delayLoad)
 {

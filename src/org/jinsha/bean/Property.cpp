@@ -24,7 +24,7 @@ Property::Property(BeanWorld* world, const char* name, pidType id,
     , m_id_(id)
     , m_propertyType_(type)
     , m_valueType_(valueType)
-    , m_indexed_(true)
+    , m_indexed_(false)
     , m_delayLoad_(delayLoad)
 {
 };
@@ -112,7 +112,7 @@ static bool doRemoveIndex(Bean* bean, const ValueT& value, MapT& map)
 }
 
 
-size_t Property::getNumOfSubjects()
+size_t Property::getNumOfSubjects() const
 {
     return m_subjectMap_.size();
 }

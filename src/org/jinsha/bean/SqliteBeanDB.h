@@ -6,6 +6,7 @@
 #include <unordered_map>
 
 #include "./Page.hpp"
+#include "./internal_common.hxx"
 
 namespace org {
 namespace jinsha {
@@ -178,8 +179,7 @@ private:
      */
      BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = 16) const;
 
-    int findSubject(pidType pid, oidType oid, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
-
+    BeanIdPage* findSubjects(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const;
 
 private:
     class SqliteBeanIdPage : public BeanIdPage {
@@ -187,6 +187,7 @@ private:
         SqliteBeanIdPage(unsigned int pageSize, BeanIdPage::LoadPageFuncType func) : BeanIdPage(pageSize, func) {};
     };
 
+    int loadPage_findSubjects(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
 
 private:
     int initDB();

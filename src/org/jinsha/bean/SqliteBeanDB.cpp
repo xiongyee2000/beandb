@@ -552,10 +552,10 @@ int  SqliteBeanDB::loadBeanProperty_(oidType beanId, const Property* property, J
     }
 
     if (property->isRelation()) {
-        snprintf(buff, 64, "SELECT OID from " TTABLE " WHERE SID = ? AND PID = %d;", 
+        snprintf(buff, sizeof(buff), "SELECT OID from " TTABLE " WHERE SID = ? AND PID = %d;", 
             property->getId());
     } else {
-        snprintf(buff, 64, "SELECT VALUE from p_%s WHERE SID = ?;", 
+        snprintf(buff, sizeof(buff), "SELECT VALUE from p_%s WHERE SID = ?;", 
             pname);
     }
 
@@ -1719,27 +1719,110 @@ out:
     return err;
 }
 
-int SqliteBeanDB::findSubject(pidType pid, oidType oid, unsigned int pageSize, unsigned long pageIndex,  std::vector<oidType>& sids)
+
+BeanIdPage* SqliteBeanDB::findEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
 {
-    CHECK_CONNECTED();
+    return findSubjects(op_eq, property, value, pageSize);
+}
 
-    static const char SELECT_TRIPLE[] = "SELECT SID from " TTABLE " WHERE PID = ? AND OID= ? limit ?,? ;";
-    sqlite3_stmt *pstmt = nullptr;
+
+int SqliteBeanDB::loadPage_findSubjects(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
+{
+   CHECK_CONNECTED();
+
+    static const char* OP_EQ_STR = "==";
+    static const char* OP_LE_STR = "<=";
+    static const char* OP_LT_STR = "<";
+    static const char* OP_GE_STR = ">=";
+    static const char* OP_GT_STR = ">";
+    // static const char* OP_LIKE_STR = "like";
     int err = 0;
-    int size = 0;
-    oidType sid = 0;
-    sqlite3_int64 limitFrom = pageSize * pageIndex;
     bool found = false;
+    char buff[128]{0};
+    char * sql = &buff[0];
+    const char* op_str = nullptr;
+    sqlite3_stmt *pstmt = nullptr;
+    int size = 0;
+    int nCol = 1;
+    oidType sid = 0;
+    oidType oid = 0;
+    sqlite3_int64 limitFrom = pageSize * pageIndex;
+    const auto& pname = property->getName().c_str();
+    pidType pid = property->getId();
+    bool isRelation = property->isRelation();
+    bool isArray = property->isArray();
+    Property::Type ptype = property->getType();
+    Property::ValueType vtype = property->getValueType();
 
-    err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_TRIPLE, strlen(SELECT_TRIPLE), &pstmt, nullptr);
+    switch (optype)
+    {
+        case op_eq:
+            op_str = OP_EQ_STR;
+            break;
+        case op_le:
+            op_str = OP_LE_STR;
+            break;
+        case op_lt:
+            op_str = OP_LT_STR;
+            break;
+        case op_ge:
+            op_str = OP_GE_STR;
+            break;
+        case op_gt:
+            op_str = OP_GT_STR;
+            break;
+        case op_like:
+            op_str = OP_EQ_STR;
+            break;
+        default:
+            break;
+    }
+
+    if (isRelation) {
+        snprintf(buff, sizeof(buff), "SELECT SID from " TTABLE " WHERE PID = ? AND OID %s ? limit ?,? ;", op_str);
+    } else {
+        snprintf(buff, sizeof(buff), "SELECT SID from p_%s WHERE VALUE %s ? limit ?,? ;", pname, op_str);
+    }
+    
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto _out;
-    err = sqlite3_bind_int64(pstmt, 1, pid);
+    if (isRelation) {
+        err = sqlite3_bind_int64(pstmt, nCol++, pid);
+        if (err != SQLITE_OK) goto _out;
+#if defined(JSON_NO_INT64)
+            oid = (oidType)value.asInt(), 
+#else
+            oid = (oidType)value.asInt64(), 
+#endif
+        err = sqlite3_bind_int64(pstmt, nCol++, oid);
+        if (err != SQLITE_OK) goto _out;
+    } else {
+        switch (value.type()) {
+            case Json::intValue:
+                err = sqlite3_bind_int(pstmt, nCol++, value.asInt());
+                break;
+            case Json::uintValue:
+                err = sqlite3_bind_int(pstmt, nCol++, value.asUInt());
+                break;
+            case Json::realValue:
+                err = sqlite3_bind_double(pstmt, nCol++, value.asDouble());         
+                break;
+            case Json::stringValue:
+                err = sqlite3_bind_text(pstmt, nCol++, value.asCString(), -1, nullptr);         
+                break;
+            case Json::booleanValue:
+                err = sqlite3_bind_int(pstmt, nCol++, value.asBool() ? 1 : 0);
+                break;
+            default:
+                elog("[%s:%d] value type %d not supported" ,  __FILE__, __LINE__, value.type());
+                break;
+        }
+        if (err != SQLITE_OK) goto _out;      
+    }
+
+    err = sqlite3_bind_int64(pstmt, nCol++, limitFrom);
     if (err != SQLITE_OK) goto _out;
-    err = sqlite3_bind_int64(pstmt, 2, oid);
-    if (err != SQLITE_OK) goto _out;
-    err = sqlite3_bind_int64(pstmt, 3, limitFrom);
-    if (err != SQLITE_OK) goto _out;
-    err = sqlite3_bind_int(pstmt, 4, pageSize);
+    err = sqlite3_bind_int(pstmt, nCol++, pageSize);
     if (err != SQLITE_OK) goto _out;
 
     sids.clear();
@@ -1766,38 +1849,57 @@ _out:
     return err;
 }
 
-BeanIdPage* SqliteBeanDB::findEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
-{
+
+BeanIdPage* SqliteBeanDB::findSubjects(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const
+{  
+    if (optype == op_has) return nullptr;
     if (property == nullptr) return nullptr; 
-    if (pageSize == 0) return nullptr;
     if (value.isNull()) return nullptr; 
     if (value.isArray()) return nullptr; 
     if (value.isObject()) return nullptr; 
+    if (pageSize == 0) return nullptr;
     if (!connected()) return nullptr;
 
+    int err = 0;
+    SqliteBeanIdPage* page = nullptr;
     auto& pname = property->getName();
     pidType pid = property->getId();
     bool isRelation = property->isRelation();
     bool isArray = property->isArray();
-    int err = 0;
-    SqliteBeanIdPage* page = nullptr;
+    Property::Type ptype = property->getType();
+    Property::ValueType vtype = property->getValueType();
 
-    if (isRelation) {
-        auto func = std::bind(&SqliteBeanDB::findSubject, 
-            (SqliteBeanDB*)this, 
-            property->getId(), 
-#if defined(JSON_NO_INT64)
-            (oidType)value.asInt(), 
-#else
-            (oidType)value.asInt64(), 
-#endif
-            placeholders::_1, 
-            placeholders::_2,
-            placeholders::_3);
-        page = new SqliteBeanIdPage(pageSize, func);
-    } else {
-        //todo
+    if (vtype != (Property::ValueType)value.type()) return nullptr;
+
+    if (optype == op_like) {
+        elog("%s", "op_like not supported yet. \n");
+        return nullptr;
     }
+
+    if (isRelation && optype != op_eq) {
+        elog("%s", "relation search only supports op_eq. \n");
+        return nullptr;
+    }
+
+    if (vtype == Property::BoolType && optype != op_eq) {
+        elog("%s", "bool value only supports op_eq. \n");
+        return nullptr;
+    }
+
+    if (vtype != Property::StringType && optype == op_like) {
+        elog("%s", "op_like only applies to string type. \n");
+        return nullptr;
+    }
+
+    auto func = std::bind(&SqliteBeanDB::loadPage_findSubjects, 
+        (SqliteBeanDB*)this, 
+        optype,
+        property, 
+        value,
+        placeholders::_1, 
+        placeholders::_2,
+        placeholders::_3);
+    page = new SqliteBeanIdPage(pageSize, func);
 
     return page;
 }

@@ -1082,7 +1082,6 @@ TEST(SqliteBeanDB, nativeData)
 }
 
 
-
 TEST(SqliteBeanDB, findEqual)
 {
     char buff[128] = {0};
@@ -1134,43 +1133,38 @@ TEST(SqliteBeanDB, findEqual)
     page = testdb.findEqual(testHelper.r1, value);
     EXPECT_TRUE(page == nullptr);
 
-    page = testdb.findEqual(testHelper.r1, 3, 3);
+    page = testdb.findEqual(testHelper.r1, bean3->getId(), 3);
     EXPECT_TRUE(page != nullptr);
     EXPECT_TRUE(page->getPageSize() == 3);
     EXPECT_TRUE(page->getPageIndex() == 0);
-    // beanIds = &page->getElements();
     EXPECT_TRUE(page->size() == 3);
     EXPECT_TRUE(page->at(0) == 3);
     EXPECT_TRUE(page->at(1) == 1);
     EXPECT_TRUE(page->at(2) == 2);
     delete page;
  
-    page = testdb.findEqual(testHelper.r1, 3, 1);
+    page = testdb.findEqual(testHelper.r1, bean3->getId(), 1);
     EXPECT_TRUE(page != nullptr);
     EXPECT_TRUE(page->getPageSize() == 1);
     EXPECT_TRUE(page->getPageIndex() == 0);
-    // beanIds = page->getElements();
     EXPECT_TRUE(page->size() == 1);
     EXPECT_TRUE(page->at(0) == 3);
     err = page->next();
     EXPECT_TRUE(err == 0);
-    // beanIds = page->getElements();
     EXPECT_TRUE(page->size() == 1);
     EXPECT_TRUE(page->at(0) == 1);
     err = page->next();
     EXPECT_TRUE(err == 0);
-    // beanIds = page->getElements();
     EXPECT_TRUE(page->size() == 1);
     EXPECT_TRUE(page->at(0) == 2);
     err = page->next();
     EXPECT_TRUE(err == -1001);
     delete page;
 
-    page = testdb.findEqual(testHelper.r1, 3, 2);
+    page = testdb.findEqual(testHelper.r1, bean3->getId(), 2);
     EXPECT_TRUE(page != nullptr);
     EXPECT_TRUE(page->getPageSize() == 2);
     EXPECT_TRUE(page->getPageIndex() == 0);
-    // beanIds = page->getElements();
     EXPECT_TRUE(page->size() == 2);
     EXPECT_TRUE(page->at(0) == 3);
     EXPECT_TRUE(page->at(1) == 1);
@@ -1203,20 +1197,18 @@ TEST(SqliteBeanDB, findEqual)
     
     delete page;
 
-    page = testdb.findEqual(testHelper.r_array_1, 1, 3);
+    page = testdb.findEqual(testHelper.r_array_1, bean1->getId(), 3);
     EXPECT_TRUE(page != nullptr);
-    // beanIds = page->getElements();
     EXPECT_TRUE(page->size() == 3);
     EXPECT_TRUE(page->at(0) == 3);
     EXPECT_TRUE(page->at(1) == 1);
     EXPECT_TRUE(page->at(2) == 2);
     delete page;
 
-    page = testdb.findEqual(testHelper.r_array_1, 1, 2);
+    page = testdb.findEqual(testHelper.r_array_1, bean1->getId(), 2);
     EXPECT_TRUE(page != nullptr);
     EXPECT_TRUE(page->getPageSize() == 2);
     EXPECT_TRUE(page->getPageIndex() == 0);
-    // beanIds = page->getElements();
     EXPECT_TRUE(page->size() == 2);
     EXPECT_TRUE(page->at(0) == 3);
     EXPECT_TRUE(page->at(1) == 1);
@@ -1235,7 +1227,7 @@ TEST(SqliteBeanDB, findEqual)
 
     testdb.disconnect();
 
-    page = testdb.findEqual(testHelper.r1, 1);
+    page = testdb.findEqual(testHelper.r1, bean1->getId());
     EXPECT_TRUE(page == nullptr);
     delete page;
 }

@@ -23,31 +23,31 @@ void basic()
     DummyBeanDB dummyDB;
     BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
     EXPECT_TRUE(nullptr != world);
-    EXPECT_TRUE(world->getNumOfBeans() == 0);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 0);
     EXPECT_TRUE(world->getProperties().size() == 0);
 
-    EXPECT_TRUE(world->getNumOfBeans() == 0);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 0);
 
     Bean *bean1 = world->createBean();
     EXPECT_TRUE(nullptr != bean1);
-    EXPECT_TRUE(world->getNumOfBeans() == 1);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 1);
 
     Bean *bean2 = world->createBean();
     EXPECT_TRUE(nullptr != bean2);
-    EXPECT_TRUE(world->getNumOfBeans() == 2);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 2);
 
     Bean *bean3 = world->createBean();
     EXPECT_TRUE(nullptr != bean3);
-    EXPECT_TRUE(world->getNumOfBeans() == 3);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 3);
 
     world->removeBean(bean1->getId());
-    EXPECT_TRUE(world->getNumOfBeans() == 2);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 2);
 
     world->removeBean(bean2->getId());
-    EXPECT_TRUE(world->getNumOfBeans() == 1);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 1);
 
     world->removeBean(bean3->getId());
-    EXPECT_TRUE(world->getNumOfBeans() == 0);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 0);
 
     delete world;
 }
@@ -75,7 +75,7 @@ TEST(BeanWorld, getBeans)
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
     Bean *bean3 = world->createBean();
-    auto& beans  = world->getBeans();
+    auto& beans  = world->getCachedBeans();
     EXPECT_TRUE(beans.size() == 3);
 
     delete world;
@@ -113,10 +113,10 @@ TEST(BeanWorld, clear)
     world->createBean();
     world->createBean();
     world->createBean();
-    EXPECT_TRUE(world->getNumOfBeans() == 3);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 3);
 
     world->clear();
-    EXPECT_TRUE(world->getNumOfBeans() == 0);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 0);
 
     delete world;
 }

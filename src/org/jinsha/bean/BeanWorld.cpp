@@ -109,12 +109,12 @@ void BeanWorld::removeBean(oidType id)
 }
 
 
-int BeanWorld::getNumOfBeans()
+int BeanWorld::getCachedNumOfBeans()
 {
     return m_beans_.size();
 }
 
-const unordered_map<oidType, Bean*>& BeanWorld::getBeans()
+const unordered_map<oidType, Bean*>& BeanWorld::getCachedBeans()
 {
     return m_beans_;
 }

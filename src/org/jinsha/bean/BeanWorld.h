@@ -9,6 +9,7 @@
 #include "./Bean.h"
 #include "./BeanDBUserIntf.h"
 #include "./AbstractBeanDB.h"
+#include "./Page.hpp"
 
 namespace org {
 namespace jinsha {
@@ -21,8 +22,11 @@ class AbstractBeanDB;
 class BeanWorld : public BeanDBUserIntf
 {
 public:
+    static const unsigned int DEFAULT_PAGE_SIZE = 8u;
+
     /**
      * Remove all beans from this world.
+     * 
      */
     virtual void clear();
 
@@ -114,19 +118,44 @@ public:
     virtual void removeBean(oidType id) override;
 
     /**
-     * Get total number of beans.
+     * Get total number of beans chached in this world (in memory).
      * 
      * @return the total number of beans
      */
-    virtual int getNumOfBeans();
+    virtual int getCachedNumOfBeans();
 
     /**
-     * Get all beans in this world.
+     * Get all beans chached in this world (in memory).
      * 
      * @return a map containing all beans
      */
-    virtual const std::unordered_map<oidType, Bean*>& getBeans();
+    virtual const std::unordered_map<oidType, Bean*>& getCachedBeans();
 
+
+    /***********************************************************
+     * search related
+     ***********************************************************/
+    /**
+     * Find beans the property values of which meet the condition 
+     * given by optype, property and value.
+     * 
+     * The condition could be understood as:
+     * bean->getProperty(<property>) <optype> <value>
+     * 
+     * Notes:
+     * - The property and the value shall be of consistent type;
+     * - This method could be used to get relation subjects, 
+     *   in which case optype, property, value  shall be op_eq, 
+     *   a relation property, and object bean id respectively.
+     * 
+     * @param optype operation type  of the search criteria
+     * @param property the property
+     * @param value the value
+     * @param pageSize the page size of the returned page
+     */
+    BeanIdPage* findBeans_(oidType optype, Property* property, Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE);
+
+    // BeanIdPage* findBeans_(oidType optype, Property* property, Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE);
 
 private:
     /**

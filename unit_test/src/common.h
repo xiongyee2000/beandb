@@ -59,3 +59,15 @@ void validateBeanProperties(TestHelper& testHelper, Bean* bean);
 void validateBeanNativeData(TestHelper& testHelper, Bean* bean);
 void validateBean(TestHelper& testHelper, Bean* bean);
 // static void evaluate_testdb_empty_property(AbstractBeanDB& testdb);
+
+void test_find_init(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3);
+void test_findEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2);
+void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<oidType>& beans, bool needIndex);
+void test_FindGreaterEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3);
+void test_findGreaterThan_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3);
+void test_findLessEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3);
+void test_findLessThan_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3);
+void test_findObjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bean1, Bean& bean2, Bean& bean3, std::list<oidType>& beans, bool needIndex = false);
+void test_findSubjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bean1, Bean& bean2, Bean& bean3, std::list<oidType>& beans, bool needIndex);
+void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<oidType>& beans, bool needIndex);
+void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::list<oidType>& beans, bool needIndex = false);

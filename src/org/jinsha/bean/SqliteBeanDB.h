@@ -166,21 +166,22 @@ private:
      */
     virtual int deleteBeanNativeData_(oidType beanId) override;
 
+    /**
+     * @ref BeanDBPersistenceIntf
+     */
+   BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
     /**
-     * Find beans whose property values are equal to the given one.
-     * 
-     * @param value the value of the property
-     * @param beans the results
-     * 
-     * Notes:
-     * 1. the search is type restricted, i.e. only those beans with the property value
-     *     having the same type will be considered. 
+     * @ref BeanDBPersistenceIntf
      */
-     BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = 16) const;
+    virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
-    BeanIdPage* findSubjects(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const;
+    /**
+     * @ref BeanDBPersistenceIntf
+     */
+    virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
+    
 private:
     class SqliteBeanIdPage : public BeanIdPage {
         public:
@@ -198,7 +199,6 @@ private:
     int getIdByPropertyIndex(const Property* property, oidType sid, Json::ArrayIndex index, sqlite3_int64& id) const;
     int deleteRelationByObject(oidType id);    
     int deletePropertyFromAllBeans(Property* property);
-
 
 private:
     std::string m_dir_;

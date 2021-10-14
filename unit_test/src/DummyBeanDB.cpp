@@ -222,6 +222,22 @@ int DummyBeanDB::deleteBeanNativeData_(oidType beanId)
 }
 
 
+BeanIdPage* DummyBeanDB::findSubjects(const Property* property, unsigned int pageSize) const
+{
+    return nullptr;
+}
+
+
+BeanIdPage* DummyBeanDB::findObjects(const Property* property, unsigned int pageSize) const
+{
+    return nullptr;
+}
+
+BeanIdPage* DummyBeanDB::findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const
+{
+    return nullptr;
+}
+
 }
 }
 }

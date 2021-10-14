@@ -1720,12 +1720,6 @@ out:
 }
 
 
-BeanIdPage* SqliteBeanDB::findEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
-{
-    return findSubjects(op_eq, property, value, pageSize);
-}
-
-
 int SqliteBeanDB::loadPage_findSubjects(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
 {
    CHECK_CONNECTED();
@@ -1850,7 +1844,7 @@ _out:
 }
 
 
-BeanIdPage* SqliteBeanDB::findSubjects(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const
+BeanIdPage* SqliteBeanDB::findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const
 {  
     if (optype == op_has) return nullptr;
     if (property == nullptr) return nullptr; 
@@ -1903,6 +1897,19 @@ BeanIdPage* SqliteBeanDB::findSubjects(opType optype, const Property* property, 
 
     return page;
 }
+
+
+BeanIdPage* SqliteBeanDB::findSubjects(const Property* property, unsigned int pageSize) const
+{
+    return nullptr;
+}
+
+
+BeanIdPage* SqliteBeanDB::findObjects(const Property* property, unsigned int pageSize) const
+{
+    return nullptr;
+}
+
 
 }
 }

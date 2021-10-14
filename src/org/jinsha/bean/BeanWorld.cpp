@@ -322,6 +322,54 @@ int BeanWorld::saveAll()
 }
 
 
+BeanIdPage* BeanWorld::findEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
+{
+    return findBeans(op_eq, property, value, pageSize);
+}
+
+
+BeanIdPage* BeanWorld::findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
+{
+    return findBeans(op_le, property, value, pageSize);
+}
+
+
+BeanIdPage* BeanWorld::findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize) const
+{
+    return findBeans(op_lt, property, value, pageSize);
+}
+
+
+BeanIdPage* BeanWorld::findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
+{
+    return findBeans(op_ge, property, value, pageSize);
+}
+
+
+BeanIdPage* BeanWorld::findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize) const
+{
+    return findBeans(op_gt, property, value, pageSize);
+}
+
+
+BeanIdPage* BeanWorld::findSubjects(const Property* property, unsigned int pageSize) const
+{
+    return nullptr;
+}
+
+
+BeanIdPage* BeanWorld::findObjects(const Property* property, unsigned int pageSize) const
+{
+    return nullptr;
+}
+
+
+BeanIdPage* BeanWorld::findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const
+{
+    if (m_db_ != nullptr && m_db_->connected()) return nullptr;
+    return m_db_->findBeans(optype, property, value, pageSize);
+}
+
 }
 }
 }

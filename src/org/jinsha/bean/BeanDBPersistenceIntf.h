@@ -5,6 +5,7 @@
 
 #include "./Property.h"
 #include "./Bean.h"
+#include "./Page.hpp"
 
 namespace org {
 namespace jinsha {
@@ -12,6 +13,9 @@ namespace bean {
 
 class BeanDBPersistenceIntf
 {
+public: 
+    static const unsigned int DEFAULT_PAGE_SIZE = 8u;
+    
     /***********************************************************
      * connection related
      ***********************************************************/
@@ -260,6 +264,53 @@ public:
         const Json::Value& value) = 0;
 
     virtual int deleteBeanNativeData_(oidType beanId) = 0;
+
+
+    /***********************************************************
+     * search related
+     ***********************************************************/
+    /**
+     * Find beans the property values of which meet the condition 
+     * given by optype, property and value.
+     * 
+     * The condition could be represented as:
+     * bean->getProperty(<property>) <optype> <value>
+     * 
+     * @param property the property
+     * @param value the value of the property
+     * @param pageSize the page size of the returned BeanIdPage
+     * @return the first page of the result
+     * 
+     * Notes:
+     * 1. when the given property is a relation, the value is interpreted as 
+     *     the object bean id;
+     * 2. argument value shall not be array or object;
+     * 3. the search is type restricted, i.e. only those beans with the property value
+     *     having the same type will be considered;
+     */
+   virtual BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const = 0;
+
+    /**
+     * Find subject beans of a given relation property.
+     * 
+     * @param property the property
+     * @param pageSize the page size of the returned BeanIdPage
+     * 
+     * Notes:
+     * 1. only applies to relation properties;
+     */
+    virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const = 0;
+
+    /**
+     * Find object beans of a given relation property.
+     * 
+     * @param property the property
+     * @param pageSize the page size of the returned BeanIdPage
+     * 
+     * Notes:
+     * 1. only applies to relation properties;
+     */
+    virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const = 0;
 
 };
 

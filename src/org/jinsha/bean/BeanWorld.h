@@ -22,7 +22,6 @@ class AbstractBeanDB;
 class BeanWorld : public BeanDBUserIntf
 {
 public:
-    static const unsigned int DEFAULT_PAGE_SIZE = 8u;
 
     /**
      * Remove all beans from this world.
@@ -136,26 +135,39 @@ public:
      * search related
      ***********************************************************/
     /**
-     * Find beans the property values of which meet the condition 
-     * given by optype, property and value.
-     * 
-     * The condition could be understood as:
-     * bean->getProperty(<property>) <optype> <value>
-     * 
-     * Notes:
-     * - The property and the value shall be of consistent type;
-     * - This method could be used to get relation subjects, 
-     *   in which case optype, property, value  shall be op_eq, 
-     *   a relation property, and object bean id respectively.
-     * 
-     * @param optype operation type  of the search criteria
-     * @param property the property
-     * @param value the value
-     * @param pageSize the page size of the returned page
+     * @ref BeanDBPersistenceIntf::findBeans()
      */
-    BeanIdPage* findBeans_(oidType optype, Property* property, Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE);
+    virtual BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
 
-    // BeanIdPage* findBeans_(oidType optype, Property* property, Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE);
+    /**
+     * @ref BeanDBPersistenceIntf::findBeans()
+     */
+    virtual BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+
+    /**
+     * @ref BeanDBPersistenceIntf::findBeans()
+     */
+    virtual BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+
+    /**
+     * @ref BeanDBPersistenceIntf::findBeans()
+     */
+    virtual BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+
+    /**
+     * @ref BeanDBPersistenceIntf::findBeans()
+     */
+    virtual BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+
+    /**
+     * @ref BeanDBPersistenceIntf
+     */
+    virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+
+    /**
+     * @ref BeanDBPersistenceIntf
+     */
+    virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
 
 private:
     /**
@@ -174,6 +186,7 @@ private:
     Property* definePropertyCommon_(const char* name, 
         Property::Type type, 
         Property::ValueType valueType);
+   BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const;
 
 private:
     std::unordered_map<oidType, Bean*> m_beans_;

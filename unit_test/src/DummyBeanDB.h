@@ -59,6 +59,21 @@ public:
 
     virtual int reInit_() override;
 
+    /**
+     * @ref BeanDBPersistenceIntf
+     */
+    virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
+
+    /**
+     * @ref BeanDBPersistenceIntf
+     */
+    virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
+
+    /**
+     * @ref BeanDBPersistenceIntf
+     */
+   BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
+
 private:
     int internalInit();
 

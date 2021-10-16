@@ -1,14 +1,13 @@
 #pragma once
 
-#include "./BeanDBUserIntf.h"
-#include "./BeanDBPersistenceIntf.h"
+#include "./BeanDBIntf.h"
 #include "./BeanWorld.h"
 
 namespace org {
 namespace jinsha {
 namespace bean {
 
-class AbstractBeanDB : public BeanDBPersistenceIntf
+class AbstractBeanDB : public BeanDBIntf
 {
 
     ////////////////////////////////////////////////////////////////////////

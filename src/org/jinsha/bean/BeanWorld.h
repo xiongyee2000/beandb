@@ -137,37 +137,37 @@ public:
     /**
      * @ref BeanDBPersistenceIntf::findBeans()
      */
-    virtual BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+    virtual BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPersistenceIntf::findBeans()
      */
-    virtual BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+    virtual BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPersistenceIntf::findBeans()
      */
-    virtual BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+    virtual BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPersistenceIntf::findBeans()
      */
-    virtual BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+    virtual BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPersistenceIntf::findBeans()
      */
-    virtual BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+    virtual BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPersistenceIntf
      */
-    virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+    virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPersistenceIntf
      */
-    virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = BeanDBPersistenceIntf::DEFAULT_PAGE_SIZE) const;
+    virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
 private:
     /**

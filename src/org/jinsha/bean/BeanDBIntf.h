@@ -11,7 +11,7 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
-class BeanDBPersistenceIntf
+class BeanDBIntf
 {
 public: 
     static const unsigned int DEFAULT_PAGE_SIZE = 8u;
@@ -295,6 +295,7 @@ public:
      * 
      * @param property the property
      * @param pageSize the page size of the returned BeanIdPage
+     * @return the first page of the result
      * 
      * Notes:
      * 1. only applies to relation properties;
@@ -306,6 +307,7 @@ public:
      * 
      * @param property the property
      * @param pageSize the page size of the returned BeanIdPage
+     * @return the first page of the result
      * 
      * Notes:
      * 1. only applies to relation properties;

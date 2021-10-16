@@ -366,7 +366,7 @@ BeanIdPage* BeanWorld::findObjects(const Property* property, unsigned int pageSi
 
 BeanIdPage* BeanWorld::findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const
 {
-    if (m_db_ != nullptr && m_db_->connected()) return nullptr;
+    if (m_db_ == nullptr || !m_db_->connected()) return nullptr;
     return m_db_->findBeans(optype, property, value, pageSize);
 }
 

@@ -37,37 +37,37 @@ public:
 
 private:
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int reInit_() override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int connect_() override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int disconnect_() override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int beginTransaction_() override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int commitTransaction_() override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int rollbackTransaction_() override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int defineProperty_(const char* name, 
         Property::Type type,
@@ -76,61 +76,61 @@ private:
         bool& delayLoad) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int undefineProperty_(Property* property) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int loadProperties_(std::unordered_map<std::string, Property*>& properties) const override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int createBean_(oidType &id);
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value* nativeData = nullptr) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value* nativeData = nullptr) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int deleteBean_(oidType id) override;
 
     // /**
-    //  * @ref BeanDBPersistenceIntf
+    //  * @ref BeanDBPIntf
     //  */
     // virtual std::list<std::string> getBeanProperties_(oidType id) const override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int insertBeanProperty_(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int updateBeanProperty_(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int updateBeanProperty_(oidType beanId, 
         const Property* property, 
@@ -138,46 +138,46 @@ private:
         const Json::Value& value) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int deleteBeanProperty_(oidType beanId, 
         const Property* property) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int deleteBeanProperty_(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) override;
     
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int loadBeanNativeData_(oidType beanId, Json::Value& value) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int updateBeanNativeData_(oidType beanId, 
         const Json::Value& value) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual int deleteBeanNativeData_(oidType beanId) override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
    BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
@@ -188,7 +188,8 @@ private:
         SqliteBeanIdPage(unsigned int pageSize, BeanIdPage::LoadPageFuncType func) : BeanIdPage(pageSize, func) {};
     };
 
-    int loadPage_findSubjects(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
+    int loadPage_findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
+    int loadPage_findSubjects_Objects(bool findSubjects, const Property* property, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
 
 private:
     int initDB();
@@ -199,6 +200,7 @@ private:
     int getIdByPropertyIndex(const Property* property, oidType sid, Json::ArrayIndex index, sqlite3_int64& id) const;
     int deleteRelationByObject(oidType id);    
     int deletePropertyFromAllBeans(Property* property);
+    BeanIdPage* findSubjectsObjects(bool findSubjects, const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
 private:
     std::string m_dir_;

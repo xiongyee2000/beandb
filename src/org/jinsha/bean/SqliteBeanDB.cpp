@@ -1069,7 +1069,10 @@ int SqliteBeanDB::deleteBeanProperty_(oidType beanId,
         return err;
     }
 
-    snprintf(buff, sizeof(buff), "DELETE FROM p_%s WHERE ID = ?;", pname);
+    if (property->isRelation()) 
+        snprintf(buff, sizeof(buff), "DELETE FROM " TTABLE " WHERE ID = ?;");
+    else
+        snprintf(buff, sizeof(buff), "DELETE FROM p_%s WHERE ID = ?;", pname);
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
     if (err != SQLITE_OK) goto out;
     nCol = 1;
@@ -1720,7 +1723,7 @@ out:
 }
 
 
-int SqliteBeanDB::loadPage_findSubjects(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
+int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
 {
    CHECK_CONNECTED();
 
@@ -1773,9 +1776,9 @@ int SqliteBeanDB::loadPage_findSubjects(opType optype, const Property* property,
     }
 
     if (isRelation) {
-        snprintf(buff, sizeof(buff), "SELECT SID from " TTABLE " WHERE PID = ? AND OID %s ? limit ?,? ;", op_str);
+        snprintf(buff, sizeof(buff), "SELECT DISTINCT SID from " TTABLE " WHERE PID = ? AND OID %s ? limit ?,? ;", op_str);
     } else {
-        snprintf(buff, sizeof(buff), "SELECT SID from p_%s WHERE VALUE %s ? limit ?,? ;", pname, op_str);
+        snprintf(buff, sizeof(buff), "SELECT DISTINCT SID from p_%s WHERE VALUE %s ? limit ?,? ;", pname, op_str);
     }
     
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
@@ -1813,6 +1816,67 @@ int SqliteBeanDB::loadPage_findSubjects(opType optype, const Property* property,
         }
         if (err != SQLITE_OK) goto _out;      
     }
+
+    err = sqlite3_bind_int64(pstmt, nCol++, limitFrom);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int(pstmt, nCol++, pageSize);
+    if (err != SQLITE_OK) goto _out;
+
+    sids.clear();
+	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+        sid = sqlite3_column_int64(pstmt, 0);
+        sids.push_back(sid);
+        found = true;
+    }
+
+_out:
+    if (err > 0) {
+        if (err != SQLITE_OK && err != SQLITE_DONE) {
+            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+        } else {
+            if (found)
+                err = 0;
+            else 
+                err = -1001;
+        }
+    }
+    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+    return err;
+}
+
+
+int SqliteBeanDB::loadPage_findSubjects_Objects(bool findSubjects, const Property* property, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
+{
+   CHECK_CONNECTED();
+
+    int err = 0;
+    bool found = false;
+    char buff[128]{0};
+    char * sql = &buff[0];
+    const char* op_str = nullptr;
+    sqlite3_stmt *pstmt = nullptr;
+    int size = 0;
+    int nCol = 1;
+    oidType sid = 0;
+    sqlite3_int64 limitFrom = pageSize * pageIndex;
+    const auto& pname = property->getName().c_str();
+    pidType pid = property->getId();
+    bool isRelation = property->isRelation();
+    bool isArray = property->isArray();
+    Property::Type ptype = property->getType();
+    Property::ValueType vtype = property->getValueType();
+
+    if (findSubjects) 
+        snprintf(buff, sizeof(buff), "SELECT DISTINCT SID from " TTABLE " WHERE PID = ? limit ?,? ;");
+    else
+        snprintf(buff, sizeof(buff), "SELECT DISTINCT OID from " TTABLE " WHERE PID = ? limit ?,? ;");
+    
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int64(pstmt, nCol++, pid);
+    if (err != SQLITE_OK) goto _out;
 
     err = sqlite3_bind_int64(pstmt, nCol++, limitFrom);
     if (err != SQLITE_OK) goto _out;
@@ -1885,7 +1949,7 @@ BeanIdPage* SqliteBeanDB::findBeans(opType optype, const Property* property, con
         return nullptr;
     }
 
-    auto func = std::bind(&SqliteBeanDB::loadPage_findSubjects, 
+    auto func = std::bind(&SqliteBeanDB::loadPage_findBeans, 
         (SqliteBeanDB*)this, 
         optype,
         property, 
@@ -1901,15 +1965,44 @@ BeanIdPage* SqliteBeanDB::findBeans(opType optype, const Property* property, con
 
 BeanIdPage* SqliteBeanDB::findSubjects(const Property* property, unsigned int pageSize) const
 {
-    return nullptr;
+    return findSubjectsObjects(true, property, pageSize);
 }
 
 
 BeanIdPage* SqliteBeanDB::findObjects(const Property* property, unsigned int pageSize) const
 {
-    return nullptr;
+    return findSubjectsObjects(false, property, pageSize);
 }
 
+
+BeanIdPage* SqliteBeanDB::findSubjectsObjects(bool findSubjects, const Property* property, unsigned int pageSize) const
+{
+    if (property == nullptr) return nullptr; 
+    if (pageSize == 0) return nullptr;
+    if (!connected()) return nullptr;
+
+    int err = 0;
+    SqliteBeanIdPage* page = nullptr;
+    auto& pname = property->getName();
+    pidType pid = property->getId();
+    bool isRelation = property->isRelation();
+
+    if (!isRelation) {
+        elog("%s", "only relation property is supported for this method. \n");
+        return nullptr;
+    }
+
+    auto func = std::bind(&SqliteBeanDB::loadPage_findSubjects_Objects, 
+        (SqliteBeanDB*)this, 
+        findSubjects,
+        property, 
+        placeholders::_1, 
+        placeholders::_2,
+        placeholders::_3);
+    page = new SqliteBeanIdPage(pageSize, func);
+
+    return page;
+}
 
 }
 }

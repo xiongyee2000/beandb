@@ -1836,3 +1836,166 @@ TEST(SqliteBeanDB, findEqual_relation)
     EXPECT_TRUE(page == nullptr);
     delete page;
 }
+
+
+TEST(SqliteBeanDB, findSubjects)
+{
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world);
+
+    Bean* bean1 = world->createBean();
+    Bean* bean2 = world->createBean();
+    Bean* bean3 = world->createBean();
+
+    page = world->findSubjects(testHelper.p_int);
+    EXPECT_TRUE(page == nullptr);
+    page = world->findSubjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 0);
+    page = world->findSubjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 0);
+
+    bean1->setRelation(testHelper.r1, bean3);
+    page = world->findSubjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    bean2->setRelation(testHelper.r1, bean3);
+    page = world->findSubjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    EXPECT_TRUE(page->at(1) == bean2->getId());
+
+    bean1->removeProperty(testHelper.r1);
+    page = world->findSubjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == bean2->getId());
+
+    bean2->removeProperty(testHelper.r1);
+    page = world->findSubjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 0);
+
+    bean1->createArrayRelation(testHelper.r_array_1);
+    bean2->createArrayRelation(testHelper.r_array_1);
+    page = world->findSubjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 0);
+
+    bean1->appendRelation(testHelper.r_array_1, bean1);
+    page = world->findSubjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    bean1->appendRelation(testHelper.r_array_1, bean2);
+    page = world->findSubjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    bean2->appendRelation(testHelper.r_array_1, bean1);
+    page = world->findSubjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    EXPECT_TRUE(page->at(1) == bean2->getId());
+    bean2->appendRelation(testHelper.r_array_1, bean2);
+    page = world->findSubjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    EXPECT_TRUE(page->at(1) == bean2->getId());
+
+    bean1->removeProperty(testHelper.r_array_1);
+    page = world->findSubjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == bean2->getId());
+    bean2->removeProperty(testHelper.r_array_1);
+    page = world->findSubjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 0);
+
+    testdb.disconnect();
+}
+
+
+TEST(SqliteBeanDB, findOjects)
+{
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world);
+
+    Bean* bean1 = world->createBean();
+    Bean* bean2 = world->createBean();
+    Bean* bean3 = world->createBean();
+
+    page = world->findObjects(testHelper.p_int);
+    EXPECT_TRUE(page == nullptr);
+    page = world->findObjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 0);
+    page = world->findObjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 0);
+
+    bean1->setRelation(testHelper.r1, bean1);
+    page = world->findObjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    bean2->setRelation(testHelper.r1, bean2);
+    page = world->findObjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    EXPECT_TRUE(page->at(1) == bean2->getId());
+
+    bean1->removeProperty(testHelper.r1);
+    page = world->findObjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == bean2->getId());
+
+    bean2->removeProperty(testHelper.r1);
+    page = world->findObjects(testHelper.r1);
+    EXPECT_TRUE(page->size() == 0);
+
+    bean1->createArrayRelation(testHelper.r_array_1);
+    bean2->createArrayRelation(testHelper.r_array_1);
+    page = world->findObjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 0);
+
+    bean1->appendRelation(testHelper.r_array_1, bean1);
+    page = world->findObjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    bean1->appendRelation(testHelper.r_array_1, bean2);
+    page = world->findObjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    EXPECT_TRUE(page->at(1) == bean2->getId());
+    bean2->appendRelation(testHelper.r_array_1, bean2);
+    page = world->findObjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    EXPECT_TRUE(page->at(1) == bean2->getId());
+    bean2->appendRelation(testHelper.r_array_1, bean3);
+    page = world->findObjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 3);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    EXPECT_TRUE(page->at(1) == bean2->getId());
+    EXPECT_TRUE(page->at(2) == bean3->getId());
+
+    bean1->removeProperty(testHelper.r_array_1);
+    page = world->findObjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean2->getId());
+    EXPECT_TRUE(page->at(1) == bean3->getId());
+    bean2->removeProperty(testHelper.r_array_1);
+    page = world->findObjects(testHelper.r_array_1);
+    EXPECT_TRUE(page->size() == 0);
+
+    testdb.disconnect();
+}

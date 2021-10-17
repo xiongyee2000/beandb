@@ -354,13 +354,15 @@ BeanIdPage* BeanWorld::findGreaterThan(const Property* property, const Json::Val
 
 BeanIdPage* BeanWorld::findSubjects(const Property* property, unsigned int pageSize) const
 {
-    return nullptr;
+    if (m_db_ == nullptr || !m_db_->connected()) return nullptr;
+    return m_db_->findSubjects(property, pageSize);
 }
 
 
 BeanIdPage* BeanWorld::findObjects(const Property* property, unsigned int pageSize) const
 {
-    return nullptr;
+    if (m_db_ == nullptr || !m_db_->connected()) return nullptr;
+    return m_db_->findObjects(property, pageSize);
 }
 
 

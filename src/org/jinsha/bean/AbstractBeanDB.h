@@ -26,7 +26,7 @@ public:
     virtual ~AbstractBeanDB();
 
     /**
-     * @ref BeanDBPersistenceIntf::reInit()
+     * @ref BeanDBPIntf::reInit()
      */
     virtual int reInit() override;
 

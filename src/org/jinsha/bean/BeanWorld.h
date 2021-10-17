@@ -135,37 +135,37 @@ public:
      * search related
      ***********************************************************/
     /**
-     * @ref BeanDBPersistenceIntf::findBeans()
+     * @ref BeanDBPIntf::findBeans()
      */
     virtual BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPersistenceIntf::findBeans()
+     * @ref BeanDBPIntf::findBeans()
      */
     virtual BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPersistenceIntf::findBeans()
+     * @ref BeanDBPIntf::findBeans()
      */
     virtual BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPersistenceIntf::findBeans()
+     * @ref BeanDBPIntf::findBeans()
      */
     virtual BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPersistenceIntf::findBeans()
+     * @ref BeanDBPIntf::findBeans()
      */
     virtual BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPersistenceIntf
+     * @ref BeanDBPIntf
      */
     virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 

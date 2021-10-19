@@ -135,6 +135,11 @@ public:
      * search related
      ***********************************************************/
     /**
+     * @ref BeanDBPIntf::getAllBeans()
+     */
+    virtual BeanIdPage* getAllBeans(unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+
+    /**
      * @ref BeanDBPIntf::findBeans()
      */
     virtual BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;

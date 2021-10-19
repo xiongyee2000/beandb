@@ -1999,3 +1999,38 @@ TEST(SqliteBeanDB, findOjects)
 
     testdb.disconnect();
 }
+
+
+TEST(SqliteBeanDB, getAllBeans)
+{
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world);
+
+    page = world->getAllBeans(2);
+    EXPECT_TRUE(page->size() == 0);
+    delete page;
+
+    Bean* bean1 = world->createBean();
+    Bean* bean2 = world->createBean();
+    Bean* bean3 = world->createBean();
+
+    page = world->getAllBeans(2);
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    EXPECT_TRUE(page->at(1) == bean2->getId());
+    err = page->next();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(page->size() == 1);
+    EXPECT_TRUE(page->at(0) == bean3->getId());
+
+    testdb.disconnect();
+}

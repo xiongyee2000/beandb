@@ -22,7 +22,7 @@ TEST(BeanIdPage, getPageSize)
 {
     BeanIdPage* beanIdPage = nullptr;
 
-    BeanIdPage::LoadPageFuncType func = [] (unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& elements) -> int {
+    BeanIdPage::LoadPageFuncType func = [] (BeanIdPage* page, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& elements) -> int {
 
     };
     

@@ -24,7 +24,7 @@ public:
      *                   -1001: no element found at specified page
      *                   others: error occurred
      */
-    typedef std::function<int (unsigned int pageSize, unsigned long pageIndex, std::vector<T>& elements)> LoadPageFuncType;
+    typedef std::function<int (Page<T>* page, unsigned int pageSize, unsigned long pageIndex, std::vector<T>& elements)> LoadPageFuncType;
 
     /**
      * Constructor
@@ -90,7 +90,7 @@ public:
     {
         int err = 0;
         if (m_loadPageFunc_) {
-            err = m_loadPageFunc_(m_pageSize_, m_pageIndex_ + 1, m_elements_);
+            err = m_loadPageFunc_(this, m_pageSize_, m_pageIndex_ + 1, m_elements_);
         } else {
             err = -1;
         }
@@ -113,7 +113,7 @@ public:
         if (m_pageIndex_ == 0) return -2;
         int err = 0;
         if (m_loadPageFunc_) {
-            err = m_loadPageFunc_(m_pageSize_, m_pageIndex_ - 1, m_elements_);
+            err = m_loadPageFunc_(this, m_pageSize_, m_pageIndex_ - 1, m_elements_);
         } else {
             err = -1;
         }
@@ -137,7 +137,7 @@ public:
         // if (pageIndex == m_pageIndex_) return 0;
         int err = 0;
         if (m_loadPageFunc_) {
-            err = m_loadPageFunc_(m_pageSize_, pageIndex, m_elements_);
+            err = m_loadPageFunc_(this, m_pageSize_, pageIndex, m_elements_);
         } else {
             err = -1;
         }

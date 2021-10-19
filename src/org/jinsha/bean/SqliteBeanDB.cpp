@@ -1723,7 +1723,7 @@ out:
 }
 
 
-int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
+int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, const Json::Value& value, BeanIdPage* page, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
 {
    CHECK_CONNECTED();
 
@@ -1750,6 +1750,7 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
     bool isArray = property->isArray();
     Property::Type ptype = property->getType();
     Property::ValueType vtype = property->getValueType();
+    SqliteBeanIdPage* sqlitePage = (SqliteBeanIdPage*)page;
 
     switch (optype)
     {
@@ -1768,10 +1769,12 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
         case op_gt:
             op_str = OP_GT_STR;
             break;
-        case op_like:
-            op_str = OP_EQ_STR;
-            break;
+        // case op_like:
+        //     op_str = OP_LIKE_STR;
+        //     break;
         default:
+            err = -1;
+            goto _out;
             break;
     }
 
@@ -1847,7 +1850,7 @@ _out:
 }
 
 
-int SqliteBeanDB::loadPage_findSubjects_Objects(bool findSubjects, const Property* property, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
+int SqliteBeanDB::loadPage_findSubjects_Objects(bool findSubjects, const Property* property, BeanIdPage* page, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
 {
    CHECK_CONNECTED();
 
@@ -1887,6 +1890,52 @@ int SqliteBeanDB::loadPage_findSubjects_Objects(bool findSubjects, const Propert
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
         sid = sqlite3_column_int64(pstmt, 0);
         sids.push_back(sid);
+        found = true;
+    }
+
+_out:
+    if (err > 0) {
+        if (err != SQLITE_OK && err != SQLITE_DONE) {
+            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+        } else {
+            if (found)
+                err = 0;
+            else 
+                err = -1001;
+        }
+    }
+    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
+    sqlite3_reset(pstmt);
+    sqlite3_finalize(pstmt);
+    return err;
+}
+
+
+int SqliteBeanDB::loadPage_getAllBeans(BeanIdPage* page, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
+{
+   CHECK_CONNECTED();
+
+    int err = 0;
+    bool found = false;
+    static char * sql = "SELECT ID from " BTABLE " limit ?,? ;";
+    sqlite3_stmt *pstmt = nullptr;
+    int size = 0;
+    int nCol = 1;
+    oidType id = 0;
+    sqlite3_int64 limitFrom = pageSize * pageIndex;
+
+    err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
+    if (err != SQLITE_OK) goto _out;
+
+    err = sqlite3_bind_int64(pstmt, nCol++, limitFrom);
+    if (err != SQLITE_OK) goto _out;
+    err = sqlite3_bind_int(pstmt, nCol++, pageSize);
+    if (err != SQLITE_OK) goto _out;
+
+    sids.clear();
+	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
+        id = sqlite3_column_int64(pstmt, 0);
+        sids.push_back(id);
         found = true;
     }
 
@@ -1954,9 +2003,10 @@ BeanIdPage* SqliteBeanDB::findBeans(opType optype, const Property* property, con
         optype,
         property, 
         value,
-        placeholders::_1, 
-        placeholders::_2,
-        placeholders::_3);
+        placeholders::_1,
+        placeholders::_2, 
+        placeholders::_3,
+        placeholders::_4);
     page = new SqliteBeanIdPage(pageSize, func);
 
     return page;
@@ -1998,8 +2048,24 @@ BeanIdPage* SqliteBeanDB::findSubjectsObjects(bool findSubjects, const Property*
         property, 
         placeholders::_1, 
         placeholders::_2,
-        placeholders::_3);
+        placeholders::_3,
+        placeholders::_4);
     page = new SqliteBeanIdPage(pageSize, func);
+
+    return page;
+}
+
+BeanIdPage* SqliteBeanDB::getAllBeans(unsigned int pageSize) const
+{
+    if (!connected()) return nullptr;
+    auto func = std::bind(&SqliteBeanDB::loadPage_getAllBeans, 
+        (SqliteBeanDB*)this, 
+        placeholders::_1, 
+        placeholders::_2,
+        placeholders::_3,
+        placeholders::_4);
+
+    BeanIdPage* page = new SqliteBeanIdPage(pageSize, func);
 
     return page;
 }

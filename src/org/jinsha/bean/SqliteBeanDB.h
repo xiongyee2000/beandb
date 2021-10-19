@@ -181,15 +181,27 @@ private:
      */
     virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
+    /**
+     * @ref BeanDBPIntf
+     */
+    virtual BeanIdPage* getAllBeans(unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
+
     
 private:
     class SqliteBeanIdPage : public BeanIdPage {
         public:
         SqliteBeanIdPage(unsigned int pageSize, BeanIdPage::LoadPageFuncType func) : BeanIdPage(pageSize, func) {};
+
+        public:
+        Json::Value currPageMinValue;
+        Json::Value currPageMaxValue;
+        Json::Value minValue;
+        Json::Value maxValue;
     };
 
-    int loadPage_findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
-    int loadPage_findSubjects_Objects(bool findSubjects, const Property* property, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
+    int loadPage_findBeans(opType optype, const Property* property, const Json::Value& value, BeanIdPage* page,  unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
+    int loadPage_findSubjects_Objects(bool findSubjects, const Property* property, BeanIdPage* page, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
+    int loadPage_getAllBeans(BeanIdPage* page, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids);
 
 private:
     int initDB();

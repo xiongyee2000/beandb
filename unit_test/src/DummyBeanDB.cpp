@@ -233,10 +233,18 @@ BeanIdPage* DummyBeanDB::findObjects(const Property* property, unsigned int page
     return nullptr;
 }
 
+
 BeanIdPage* DummyBeanDB::findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const
 {
     return nullptr;
 }
+
+
+BeanIdPage* DummyBeanDB::getAllBeans(unsigned int pageSize) const
+{
+    return nullptr;
+}
+
 
 }
 }

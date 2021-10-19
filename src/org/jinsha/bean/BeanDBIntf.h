@@ -14,6 +14,10 @@ namespace bean {
 class BeanDBIntf
 {
 public: 
+    /**
+     * The default page size.
+     * @ref Page
+     */
     static const unsigned int DEFAULT_PAGE_SIZE = 8u;
     
     /***********************************************************
@@ -313,6 +317,13 @@ public:
      * 1. only applies to relation properties;
      */
     virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const = 0;
+
+    /**
+     * Get alll beans in this database.
+     * @param pageSize the page size of the returned BeanIdPage
+     * @return the first page of the result
+     */
+    virtual BeanIdPage* getAllBeans(unsigned int pageSize = DEFAULT_PAGE_SIZE) const = 0;
 
 };
 

@@ -74,6 +74,12 @@ public:
      */
    BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
+    /**
+     * @ref BeanDBPIntf
+     */
+    virtual BeanIdPage* getAllBeans(unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
+
+    
 private:
     int internalInit();
 

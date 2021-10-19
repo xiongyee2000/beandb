@@ -322,6 +322,13 @@ int BeanWorld::saveAll()
 }
 
 
+ BeanIdPage* BeanWorld::getAllBeans(unsigned int pageSize) const
+ {
+    if (m_db_ == nullptr || !m_db_->connected()) return nullptr;
+    return m_db_->getAllBeans(pageSize);
+ }
+
+
 BeanIdPage* BeanWorld::findEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
 {
     return findBeans(op_eq, property, value, pageSize);

@@ -855,6 +855,9 @@ TEST(SqliteBeanDB, updateBeanProperty_)
     Bean* bean1 = world->createBean();
     oidType beanId_1 = bean1->getId();
 
+    Bean* bean3 = world->getBean(3);
+    oidType beanId_3 = bean3->getId();
+
     err = testdb.updateBeanProperty_(9999, testHelper.p_str, "foo");
     EXPECT_TRUE(err == 0);
     err = testdb.updateBeanProperty_(beanId_1, testHelper.p_array_int, 9999, 1);
@@ -862,6 +865,9 @@ TEST(SqliteBeanDB, updateBeanProperty_)
 
     bean1->setProperty(testHelper.p_str, "xxx");
     err = testdb.updateBeanProperty_(beanId_1, testHelper.p_str, "foo");
+    EXPECT_TRUE(err == 0);
+
+    err = testdb.updateBeanProperty_(beanId_3, testHelper.r1, 3);
     EXPECT_TRUE(err == 0);
 
     bean1->createArrayProperty(testHelper.p_array_int);
@@ -901,6 +907,8 @@ TEST(SqliteBeanDB, updateBeanProperty_)
     EXPECT_TRUE(value == "foo");
     testdb.loadBeanProperty_(beanId_1, testHelper.p_int, value);
     EXPECT_TRUE(value == 99);
+    testdb.loadBeanProperty_(beanId_3, testHelper.r1, value);
+    EXPECT_TRUE(value == 3u);
     testdb.loadBeanProperty_(beanId_1, testHelper.p_array_int, value);
     EXPECT_TRUE(value[0] == 10);
     EXPECT_TRUE(value[1] == 11);
@@ -2031,6 +2039,51 @@ TEST(SqliteBeanDB, getAllBeans)
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(page->size() == 1);
     EXPECT_TRUE(page->at(0) == bean3->getId());
+
+    testdb.disconnect();
+}
+
+
+TEST(SqliteBeanDB, BeanWorld_reloadAll)
+{
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+    Bean* bean = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world);
+
+    err = world->reloadAll();
+    EXPECT_TRUE(err == 0);
+
+    Bean* bean1 = world->createBean();
+    Bean* bean2 = world->createBean();
+    Bean* bean3 = world->createBean();
+
+    world->removeBean(bean1->getId());
+    world->removeBean(bean2->getId());
+    world->removeBean(bean3->getId());
+    bean = world->getBean(bean1->getId(), false);
+    EXPECT_TRUE(bean == nullptr);
+    bean = world->getBean(bean2->getId(), false);
+    EXPECT_TRUE(bean == nullptr);
+    bean = world->getBean(bean3->getId(), false);
+
+    err = world->reloadAll();
+    EXPECT_TRUE(err == 0);
+
+    bean = world->getBean(bean1->getId(), false);
+    EXPECT_TRUE(bean->getId() == bean1->getId());
+    bean = world->getBean(bean2->getId(), false);
+    EXPECT_TRUE(bean->getId() == bean2->getId());
+    bean = world->getBean(bean3->getId(), false);
+    EXPECT_TRUE(bean->getId() == bean3->getId());
 
     testdb.disconnect();
 }

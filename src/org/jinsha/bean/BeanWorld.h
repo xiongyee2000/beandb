@@ -102,7 +102,7 @@ public:
     /**
      * @ref BeanDBUserIntf::loadAll()
      */
-    virtual int loadAll() override;
+    virtual int reloadAll() override;
 
     /**
      * @ref BeanDBUserIntf::saveAll()

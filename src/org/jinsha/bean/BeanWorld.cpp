@@ -24,13 +24,6 @@ BeanWorld::BeanWorld(AbstractBeanDB& db)
 BeanWorld::~BeanWorld()
 {
     clear();
-
-    for (auto& item : m_propertyMap_) 
-    {
-        delete item.second;
-    }
-   m_propertyMap_.clear();
-   m_properties_loaded_ = false;
 };
 
 
@@ -42,6 +35,12 @@ void BeanWorld::clear()
         item.second = nullptr;
     }
     m_beans_.clear();
+    for (auto& item : m_propertyMap_) 
+    {
+        delete item.second;
+    }
+   m_propertyMap_.clear();
+   m_properties_loaded_ = false;
 }
 
 
@@ -281,6 +280,8 @@ const std::unordered_map<std::string, Property*>& BeanWorld::getProperties()
 
 int BeanWorld::reloadProperties()
 {
+    if (m_db_ == nullptr || !m_db_->connected()) return -1;
+
     int err = 0;
     if (m_properties_loaded_)
         clear();
@@ -300,16 +301,37 @@ int BeanWorld::reloadProperties()
 }
 
 
-int BeanWorld::loadAll()
+int BeanWorld::reloadAll()
 {
-    //todo:
-    return -1;
+    if (m_db_ == nullptr || !m_db_->connected()) return -1;
+    
+    int err = 0;
+    oidType beanId = 0;
+
+    err = reloadProperties();
+    if (err) return err;
+
+    BeanIdPage* page = m_db_->getAllBeans();
+    if (page != nullptr) {
+        do {
+            for (int i = 0; i < page->size(); i++) {
+                beanId = page->at(i);
+                getBean(beanId, true);
+            }
+            err = page->next();
+        } while (!err);
+    } else {
+        err =  -1;
+    }
+
+    if (err == -1001) err = 0;
+    return err;
 }
 
 
 int BeanWorld::saveAll()
 {
-    if (!m_db_->connected()) return -1;
+    if (m_db_ == nullptr || !m_db_->connected()) return -1;
     int err = 0;
     for (auto& iter : m_beans_) {
         err = iter.second->save();

@@ -187,11 +187,15 @@ public:
     virtual int deleteBean(Bean* bean) = 0;
 
     /**
-     * Load all data from the storage.
+     * Reload all data from the storage.
+     * 
+     * Notes:
+     * - all previously loaded data will be removed from this world
+     *    before reloading;
      * 
      * @return 0 for success, or an error code
      */
-    virtual int loadAll() = 0;
+    virtual int reloadAll() = 0;
 
     /**
      * Save all data into the storage.

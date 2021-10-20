@@ -83,7 +83,6 @@ public:
      * 
      * @return 0 for success, or an error code:
      *                   -1: no callable loadPage method
-     *                   -1001: no element in next page (i.e. this is the last page)
      *                   others: other errors
      */
     int next() 

@@ -1105,6 +1105,14 @@ TEST(SqliteBeanDB, nativeData)
     
     testdb.disconnect();
     testdb.connect();
+    world = testdb.getWorld();
+
+    bean1 = world->getBean(beanId_1);
+    value = bean1->getNativeData();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(value["root"][0] == 0);
+    EXPECT_TRUE(value["root"][1] == 1);
+
     err = testdb.loadBeanNativeData_(beanId_1, value);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(value["root"][0] == 0);
@@ -2075,9 +2083,9 @@ TEST(SqliteBeanDB, BeanWorld_reloadAll)
     Bean* bean2 = world->createBean();
     Bean* bean3 = world->createBean();
 
-    world->removeBean(bean1->getId());
-    world->removeBean(bean2->getId());
-    world->removeBean(bean3->getId());
+    world->unloadBean(bean1->getId());
+    world->unloadBean(bean2->getId());
+    world->unloadBean(bean3->getId());
     bean = world->getBean(bean1->getId(), false);
     EXPECT_TRUE(bean == nullptr);
     bean = world->getBean(bean2->getId(), false);

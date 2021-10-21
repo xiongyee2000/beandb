@@ -446,6 +446,10 @@ TEST(Bean, relation)
     err = bean1->setRelation(testHelper.r1, bean2->getId());
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean2->getId());
+
+    err = bean1->setRelation(testHelper.r1, bean3->getId());
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean3->getId());
 }
 
 TEST(Bean, array_relation)

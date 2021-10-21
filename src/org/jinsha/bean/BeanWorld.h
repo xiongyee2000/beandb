@@ -114,7 +114,7 @@ public:
      * 
      * @param id the id of the bean
      */
-    virtual void removeBean(oidType id) override;
+    virtual void unloadBean(oidType id) override;
 
     /**
      * Get total number of beans chached in this world (in memory).

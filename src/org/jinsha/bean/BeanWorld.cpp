@@ -61,7 +61,7 @@ Bean* BeanWorld::createBean()
 };
 
 
-void BeanWorld::removeBean(oidType id)
+void BeanWorld::unloadBean(oidType id)
 {
     auto iter = m_beans_.find(id);
     if (iter != m_beans_.end())
@@ -151,7 +151,7 @@ int BeanWorld::deleteBean(Bean* bean)
     int err = 0;
     err = m_db_->deleteBean_(bean->getId());
     if (!err) {
-        removeBean(bean->getId());
+        unloadBean(bean->getId());
     }
     
     return err;

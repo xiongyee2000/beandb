@@ -124,7 +124,6 @@ int Bean::doSetProperty(Property* property,  const Json::Value& value, bool save
     if (m_pst_json_.isMember(pname)) {
         oldValue = getMemberPtr(property);
     }
-    // if (oldValue != nullptr && (*oldValue) == value) return 0;
 
     err = setPropertyBase_(property,  oldValue, value, -1, saveAtOnce);
     if (err) {
@@ -389,10 +388,11 @@ oidType Bean::getObjectId(const Property* relation) const
 {
     if (!hasRelation(relation)) return 0;
     auto pname = relation->getName().c_str();
-    if (m_pst_json_[pname].asInt() == PST_NSY) {
-        //delay load
-        if (0 != ((Bean*)this)->loadProperty(relation)) return 0;
-    } 
+    //currently relation is direct-load
+    // if (m_pst_json_[pname].asInt() == PST_NSY) {
+    //     //delay load
+    //     if (0 != ((Bean*)this)->loadProperty(relation)) return 0;
+    // } 
     auto& value = m_json_[pname];
     return value.asUInt64();
     
@@ -405,11 +405,12 @@ oidType Bean::getObjectId(const Property* relation,
     if (!hasArrayRelation(relation)) return 0;
     auto pname = relation->getName().c_str();
     auto& value = m_json_[pname];
-    if (!m_pst_json_[pname].isArray()) {
-        //delay load
-        if (0 != ((Bean*)this)->loadProperty(relation)) 
-            return 0;
-    }
+    //currently relation is direct-load
+    // if (!m_pst_json_[pname].isArray()) {
+    //     //delay load
+    //     if (0 != ((Bean*)this)->loadProperty(relation)) 
+    //         return 0;
+    // }
     if (!value.isArray()) return 0;
     if (index >= value.size()) return 0;
     return value[index].asUInt64();
@@ -426,6 +427,7 @@ int Bean::setRelation(Property* relation, Bean* bean)
 int Bean::setRelation(Property* relation, oidType objectId)
 {
     if (relation == nullptr) return -2;
+    if (objectId == 0) return -3;
     return doSetRelation(relation, objectId, true);
 }
 
@@ -435,37 +437,40 @@ int Bean::doSetRelation(Property* relation, oidType objectId, bool saveAtOnce)
     if (relation->getType() != Property::RelationType) return -2;
     Bean* object = nullptr;
     Json::Value *oldValue = nullptr;
+    oidType oldObjectId = 0;
+    int err = 0;
     const auto& pname = relation->getName();
     if (m_pst_json_.isMember(pname)) {
         oldValue = getMemberPtr(relation);
     }
-    int err =setPropertyBase_(relation, oldValue, objectId, -1, saveAtOnce);
-    if (err) {
-        return err;
-    } else {
-        if ( saveAtOnce)
-            m_pst_json_[pname] = PST_SYN;
-        else 
-            m_pst_json_[pname] = PST_MOD;
+
+    if (oldValue != nullptr) {
+        oldObjectId = (*oldValue).asUInt64();
+        object = m_world_->getBean(oldObjectId, false);
     }
 
-    //handle object tracking
-    if (oldValue != nullptr) {
-        oidType oldObjectId = (*oldValue).asUInt64();
-        if (oldObjectId == objectId) return 0; //the same bean, do nothing
-        object = m_world_->getBean(oldObjectId, false);
+    if (!saveAtOnce && oldObjectId == objectId)  return 0;
+    
+    err =setPropertyBase_(relation, oldValue, objectId, -1, saveAtOnce);
+    if (err) return err;
+
+    m_pst_json_[pname] = PST_SYN;
+
+    if (oldObjectId != objectId) {
+        //handle object tracking
         if (object != nullptr) {
             object->removeSubject(this, relation);
         }
-        relation->removeObject(oldObjectId);
-    }
-    relation->addObject(objectId);
-    relation->addSubject(m_id_);
 
-    //handle subject tracking
-    object = m_world_->getBean(objectId, false);
-    if (object != nullptr) 
-        object->addSubject(this, relation);
+        relation->removeObject(oldObjectId);
+        relation->addObject(objectId);
+        relation->addSubject(m_id_);
+
+        //handle subject tracking
+        object = m_world_->getBean(objectId, false);
+        if (object != nullptr) 
+            object->addSubject(this, relation);
+    }
     
     return 0;
 }
@@ -495,13 +500,15 @@ int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool saveA
 
     // if (!m_pst_json_.isMember(pname)) return -4;
     int err = 0;
-    if (!m_pst_json_[pname].isArray()) {
-        //delay load
-        err = loadProperty(relation);
-        if (err) return -11;
-    } else {
-        //already loaded
-    }
+
+    //currently relation is direct-load
+    // if (!m_pst_json_[pname].isArray()) {
+    //     //delay load
+    //     err = loadProperty(relation);
+    //     if (err) return -11;
+    // } else {
+    //     //already loaded
+    // }
 
     //insert property record first
     if (m_world_->m_db_ != nullptr && saveAtOnce) {
@@ -548,20 +555,32 @@ int Bean::setArrayRelation(Property* relation,
 {
     if (relation == nullptr) return -2;
     if (relation->getType() != Property::ArrayRelationType) return -2;
-    Bean* object = nullptr;
     const auto& pname = relation->getName();
     if (!m_pst_json_.isMember(pname)) return -4;
-    if (!m_pst_json_[pname].isArray() && 
-        m_pst_json_[pname].asInt() == PST_NSY) { 
-        //delay load
-        if (0 != loadProperty(relation)) {
-            return -11;
-        }
-    }
+
+    //currently relation is direct-load
+    // if (!m_pst_json_[pname].isArray() && 
+    //     m_pst_json_[pname].asInt() == PST_NSY) { 
+    //     //delay load
+    //     if (0 != loadProperty(relation)) {
+    //         return -11;
+    //     }
+    // }
+
     auto& array = m_json_[pname]; 
     if (index >= array.size()) return -5;
+
     Json::Value *oldValue = &array[index];
-    int err = setPropertyBase_(relation, oldValue, objectId, index, true);
+     oidType oldObjectId = 0;
+     int err = 0;
+    Bean* object = nullptr;
+
+    oldObjectId = (*oldValue).asUInt64();
+    if (oldObjectId == objectId) return 0;
+
+    object = m_world_->getBean(objectId, false);
+
+    err = setPropertyBase_(relation, oldValue, objectId, index, true);
     if (err) {
         return err;
     } else {
@@ -569,15 +588,11 @@ int Bean::setArrayRelation(Property* relation,
     }
 
     //handle object tracking
-    if (oldValue != nullptr) {
-        oidType objectId = (*oldValue).asUInt64();
-        if (objectId == objectId) return 0; //the same bean, do nothing
-        object = m_world_->getBean(objectId, false);
-        if (object != nullptr) {
-            object->removeSubject(this, relation);
-        }
-        relation->removeObject(objectId);
+    if (object != nullptr) {
+        object->removeSubject(this, relation);
     }
+
+    relation->removeObject(oldObjectId);
     relation->addObject(objectId);
 
     //handle subject tracking
@@ -883,7 +898,7 @@ int Bean::load()
     //unload first
     unload();
 
-    err = m_world_->m_db_->loadBeanBase_(m_id_, data, &m_native_data_json_);
+    err = m_world_->m_db_->loadBeanBase_(m_id_, data);
     if (err) {
         m_json_ = Json::Value(Json::ValueType::objectValue);
         m_native_data_json_ = Json::Value::nullRef;
@@ -978,7 +993,8 @@ int Bean::unload()
     m_pst_json_ = Json::Value(Json::objectValue);
 
     //remove all native data
-   m_native_data_json_ = Json::Value(Json::objectValue);
+//    m_native_data_json_ = Json::Value(Json::objectValue);
+   m_native_data_json_ = Json::Value::nullRef;
    m_native_data_pst_json_ = PST_NSY;
 
     return err;

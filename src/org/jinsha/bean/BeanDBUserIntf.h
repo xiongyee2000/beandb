@@ -167,14 +167,14 @@ public:
     virtual Bean* getBean(oidType id, bool loadFromDB = true) = 0;
 
     /**
-     * Remove a bean from this world. 
+     * Unload a bean from this world. 
      * 
      * Notes:
      * - The bean will NOT be deleted from the database.
      * 
      * @param id the id of the bean
      */
-    virtual void removeBean(oidType id) = 0;
+    virtual void unloadBean(oidType id) = 0;
 
     /**
      * Remove a single bean from the storage.

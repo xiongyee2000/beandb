@@ -424,15 +424,15 @@ TEST(Bean, relation)
     Bean* bean2 = world->createBean();
     Bean* bean3 = world->createBean();
 
-    EXPECT_TRUE(!bean1->getRelationBeanId(nullptr));
+    EXPECT_TRUE(!bean1->getObjectId(nullptr));
 
-    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p1));
+    EXPECT_TRUE(!bean1->getObjectId(testHelper.p1));
     bean1->setProperty(testHelper.p1, 1);
-    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p1));
+    EXPECT_TRUE(!bean1->getObjectId(testHelper.p1));
 
-    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p_array_int));
+    EXPECT_TRUE(!bean1->getObjectId(testHelper.p_array_int));
     bean1->createArrayProperty(testHelper.p_array_int);
-    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p_array_int));
+    EXPECT_TRUE(!bean1->getObjectId(testHelper.p_array_int));
 
 
     err = bean1->setRelation(testHelper.r1, nullptr);
@@ -442,10 +442,10 @@ TEST(Bean, relation)
     err = bean1->setRelation(testHelper.p1, bean2);
     EXPECT_TRUE(err == -2);
 
-    EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.r1));
+    EXPECT_TRUE(!bean1->getObjectId(testHelper.r1));
     err = bean1->setRelation(testHelper.r1, bean2->getId());
     EXPECT_TRUE(err == 0);
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r1) == bean2->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean2->getId());
 }
 
 TEST(Bean, array_relation)
@@ -466,13 +466,13 @@ TEST(Bean, array_relation)
     Bean* bean2 = world->createBean();
     Bean* bean3 = world->createBean();
 
-    beanId = bean1->getRelationBeanId(nullptr, -1);
+    beanId = bean1->getObjectId(nullptr, -1);
     EXPECT_TRUE(beanId == 0);
-    beanId = bean1->getRelationBeanId(testHelper.p1, -1);
+    beanId = bean1->getObjectId(testHelper.p1, -1);
     EXPECT_TRUE(beanId == 0);
-    beanId = bean1->getRelationBeanId(testHelper.r_array_1, -1);
+    beanId = bean1->getObjectId(testHelper.r_array_1, -1);
     EXPECT_TRUE(beanId == 0);
-    beanId = bean1->getRelationBeanId(testHelper.r_array_1, 0);
+    beanId = bean1->getObjectId(testHelper.r_array_1, 0);
     EXPECT_TRUE(beanId == 0);
 
     err = bean1->setArrayRelation(nullptr, -1, nullptr);
@@ -508,26 +508,26 @@ TEST(Bean, array_relation)
     err = bean1->appendRelation(testHelper.r_array_1, bean2);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getArraySize(testHelper.r_array_1) == 1);
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean2->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean2->getId());
     err = bean1->appendRelation(testHelper.r_array_1, bean2);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getArraySize(testHelper.r_array_1) == 2);
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 1) == bean2->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 1) == bean2->getId());
 
     err = bean1->setArrayRelation(testHelper.r_array_1, 0, bean3);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getArraySize(testHelper.r_array_1) == 2);
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean3->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean3->getId());
     err = bean1->setArrayRelation(testHelper.r_array_1, 1, bean3->getId());
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean1->getArraySize(testHelper.r_array_1) == 2);
-    EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean3->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean3->getId());
 
-    beanId = bean1->getRelationBeanId(testHelper.r_array_1, 0);
+    beanId = bean1->getObjectId(testHelper.r_array_1, 0);
     EXPECT_TRUE(beanId == bean3->getId());
-    beanId = bean1->getRelationBeanId(testHelper.r_array_1, 1);
+    beanId = bean1->getObjectId(testHelper.r_array_1, 1);
     EXPECT_TRUE(beanId == bean3->getId());
-    beanId = bean1->getRelationBeanId(testHelper.r_array_1, 2);
+    beanId = bean1->getObjectId(testHelper.r_array_1, 2);
     EXPECT_TRUE(beanId == 0);
 
     // err = bean1->appendRelation(testHelper.r_array_1, nullptr);
@@ -548,7 +548,7 @@ TEST(Bean, array_relation)
     // err = bean1->setRelation(testHelper.r_array_1, 0, bean2);
     // EXPECT_TRUE(err == -4);
 
-    // EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.r_array_1, 0));
+    // EXPECT_TRUE(!bean1->getObjectId(testHelper.r_array_1, 0));
     // err = bean1->createArrayRelation(nullptr);
     // EXPECT_TRUE(err == -2);
     // err = bean1->createArrayRelation(testHelper.p1);
@@ -565,13 +565,13 @@ TEST(Bean, array_relation)
     // EXPECT_TRUE(err == -5);
     // err = bean1->setRelation(testHelper.r_array_1, 0, bean2);
     // EXPECT_TRUE(err == 0);
-    // EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean2->getId());
+    // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean2->getId());
     // err = bean1->setRelation(testHelper.r_array_1, 0, bean3);
     // EXPECT_TRUE(err == 0);
-    // EXPECT_TRUE(bean1->getRelationBeanId(testHelper.r_array_1, 0) == bean3->getId());
+    // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean3->getId());
     // bean1->setProperty(testHelper.p1, 1);
-    // EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.p1, 0));
-    // EXPECT_TRUE(!bean1->getRelationBeanId(testHelper.r_array_1, 1));
+    // EXPECT_TRUE(!bean1->getObjectId(testHelper.p1, 0));
+    // EXPECT_TRUE(!bean1->getObjectId(testHelper.r_array_1, 1));
 
     //getArraySize()
     EXPECT_TRUE(bean1->getArraySize(nullptr) == 0);

@@ -94,7 +94,7 @@ void BeanWorld::removeBean(oidType id)
                 size_t size = value->size();
                 //todo: O(n*n) complexity! How to improve performance?
                 for (Json::ArrayIndex i = size; i > 0; i--)
-                    if (subject->getRelationBeanId(property, i - 1) == bean->m_id_) {
+                    if (subject->getObjectId(property, i - 1) == bean->m_id_) {
                         subject->doRemoveProperty(property, i - 1, true, true); 
                     }
             }

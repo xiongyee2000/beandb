@@ -385,7 +385,7 @@ bool Bean::hasArrayRelation(const Property* relation) const
 }
 
 
-oidType Bean::getRelationBeanId(const Property* relation) const
+oidType Bean::getObjectId(const Property* relation) const
 {
     if (!hasRelation(relation)) return 0;
     auto pname = relation->getName().c_str();
@@ -399,7 +399,7 @@ oidType Bean::getRelationBeanId(const Property* relation) const
 }
 
 
-oidType Bean::getRelationBeanId(const Property* relation,  
+oidType Bean::getObjectId(const Property* relation,  
     Json::Value::ArrayIndex index) const
 {
     if (!hasArrayRelation(relation)) return 0;

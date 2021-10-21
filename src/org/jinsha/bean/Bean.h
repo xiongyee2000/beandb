@@ -250,16 +250,16 @@ public:
 
 
     /**
-     * Get relation bean.
+     * Get the object bean id of the given relation.
      * 
      * @param relation the relation
      * @return the bean id, or 0 if it does not exist.
      * 
      */
-    oidType getRelationBeanId(const Property* relation) const;
+    oidType getObjectId(const Property* relation) const;
 
     /**
-     * Get relation bean of an array relation at specified index.
+     * Get the object bean id of the given array relation at specified index.
      * 
      * Notes:
      * - bean id shall not be 0, which reprents an error.
@@ -269,7 +269,7 @@ public:
      * @return the bean id, or 0 if it does not exist.
      * 
      */
-    oidType getRelationBeanId(const Property* relation, 
+    oidType getObjectId(const Property* relation, 
         Json::Value::ArrayIndex index) const;
 
     /**

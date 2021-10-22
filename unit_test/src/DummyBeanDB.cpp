@@ -36,7 +36,7 @@ int DummyBeanDB::disconnect_()
     return 0;
 }
 
-int DummyBeanDB::reInit_()
+int DummyBeanDB::reInit()
 {
     return 0;
 }

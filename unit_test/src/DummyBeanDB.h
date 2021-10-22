@@ -57,7 +57,7 @@ public:
     virtual int deleteBeanNativeData_(oidType beanId) override;
     virtual int loadBeanNativeData_(oidType beanId, Json::Value& value) override;
 
-    virtual int reInit_() override;
+    virtual int reInit() override;
 
     /**
      * @ref BeanDBPIntf

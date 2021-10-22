@@ -23,6 +23,7 @@ using namespace org::jinsha::bean;
 
 static const char* g_tmpDBDir = "./unit_test/data/sqlite_tmp_db";
 static const char* g_sqlite_db_1 = "./unit_test/data/sqlite_db_1";
+static const char* g_invalid_sqlite_db = "./unit_test/data/sqlite_invalid_db";
 
 static void validate_testdb_1(SqliteBeanDB& testdb);
 static void validate_properties_testdb_1(std::unordered_map<std::string, Property*>& propertyMap);
@@ -152,8 +153,10 @@ void find_beanInit(TestHelper& testHelper, Bean* bean1, Bean* bean2, Bean* bean3
 TEST(SqliteBeanDB, constuctor_destructor)
 {
     const char* testdbDir = nullptr;
-    SqliteBeanDB* testdb;
-    
+    SqliteBeanDB* testdb = nullptr;
+    char buff[128] = {0};
+    char* cmd = &buff[0];
+
     testdb = new SqliteBeanDB(testdbDir);
     EXPECT_TRUE(testdb->getDir() == ".");
     EXPECT_TRUE(testdb->checkDB() == 0);
@@ -171,12 +174,55 @@ TEST(SqliteBeanDB, constuctor_destructor)
     EXPECT_TRUE(testdb->checkDB() != 0);
     delete testdb;
 
+
+    testdbDir = g_invalid_sqlite_db;
+    testdb = new SqliteBeanDB(testdbDir);
+    EXPECT_TRUE(testdb->getDir() == testdbDir);
+    EXPECT_TRUE(testdb->checkDB() == 0);
+    delete testdb;
+    sprintf(buff, "rm -rf %s/*", g_invalid_sqlite_db);
+    system(cmd);
+    
     testdbDir = g_tmpDBDir;
     testdb = new SqliteBeanDB(testdbDir);
     EXPECT_TRUE(testdb->getDir() == testdbDir);
     EXPECT_TRUE(testdb->checkDB() == 0);
     delete testdb;
 }
+
+
+TEST(SqliteBeanDB, reinit)
+{
+    SqliteBeanDB* testdb = nullptr;
+    BeanWorld *world = nullptr;
+    int err = 0;
+    // char buff[128] = {0};
+    // char* cmd = &buff[0];
+
+    testdb = new SqliteBeanDB("###");
+    err = testdb->reInit();
+    EXPECT_TRUE(err == -1);
+    delete testdb;
+
+    testdb = new SqliteBeanDB("/var/log");
+    err = testdb->reInit();
+    EXPECT_TRUE(err == -2);
+    delete testdb;
+
+    testdb = new SqliteBeanDB(g_tmpDBDir);
+    err = testdb->reInit();
+    EXPECT_TRUE(err == 0);
+
+    testdb->connect();
+    err = testdb->reInit();
+    EXPECT_TRUE(err == -1);
+
+    testdb->disconnect();
+    err = testdb->reInit();
+    EXPECT_TRUE(err == 0);
+    delete testdb;
+}
+
 
 TEST(SqliteBeanDB, connect_disconnect)
 {
@@ -466,6 +512,90 @@ TEST(SqliteBeanDB, world_createBean_deleteBean)
     EXPECT_TRUE(err == 0);
 
     testdb.reInit();
+    testdb.disconnect();
+}
+
+
+TEST(SqliteBeanDB, loadBeanBase_)
+{
+    const char* testdbDir = g_tmpDBDir;
+    SqliteBeanDB testdb(testdbDir);
+    BeanWorld *world = nullptr;
+    int err = 0;
+    Property* property = nullptr;
+    TestHelper testHelper;
+    Bean* bean1 = nullptr;
+    Bean* bean2 = nullptr;
+    Bean* bean3 = nullptr;
+    oidType beanId_1 = 0;
+    oidType beanId_2 = 0;
+    oidType beanId_3 = 0;
+    Json::Value value, nativeData;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();   
+    initTestHelper(testHelper, *world, false);
+    validate_testdb_1(testdb);
+ 
+    bean1 = world->createBean();
+    bean2 = world->createBean();
+    bean3 = world->createBean();
+    beanId_1 = bean1->getId();
+    beanId_2 = bean2->getId();
+    beanId_3 = bean3->getId();
+
+    bean1->setProperty(testHelper.p_int, 1);
+    bean1->createArrayProperty(testHelper.p_array_int);
+    bean1->appendProperty(testHelper.p_array_int, 0);
+    bean1->appendProperty(testHelper.p_array_int, 1);
+
+    nativeData["test"] = 1;
+    bean1->setNativeData(nativeData);
+
+    bean2->setProperty(testHelper.p_int, 1);
+    bean2->createArrayProperty(testHelper.p_array_int);
+    bean2->appendProperty(testHelper.p_array_int, 0);
+    bean2->appendProperty(testHelper.p_array_int, 1);
+
+    bean3->setRelation(testHelper.r1, beanId_1);
+    bean3->createArrayRelation(testHelper.r_array_1);
+    bean3->appendRelation(testHelper.r_array_1, beanId_1);
+    bean3->appendRelation(testHelper.r_array_1, beanId_2);
+
+    world->saveAll();
+    testdb.disconnect();
+
+    testdb.connect();
+    world = testdb.getWorld();   
+    initTestHelper(testHelper, *world, false);
+    
+    bean1 = world->getBean(beanId_1);
+    bean2 = world->getBean(beanId_2);
+    bean3 = world->getBean(beanId_3);
+
+    testdb.loadBeanBase_(beanId_1, value);
+    EXPECT_TRUE(value[testHelper.p_int->getName()] == 1);
+    EXPECT_TRUE(value.isMember(testHelper.p_array_int->getName()));
+    EXPECT_TRUE(value[testHelper.p_array_int->getName()].isNull());
+
+    testdb.loadBeanBase_(beanId_2, value);
+    EXPECT_TRUE(value[testHelper.p_int->getName()] == 1);
+    EXPECT_TRUE(value.isMember(testHelper.p_array_int->getName()));
+    EXPECT_TRUE(value[testHelper.p_array_int->getName()].isNull());
+
+    testdb.loadBeanBase_(beanId_3, value);
+    EXPECT_TRUE(value[testHelper.r1->getName()] == 1u);
+    EXPECT_TRUE(value[testHelper.r_array_1->getName()][0] == 1u);
+    EXPECT_TRUE(value[testHelper.r_array_1->getName()][1] == 2u);
+
+
+    testdb.loadBeanBase_(beanId_1, value, &nativeData);
+    EXPECT_TRUE(nativeData["test"] == 1);
+
+    testdb.loadBeanBase_(beanId_2, value, &nativeData);
+    EXPECT_TRUE(nativeData.isNull());
+    
     testdb.disconnect();
 }
 
@@ -1171,6 +1301,17 @@ TEST(SqliteBeanDB, findEqual)
     bean1->save();
     bean2->save();
 
+    page = testdb.findBeans(op_le, testHelper.p_bool_0, false);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_lt, testHelper.p_bool_0, false);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_ge, testHelper.p_bool_1, true);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_gt, testHelper.p_bool_1, true);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_like, testHelper.p_bool_1, true);
+    EXPECT_TRUE(page == nullptr);
+
     page = world->findEqual(testHelper.p_real, 1.0);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
@@ -1708,6 +1849,101 @@ TEST(SqliteBeanDB, findGreaterEqual)
 
 
 
+TEST(SqliteBeanDB, find_like)
+{
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world);
+
+    Bean* bean1 = world->createBean();
+    oidType beanId_1 = bean1->getId();
+    Bean* bean2 = world->createBean();
+    oidType beanId_2= bean2->getId();
+    Bean* bean3 = world->createBean();
+    oidType beanId_3 = bean3->getId();
+
+    bean1->setProperty(testHelper.p_str, "beandb");
+    bean2->setProperty(testHelper.p_str, "is");
+    bean3->setProperty(testHelper.p_str, "amazing!");
+
+    bean1->createArrayProperty(testHelper.p_array_str);
+    bean2->createArrayProperty(testHelper.p_array_str);
+    bean3->createArrayProperty(testHelper.p_array_str);
+
+    bean1->appendProperty(testHelper.p_array_str, "bean1 #1");
+    bean1->appendProperty(testHelper.p_array_str, "bean1 #2");
+    bean2->appendProperty(testHelper.p_array_str, "bean2 #1");
+    bean2->appendProperty(testHelper.p_array_str, "bean2 #2");
+    bean3->appendProperty(testHelper.p_array_str, "bean3 #1");
+    bean3->appendProperty(testHelper.p_array_str, "bean3 #2");
+
+    world->saveAll();
+
+    page = testdb.findBeans(op_like, testHelper.p_int, 1);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_like, testHelper.p_uint, 1u);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_like, testHelper.p_real, 1.0);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_like, testHelper.p_bool_0, false);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_like, testHelper.p_array_int, 1);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_like, testHelper.r1, 1);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_like, testHelper.r_array_1, 1);
+    EXPECT_TRUE(page == nullptr);
+
+    page = testdb.findBeans(op_like, testHelper.p_str, "");
+    EXPECT_TRUE(page->size() == 0);
+
+    page = testdb.findBeans(op_like, testHelper.p_str, "%a%");
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean1->getId());
+    EXPECT_TRUE(page->at(1) == bean3->getId());
+    for (size_t i = 0; i < page->size(); i++)
+    {
+        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).asString().find("a") != std::string::npos);
+    }
+
+    page = testdb.findBeans(op_like, testHelper.p_str, "%i%");
+    EXPECT_TRUE(page->size() == 2);
+    EXPECT_TRUE(page->at(0) == bean2->getId());
+    EXPECT_TRUE(page->at(1) == bean3->getId());
+    for (size_t i = 0; i < page->size(); i++)
+    {
+        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).asString().find("i") != std::string::npos);
+    }
+
+    page = testdb.findBeans(op_like, testHelper.p_array_str, "bean1%");
+    EXPECT_TRUE(page->size() == 1);
+    for (size_t i = 0; i < page->size(); i++)
+    {
+        EXPECT_TRUE(world->getBean(page->at(i))->getArrayProperty(testHelper.p_array_str, 0).asString().find("bean1") == 0);
+    }
+    page = testdb.findBeans(op_like, testHelper.p_array_str, "bean2%");
+    EXPECT_TRUE(page->size() == 1);
+    for (size_t i = 0; i < page->size(); i++)
+    {
+        EXPECT_TRUE(world->getBean(page->at(i))->getArrayProperty(testHelper.p_array_str, 0).asString().find("bean2") == 0);
+    }
+    page = testdb.findBeans(op_like, testHelper.p_array_str, "bean3%");
+    EXPECT_TRUE(page->size() == 1);
+    for (size_t i = 0; i < page->size(); i++)
+    {
+        EXPECT_TRUE(world->getBean(page->at(i))->getArrayProperty(testHelper.p_array_str, 0).asString().find("bean3") == 0);
+    }
+}
+
+
 TEST(SqliteBeanDB, findEqual_relation)
 {
     char buff[128] = {0};
@@ -1749,6 +1985,17 @@ TEST(SqliteBeanDB, findEqual_relation)
     bean3->appendRelation(testHelper.r_array_1, bean1);
     bean3->appendRelation(testHelper.r_array_1, bean2);
     bean3->appendRelation(testHelper.r_array_1, bean3);
+
+    page = testdb.findBeans(op_le, testHelper.r1, 1u);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_lt, testHelper.r1, 1u);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_ge, testHelper.r_array_1, 1u);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_gt, testHelper.r_array_1, 1u);
+    EXPECT_TRUE(page == nullptr);
+    page = testdb.findBeans(op_like, testHelper.r_array_1, 1u);
+    EXPECT_TRUE(page == nullptr);
 
     page = world->findEqual(nullptr, 1);
     EXPECT_TRUE(page == nullptr);

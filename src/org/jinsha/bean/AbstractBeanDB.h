@@ -25,12 +25,6 @@ public:
      */
     virtual ~AbstractBeanDB();
 
-    /**
-     * @ref BeanDBPIntf::reInit()
-     */
-    virtual int reInit() override;
-
-
 
     /***********************************************************
      * connection related

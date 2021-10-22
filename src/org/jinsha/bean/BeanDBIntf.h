@@ -65,15 +65,6 @@ public:
     virtual int reInit() = 0;
 
     /**
-     * Re-initialize the database.
-     *
-     * 
-     * @return 0 for success, or an error code
-     */
-    virtual int reInit_() = 0;
-
-
-    /**
      * Connect to the database. 
      * 
      * @return 0 for success, or an error code

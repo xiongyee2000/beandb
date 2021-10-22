@@ -27,7 +27,7 @@ m_id_(id)
 , m_world_(world)
 {
     m_json_= Json::Value(Json::ValueType::objectValue);
-    m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
+    m_native_data_json_ = Json::Value::nullRef;
     m_pst_json_ = Json::Value(Json::ValueType::objectValue);
     m_native_data_pst_json_ = PST_NSY;
 }

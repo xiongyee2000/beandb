@@ -20,13 +20,6 @@ AbstractBeanDB::~AbstractBeanDB()
 }
 
 
-int AbstractBeanDB::reInit()
-{
-    if (connected()) return -1;
-    return reInit_();
-}
-
-
 int AbstractBeanDB::connect()
 {
     int err = 0;

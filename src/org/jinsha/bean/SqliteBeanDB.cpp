@@ -230,10 +230,16 @@ int SqliteBeanDB::initDB()
 }
 
 
-int SqliteBeanDB::reInit_()
+int SqliteBeanDB::reInit()
 {
     int err = 0;
     char buff[256] = {0};
+
+    if (connected()) 
+    {
+        elog("%s", "Cannot do reinit when db is connected.");
+        return -1;
+    }
 
     if (access(m_dir_.c_str(), 0) != 0)  { //dir does not exist
         elog("Failed to reinit db for %s can not be accessed. \n",  m_dir_.c_str());
@@ -424,7 +430,7 @@ int SqliteBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value*
                     goto _out;
                 }
             } else {
-                *nativeData = Json::Value(Json::ValueType::objectValue);
+                *nativeData = Json::Value::nullRef;
             }
         }
         
@@ -1732,7 +1738,7 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
     static const char* OP_LT_STR = "<";
     static const char* OP_GE_STR = ">=";
     static const char* OP_GT_STR = ">";
-    // static const char* OP_LIKE_STR = "like";
+    static const char* OP_LIKE_STR = "like";
     int err = 0;
     bool found = false;
     char buff[128]{0};
@@ -1769,9 +1775,10 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
         case op_gt:
             op_str = OP_GT_STR;
             break;
-        // case op_like:
-        //     op_str = OP_LIKE_STR;
-        //     break;
+        case op_like:
+            if (value.asString().empty()) return -1;
+            op_str = OP_LIKE_STR;
+            break;
         default:
             err = -1;
             goto _out;
@@ -1977,11 +1984,6 @@ BeanIdPage* SqliteBeanDB::findBeans(opType optype, const Property* property, con
     Property::ValueType vtype = property->getValueType();
 
     if (vtype != (Property::ValueType)value.type()) return nullptr;
-
-    if (optype == op_like) {
-        elog("%s", "op_like not supported yet. \n");
-        return nullptr;
-    }
 
     if (isRelation && optype != op_eq) {
         elog("%s", "relation search only supports op_eq. \n");

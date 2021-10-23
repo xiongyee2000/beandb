@@ -312,12 +312,6 @@ int BeanWorld::reloadProperties()
 }
 
 
-int BeanWorld::loadBean(Bean* bean)
-{
-     return 0;
-}
-
-
 int BeanWorld::reloadAll()
 {
     if (m_db_ == nullptr || !m_db_->connected()) return -1;

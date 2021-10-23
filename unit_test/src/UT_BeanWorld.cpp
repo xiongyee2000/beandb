@@ -208,26 +208,34 @@ TEST(BeanWorld, defineProperty_undefineProperty)
 TEST(BeanWorld, getProperty)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
+    BeanWorld* world;
     Value value;
-    const Property* property = nullptr;
+    Property* property = nullptr;
     TestHelper testHelper;
 
-    initTestHelper(testHelper, world);
+    dummyDB.connect();
+    world = dummyDB.getWorld();
+    initTestHelper(testHelper, *world);
 
-    property = world.getProperty(nullptr);
+    property = world->getProperty(nullptr);
     EXPECT_TRUE(property == nullptr);
-    property = world.getProperty("");
+    property = world->getProperty("");
     EXPECT_TRUE(property == nullptr);
-    property = world.getProperty("a");
+    property = world->getProperty("a");
     EXPECT_TRUE(property == nullptr);
 
-    property = world.defineProperty("p1", Property::IntType);
-    property = world.getProperty("p1");
+    property = world->defineProperty("p1", Property::IntType);
+    property = world->getProperty("p1");
     EXPECT_TRUE(property->getName() == "p1");
 
-    property = ((BeanWorld*)&world)->getProperty("p1");
+    property = world->getProperty("p1");
     EXPECT_TRUE(property->getName() == "p1");
+
+    property = world->getProperty(testHelper.p1->getId());
+    EXPECT_TRUE(property->getName() == "p1");
+
+    property = world->getProperty(999);
+    EXPECT_TRUE(property == nullptr);
 }
 
 TEST(BeanWorld, getProperties)

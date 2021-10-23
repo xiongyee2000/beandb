@@ -194,7 +194,6 @@ private:
     virtual ~BeanWorld();
 
     int reloadProperties();
-    int loadBean(Bean* bean);
     Property* definePropertyCommon_(const char* name, 
         Property::Type type, 
         Property::ValueType valueType);

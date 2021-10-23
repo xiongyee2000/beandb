@@ -278,6 +278,99 @@ TEST(BeanWorld, getProperties)
     delete world;
 }
 
+
+TEST(BeanWorld, unloadBean)
+{
+    int err = 0;
+    DummyBeanDB dummyDB;
+    BeanWorld world((AbstractBeanDB&)dummyDB);
+    Value value;
+    oidType oid = 0;
+    TestHelper testHelper;
+
+    initTestHelper(testHelper, world);
+
+    Bean* bean1 = world.createBean();
+    Bean* bean2 = world.createBean();
+    Bean* bean3 = world.createBean();
+    Bean* bean4 = world.createBean();
+
+    oid = bean1->getId();
+    world.unloadBean(bean1);
+    EXPECT_TRUE(world.getBean(oid, false) == nullptr);
+    bean1 = world.createBean();
+
+    bean1->setRelation(testHelper.r1, bean2);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean2->getId());
+    world.unloadBean(bean2);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == 2);
+    bean2 = world.createBean();
+
+    bean1->setRelation(testHelper.r1, bean3);
+    bean1->setRelation(testHelper.r2, bean3);
+    bean2->setRelation(testHelper.r1, bean3);
+    bean2->setRelation(testHelper.r2, bean3);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean3->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == bean3->getId());
+    EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == bean3->getId());
+    EXPECT_TRUE(bean2->getObjectId(testHelper.r2) == bean3->getId());
+    EXPECT_TRUE(world.getCachedNumOfBeans() == 4);
+    oid = bean3->getId();
+    world.unloadBean(bean3);
+    EXPECT_TRUE(world.getBean(oid, false) == nullptr);
+    EXPECT_TRUE(world.getCachedNumOfBeans() == 3);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean3->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == bean3->getId());
+    EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == bean3->getId());
+    EXPECT_TRUE(bean2->getObjectId(testHelper.r2) == bean3->getId());
+     bean3 = world.createBean();
+    oid = bean3->getId();
+
+    //array
+    bean1->createArrayRelation(testHelper.r_array_1);
+    bean1->createArrayRelation(testHelper.r_array_2);
+    bean1->appendRelation(testHelper.r_array_1, bean3);
+    bean1->appendRelation(testHelper.r_array_1, bean4);
+    bean1->appendRelation(testHelper.r_array_2, bean3);
+    bean1->appendRelation(testHelper.r_array_2, bean4);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean3->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 1) == bean4->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == bean3->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 1) == bean4->getId());
+    world.unloadBean(bean3);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == oid);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 1) == bean4->getId());
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == oid);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 1) == bean4->getId());
+    bean3 = world.createBean();
+
+    // bean2->createArrayRelation(testHelper.r_array_1);
+    // bean2->createArrayRelation(testHelper.r_array_2);    
+    // bean2->appendRelation(testHelper.r_array_1, bean4);
+    // bean2->appendRelation(testHelper.r_array_2, bean4);
+    // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean4->getId());
+    // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == bean4->getId());
+    // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_1, 0) == bean4->getId());
+    // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_2, 0) == bean4->getId());
+    // world.deleteBean(bean4);
+    // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == 0);
+    // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == 0);
+    // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_1, 0) == 0);
+    // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_2, 0) == 0);
+    // bean4 = world.createBean();
+
+    // bean1->appendRelation(testHelper.r_array_1, bean2);
+    // bean2->appendRelation(testHelper.r_array_1, bean3);
+    // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean2->getId());
+    // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_1, 0) == bean3->getId());
+    // EXPECT_TRUE(bean3->m_subjectMap_.size() == 1);
+    // world.deleteBean(bean2);
+    // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == 0);
+    // EXPECT_TRUE(bean3->m_subjectMap_.size() == 0);
+
+}
+
+
 TEST(BeanWorld, deleteBean)
 {
     int err = 0;
@@ -313,6 +406,7 @@ TEST(BeanWorld, deleteBean)
     EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == bean3->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == bean3->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r2) == bean3->getId());
+    EXPECT_TRUE(world.getCachedNumOfBeans() == 4);
     world.deleteBean(bean3);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == 0);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == 0);

@@ -983,6 +983,9 @@ int Bean::unload()
 
         //remove subject reference from property
         property->removeSubject(m_id_);
+
+        //remove property (remove index)
+        doRemoveProperty(property, false);
     }
 
     //reset data

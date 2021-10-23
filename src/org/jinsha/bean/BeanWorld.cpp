@@ -61,50 +61,14 @@ Bean* BeanWorld::createBean()
 };
 
 
-void BeanWorld::unloadBean(oidType id)
+void BeanWorld::unloadBean(Bean* bean)
 {
-    auto iter = m_beans_.find(id);
-    if (iter != m_beans_.end())
-    {
-        //handle relations: remove relation from subject that has
-        Bean* bean = iter->second;
-        //relation to this bean (as object)
-        Bean* subject = nullptr;
-        Property* property = nullptr;
-        Json::Value* value = nullptr;
-        auto iter2 = bean->m_subjectMap_.begin();
-        while (iter2 != bean->m_subjectMap_.end())
-        {
-            subject = getBean(iter2->first, false);
-            if (subject == nullptr) {
-                iter2 = bean->m_subjectMap_.erase(iter2);
-                continue;
-            }
-            property = iter2->second;
-            if (property->getType() == Property::RelationType)  {
-                //use doRemoveProperty(property, true) to keep
-                //m_subjectMap_ unchanged
-                subject->doRemoveProperty(property, true, true);
-            } else if (property->getType() == Property::ArrayRelationType) {
-                value = subject->getMemberPtr(property);
-                if (value == nullptr) {
-                    iter2++;
-                    continue; //shall not be null
-                }
-                size_t size = value->size();
-                //todo: O(n*n) complexity! How to improve performance?
-                for (Json::ArrayIndex i = size; i > 0; i--)
-                    if (subject->getObjectId(property, i - 1) == bean->m_id_) {
-                        subject->doRemoveProperty(property, i - 1, true, true); 
-                    }
-            }
-            iter2++;
-        }
-
-        iter->second->unload();
-       delete iter->second;
-        m_beans_.erase(iter);
-    }
+    if (bean == nullptr) return;
+    auto iter = m_beans_.find(bean->getId());
+    if (iter == m_beans_.end()) return;
+    m_beans_.erase(iter);
+    bean->unload();
+    delete bean;
 }
 
 
@@ -122,19 +86,33 @@ const unordered_map<oidType, Bean*>& BeanWorld::getCachedBeans()
 Bean* BeanWorld::getBean(oidType id,  bool loadFromDB)
 {
     int err = 0;
+    Json::Value data;
+    Json::Value nativeData;
     Bean* bean = nullptr;
     auto iter = m_beans_.find(id);
     if (iter == m_beans_.end())
     { //bean not found in this world
         if (!loadFromDB) return nullptr;
         //try to load it from db
+        if (m_db_ == nullptr) return nullptr;
+        if (!m_db_->connected()) return nullptr;
         bean = new Bean(id, this);
-        err = bean->load();
-        if (err) { //no such bean in db
+        err = m_db_->loadBeanBase_(id, data);
+        if (err) {
             delete bean;
             bean = nullptr;
         } else {
-            m_beans_[id] = bean;
+            //todo: 
+            //check data validity, e.g.: property name consistency, 
+            //delay load attribute etc...
+            
+            err = bean->load(data);
+            if (err) {
+                delete bean;
+                bean = nullptr;
+            } else {
+                m_beans_[id] = bean;
+            }
         }
     } else {
         bean = iter->second;
@@ -149,9 +127,31 @@ int BeanWorld::deleteBean(Bean* bean)
     if (bean == nullptr) return 0;
     
     int err = 0;
+    oidType subjectId = 0;
+    Bean* subject = nullptr;
+    Json::Value value;
+    Property* property = nullptr;
     err = m_db_->deleteBean_(bean->getId());
     if (!err) {
-        unloadBean(bean->getId());
+        auto iter = bean->m_subjectMap_.begin();
+        while ( iter != bean->m_subjectMap_.end()) {
+            subjectId = iter->first;
+            property = iter->second;
+            if (subjectId != bean->getId()) {
+                subject = getBean(subjectId, false);
+                if (subject == nullptr)  continue;
+                if (property->isArray()) {
+                    for (int i = 0; i < subject->getArraySize(property); i++) {
+                        if (subject->getObjectId(property, i) == bean->getId())
+                            subject->doRemoveProperty(property, i, false);
+                    }
+                } else {
+                    subject->doRemoveProperty(property, false);
+                }
+            }
+            iter = bean->m_subjectMap_.begin();
+        }
+        unloadBean(bean);
     }
     
     return err;
@@ -231,6 +231,17 @@ int BeanWorld::undefineProperty(Property* property)
         return -1;
     }
 
+    Bean* bean = nullptr;
+    //remove property from beans that have this property
+    auto iter2 = property->m_subjectMap_.begin();
+    while (property->m_subjectMap_.end() != iter2)
+    {
+        bean = getBean(iter2->first, false);
+        if (bean != nullptr) {
+            bean->doRemoveProperty(property, false);
+        }
+        iter2 = property->m_subjectMap_.begin();
+    }
     m_propertyMap_.erase(iter);
     delete property;
     return 0;
@@ -298,6 +309,12 @@ int BeanWorld::reloadProperties()
         m_properties_loaded_ = true;
     }
     return err;
+}
+
+
+int BeanWorld::loadBean(Bean* bean)
+{
+     return 0;
 }
 
 

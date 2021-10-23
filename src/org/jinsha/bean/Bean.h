@@ -394,9 +394,9 @@ public:
      * - Use this method to remove both property and relation.
      * 
      * @param property the property
-     * @return the removed item as json value
+     * @return 0 for souccess, or an error code
      */
-    Json::Value removeProperty( Property* property);
+    int removeProperty( Property* property);
 
     /**
      * Remove the item at given index from this bean's array property/relation.
@@ -406,9 +406,9 @@ public:
      * 
      * @param property the array property
      * @param index the index
-     * @return the removed item as json value
+     * @return 0 for souccess, or an error code
      */
-    Json::Value removeProperty( Property* property, Json::Value::ArrayIndex index);
+    int removeProperty( Property* property, Json::Value::ArrayIndex index);
 
     // /**
     //  * Remove relation from this bean.
@@ -496,8 +496,8 @@ private:
         const Json::Value&  newValue, 
         Json::Value::ArrayIndex index = (Json::Value::ArrayIndex)-1, bool saveAtOnce = true);
 
-    Json::Value doRemoveProperty( Property* property, bool internal = false, bool saveAtOnce = true);
-    Json::Value doRemoveProperty( Property* property, Json::Value::ArrayIndex index,  bool internal = false, bool saveAtOnce = true);
+    int doRemoveProperty( Property* property, bool saveAtOnce = true);
+    int doRemoveProperty( Property* property, Json::Value::ArrayIndex index, bool saveAtOnce = true);
 
     void addSubject(Bean* subject, Property* relation);
     void removeSubject(Bean* subject, Property* relation);
@@ -507,7 +507,7 @@ private:
     //DB related methods
     ////////////////////////////////////////////////////////////////
 private:
-    int load();
+    int load(Json::Value& data);
     int unload();
     int loadProperty(const Property* property);
     // bool propertyLoaded(const Property* property);

@@ -100,7 +100,7 @@ public:
     virtual int deleteBean(Bean* bean) override;
 
     /**
-     * @ref BeanDBUserIntf::loadAll()
+     * @ref BeanDBUserIntf::reloadAll()
      */
     virtual int reloadAll() override;
 
@@ -110,11 +110,17 @@ public:
     virtual int saveAll() override;
 
     /**
-     * Remove a bean from this world. 
+     * Unload (remove) a bean from this world. 
      * 
-     * @param id the id of the bean
+     * Notes:
+     * - the memory allocated to bean will be deleted 
+     *    so that it shall not be used any longer;
+     * - however the bean will NOT be deleted from the 
+     *    database;
+     * 
+     * @param bean the bean to be unloaded
      */
-    virtual void unloadBean(oidType id) override;
+    virtual void unloadBean(Bean* bean) override;
 
     /**
      * Get total number of beans chached in this world (in memory).
@@ -188,6 +194,7 @@ private:
     virtual ~BeanWorld();
 
     int reloadProperties();
+    int loadBean(Bean* bean);
     Property* definePropertyCommon_(const char* name, 
         Property::Type type, 
         Property::ValueType valueType);

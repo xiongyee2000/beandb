@@ -604,10 +604,10 @@ int Bean::setArrayRelation(Property* relation,
 }
 
 
-Json::Value Bean::removeProperty(Property* property)
+int Bean::removeProperty(Property* property)
 {
-    if (property == nullptr) return Json::Value::nullRef;
-    return doRemoveProperty(property, false, true);
+    if (property == nullptr) return -1;
+    return doRemoveProperty(property, true);
 }
 
 
@@ -627,29 +627,29 @@ int Bean::removeNativeData()
 }
 
 
-Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool saveAtOnce)
+int Bean::doRemoveProperty(Property* property, bool saveAtOnce)
 {
     const auto& pname = property->getName();
-    Json::Value rtnValue;
    Json::Value* valuePtr = getMemberPtr(property);
-    if (valuePtr == nullptr) return Json::Value::nullRef;
+    if (valuePtr == nullptr) return -1; //bean has no such property value
     Json::Value& pstValue = m_pst_json_[pname];
-    if (pstValue.isArray()) {
+    if (pstValue.isArray()) 
         if (m_json_[pname].isNull() || !m_json_[pname].isArray()) 
-            return Json::Value::nullRef; //inconsistent value
-        Json::Value& array = m_json_[pname];
-        rtnValue = *valuePtr;
-        Json::Value::ArrayIndex size = array.size();
-        for (Json::Value::ArrayIndex i = 0; i < size; i++) {
-            doRemoveProperty(property, i, false, saveAtOnce);
-        }
-    }
+            return -1; //inconsistent value
 
     if (saveAtOnce) {
         //delete from db first
         if (m_world_->m_db_ != nullptr) {
             if (0 != m_world_->m_db_->deleteBeanProperty_(m_id_, property))
-                return Json::Value::nullRef;
+                return -1;
+        }
+    }
+
+    if (pstValue.isArray()) {
+        Json::Value& array = m_json_[pname];
+        Json::Value::ArrayIndex size = array.size();
+        for (Json::Value::ArrayIndex i = 0; i < size; i++) {
+            doRemoveProperty(property, i, saveAtOnce);
         }
     }
 
@@ -680,12 +680,9 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool saveA
     {
             oidType oid = value.asUInt64();
             property->removeObject(oid);
-
-            if (!internal) {
-                Bean* objectBean = m_world_->getBean(oid, false);
-                if (objectBean != nullptr)
-                    objectBean->removeSubject(this, property);
-            }
+            Bean* objectBean = m_world_->getBean(oid, false);
+            if (objectBean != nullptr)
+                objectBean->removeSubject(this, property);
     }
     else if (property->getType() == Property::ArrayRelationType)
     {
@@ -695,53 +692,43 @@ Json::Value Bean::doRemoveProperty(Property* property, bool internal, bool saveA
         {
             oid = array[index].asUInt64();
             property->removeObject(oid);
-
-            if (!internal) {
-                Bean* objectBean = m_world_->getBean(oid, false);
-                if (objectBean == nullptr) continue;
-                objectBean->removeSubject(this, property);
-            }
+            Bean* objectBean = m_world_->getBean(oid, false);
+            if (objectBean == nullptr) continue;
+            objectBean->removeSubject(this, property);
         }
     }
     
     //remove member of json object
     m_pst_json_.removeMember(pname);
-    if (property->getType() == Property::ArrayPrimaryType || 
-        property->getType() == Property::ArrayRelationType) {
-            m_json_.removeMember(pname);
-            return rtnValue;
-    }
-    return m_json_.removeMember(pname);
+    m_json_.removeMember(pname);
+    return 0;
 }
 
 
-Json::Value Bean::removeProperty(Property* property, Json::Value::ArrayIndex index)
+int Bean::removeProperty(Property* property, Json::Value::ArrayIndex index)
 {
-    if (property == nullptr) return Json::Value::nullRef;
-    return doRemoveProperty(property, index, false, true);
+    if (property == nullptr) return -1;
+    return doRemoveProperty(property, index, true);
 }
 
-Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex index, bool internal, bool saveAtOnce)
+int Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex index, bool saveAtOnce)
 {
-    Json::Value rtn; //null
     const auto& pname = property->getName();
-    if (!m_pst_json_.isMember(pname)) return Json::Value::nullRef; //bean has no such property value
+    if (!m_pst_json_.isMember(pname)) return -1; //bean has no such property value
     Json::Value& pstValue = m_pst_json_[pname];
     Json::Value* arrayPtr = getMemberPtr(property);
-    if (arrayPtr == nullptr) return Json::Value::nullRef; 
+    if (arrayPtr == nullptr) return -1; 
     Json::Value& array = *arrayPtr;
-    if (!array.isArray()) return Json::Value::nullRef; //if property is array, array.isArray() shall be true
-    if (index >= array.size()) return Json::Value::nullRef;
+    if (!array.isArray()) return -1; //if property is array, array.isArray() shall be true
+    if (index >= array.size()) return -1;
 
     if (saveAtOnce) {
         //delete from db first
         if (m_world_->m_db_ != nullptr) {
             if (0 != m_world_->m_db_->deleteBeanProperty_(m_id_, property, index))
-                return Json::Value::nullRef;
+                return -1;
         }
     }
-
-    rtn = array[index];
 
     //todo: index not supported for array currently
     // if (property->indexed())
@@ -756,11 +743,9 @@ Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex i
     {
         oid = array[index].asUInt64();
         property->removeObject(oid);
-        if (!internal) {
-            objectBean = m_world_->getBean(oid, false);
-            if (objectBean != nullptr)
-                objectBean->removeSubject(this, property);
-        }
+        objectBean = m_world_->getBean(oid, false);
+        if (objectBean != nullptr)
+            objectBean->removeSubject(this, property);
     }
     
     //create a new array and replace the old
@@ -775,7 +760,7 @@ Json::Value Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex i
 
     array = newArray;
     m_pst_json_[pname] = newPstArray;
-    return rtn;
+    return 0;
 }
 
 
@@ -886,91 +871,70 @@ int Bean::setNativeData(Json::Value& data, bool saveAtOnce)
 // }
 
 
-int Bean::load()
+int Bean::load(Json::Value& data)
 {
     if (m_world_->m_db_ == nullptr) return -1;
     int err = 0;
     int size = 0;
     Property* property = nullptr;
-    Json::Value data;
     Json::Value* dataValuePtr = nullptr;
 
-    //unload first
-    unload();
+    //set proper property value
+    auto pnames = data.getMemberNames();
+    for (auto& pname : pnames) {
+        property = m_world_->getProperty(pname.c_str());
+        if (property == nullptr) continue; //it's not a defined property
 
-    err = m_world_->m_db_->loadBeanBase_(m_id_, data);
-    if (err) {
-        m_json_ = Json::Value(Json::ValueType::objectValue);
-        m_native_data_json_ = Json::Value::nullRef;
-        m_native_data_pst_json_ = PST_NSY;
-    } else {
-        //todo: 
-        //check data validity, e.g.: property name consistency, 
-        //delay load attribute etc...
-
-        //set proper property value
-        auto pnames = data.getMemberNames();
-        for (auto& pname : pnames) {
-            property = m_world_->getProperty(pname.c_str());
-            if (property == nullptr) continue; //it's not a defined property
-
-            //set pst value
-            if (property->isDelayLoad()) {
-                m_pst_json_[pname] = PST_NSY;
-            } else {
-                m_pst_json_[pname] = PST_SYN;
-            }
-
-            dataValuePtr = &data[pname];
-
-            if (dataValuePtr->isNull()) { //delay load
-                m_json_[pname] = Json::Value::nullRef;
-                m_pst_json_[pname] = PST_NSY;
-            } else {
-                switch (property->getType()) {
-                    case Property::PrimaryType:
-                        m_pst_json_.removeMember(pname);
-                        doSetProperty(property,  *dataValuePtr, false);
-                        m_pst_json_[pname] = PST_SYN;
-                        break;
-                    case Property::RelationType:
-                        m_pst_json_.removeMember(pname);
-                        doSetRelation(property, dataValuePtr->asUInt64(), false);         
-                        m_pst_json_[pname] = PST_SYN;
-                        break;
-                    case Property::ArrayPrimaryType:
-                        //override pst value
-                        m_pst_json_.removeMember(pname);                 
-                        doCreateArrayProperty(property, false);
-                        size = dataValuePtr->size();
-                        for (int i = 0; i < size; i++) {
-                            doAppendProperty(property,  (*dataValuePtr)[i], false);
-                            //set it again to ensure it's PST_SYN
-                            m_pst_json_[pname][i] = PST_SYN;
-                        }
-                        break;
-                    case Property::ArrayRelationType:
-                        //override pst value
-                        m_pst_json_.removeMember(pname);         
-                        doCreateArrayProperty(property, false);
-                        size = dataValuePtr->size();
-                        for (int i = 0; i < size; i++) {
-                            doAppendRelation(property,  (*dataValuePtr)[i].asUInt64(), false);
-                            //set it again to ensure it's PST_SYN
-                            m_pst_json_[pname][i] = PST_SYN;
-                        } 
-                        break;
-                    default: 
-                        //shall not reach here
-                        break;
-                }
-            }
+        //set pst value
+        if (property->isDelayLoad()) {
+            m_pst_json_[pname] = PST_NSY;
+        } else {
+            m_pst_json_[pname] = PST_SYN;
         }
 
-        if (m_native_data_json_.isNull()) { //delay load
-            m_native_data_pst_json_ = PST_NSY;
+        dataValuePtr = &data[pname];
+
+        if (dataValuePtr->isNull()) { //delay load
+            m_json_[pname] = Json::Value::nullRef;
+            m_pst_json_[pname] = PST_NSY;
         } else {
-            m_native_data_pst_json_ = PST_SYN;
+            switch (property->getType()) {
+                case Property::PrimaryType:
+                    m_pst_json_.removeMember(pname);
+                    doSetProperty(property,  *dataValuePtr, false);
+                    m_pst_json_[pname] = PST_SYN;
+                    break;
+                case Property::RelationType:
+                    m_pst_json_.removeMember(pname);
+                    doSetRelation(property, dataValuePtr->asUInt64(), false);         
+                    m_pst_json_[pname] = PST_SYN;
+                    break;
+                case Property::ArrayPrimaryType:
+                    //override pst value
+                    m_pst_json_.removeMember(pname);                 
+                    doCreateArrayProperty(property, false);
+                    size = dataValuePtr->size();
+                    for (int i = 0; i < size; i++) {
+                        doAppendProperty(property,  (*dataValuePtr)[i], false);
+                        //set it again to ensure it's PST_SYN
+                        m_pst_json_[pname][i] = PST_SYN;
+                    }
+                    break;
+                case Property::ArrayRelationType:
+                    //override pst value
+                    m_pst_json_.removeMember(pname);         
+                    doCreateArrayProperty(property, false);
+                    size = dataValuePtr->size();
+                    for (int i = 0; i < size; i++) {
+                        doAppendRelation(property,  (*dataValuePtr)[i].asUInt64(), false);
+                        //set it again to ensure it's PST_SYN
+                        m_pst_json_[pname][i] = PST_SYN;
+                    } 
+                    break;
+                default: 
+                    //shall not reach here
+                    break;
+            }
         }
     }
 
@@ -982,20 +946,55 @@ int Bean::unload()
 {
     int err = 0;
    Property* property = nullptr;
+   Property* tmpProperty = nullptr;
+   Bean* subject = nullptr;
+   Bean* object = nullptr;
+   Json::Value* objectValue = nullptr;
+   oidType objectId = 0;
+   Json::Value helperArrayValue = Json::Value(Json::arrayValue);
+   Json::Value* tmpv = nullptr;
 
-   //remove all properties
-    for (auto& pname : m_pst_json_.getMemberNames()) {
+    for (auto& pname : m_json_.getMemberNames()) {
         property = m_world_->getProperty(pname.c_str());
         if (property == nullptr) continue;
-        doRemoveProperty(property, false, false); 
+
+        if (property->isRelation()) {
+            objectValue = getMemberPtr(property);
+            if (objectValue != nullptr) {
+                if (objectValue->isArray()) {
+                    tmpv = objectValue;
+                } else {
+                    helperArrayValue.append(objectValue->asUInt64());
+                    tmpv = &helperArrayValue;
+                }
+                for (Json::ArrayIndex i = 0; i < tmpv->size(); i++) {
+                    objectId = ((*tmpv)[i]).asUInt64();
+                    object = m_world_->getBean(objectId, false);
+                    if (object != nullptr) {
+                        //remove subject reference from relation objects
+                        object->removeSubject(this, property);
+                    }
+                }
+
+                //remove object reference from property
+                property->removeObject(m_id_);
+            }
+        }
+
+        //remove subject reference from property
+        property->removeSubject(m_id_);
     }
+
+    //reset data
     m_json_ = Json::Value(Json::objectValue);
     m_pst_json_ = Json::Value(Json::objectValue);
 
-    //remove all native data
-//    m_native_data_json_ = Json::Value(Json::objectValue);
+    //reset native data
    m_native_data_json_ = Json::Value::nullRef;
    m_native_data_pst_json_ = PST_NSY;
+
+   //reset subject map
+   m_subjectMap_.clear();
 
     return err;
 }

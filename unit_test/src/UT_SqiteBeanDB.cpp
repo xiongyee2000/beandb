@@ -595,7 +595,7 @@ TEST(SqliteBeanDB, loadBeanBase_)
 
     testdb.loadBeanBase_(beanId_2, value, &nativeData);
     EXPECT_TRUE(nativeData.isNull());
-    
+
     testdb.disconnect();
 }
 
@@ -2330,9 +2330,9 @@ TEST(SqliteBeanDB, BeanWorld_reloadAll)
     Bean* bean2 = world->createBean();
     Bean* bean3 = world->createBean();
 
-    world->unloadBean(bean1->getId());
-    world->unloadBean(bean2->getId());
-    world->unloadBean(bean3->getId());
+    world->unloadBean(bean1);
+    world->unloadBean(bean2);
+    world->unloadBean(bean3);
     bean = world->getBean(bean1->getId(), false);
     EXPECT_TRUE(bean == nullptr);
     bean = world->getBean(bean2->getId(), false);

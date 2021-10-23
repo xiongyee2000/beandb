@@ -721,7 +721,7 @@ TEST(Property, index_more_complicated)
     ///////////////////////////////////////////////////////
     //remove bean after createIndex()
     ///////////////////////////////////////////////////////
-    world.unloadBean(bean2->getId());
+    world.unloadBean(bean2);
     testHelper.p_real->findEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 0);
 

@@ -31,18 +31,6 @@ Property::Property(BeanWorld* world, const char* name, pidType id,
 
 Property::~Property()
 {
-    removeIndex();
-    Bean* bean = nullptr;
-    //remove property from beans that have this property
-    for (auto& iter : m_subjectMap_)
-    {
-        bean = m_world_->getBean(iter.first, false);
-        if (bean != nullptr) {
-            bean->m_json_.removeMember(m_name_);
-            bean->m_pst_json_.removeMember(m_name_);
-        }
-    }
-    m_subjectMap_.clear();
 }
 
 
@@ -121,8 +109,11 @@ size_t Property::getNumOfSubjects() const
 size_t Property::getNumOfObjects() const
 {
     size_t size = 0;
-    if (m_propertyType_ == PrimaryType)
-    { //todo: do we need to consider PrimaryType?
+    if (isRelation())
+    { 
+        size = m_objectMap_.size();
+
+    } else  { //todo: do we need to consider PrimaryType?
         // switch (m_valueType_)
         // {
         // case IntType:
@@ -139,10 +130,6 @@ size_t Property::getNumOfObjects() const
         //     return 0;
         // }
     }
-    else if (m_propertyType_ == RelationType || m_propertyType_ == ArrayRelationType)
-    {
-        size = m_objectMap_.size();
-    }
     
     return size;
 }
@@ -150,15 +137,17 @@ size_t Property::getNumOfObjects() const
 
 void Property::addSubject(oidType id)
 {
-    m_subjectMap_[id] = 0;
+    m_subjectMap_[id] = 1;
 }
 
 
 void Property::removeSubject(oidType id)
 {
-        auto iter = m_subjectMap_.find(id);
-        if (iter != m_subjectMap_.end())
-            m_subjectMap_.erase(iter);
+    auto iter = m_subjectMap_.find(id);
+    if (iter != m_subjectMap_.end())
+    {
+        m_subjectMap_.erase(iter);
+    }
 }
 
 

@@ -170,11 +170,14 @@ public:
      * Unload a bean from this world. 
      * 
      * Notes:
-     * - The bean will NOT be deleted from the database.
+     * - the memory allocated to bean will be deleted 
+     *    so that it shall not be used any longer;
+     * - however the bean will NOT be deleted from the 
+     *    database;
      * 
-     * @param id the id of the bean
+     * @param bean the bean to be uloaded
      */
-    virtual void unloadBean(oidType id) = 0;
+    virtual void unloadBean(Bean* bean) = 0;
 
     /**
      * Remove a single bean from the storage.

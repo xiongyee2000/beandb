@@ -330,9 +330,9 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
     err = world->undefineProperty(nullptr);
     EXPECT_TRUE(err == 0);
 
-    bean1 = world->createBean();
-    bean2 = world->createBean();
-    bean3 = world->createBean();
+    bean1 = world->newBean();
+    bean2 = world->newBean();
+    bean3 = world->newBean();
     beanId_1 = bean1->getId();
     beanId_2 = bean1->getId();
     beanId_3 = bean1->getId();
@@ -490,19 +490,19 @@ TEST(SqliteBeanDB, world_createBean_deleteBean)
     testdb.connect();
     world = testdb.getWorld();
 
-    bean = world->createBean();
+    bean = world->newBean();
     EXPECT_TRUE(bean != nullptr);
     
     err = world->deleteBean(bean);
     EXPECT_TRUE(err == 0);
 
-    bean = world->createBean();
+    bean = world->newBean();
     EXPECT_TRUE(bean != nullptr);
     
     err = world->deleteBean(bean);
     EXPECT_TRUE(err == 0);
 
-    bean = world->createBean();
+    bean = world->newBean();
     EXPECT_TRUE(bean != nullptr);
     
     err = world->deleteBean(bean);
@@ -538,9 +538,9 @@ TEST(SqliteBeanDB, loadBeanBase_)
     initTestHelper(testHelper, *world, false);
     validate_testdb_1(testdb);
  
-    bean1 = world->createBean();
-    bean2 = world->createBean();
-    bean3 = world->createBean();
+    bean1 = world->newBean();
+    bean2 = world->newBean();
+    bean3 = world->newBean();
     beanId_1 = bean1->getId();
     beanId_2 = bean2->getId();
     beanId_3 = bean3->getId();
@@ -654,17 +654,17 @@ TEST(SqliteBeanDB, saveBean)
 
     initTestHelper(testHelper, *world, false);
 
-    bean1 = world->createBean();
+    bean1 = world->newBean();
     beanId_1 = bean1->getId();
     setBeanProperties(testHelper, bean1);
     setBeanNativeData(testHelper, bean1);
 
-    bean2 = world->createBean();
+    bean2 = world->newBean();
     beanId_2 = bean2->getId();
     setBeanProperties(testHelper, bean2);
     setBeanNativeData(testHelper, bean2);
 
-    bean3 = world->createBean();
+    bean3 = world->newBean();
     beanId_3 = bean3->getId();
     setBeanProperties(testHelper, bean3);
     setBeanNativeData(testHelper, bean3);
@@ -943,7 +943,7 @@ TEST(SqliteBeanDB, insertBeanProperty_)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
+    Bean* bean1 = world->newBean();
     oidType beanId_1 = bean1->getId();
 
     err = testdb.insertBeanProperty_(9999, testHelper.p_int, 1);
@@ -991,7 +991,7 @@ TEST(SqliteBeanDB, updateBeanProperty_)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
+    Bean* bean1 = world->newBean();
     oidType beanId_1 = bean1->getId();
 
     Bean* bean3 = world->getBean(3);
@@ -1079,7 +1079,7 @@ TEST(SqliteBeanDB, deleteBeanProperty_)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
+    Bean* bean1 = world->newBean();
     oidType beanId_1 = bean1->getId();
     
     bean1->addArrayProperty(testHelper.p_array_int);
@@ -1209,7 +1209,7 @@ TEST(SqliteBeanDB, nativeData)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
+    Bean* bean1 = world->newBean();
     oidType beanId_1 = bean1->getId();
 
     err = testdb.loadBeanNativeData_(beanId_1, value);
@@ -1277,8 +1277,8 @@ TEST(SqliteBeanDB, findEqual)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
 
     bean1->set(testHelper.p_real, 1.0);
     bean1->set(testHelper.p_str, "hello");
@@ -1373,9 +1373,9 @@ TEST(SqliteBeanDB, findLessThan)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     find_beanInit(testHelper, bean1, bean2, bean3);
 
@@ -1486,9 +1486,9 @@ TEST(SqliteBeanDB, findLessEqual)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     find_beanInit(testHelper, bean1, bean2, bean3);
 
@@ -1619,9 +1619,9 @@ TEST(SqliteBeanDB, findGreaterThan)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     find_beanInit(testHelper, bean1, bean2, bean3);
 
@@ -1732,9 +1732,9 @@ TEST(SqliteBeanDB, findGreaterEqual)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     find_beanInit(testHelper, bean1, bean2, bean3);
 
@@ -1863,11 +1863,11 @@ TEST(SqliteBeanDB, find_like)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
+    Bean* bean1 = world->newBean();
     oidType beanId_1 = bean1->getId();
-    Bean* bean2 = world->createBean();
+    Bean* bean2 = world->newBean();
     oidType beanId_2= bean2->getId();
-    Bean* bean3 = world->createBean();
+    Bean* bean3 = world->newBean();
     oidType beanId_3 = bean3->getId();
 
     bean1->set(testHelper.p_str, "beandb");
@@ -1963,9 +1963,9 @@ TEST(SqliteBeanDB, findEqual_relation)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
     oidType beanId_1 = bean1->getId();
     oidType beanId_2 = bean2->getId();
     oidType beanId_3 = bean3->getId();
@@ -2124,9 +2124,9 @@ TEST(SqliteBeanDB, findSubjects)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     page = world->findSubjects(testHelper.p_int);
     EXPECT_TRUE(page == nullptr);
@@ -2204,9 +2204,9 @@ TEST(SqliteBeanDB, findOjects)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     page = world->findObjects(testHelper.p_int);
     EXPECT_TRUE(page == nullptr);
@@ -2291,9 +2291,9 @@ TEST(SqliteBeanDB, getAllBeans)
     EXPECT_TRUE(page->size() == 0);
     delete page;
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     page = world->getAllBeans(2);
     EXPECT_TRUE(page->size() == 2);
@@ -2326,9 +2326,9 @@ TEST(SqliteBeanDB, BeanWorld_reloadAll)
     err = world->loadAll();
     EXPECT_TRUE(err == 0);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     world->unloadBean(bean1);
     world->unloadBean(bean2);

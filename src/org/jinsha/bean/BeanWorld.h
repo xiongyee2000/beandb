@@ -183,18 +183,30 @@ public:
      ***********************************************************/
 public:
     /**
-     * Creat an empty bean.
+     * Creat a new bean.
+     * 
+     * Notes:
+     * - A new bean instance will be created in the storage and loaded into
+     *    this world;
+     * - The new bean will have no property;
+     * - The id of the bean will be the id generated in the storage;
      * 
      * @return the pointer pointing to the bean, or nullptr if exception occurs.
      */
-    Bean* createBean();
+    Bean* newBean();
 
     /**
      * Get bean by id.
      * 
+     * Notes:
+     * - Once loaded, the bean will kept in the world unless unloadBean() is called,
+     *   which will remove the bean from this world and release the memory. So do 
+     *   unloadBean() after you finish the job if you don't expect the bean kept in
+     *   the world.
+     * 
      * @param id the id of the bean
-     * @param loadFromDB if true, try to load the bean from db
-     *                    when the bean has not been loaded into this world.
+     * @param loadFromDB if true, try to load the bean from the storage
+     *                    when it has not been loaded into this world.
      * @return the pointer pointing to the bean, or null if no such
      *                   bean exist.
      */
@@ -204,10 +216,9 @@ public:
      * Unload a bean from this world. 
      * 
      * Notes:
-     * - the memory allocated to bean will be deleted 
-     *    so that it shall not be used any longer;
+     * - the memory allocated to this bean will be released;
      * - however the bean will NOT be deleted from the 
-     *    database;
+     *    storage;
      * 
      * @param bean the bean to be unloaded
      */
@@ -221,13 +232,21 @@ public:
     /**
      * Delete a bean from the storage.
      * 
+     * Notes:
+     * - The bean will also be unloaded from this world;
+     * 
      * @param bean the bean to be deleted
      * @return 0 for success, or an error code
      */
     int deleteBean(Bean* bean);
 
     /**
-     * Save all data into the storage.
+     * Save all changes into the storage.
+     * 
+     * Notes:
+     * - Only changed data will be saved into storage;
+     * - You can make some changes, and then use this method to 
+     *    save them so as to achieve better performance.
      * 
      * @return 0 for success, or an error code
      */

@@ -50,7 +50,7 @@ int BeanWorld::doUnloadAll(bool reloadProperties)
 }
 
 
-Bean* BeanWorld::createBean()
+Bean* BeanWorld::newBean()
 {
     int err = 0;
     oidType id = 0;

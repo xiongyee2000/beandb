@@ -39,8 +39,8 @@ TEST(Bean, getId)
     dummyDB.connect();
     world = dummyDB.getWorld();
 
-    Bean *bean1 = world->createBean();
-    Bean *bean2 = world->createBean();
+    Bean *bean1 = world->newBean();
+    Bean *bean2 = world->newBean();
     EXPECT_TRUE(bean1->getId() >= 0);
     EXPECT_TRUE(bean2->getId() >= 0);
     EXPECT_TRUE(bean1->getId() != bean2->getId());
@@ -60,7 +60,7 @@ TEST(Bean, create_has_remove)
 
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
+    Bean* bean1 = world->newBean();
 
     err = bean1->addArrayProperty(nullptr);
     EXPECT_TRUE(err == -2);
@@ -85,7 +85,7 @@ TEST(Bean, create_has_remove)
     EXPECT_TRUE(!bean1->hasRelation(testHelper.p_array_int));
     EXPECT_TRUE(!bean1->hasArrayRelation(testHelper.p_array_int));
 
-    Bean* bean2 = world->createBean();
+    Bean* bean2 = world->newBean();
 
     EXPECT_TRUE(!bean1->hasRelation(testHelper.r1));
     bean1->setRelation(testHelper.r1, nullptr);
@@ -147,7 +147,7 @@ TEST(Bean, property)
 
     initTestHelper(testHelper, *world);
 
-    Bean &bean = *world->createBean();
+    Bean &bean = *world->newBean();
 
     err = bean.set(testHelper.p1, Json::Value());
     EXPECT_TRUE(err == -1);
@@ -291,7 +291,7 @@ TEST(Bean, array_property)
 
     initTestHelper(testHelper, *world);
 
-    Bean &bean = *world->createBean();
+    Bean &bean = *world->newBean();
     EXPECT_TRUE(bean.hasArrayProperty(testHelper.p_array_int) == false);
     EXPECT_TRUE(bean.size(testHelper.p_array_int) == 0);
     Value value2 = bean.getAt(testHelper.p_array_int, 0);
@@ -420,9 +420,9 @@ TEST(Bean, relation)
 
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     EXPECT_TRUE(!bean1->getObjectId(nullptr));
 
@@ -466,9 +466,9 @@ TEST(Bean, array_relation)
 
     initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world->createBean();
-    Bean* bean2 = world->createBean();
-    Bean* bean3 = world->createBean();
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
 
     beanId = bean1->getObjectId(nullptr, -1);
     EXPECT_TRUE(beanId == 0);
@@ -617,7 +617,7 @@ TEST(Bean, isMember)
 
     initTestHelper(testHelper, *world);
     
-    Bean* bean1 = world->createBean();
+    Bean* bean1 = world->newBean();
 
     EXPECT_TRUE(!bean1->isMember(nullptr));
 
@@ -637,7 +637,7 @@ TEST(Bean, isMember)
     EXPECT_TRUE(bean1->isMember(testHelper.p_array_int));
     EXPECT_TRUE(bean1->getMemberNames().size() == 3);
 
-    Bean* bean2 = world->createBean();
+    Bean* bean2 = world->newBean();
 
     EXPECT_TRUE(!bean1->isMember(testHelper.r1));
     bean1->setRelation(testHelper.r1, nullptr);
@@ -675,17 +675,17 @@ TEST(Bean, save)
 
     initTestHelper(testHelper, *world, false);
 
-    bean1 = world->createBean();
+    bean1 = world->newBean();
     beanId_1 = bean1->getId();
     setBeanProperties(testHelper, bean1, false);
     setBeanNativeData(testHelper, bean1, false);
 
-    bean2 = world->createBean();
+    bean2 = world->newBean();
     beanId_2 = bean2->getId();
     setBeanProperties(testHelper, bean2, false);
     setBeanNativeData(testHelper, bean2, false);
 
-    bean3 = world->createBean();
+    bean3 = world->newBean();
     beanId_3 = bean3->getId();
     setBeanProperties(testHelper, bean3, false);
     setBeanNativeData(testHelper, bean3, false);
@@ -740,15 +740,15 @@ TEST(Bean, removeAllProperties)
 
     initTestHelper(testHelper, *world, false);
 
-    bean1 = world->createBean();
+    bean1 = world->newBean();
     beanId_1 = bean1->getId();
     setBeanProperties(testHelper, bean1);
 
-    bean2 = world->createBean();
+    bean2 = world->newBean();
     beanId_2 = bean2->getId();
     setBeanProperties(testHelper, bean2);
 
-    bean3 = world->createBean();
+    bean3 = world->newBean();
     beanId_3 = bean3->getId();
     setBeanProperties(testHelper, bean3);
 
@@ -803,7 +803,7 @@ TEST(Bean, nativeData)
 
     initTestHelper(testHelper, *world, false);
 
-    bean1 = world->createBean();
+    bean1 = world->newBean();
     setBeanNativeData(testHelper, bean1);
     validateBeanNativeData(testHelper, bean1);
     EXPECT_TRUE(bean1->getNativeData().getMemberNames().size() > 0);
@@ -838,17 +838,17 @@ TEST(Bean, clear)
 
     initTestHelper(testHelper, *world, false);
 
-    bean1 = world->createBean();
+    bean1 = world->newBean();
     beanId_1 = bean1->getId();
     setBeanProperties(testHelper, bean1);
     setBeanNativeData(testHelper, bean1);
 
-    bean2 = world->createBean();
+    bean2 = world->newBean();
     beanId_2 = bean2->getId();
     setBeanProperties(testHelper, bean2);
     setBeanNativeData(testHelper, bean2);
 
-    bean3 = world->createBean();
+    bean3 = world->newBean();
     beanId_3 = bean3->getId();
     setBeanProperties(testHelper, bean3);
     setBeanNativeData(testHelper, bean3);

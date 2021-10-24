@@ -156,13 +156,13 @@ public:
      * value of null will be returned;
      * If the index is invalid, a json value of null will be returned;
      */
-    Json::Value at(const Property* property, 
+    Json::Value getAt(const Property* property, 
         Json::Value::ArrayIndex index) const;
 
      /**
-     * Create an empty array property for this bean.
+     * Add an empty array property for this bean.
      * 
-     * This method must be called before items can be added into 
+     * This method must be called before items can be appended into 
      * the array property.
      * 
      * @param property the array property
@@ -170,7 +170,7 @@ public:
      *                   error code:
      *                   -2: if property is null or invalid
      */
-    int createArrayProperty(Property* property);
+    int addArrayProperty(Property* property);
 
      /**
      * Append an item to the end of an array property. 
@@ -189,7 +189,7 @@ public:
      /**
      * Set the value of an array property at specified index. 
      * 
-     * This method must be called after createArrayProperty();
+     * This method must be called after addArrayProperty();
      * 
      * @param property the array property
      * @param index the index in the array
@@ -293,17 +293,17 @@ public:
     int setRelation(Property* relation, Bean* bean);
 
      /**
-     * Create an empty array relation for this bean.
+     * Add an empty array relation for this bean.
      * 
-     * This method must be called before items can be added into 
+     * This method must be called before items can be appended into 
      * the array relation.
      * 
      * @param relation the array relation
      * @return 0 if success, or an error code
      *                   error code:
-     *                   -2: if property is null or invalid
+     *                   -2: if relation is null or invalid
      */
-    int createArrayRelation(Property* relation);
+    int addArrayRelation(Property* relation);
 
     /**
      * This method is used to append an item to an array relation.
@@ -330,7 +330,7 @@ public:
      * 
      * Notes:
      * - This method will internally add the counter part bean's id to the 
-     *    json array property created by createArrayRelation(Property* property).
+     *    json array property created by addArrayRelation(Property* property).
      * 
      * @param relation the array relation
      * @param bean the counter part bean of the relation to be added
@@ -503,11 +503,11 @@ private:
     int loadProperty(const Property* property);
     // bool propertyLoaded(const Property* property);
 
-    int doSetProperty(Property* property, const Json::Value& value, bool saveAtOnce);
-    int doSetArrayProperty(Property* property, const Json::Value& value, bool saveAtOnce);
+    int doSet(Property* property, const Json::Value& value, bool saveAtOnce);
+    int doSetAt(Property* property, const Json::Value& value, bool saveAtOnce);
     int doSetRelation(Property* relation, oidType objectBeanId, bool saveAtOnce);
-    int doCreateArrayProperty(Property* property, bool saveAtOnce = true);
-    int doAppendProperty(Property* property, const Json::Value& value, bool saveAtOnce); 
+    int doAddArrayProperty(Property* property, bool saveAtOnce = true);
+    int doAppend(Property* property, const Json::Value& value, bool saveAtOnce); 
     int doAppendRelation(Property* relation, oidType objectBeanId, bool saveAtOnce);
 
 private:

@@ -91,7 +91,7 @@ Json::Value Bean::get(const Property* property) const
 
 int Bean::set(Property* property,  const Json::Value& value, bool saveAtOnce)
 {
-    return doSetProperty(property, value, saveAtOnce);
+    return doSet(property, value, saveAtOnce);
 }
 
 
@@ -99,7 +99,7 @@ int Bean::set(Property* property,  const char* value, bool saveAtOnce)
 {
     Json::StaticString sv(value);
     Json::Value v(sv);
-    return doSetProperty(property, v, saveAtOnce);
+    return doSet(property, v, saveAtOnce);
 }
 
 
@@ -107,11 +107,11 @@ int Bean::set(Property* property,  const std::string& value, bool saveAtOnce)
 {
     Json::StaticString sv(value.c_str());
     Json::Value v(sv);
-    return doSetProperty(property, v, saveAtOnce);
+    return doSet(property, v, saveAtOnce);
 }
 
 
-int Bean::doSetProperty(Property* property,  const Json::Value& value, bool saveAtOnce)
+int Bean::doSet(Property* property,  const Json::Value& value, bool saveAtOnce)
 {
     if (value.isNull()) return -1;
     if (property == nullptr) return -2;
@@ -230,7 +230,7 @@ Json::Value::ArrayIndex Bean::size(const Property* property) const
 }
 
 
-Json::Value Bean::at(const Property* property,  
+Json::Value Bean::getAt(const Property* property,  
     Json::Value::ArrayIndex index) const
 {
     Json::Value value(Json::nullValue);
@@ -251,17 +251,17 @@ Json::Value Bean::at(const Property* property,
 }
 
 
-int Bean::createArrayProperty(Property* property)
+int Bean::addArrayProperty(Property* property)
 {
     if (property == nullptr) return -2;
     if (property->getType() != Property::ArrayPrimaryType) return -2;
     
     if (hasArrayProperty(property)) return 0;
-    return doCreateArrayProperty(property, true);
+    return doAddArrayProperty(property, true);
 }
 
 
-int Bean::doCreateArrayProperty(Property* property, bool saveAtOnce)
+int Bean::doAddArrayProperty(Property* property, bool saveAtOnce)
 {
     int err = 0;
     const auto& pname = property->getName();
@@ -328,11 +328,11 @@ int Bean::setAt(Property* property,
 
 int Bean::append(Property* property,  const Json::Value& value)
 {
-    return doAppendProperty(property, value, true);
+    return doAppend(property, value, true);
 }
 
 
-int Bean::doAppendProperty(Property* property,  const Json::Value& value, bool saveAtOnce)
+int Bean::doAppend(Property* property,  const Json::Value& value, bool saveAtOnce)
 {
     if (value.isNull()) return -1;
     if (property == nullptr) return -2;
@@ -476,12 +476,12 @@ int Bean::doSetRelation(Property* relation, oidType objectId, bool saveAtOnce)
 }
 
 
-int Bean::createArrayRelation(Property* relation)
+int Bean::addArrayRelation(Property* relation)
 {
     if (relation == nullptr) return -2;
     if (relation->getType() != Property::ArrayRelationType) return -2;
     if (hasArrayRelation(relation)) return 0;
-    return doCreateArrayProperty(relation, true);
+    return doAddArrayProperty(relation, true);
 }
 
 
@@ -901,7 +901,7 @@ int Bean::load(Json::Value& data)
             switch (property->getType()) {
                 case Property::PrimaryType:
                     m_pst_json_.removeMember(pname);
-                    doSetProperty(property,  *dataValuePtr, false);
+                    doSet(property,  *dataValuePtr, false);
                     m_pst_json_[pname] = PST_SYN;
                     break;
                 case Property::RelationType:
@@ -912,10 +912,10 @@ int Bean::load(Json::Value& data)
                 case Property::ArrayPrimaryType:
                     //override pst value
                     m_pst_json_.removeMember(pname);                 
-                    doCreateArrayProperty(property, false);
+                    doAddArrayProperty(property, false);
                     size = dataValuePtr->size();
                     for (int i = 0; i < size; i++) {
-                        doAppendProperty(property,  (*dataValuePtr)[i], false);
+                        doAppend(property,  (*dataValuePtr)[i], false);
                         //set it again to ensure it's PST_SYN
                         m_pst_json_[pname][i] = PST_SYN;
                     }
@@ -923,7 +923,7 @@ int Bean::load(Json::Value& data)
                 case Property::ArrayRelationType:
                     //override pst value
                     m_pst_json_.removeMember(pname);         
-                    doCreateArrayProperty(property, false);
+                    doAddArrayProperty(property, false);
                     size = dataValuePtr->size();
                     for (int i = 0; i < size; i++) {
                         doAppendRelation(property,  (*dataValuePtr)[i].asUInt64(), false);

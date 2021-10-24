@@ -53,7 +53,16 @@
 			"set": "cpp",
 			"iomanip": "cpp",
 			"iostream": "cpp",
-			"*.ih": "cpp"
+			"*.ih": "cpp",
+			"cassert": "cpp",
+			"cerrno": "cpp",
+			"cfloat": "cpp",
+			"climits": "cpp",
+			"ios": "cpp",
+			"locale": "cpp",
+			"queue": "cpp",
+			"stack": "cpp",
+			"random": "cpp"
 		}
 	}
 }

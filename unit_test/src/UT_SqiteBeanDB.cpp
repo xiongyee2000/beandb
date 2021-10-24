@@ -339,18 +339,18 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
 
     bean1->setProperty(testHelper.p_int, 1);
     bean1->createArrayProperty(testHelper.p_array_int);
-    bean1->appendProperty(testHelper.p_array_int, 0);
-    bean1->appendProperty(testHelper.p_array_int, 1);
+    bean1->append(testHelper.p_array_int, 0);
+    bean1->append(testHelper.p_array_int, 1);
 
     bean2->setProperty(testHelper.p_int, 1);
     bean2->createArrayProperty(testHelper.p_array_int);
-    bean2->appendProperty(testHelper.p_array_int, 0);
-    bean2->appendProperty(testHelper.p_array_int, 1);
+    bean2->append(testHelper.p_array_int, 0);
+    bean2->append(testHelper.p_array_int, 1);
 
     bean3->setRelation(testHelper.r1, beanId_1);
     bean3->createArrayRelation(testHelper.r_array_1);
-    bean3->appendRelation(testHelper.r_array_1, beanId_1);
-    bean3->appendRelation(testHelper.r_array_1, beanId_2);
+    bean3->append(testHelper.r_array_1, beanId_1);
+    bean3->append(testHelper.r_array_1, beanId_2);
 
     err = world->undefineProperty(testHelper.p_int);
     EXPECT_TRUE(err == 0);
@@ -547,16 +547,16 @@ TEST(SqliteBeanDB, loadBeanBase_)
 
     bean1->setProperty(testHelper.p_int, 1);
     bean1->createArrayProperty(testHelper.p_array_int);
-    bean1->appendProperty(testHelper.p_array_int, 0);
-    bean1->appendProperty(testHelper.p_array_int, 1);
+    bean1->append(testHelper.p_array_int, 0);
+    bean1->append(testHelper.p_array_int, 1);
 
     nativeData["test"] = 1;
     bean1->setNativeData(nativeData);
 
     bean2->setProperty(testHelper.p_int, 1);
     bean2->createArrayProperty(testHelper.p_array_int);
-    bean2->appendProperty(testHelper.p_array_int, 0);
-    bean2->appendProperty(testHelper.p_array_int, 1);
+    bean2->append(testHelper.p_array_int, 0);
+    bean2->append(testHelper.p_array_int, 1);
 
     bean3->setRelation(testHelper.r1, beanId_1);
     bean3->createArrayRelation(testHelper.r_array_1);
@@ -766,8 +766,8 @@ TEST(SqliteBeanDB, delayLoad)
     EXPECT_TRUE(size == 2);
 
     bean3->createArrayProperty(testHelper.p_array_str);
-    bean3->appendProperty(testHelper.p_array_str, "str3");
-    bean3->appendProperty(testHelper.p_array_str, "str4");
+    bean3->append(testHelper.p_array_str, "str3");
+    bean3->append(testHelper.p_array_str, "str4");
 
     testdb.disconnect();
 
@@ -810,7 +810,7 @@ TEST(SqliteBeanDB, delayLoad)
    world = testdb.getWorld();
     initTestHelper(testHelper, *world, false);
     bean1 = world->getBean(1);
-    err = bean1->appendProperty(testHelper.p_array_int, 100);
+    err = bean1->append(testHelper.p_array_int, 100);
     EXPECT_TRUE(err == 0);
     bean3 = world->getBean(3);
     err = bean3->appendRelation(testHelper.r_array_1, bean3->getId());
@@ -1878,12 +1878,12 @@ TEST(SqliteBeanDB, find_like)
     bean2->createArrayProperty(testHelper.p_array_str);
     bean3->createArrayProperty(testHelper.p_array_str);
 
-    bean1->appendProperty(testHelper.p_array_str, "bean1 #1");
-    bean1->appendProperty(testHelper.p_array_str, "bean1 #2");
-    bean2->appendProperty(testHelper.p_array_str, "bean2 #1");
-    bean2->appendProperty(testHelper.p_array_str, "bean2 #2");
-    bean3->appendProperty(testHelper.p_array_str, "bean3 #1");
-    bean3->appendProperty(testHelper.p_array_str, "bean3 #2");
+    bean1->append(testHelper.p_array_str, "bean1 #1");
+    bean1->append(testHelper.p_array_str, "bean1 #2");
+    bean2->append(testHelper.p_array_str, "bean2 #1");
+    bean2->append(testHelper.p_array_str, "bean2 #2");
+    bean3->append(testHelper.p_array_str, "bean3 #1");
+    bean3->append(testHelper.p_array_str, "bean3 #2");
 
     world->saveAll();
 

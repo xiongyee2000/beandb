@@ -84,24 +84,24 @@ void setBeanProperties(TestHelper& testHelper, Bean* bean, bool saveAtOnce)
     bean->setProperty(testHelper.p_str, "foo", saveAtOnce);
 
     bean->createArrayProperty(testHelper.p_array_int);
-    bean->appendProperty(testHelper.p_array_int, 101);
-    bean->appendProperty(testHelper.p_array_int, 102);
+    bean->append(testHelper.p_array_int, 101);
+    bean->append(testHelper.p_array_int, 102);
 
     bean->createArrayProperty(testHelper.p_array_uint);
-    bean->appendProperty(testHelper.p_array_uint, (Json::UInt)101);
-    bean->appendProperty(testHelper.p_array_uint, (Json::UInt)102);
+    bean->append(testHelper.p_array_uint, (Json::UInt)101);
+    bean->append(testHelper.p_array_uint, (Json::UInt)102);
 
     bean->createArrayProperty(testHelper.p_array_real);
-    bean->appendProperty(testHelper.p_array_real, (double)555.555);
-    bean->appendProperty(testHelper.p_array_real, (double)888.888);
+    bean->append(testHelper.p_array_real, (double)555.555);
+    bean->append(testHelper.p_array_real, (double)888.888);
 
     bean->createArrayProperty(testHelper.p_array_bool);
-    bean->appendProperty(testHelper.p_array_bool, true);
-    bean->appendProperty(testHelper.p_array_bool, false);
+    bean->append(testHelper.p_array_bool, true);
+    bean->append(testHelper.p_array_bool, false);
 
     bean->createArrayProperty(testHelper.p_array_str);
-    bean->appendProperty(testHelper.p_array_str, "str0");
-    bean->appendProperty(testHelper.p_array_str, "str1");
+    bean->append(testHelper.p_array_str, "str0");
+    bean->append(testHelper.p_array_str, "str1");
 }
 
 

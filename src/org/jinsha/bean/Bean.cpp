@@ -326,7 +326,7 @@ int Bean::setArrayProperty(Property* property,
 }
 
 
-int Bean::appendProperty(Property* property,  const Json::Value& value)
+int Bean::append(Property* property,  const Json::Value& value)
 {
     return doAppendProperty(property, value, true);
 }

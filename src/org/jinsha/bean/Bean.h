@@ -180,7 +180,7 @@ public:
      *                   -3: if he value is of invalid type
      *                   -4: if the array property is not a member of this bean
      */
-    int appendProperty(Property* property, const Json::Value& value); 
+    int append(Property* property, const Json::Value& value); 
 
      /**
      * Set the value of an array property at specified index. 
@@ -332,7 +332,6 @@ public:
      *                   -4: if the array relation is not a member of this bean
      */
     int appendRelation(Property* relation, oidType objectId);
-
 
     /**
      * This method is used to append an item to an array relation.

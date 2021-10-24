@@ -12,11 +12,13 @@ namespace bean {
 AbstractBeanDB::AbstractBeanDB()
     : m_world_(nullptr) 
 {
+    m_world_ = new BeanWorld(*this);
 }
 
 
 AbstractBeanDB::~AbstractBeanDB()
 {
+    delete m_world_;
 }
 
 
@@ -26,12 +28,15 @@ int AbstractBeanDB::connect()
     if (!m_connected_) {
         err = connect_();
         if (err) {
-            elog("Failed to connect (err:%d) \n", err);
+            elog("Failed to connect (err:%d). \n", err);
         } else {
-            m_world_ = new BeanWorld(*this);
-            assert(m_world_);
             m_connected_ = true;
-            m_world_->reloadProperties();
+            err = m_world_->loadProperties();
+            if (err) {
+                disconnect_();
+                m_connected_ = false;
+                elog("Failed to connect due to fail to load properties (err:%d). \n", err);
+            } 
         }
     } 
     return err;
@@ -46,10 +51,10 @@ int AbstractBeanDB::disconnect()
         if (err) {
             elog("Failed to disconnect (err:%d) \n", err);
         } else {
-            delete m_world_;
+            m_world_->doUnloadAll(false);
             m_connected_ = false;
         }
-    } 
+    }
     return err;
 }
 

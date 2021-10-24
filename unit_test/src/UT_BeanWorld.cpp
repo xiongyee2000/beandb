@@ -21,7 +21,10 @@ using namespace org::jinsha::bean;
 void basic()
 {
     DummyBeanDB dummyDB;
-    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
+    BeanWorld *world = nullptr;
+    dummyDB.connect();
+    world = dummyDB.getWorld();
+
     EXPECT_TRUE(nullptr != world);
     EXPECT_TRUE(world->getCachedNumOfBeans() == 0);
     EXPECT_TRUE(world->getProperties().size() == 0);
@@ -49,7 +52,6 @@ void basic()
     world->unloadBean(bean3);
     EXPECT_TRUE(world->getCachedNumOfBeans() == 0);
 
-    delete world;
 }
 
 TEST(BeanWorld, Constructor)
@@ -70,21 +72,23 @@ TEST(BeanWorld, getNumOfBeans)
 TEST(BeanWorld, getBeans)
 {
     DummyBeanDB dummyDB;
-    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
+    BeanWorld *world = nullptr;
+    dummyDB.connect();
+    world = dummyDB.getWorld();
     
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
     Bean *bean3 = world->createBean();
     auto& beans  = world->getCachedBeans();
     EXPECT_TRUE(beans.size() == 3);
-
-    delete world;
 }
 
 TEST(BeanWorld, getBean)
 {
     DummyBeanDB dummyDB;
-    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
+    BeanWorld *world = nullptr;
+    dummyDB.connect();
+    world = dummyDB.getWorld();
     Bean* bean = nullptr;
 
     std::vector<int>::const_iterator it;
@@ -102,107 +106,109 @@ TEST(BeanWorld, getBean)
     bean = world->getBean(555);
     EXPECT_TRUE(bean == nullptr);
 
-    delete world;
 }
 
 TEST(BeanWorld, clear)
 {
     DummyBeanDB dummyDB;
-    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
+    BeanWorld *world = nullptr;
+    dummyDB.connect();
+    world = dummyDB.getWorld();
 
     world->createBean();
     world->createBean();
     world->createBean();
     EXPECT_TRUE(world->getCachedNumOfBeans() == 3);
 
-    world->clear();
+    world->unloadAll();
     EXPECT_TRUE(world->getCachedNumOfBeans() == 0);
 
-    delete world;
 }
 
 TEST(BeanWorld, defineProperty_undefineProperty)
 {
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
+    BeanWorld *world = nullptr;
+    dummyDB.connect();
+    world = dummyDB.getWorld();
     Value value;
     Property* property = nullptr;
 
-    property = world.defineProperty(nullptr, Property::IntType);
+    property = world->defineProperty(nullptr, Property::IntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineProperty("", Property::IntType);
-    EXPECT_TRUE(property == nullptr);
-
-    property = world.defineArrayProperty(nullptr, Property::IntType);
-    EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayProperty("", Property::IntType);
+    property = world->defineProperty("", Property::IntType);
     EXPECT_TRUE(property == nullptr);
 
-    property = world.defineRelation(nullptr);
+    property = world->defineArrayProperty(nullptr, Property::IntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineRelation("");
-    EXPECT_TRUE(property == nullptr);
-
-    property = world.defineArrayRelation(nullptr);
-    EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayRelation("");
+    property = world->defineArrayProperty("", Property::IntType);
     EXPECT_TRUE(property == nullptr);
 
-    property = world.defineProperty("p1", Property::IntType);
-    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
-    property = world.defineProperty("p1", Property::UIntType);
+    property = world->defineRelation(nullptr);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineProperty("p1", Property::IntType);
-    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
-    property = world.defineArrayProperty("p1", Property::IntType);
+    property = world->defineRelation("");
     EXPECT_TRUE(property == nullptr);
-    property = world.defineRelation("p1");
-    EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayRelation("p1");
-    EXPECT_TRUE(property == nullptr);
-    world.undefineProperty(world.getProperty("p1"));
-    EXPECT_TRUE(nullptr == world.getProperty("p1"));
 
-    property = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
-    property = world.defineArrayProperty("p1", Property::UIntType);
+    property = world->defineArrayRelation(nullptr);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayProperty("p1", Property::IntType);
-    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
-    property = world.defineProperty("p1", Property::IntType);
+    property = world->defineArrayRelation("");
     EXPECT_TRUE(property == nullptr);
-    property = world.defineRelation("p1");
-    EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayRelation("p1");
-    EXPECT_TRUE(property == nullptr);
-    world.undefineProperty(world.getProperty("p1"));
-    EXPECT_TRUE(nullptr == world.getProperty("p1"));
 
-    property = world.defineRelation("p1");
-    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
-    property = world.defineRelation("p1");
-    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
-    property = world.defineProperty("p1", Property::UIntType);
+    property = world->defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(property != nullptr && property == world->getProperty("p1"));
+    property = world->defineProperty("p1", Property::UIntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayProperty("p1", Property::IntType);
+    property = world->defineProperty("p1", Property::IntType);
+    EXPECT_TRUE(property != nullptr && property == world->getProperty("p1"));
+    property = world->defineArrayProperty("p1", Property::IntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayRelation("p1");
+    property = world->defineRelation("p1");
     EXPECT_TRUE(property == nullptr);
-    world.undefineProperty(world.getProperty("p1"));
-    EXPECT_TRUE(nullptr == world.getProperty("p1"));
+    property = world->defineArrayRelation("p1");
+    EXPECT_TRUE(property == nullptr);
+    world->undefineProperty(world->getProperty("p1"));
+    EXPECT_TRUE(nullptr == world->getProperty("p1"));
 
-    property = world.defineArrayRelation("p1");
-    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
-    property = world.defineArrayRelation("p1");
-    EXPECT_TRUE(property != nullptr && property == world.getProperty("p1"));
-    property = world.defineProperty("p1", Property::UIntType);
+    property = world->defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(property != nullptr && property == world->getProperty("p1"));
+    property = world->defineArrayProperty("p1", Property::UIntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineArrayProperty("p1", Property::IntType);
+    property = world->defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(property != nullptr && property == world->getProperty("p1"));
+    property = world->defineProperty("p1", Property::IntType);
     EXPECT_TRUE(property == nullptr);
-    property = world.defineRelation("p1");
+    property = world->defineRelation("p1");
     EXPECT_TRUE(property == nullptr);
-    world.undefineProperty(world.getProperty("p1"));
-    EXPECT_TRUE(nullptr == world.getProperty("p1"));
+    property = world->defineArrayRelation("p1");
+    EXPECT_TRUE(property == nullptr);
+    world->undefineProperty(world->getProperty("p1"));
+    EXPECT_TRUE(nullptr == world->getProperty("p1"));
+
+    property = world->defineRelation("p1");
+    EXPECT_TRUE(property != nullptr && property == world->getProperty("p1"));
+    property = world->defineRelation("p1");
+    EXPECT_TRUE(property != nullptr && property == world->getProperty("p1"));
+    property = world->defineProperty("p1", Property::UIntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world->defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world->defineArrayRelation("p1");
+    EXPECT_TRUE(property == nullptr);
+    world->undefineProperty(world->getProperty("p1"));
+    EXPECT_TRUE(nullptr == world->getProperty("p1"));
+
+    property = world->defineArrayRelation("p1");
+    EXPECT_TRUE(property != nullptr && property == world->getProperty("p1"));
+    property = world->defineArrayRelation("p1");
+    EXPECT_TRUE(property != nullptr && property == world->getProperty("p1"));
+    property = world->defineProperty("p1", Property::UIntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world->defineArrayProperty("p1", Property::IntType);
+    EXPECT_TRUE(property == nullptr);
+    property = world->defineRelation("p1");
+    EXPECT_TRUE(property == nullptr);
+    world->undefineProperty(world->getProperty("p1"));
+    EXPECT_TRUE(nullptr == world->getProperty("p1"));
 }
 
 TEST(BeanWorld, getProperty)
@@ -241,11 +247,11 @@ TEST(BeanWorld, getProperty)
 TEST(BeanWorld, getProperties)
 {
     DummyBeanDB dummyDB;
-    BeanWorld *world = new BeanWorld((AbstractBeanDB&)dummyDB);
+    BeanWorld *world = nullptr;
+    dummyDB.connect();
+    world = dummyDB.getWorld();
     Value value;
     Property *p1, *p2;
-
-    // init_world(*world);
 
     Bean *bean1 = world->createBean();
     Bean *bean2 = world->createBean();
@@ -283,7 +289,6 @@ TEST(BeanWorld, getProperties)
     world->undefineProperty(p2);
     EXPECT_TRUE(world->getProperties().size() == 0);
     EXPECT_TRUE(bean2->hasPrimaryProperty(p1) == false);
-    delete world;
 }
 
 
@@ -291,28 +296,30 @@ TEST(BeanWorld, unloadBean)
 {
     int err = 0;
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
+    BeanWorld *world = nullptr;
+    dummyDB.connect();
+    world = dummyDB.getWorld();
     Value value;
     oidType oid = 0;
     TestHelper testHelper;
 
-    initTestHelper(testHelper, world);
+    initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world.createBean();
-    Bean* bean2 = world.createBean();
-    Bean* bean3 = world.createBean();
-    Bean* bean4 = world.createBean();
+    Bean* bean1 = world->createBean();
+    Bean* bean2 = world->createBean();
+    Bean* bean3 = world->createBean();
+    Bean* bean4 = world->createBean();
 
     oid = bean1->getId();
-    world.unloadBean(bean1);
-    EXPECT_TRUE(world.getBean(oid, false) == nullptr);
-    bean1 = world.createBean();
+    world->unloadBean(bean1);
+    EXPECT_TRUE(world->getBean(oid, false) == nullptr);
+    bean1 = world->createBean();
 
     bean1->setRelation(testHelper.r1, bean2);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean2->getId());
-    world.unloadBean(bean2);
+    world->unloadBean(bean2);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == 2);
-    bean2 = world.createBean();
+    bean2 = world->createBean();
 
     bean1->setRelation(testHelper.r1, bean3);
     bean1->setRelation(testHelper.r2, bean3);
@@ -322,16 +329,16 @@ TEST(BeanWorld, unloadBean)
     EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == bean3->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == bean3->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r2) == bean3->getId());
-    EXPECT_TRUE(world.getCachedNumOfBeans() == 4);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 4);
     oid = bean3->getId();
-    world.unloadBean(bean3);
-    EXPECT_TRUE(world.getBean(oid, false) == nullptr);
-    EXPECT_TRUE(world.getCachedNumOfBeans() == 3);
+    world->unloadBean(bean3);
+    EXPECT_TRUE(world->getBean(oid, false) == nullptr);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 3);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean3->getId());
     EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == bean3->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == bean3->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r2) == bean3->getId());
-     bean3 = world.createBean();
+     bean3 = world->createBean();
     oid = bean3->getId();
 
     //array
@@ -345,12 +352,12 @@ TEST(BeanWorld, unloadBean)
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 1) == bean4->getId());
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == bean3->getId());
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 1) == bean4->getId());
-    world.unloadBean(bean3);
+    world->unloadBean(bean3);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == oid);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 1) == bean4->getId());
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == oid);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 1) == bean4->getId());
-    bean3 = world.createBean();
+    bean3 = world->createBean();
 
     // bean2->addArrayRelation(testHelper.r_array_1);
     // bean2->addArrayRelation(testHelper.r_array_2);    
@@ -360,19 +367,19 @@ TEST(BeanWorld, unloadBean)
     // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == bean4->getId());
     // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_1, 0) == bean4->getId());
     // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_2, 0) == bean4->getId());
-    // world.deleteBean(bean4);
+    // world->deleteBean(bean4);
     // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == 0);
     // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == 0);
     // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_1, 0) == 0);
     // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_2, 0) == 0);
-    // bean4 = world.createBean();
+    // bean4 = world->createBean();
 
     // bean1->appendRelation(testHelper.r_array_1, bean2);
     // bean2->appendRelation(testHelper.r_array_1, bean3);
     // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean2->getId());
     // EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_1, 0) == bean3->getId());
     // EXPECT_TRUE(bean3->m_subjectMap_.size() == 1);
-    // world.deleteBean(bean2);
+    // world->deleteBean(bean2);
     // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == 0);
     // EXPECT_TRUE(bean3->m_subjectMap_.size() == 0);
 
@@ -383,28 +390,30 @@ TEST(BeanWorld, deleteBean)
 {
     int err = 0;
     DummyBeanDB dummyDB;
-    BeanWorld world((AbstractBeanDB&)dummyDB);
+    BeanWorld *world = nullptr;
+    dummyDB.connect();
+    world = dummyDB.getWorld();
     Value value;
     oidType oid = 0;
     TestHelper testHelper;
 
-    initTestHelper(testHelper, world);
+    initTestHelper(testHelper, *world);
 
-    Bean* bean1 = world.createBean();
-    Bean* bean2 = world.createBean();
-    Bean* bean3 = world.createBean();
-    Bean* bean4 = world.createBean();
+    Bean* bean1 = world->createBean();
+    Bean* bean2 = world->createBean();
+    Bean* bean3 = world->createBean();
+    Bean* bean4 = world->createBean();
 
     oid = bean1->getId();
-    world.deleteBean(bean1);
-    EXPECT_TRUE(world.getBean(oid, false) == nullptr);
-    bean1 = world.createBean();
+    world->deleteBean(bean1);
+    EXPECT_TRUE(world->getBean(oid, false) == nullptr);
+    bean1 = world->createBean();
 
     bean1->setRelation(testHelper.r1, bean2);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean2->getId());
-    world.deleteBean(bean2);
+    world->deleteBean(bean2);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == 0);
-    bean2 = world.createBean();
+    bean2 = world->createBean();
 
     bean1->setRelation(testHelper.r1, bean3);
     bean1->setRelation(testHelper.r2, bean3);
@@ -414,23 +423,23 @@ TEST(BeanWorld, deleteBean)
     EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == bean3->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == bean3->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r2) == bean3->getId());
-    EXPECT_TRUE(world.getCachedNumOfBeans() == 4);
-    world.deleteBean(bean3);
+    EXPECT_TRUE(world->getCachedNumOfBeans() == 4);
+    world->deleteBean(bean3);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == 0);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == 0);
     EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == 0);
     EXPECT_TRUE(bean2->getObjectId(testHelper.r2) == 0);
-    bean3 = world.createBean();
+    bean3 = world->createBean();
 
     bean1->setRelation(testHelper.r1, bean2);
     bean2->setRelation(testHelper.r1, bean3);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean2->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == bean3->getId());
     EXPECT_TRUE(bean3->m_subjectMap_.size() == 1);
-    world.deleteBean(bean2);
+    world->deleteBean(bean2);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == 0);
     EXPECT_TRUE(bean3->m_subjectMap_.size() == 0);
-    bean2 = world.createBean();
+    bean2 = world->createBean();
 
     //array
     bean1->addArrayRelation(testHelper.r_array_1);
@@ -443,10 +452,10 @@ TEST(BeanWorld, deleteBean)
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 1) == bean4->getId());
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == bean3->getId());
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 1) == bean4->getId());
-    world.deleteBean(bean3);
+    world->deleteBean(bean3);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean4->getId());
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == bean4->getId());
-    bean3 = world.createBean();
+    bean3 = world->createBean();
 
     bean2->addArrayRelation(testHelper.r_array_1);
     bean2->addArrayRelation(testHelper.r_array_2);    
@@ -456,19 +465,19 @@ TEST(BeanWorld, deleteBean)
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == bean4->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_1, 0) == bean4->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_2, 0) == bean4->getId());
-    world.deleteBean(bean4);
+    world->deleteBean(bean4);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == 0);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_2, 0) == 0);
     EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_1, 0) == 0);
     EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_2, 0) == 0);
-    bean4 = world.createBean();
+    bean4 = world->createBean();
 
     bean1->appendRelation(testHelper.r_array_1, bean2);
     bean2->appendRelation(testHelper.r_array_1, bean3);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean2->getId());
     EXPECT_TRUE(bean2->getObjectId(testHelper.r_array_1, 0) == bean3->getId());
     EXPECT_TRUE(bean3->m_subjectMap_.size() == 1);
-    world.deleteBean(bean2);
+    world->deleteBean(bean2);
     EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == 0);
     EXPECT_TRUE(bean3->m_subjectMap_.size() == 0);
 

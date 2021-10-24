@@ -21,18 +21,52 @@ class AbstractBeanDB;
 class BeanWorld
 {
 public:
+    /**
+     * Load all data from data storage into this world (in memory).
+     * 
+     * This method is supposed to be used in all-load mode.
+     * 
+     * All-load mode means load all data from database into
+     * the bean world, which is aimed to achieve the best time performance.
+     * 
+     * Notes:
+     * - All previously loaded bean will be removed from this world
+     *    before loading;
+     * - All properties will be reloaded;
+     * - All beans will be loaded;
+     * - Any unsaved changes will be lost;
+     * - Don't use all-load mode if memory is a concern;
+     * 
+     * @return 0 for success, or an error code
+     */
+    int loadAll();
 
     /**
-     * Remove all beans from this world.
+     * Unload all data from this world.
+     * 
+     * This method is supposed to be used when user choose to
+     * switch from all-load mode to partial-load mode.
+     * 
+     * Partial-load mode means only part of the data will be loaded 
+     * from data storage into the bean world, when needed (see getBean()).
+     * 
+     * The partial-load mode is used when memory is not big
+     * enough to hold all data.
+     * 
+     * Notes:
+     * - All previously loaded beans will be removed;
+     * - All properties will be reloaded;
+     * - Any unsaved changes will be lost;
+     * - No data will be deleted from the database;
      * 
      */
-    virtual void clear();
+    void unloadAll();
 
 
+public:
     /***********************************************************
      * property related
      ***********************************************************/
-public:
     /**
      * Define a property.
      * 
@@ -46,7 +80,7 @@ public:
      * @param valueType the value type of property
      * @return the pointer to the property instance
      */
-    virtual Property* defineProperty(const char* name, Property::ValueType valueType);
+    Property* defineProperty(const char* name, Property::ValueType valueType);
 
     /**
      * Define an array property.
@@ -61,7 +95,7 @@ public:
      * @param valueType the value type of the element of the array property
      * @return the pointer to the property instance
      */
-    virtual Property* defineArrayProperty(const char* name, Property::ValueType valueType);
+    Property* defineArrayProperty(const char* name, Property::ValueType valueType);
 
     /**
      * Define a relation property.
@@ -72,7 +106,7 @@ public:
      * @param name the name of relation property
      * @return the pointer to the property instance
      */
-    virtual Property* defineRelation(const char* name);
+    Property* defineRelation(const char* name);
 
     /**
      * Define an array relation property.
@@ -82,7 +116,7 @@ public:
      * @param name the name of array relation property
      * @return the pointer to the property instance
      */
-    virtual Property* defineArrayRelation(const char* name);
+    Property* defineArrayRelation(const char* name);
 
     /**
      * Undefine a property.
@@ -95,7 +129,7 @@ public:
      * @param property the property to be undefined
      * @return 0 on success, or an error code
      */
-    virtual int undefineProperty(Property* property);
+    int undefineProperty(Property* property);
 
     /**
      * Undefine a relation.
@@ -106,7 +140,7 @@ public:
      * @param relation the relation to be undefined
      * @return 0 on success, or an error code
      */
-    virtual int undefineRelation(Property* relation) {return undefineProperty(relation);};
+    int undefineRelation(Property* relation) {return undefineProperty(relation);};
 
     /**
      * Get property/relation/array property/array relation by name.
@@ -114,8 +148,8 @@ public:
      * @param name property name
      * @return property
      */
-    // virtual const Property* getProperty(const char* name) const;
-    virtual Property* getProperty(const char* name);
+    // const Property* getProperty(const char* name) const;
+    Property* getProperty(const char* name);
 
     /**
      * Get property/relation/array property/array relation by id.
@@ -123,7 +157,7 @@ public:
      * @param id property id
      * @return property
      */
-    virtual Property* getProperty(pidType id);
+    Property* getProperty(pidType id);
 
     /**
      * Get relation.
@@ -134,14 +168,14 @@ public:
      * @param name the name of relation
      * @return 0 on success, or an error code
      */
-    virtual Property* getRelation(const char* name) {return getProperty(name);};
+    Property* getRelation(const char* name) {return getProperty(name);};
 
     /**
      * Get all properties (including all properties/relations).
      * 
      * @return a map containing all properties.
      */
-    virtual const std::unordered_map<std::string, Property*>& getProperties();
+    const std::unordered_map<std::string, Property*>& getProperties();
 
 
     /***********************************************************
@@ -153,7 +187,7 @@ public:
      * 
      * @return the pointer pointing to the bean, or nullptr if exception occurs.
      */
-    virtual Bean* createBean();
+    Bean* createBean();
 
     /**
      * Get bean by id.
@@ -164,7 +198,7 @@ public:
      * @return the pointer pointing to the bean, or null if no such
      *                   bean exist.
      */
-    virtual Bean* getBean(oidType id, bool loadFromDB = true);
+    Bean* getBean(oidType id, bool loadFromDB = true);
 
     /**
      * Unload a bean from this world. 
@@ -175,51 +209,43 @@ public:
      * - however the bean will NOT be deleted from the 
      *    database;
      * 
-     * @param bean the bean to be uloaded
+     * @param bean the bean to be unloaded
      */
-    virtual void unloadBean(Bean* bean);
+    void unloadBean(Bean* bean);
 
     /**
-     * Remove a single bean from the storage.
-     * 
-     * This method is supposed to be called from class BeanWorld.
-     * 
-     * @param bean the bean to be removed
-     * @return 0 for success, or an error code
+     * Unload all beans from this world.
      */
-    virtual int deleteBean(Bean* bean);
+    void unloadAllBeans();
 
     /**
-     * Reload all data from the storage.
+     * Delete a bean from the storage.
      * 
-     * Notes:
-     * - all previously loaded data will be removed from this world
-     *    before reloading;
-     * 
+     * @param bean the bean to be deleted
      * @return 0 for success, or an error code
      */
-    virtual int reloadAll();
+    int deleteBean(Bean* bean);
 
     /**
      * Save all data into the storage.
      * 
      * @return 0 for success, or an error code
      */
-    virtual int saveAll();
+    int saveAll();
 
     /**
      * Get total number of beans chached in this world (in memory).
      * 
      * @return the total number of beans
      */
-    virtual int getCachedNumOfBeans();
+    int getCachedNumOfBeans();
 
     /**
      * Get all beans chached in this world (in memory).
      * 
      * @return a map containing all beans
      */
-    virtual const std::unordered_map<oidType, Bean*>& getCachedBeans();
+    const std::unordered_map<oidType, Bean*>& getCachedBeans();
 
 
     /***********************************************************
@@ -228,58 +254,51 @@ public:
     /**
      * @ref BeanDBPIntf::getAllBeans()
      */
-    virtual BeanIdPage* getAllBeans(unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* getAllBeans(unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    virtual BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    virtual BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    virtual BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    virtual BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    virtual BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf
      */
-    virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf
      */
-    virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findObjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
 
 
 private:
-    /**
-     * Constructor
-     * 
-     * @param db the database attached with this world
-     */
     BeanWorld(AbstractBeanDB& db);
-
-    /**
-     * Destructor
-     */
     virtual ~BeanWorld();
 
-    int reloadProperties();
+    int doUnloadAll(bool reloadProperties);
+    int loadProperties();
+    void unloadProperties();
     Property* definePropertyCommon_(const char* name, 
         Property::Type type, 
         Property::ValueType valueType);

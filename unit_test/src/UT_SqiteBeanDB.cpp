@@ -2323,7 +2323,7 @@ TEST(SqliteBeanDB, BeanWorld_reloadAll)
     world = testdb.getWorld();
     initTestHelper(testHelper, *world);
 
-    err = world->reloadAll();
+    err = world->loadAll();
     EXPECT_TRUE(err == 0);
 
     Bean* bean1 = world->createBean();
@@ -2339,7 +2339,7 @@ TEST(SqliteBeanDB, BeanWorld_reloadAll)
     EXPECT_TRUE(bean == nullptr);
     bean = world->getBean(bean3->getId(), false);
 
-    err = world->reloadAll();
+    err = world->loadAll();
     EXPECT_TRUE(err == 0);
 
     bean = world->getBean(bean1->getId(), false);

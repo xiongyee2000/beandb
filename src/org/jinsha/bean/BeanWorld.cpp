@@ -23,24 +23,30 @@ BeanWorld::BeanWorld(AbstractBeanDB& db)
 
 BeanWorld::~BeanWorld()
 {
-    clear();
+    doUnloadAll(false);
 };
 
 
-void BeanWorld::clear()
+void BeanWorld::unloadAll()
 {
-    for (auto& item : m_beans_) 
-    {
-        delete item.second;
-        item.second = nullptr;
+    //todo: handle err here?
+    doUnloadAll(true);
+}
+
+
+int BeanWorld::doUnloadAll(bool reloadProperties)
+{
+    int err = 0;
+
+    unloadAllBeans();
+    unloadProperties();
+
+    if (reloadProperties)  {
+        err = loadProperties();
     }
-    m_beans_.clear();
-    for (auto& item : m_propertyMap_) 
-    {
-        delete item.second;
-    }
-   m_propertyMap_.clear();
-   m_properties_loaded_ = false;
+    m_properties_loaded_ = false;
+
+   return err;
 }
 
 
@@ -69,6 +75,16 @@ void BeanWorld::unloadBean(Bean* bean)
     m_beans_.erase(iter);
     bean->unload();
     delete bean;
+}
+
+
+void BeanWorld::unloadAllBeans()
+{
+    for (auto& item : m_beans_) {
+        item.second->unload();
+        delete item.second;
+    }
+    m_beans_.clear();
 }
 
 
@@ -283,23 +299,13 @@ const std::unordered_map<std::string, Property*>& BeanWorld::getProperties()
 };
 
 
-// const std::unordered_map<std::string, Property*>& BeanWorld::getRelations() 
-// {
-//     return m_relationMap_;
-// };
-
-
-int BeanWorld::reloadProperties()
+int BeanWorld::loadProperties()
 {
-    if (m_db_ == nullptr || !m_db_->connected()) return -1;
-
     int err = 0;
-    if (m_properties_loaded_)
-        clear();
     err = m_db_->loadProperties_(m_propertyMap_);
     if (err) {
         elog("%s", "Failed to load properties from database");
-        clear();
+        unloadProperties();
         err = -1;
     } else {
         for (auto& item : m_propertyMap_) {
@@ -312,14 +318,23 @@ int BeanWorld::reloadProperties()
 }
 
 
-int BeanWorld::reloadAll()
+void BeanWorld::unloadProperties()
+{
+    for (auto& item : m_propertyMap_) 
+        delete item.second;
+    m_propertyMap_.clear();
+}
+
+
+int BeanWorld::loadAll()
 {
     if (m_db_ == nullptr || !m_db_->connected()) return -1;
     
     int err = 0;
     oidType beanId = 0;
 
-    err = reloadProperties();
+    doUnloadAll(false);
+    err = loadProperties();
     if (err) return err;
 
     BeanIdPage* page = m_db_->getAllBeans();

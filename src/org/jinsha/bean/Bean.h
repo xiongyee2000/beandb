@@ -387,7 +387,7 @@ public:
      * @param property the property
      * @return 0 for souccess, or an error code
      */
-    int removeProperty( Property* property);
+    int remove(Property* property);
 
     /**
      * Remove the item at given index from this bean's array property/relation.
@@ -399,7 +399,7 @@ public:
      * @param index the index
      * @return 0 for souccess, or an error code
      */
-    int removeProperty( Property* property, Json::Value::ArrayIndex index);
+    int removeAt( Property* property, Json::Value::ArrayIndex index);
 
     // /**
     //  * Remove relation from this bean.

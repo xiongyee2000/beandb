@@ -2145,12 +2145,12 @@ TEST(SqliteBeanDB, findSubjects)
     EXPECT_TRUE(page->at(0) == bean1->getId());
     EXPECT_TRUE(page->at(1) == bean2->getId());
 
-    bean1->removeProperty(testHelper.r1);
+    bean1->remove(testHelper.r1);
     page = world->findSubjects(testHelper.r1);
     EXPECT_TRUE(page->size() == 1);
     EXPECT_TRUE(page->at(0) == bean2->getId());
 
-    bean2->removeProperty(testHelper.r1);
+    bean2->remove(testHelper.r1);
     page = world->findSubjects(testHelper.r1);
     EXPECT_TRUE(page->size() == 0);
 
@@ -2178,11 +2178,11 @@ TEST(SqliteBeanDB, findSubjects)
     EXPECT_TRUE(page->at(0) == bean1->getId());
     EXPECT_TRUE(page->at(1) == bean2->getId());
 
-    bean1->removeProperty(testHelper.r_array_1);
+    bean1->remove(testHelper.r_array_1);
     page = world->findSubjects(testHelper.r_array_1);
     EXPECT_TRUE(page->size() == 1);
     EXPECT_TRUE(page->at(0) == bean2->getId());
-    bean2->removeProperty(testHelper.r_array_1);
+    bean2->remove(testHelper.r_array_1);
     page = world->findSubjects(testHelper.r_array_1);
     EXPECT_TRUE(page->size() == 0);
 
@@ -2225,12 +2225,12 @@ TEST(SqliteBeanDB, findOjects)
     EXPECT_TRUE(page->at(0) == bean1->getId());
     EXPECT_TRUE(page->at(1) == bean2->getId());
 
-    bean1->removeProperty(testHelper.r1);
+    bean1->remove(testHelper.r1);
     page = world->findObjects(testHelper.r1);
     EXPECT_TRUE(page->size() == 1);
     EXPECT_TRUE(page->at(0) == bean2->getId());
 
-    bean2->removeProperty(testHelper.r1);
+    bean2->remove(testHelper.r1);
     page = world->findObjects(testHelper.r1);
     EXPECT_TRUE(page->size() == 0);
 
@@ -2260,12 +2260,12 @@ TEST(SqliteBeanDB, findOjects)
     EXPECT_TRUE(page->at(1) == bean2->getId());
     EXPECT_TRUE(page->at(2) == bean3->getId());
 
-    bean1->removeProperty(testHelper.r_array_1);
+    bean1->remove(testHelper.r_array_1);
     page = world->findObjects(testHelper.r_array_1);
     EXPECT_TRUE(page->size() == 2);
     EXPECT_TRUE(page->at(0) == bean2->getId());
     EXPECT_TRUE(page->at(1) == bean3->getId());
-    bean2->removeProperty(testHelper.r_array_1);
+    bean2->remove(testHelper.r_array_1);
     page = world->findObjects(testHelper.r_array_1);
     EXPECT_TRUE(page->size() == 0);
 

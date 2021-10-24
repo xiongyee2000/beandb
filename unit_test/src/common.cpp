@@ -694,11 +694,11 @@ void test_findObjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bea
     testHelper.r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 1);
 
-    bean1.removeProperty(testHelper.r1);
+    bean1.remove(testHelper.r1);
     testHelper.r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 1);
 
-    bean2.removeProperty(testHelper.r1);
+    bean2.remove(testHelper.r1);
     testHelper.r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
@@ -727,10 +727,10 @@ void test_findObjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bea
     EXPECT_TRUE(beans.size() == 3);
     EXPECT_TRUE(testHelper.r_array_1->getNumOfObjects() == 3);
 
-    bean1.removeProperty(testHelper.r_array_1);
+    bean1.remove(testHelper.r_array_1);
     testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 2);
-    bean2.removeProperty(testHelper.r_array_1);
+    bean2.remove(testHelper.r_array_1);
     testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 }
@@ -770,11 +770,11 @@ void test_findSubjects_common(TestHelper& testHelper, BeanWorld &world, Bean& be
     testHelper.r1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 2);
 
-    bean1.removeProperty(testHelper.r1);
+    bean1.remove(testHelper.r1);
     testHelper.r1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 1);
 
-    bean2.removeProperty(testHelper.r1);
+    bean2.remove(testHelper.r1);
     testHelper.r1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 0);
 
@@ -796,10 +796,10 @@ void test_findSubjects_common(TestHelper& testHelper, BeanWorld &world, Bean& be
     testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 4);
 
-    bean1.removeProperty(testHelper.r_array_1);
+    bean1.remove(testHelper.r_array_1);
     testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 2);
-    bean2.removeProperty(testHelper.r_array_1);
+    bean2.remove(testHelper.r_array_1);
     testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 0);
 }
@@ -825,7 +825,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
     bean1.addArrayProperty(pArray_1);
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    bean1.removeProperty(pArray_1);
+    bean1.remove(pArray_1);
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
@@ -837,7 +837,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
     bean1.addArrayRelation(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
-    bean1.removeProperty(rArray_1);
+    bean1.remove(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
     bean1.addArrayRelation(rArray_1);
@@ -932,15 +932,15 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     EXPECT_TRUE(beans.size() == 2);
     EXPECT_TRUE(testHelper.r1->getNumOfSubjects() == 2);
 
-    bean2.removeProperty(testHelper.p_real);
-    bean2.removeProperty(testHelper.p_str);
-    bean2.removeProperty(testHelper.p_bool_0);
-    bean2.removeProperty(testHelper.p_bool_1);
-    bean2.removeProperty(testHelper.p_int);
-    bean2.removeProperty(testHelper.p_uint);
-    bean2.removeProperty(testHelper.p_int64);
-    bean2.removeProperty(testHelper.p_uint64);
-    bean2.removeProperty(testHelper.r1);
+    bean2.remove(testHelper.p_real);
+    bean2.remove(testHelper.p_str);
+    bean2.remove(testHelper.p_bool_0);
+    bean2.remove(testHelper.p_bool_1);
+    bean2.remove(testHelper.p_int);
+    bean2.remove(testHelper.p_uint);
+    bean2.remove(testHelper.p_int64);
+    bean2.remove(testHelper.p_uint64);
+    bean2.remove(testHelper.r1);
 
     testHelper.p_int->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);

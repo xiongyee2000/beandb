@@ -710,7 +710,7 @@ TEST(Property, index_more_complicated)
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
 
-    bean1->removeProperty(testHelper.p_real);
+    bean1->remove(testHelper.p_real);
     testHelper.p_real->findEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 1);
     for (auto& beanId : beans)

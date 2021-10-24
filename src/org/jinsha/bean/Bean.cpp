@@ -70,7 +70,7 @@ void Bean::removeAllProperties()
     //todo: put them into  transaction, and handle exception
     for (auto& memberName : m_json_.getMemberNames())
     {
-        removeProperty(m_world_->getProperty(memberName.c_str()));
+        remove(m_world_->getProperty(memberName.c_str()));
     }
 }
 
@@ -604,7 +604,7 @@ int Bean::setRelationAt(Property* relation,
 }
 
 
-int Bean::removeProperty(Property* property)
+int Bean::remove(Property* property)
 {
     if (property == nullptr) return -1;
     return doRemoveProperty(property, true);
@@ -705,7 +705,7 @@ int Bean::doRemoveProperty(Property* property, bool saveAtOnce)
 }
 
 
-int Bean::removeProperty(Property* property, Json::Value::ArrayIndex index)
+int Bean::removeAt(Property* property, Json::Value::ArrayIndex index)
 {
     if (property == nullptr) return -1;
     return doRemoveProperty(property, index, true);

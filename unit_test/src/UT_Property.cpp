@@ -553,42 +553,42 @@ TEST(Property, index_more_complicated)
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) == 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_real) == 1.0);
     }
 
     testHelper.p_bool_0->findEqual(false, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_bool_0) == false);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_bool_0) == false);
     }
 
     testHelper.p_bool_1->findEqual(true, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_bool_1) == true);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_bool_1) == true);
     }
 
     testHelper.p_str->findEqual("hello", beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_str) == "hello");
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_str) == "hello");
     }
 
    testHelper.p_int->findEqual((int_t)1, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_int) == 1);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_int) == 1);
     }
 
     testHelper.p_uint->findEqual((uint_t)2U, beans);
     EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_uint) == 2U);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_uint) == 2U);
     }
 
     ///////////////////////////////////////////////////////
@@ -604,42 +604,42 @@ TEST(Property, index_more_complicated)
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) == 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_real) == 1.0);
     }
 
     testHelper.p_bool_0->findEqual(false, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_bool_0) == false);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_bool_0) == false);
     }
 
     testHelper.p_bool_1->findEqual(true, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_bool_1) == true);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_bool_1) == true);
     }
 
     testHelper.p_str->findEqual("hello", beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_str) == "hello");
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_str) == "hello");
     }
 
    testHelper.p_int->findEqual((int_t)1, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_int) == 1);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_int) == 1);
     }
 
     testHelper.p_uint->findEqual((uint_t)2U, beans);
     EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_uint) == 2U);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_uint) == 2U);
     }
 
     ///////////////////////////////////////////////////////
@@ -663,42 +663,42 @@ TEST(Property, index_more_complicated)
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) == 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_real) == 1.0);
     }
 
     testHelper.p_bool_0->findEqual(false, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_bool_0) == false);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_bool_0) == false);
     }
 
     testHelper.p_bool_1->findEqual(true, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_bool_1) == true);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_bool_1) == true);
     }
 
     testHelper.p_str->findEqual("hello", beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_str) == "hello");
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_str) == "hello");
     }
 
    testHelper.p_int->findEqual((int_t)1, beans);
    EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_int) == 1);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_int) == 1);
     }
 
     testHelper.p_uint->findEqual((uint_t)2U, beans);
     EXPECT_TRUE(beans.size() == 2);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_uint) == 2U);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_uint) == 2U);
     }
 
     ///////////////////////////////////////////////////////
@@ -715,7 +715,7 @@ TEST(Property, index_more_complicated)
    EXPECT_TRUE(beans.size() == 1);
     for (auto& beanId : beans)
     {
-        EXPECT_TRUE(world.getBean(beanId)->getProperty(testHelper.p_real) == 1.0);
+        EXPECT_TRUE(world.getBean(beanId)->get(testHelper.p_real) == 1.0);
     }
 
     ///////////////////////////////////////////////////////

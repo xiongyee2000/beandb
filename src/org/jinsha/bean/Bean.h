@@ -68,7 +68,7 @@ public:
      * @return true if it has such a property, false otherwise
      * 
      */
-    bool hasProperty(const Property* property) const;
+    bool hasPrimaryProperty(const Property* property) const;
 
     /**
      * Get property value.
@@ -76,11 +76,14 @@ public:
      * @param property the property
      * @return the property value
      * 
-     * Note:
-     * If this bean does not have the named property,
-     * a json value of null will be returned.
+     * Notes:
+     * - The property must be of primary type, or
+     *    json null value will be returned;
+     * - If this bean does not have the named property,
+     *    json null value will be returned;
+     * 
      */
-    Json::Value getProperty(const Property* property) const;
+    Json::Value get(const Property* property) const;
 
     /**
      * Set the value of a property of this bean. 
@@ -132,11 +135,12 @@ public:
      * @param property the property
      * @return the size
      * 
-     * Note:
-     * If this bean does not have the named array property,
-     * 0 will be returned;
+     * Notes:
+     * - The property must be an array, or 0 will be returned;
+     * - If this bean does not have the named array property,
+     *   0 will be returned;
      */
-    Json::Value::ArrayIndex getArraySize(const Property* property) const;
+    Json::Value::ArrayIndex size(const Property* property) const;
 
     /**
      * Get value of an array property at specified index.
@@ -152,7 +156,7 @@ public:
      * value of null will be returned;
      * If the index is invalid, a json value of null will be returned;
      */
-    Json::Value getArrayProperty(const Property* property, 
+    Json::Value at(const Property* property, 
         Json::Value::ArrayIndex index) const;
 
      /**
@@ -201,21 +205,21 @@ public:
      *                   -4: if the array property is not a member of this bean
      *                   -5: if the index is invalid
      */
-    int setArrayProperty(Property* property, Json::Value::ArrayIndex index,
+    int setAt(Property* property, Json::Value::ArrayIndex index,
         const Json::Value& value, bool saveAtOnce = true);
 
     /**
-     * This is a special version of setArrayProperty() purposed to 
+     * This is a special version of setAt() purposed to 
      * avoid string copying.
      */
-    int setArrayProperty(Property* property, Json::Value::ArrayIndex index,
+    int setAt(Property* property, Json::Value::ArrayIndex index,
         const char* value, bool saveAtOnce = true);
 
     /**
-     * This is a special version of setArrayProperty() purposed to 
+     * This is a special version of setAt() purposed to 
      * avoid string copying.
      */
-    int setArrayProperty(Property* property, Json::Value::ArrayIndex index,
+    int setAt(Property* property, Json::Value::ArrayIndex index,
         const std::string& value, bool saveAtOnce = true);
 
     //  /**
@@ -363,7 +367,7 @@ public:
      *                   -4: if the array relation is not a member of this bean
      *                   -5: if the index is invalid
      */
-    int setArrayRelation(Property* relation, Json::Value::ArrayIndex index,
+    int setRelationAt(Property* relation, Json::Value::ArrayIndex index,
         Bean* bean);
 
      /**
@@ -382,7 +386,7 @@ public:
      *                   -4: if the array relation is not a member of this bean
      *                   -5: if the index is invalid
      */
-    int setArrayRelation(Property* relation, 
+    int setRelationAt(Property* relation, 
         Json::Value::ArrayIndex index,
         oidType objectId);
 

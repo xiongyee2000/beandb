@@ -51,7 +51,7 @@ bool Bean::isMember(const Property* property) const
 }
 
 
-bool Bean::hasProperty(const Property* property) const
+bool Bean::hasPrimaryProperty(const Property* property) const
 {
     return doHasProperty(property, Property::PrimaryType);
 }
@@ -75,10 +75,10 @@ void Bean::removeAllProperties()
 }
 
 
-Json::Value Bean::getProperty(const Property* property) const
+Json::Value Bean::get(const Property* property) const
 {
     Json::Value value(Json::nullValue);
-    if (!hasProperty(property)) return Json::Value::nullRef;
+    if (!hasPrimaryProperty(property)) return Json::Value::nullRef;
 
     const auto& pname = property->getName();
     if (m_pst_json_[pname].asInt() == PST_NSY) {
@@ -211,7 +211,7 @@ bool Bean::hasArrayProperty(const Property* property) const
 }
 
 
-Json::Value::ArrayIndex Bean::getArraySize(const Property* property) const
+Json::Value::ArrayIndex Bean::size(const Property* property) const
 {
     if (property == nullptr) return 0;
     if (!property->isArray())  return 0;
@@ -230,7 +230,7 @@ Json::Value::ArrayIndex Bean::getArraySize(const Property* property) const
 }
 
 
-Json::Value Bean::getArrayProperty(const Property* property,  
+Json::Value Bean::at(const Property* property,  
     Json::Value::ArrayIndex index) const
 {
     Json::Value value(Json::nullValue);
@@ -279,7 +279,7 @@ int Bean::doCreateArrayProperty(Property* property, bool saveAtOnce)
 }
 
 
-int Bean::setArrayProperty(Property* property,  
+int Bean::setAt(Property* property,  
     Json::Value::ArrayIndex index, const Json::Value& value, bool saveAtOnce)
 {
     if (value.isNull()) return -1;
@@ -308,21 +308,21 @@ int Bean::setArrayProperty(Property* property,
 }
 
 
-int Bean::setArrayProperty(Property* property,  
+int Bean::setAt(Property* property,  
     Json::Value::ArrayIndex index, const char* value, bool saveAtOnce)
 {
     Json::StaticString sv(value);
     Json::Value v(sv);
-    return setArrayProperty(property, index, v, saveAtOnce);
+    return setAt(property, index, v, saveAtOnce);
 }
 
 
-int Bean::setArrayProperty(Property* property,  
+int Bean::setAt(Property* property,  
     Json::Value::ArrayIndex index, const std::string& value, bool saveAtOnce)
 {
     Json::StaticString sv(value.c_str());
     Json::Value v(sv);
-    return setArrayProperty(property, index, v, saveAtOnce);
+    return setAt(property, index, v, saveAtOnce);
 }
 
 
@@ -542,15 +542,15 @@ int Bean::appendRelation(Property* relation,  Bean* bean)
 }
 
 
-int Bean::setArrayRelation(Property* relation,  
+int Bean::setRelationAt(Property* relation,  
     Json::Value::ArrayIndex index, Bean* bean)
 {
     if (bean == nullptr) return -1;
-    return setArrayRelation(relation, index, bean->getId());
+    return setRelationAt(relation, index, bean->getId());
 }
 
 
-int Bean::setArrayRelation(Property* relation,  
+int Bean::setRelationAt(Property* relation,  
     Json::Value::ArrayIndex index, oidType objectId)
 {
     if (relation == nullptr) return -2;

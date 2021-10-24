@@ -141,7 +141,7 @@ int BeanWorld::deleteBean(Bean* bean)
                 subject = getBean(subjectId, false);
                 if (subject == nullptr)  continue;
                 if (property->isArray()) {
-                    for (int i = 0; i < subject->getArraySize(property); i++) {
+                    for (int i = 0; i < subject->size(property); i++) {
                         if (subject->getObjectId(property, i) == bean->getId())
                             subject->doRemoveProperty(property, i, false);
                     }

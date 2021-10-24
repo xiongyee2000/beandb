@@ -279,10 +279,10 @@ TEST(BeanWorld, getProperties)
 
     world->undefineProperty(p1);
     EXPECT_TRUE(world->getProperties().size() == 1);
-    EXPECT_TRUE(bean1->hasProperty(p1) == false);
+    EXPECT_TRUE(bean1->hasPrimaryProperty(p1) == false);
     world->undefineProperty(p2);
     EXPECT_TRUE(world->getProperties().size() == 0);
-    EXPECT_TRUE(bean2->hasProperty(p1) == false);
+    EXPECT_TRUE(bean2->hasPrimaryProperty(p1) == false);
     delete world;
 }
 

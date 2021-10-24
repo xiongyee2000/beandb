@@ -371,14 +371,14 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
     bean2 = world->getBean(beanId_2);
     bean3 = world->getBean(beanId_3);
 
-    EXPECT_TRUE(bean1->getProperty(testHelper.p_int).isNull());
-    EXPECT_TRUE(bean1->getProperty(testHelper.p_array_int).isNull());
+    EXPECT_TRUE(bean1->get(testHelper.p_int).isNull());
+    EXPECT_TRUE(bean1->get(testHelper.p_array_int).isNull());
 
-    EXPECT_TRUE(bean2->getProperty(testHelper.p_int).isNull());
-    EXPECT_TRUE(bean2->getProperty(testHelper.p_array_int).isNull());
+    EXPECT_TRUE(bean2->get(testHelper.p_int).isNull());
+    EXPECT_TRUE(bean2->get(testHelper.p_array_int).isNull());
 
-    EXPECT_TRUE(bean3->getProperty(testHelper.r1).isNull());
-    EXPECT_TRUE(bean3->getProperty(testHelper.r_array_1).isNull());
+    EXPECT_TRUE(bean3->get(testHelper.r1).isNull());
+    EXPECT_TRUE(bean3->get(testHelper.r_array_1).isNull());
 
     testdb.loadBeanBase_(beanId_1, value);
     EXPECT_TRUE(!value.isMember(testHelper.p_int->getName()));
@@ -707,9 +707,9 @@ TEST(SqliteBeanDB, saveBean)
     bean1 = world->getBean(beanId_1);
     bean3 = world->getBean(beanId_3);
 
-    err = bean1->setArrayProperty(testHelper.p_array_int, 0, 99, false);    
+    err = bean1->setAt(testHelper.p_array_int, 0, 99, false);    
     EXPECT_TRUE(err == 0);
-    err = bean3->setArrayRelation(testHelper.r_array_1, 0, bean3->getId());
+    err = bean3->setRelationAt(testHelper.r_array_1, 0, bean3->getId());
     EXPECT_TRUE(err == 0);
     err = bean1->save();
     EXPECT_TRUE(err == 0);
@@ -725,7 +725,7 @@ TEST(SqliteBeanDB, saveBean)
     bean2 = world->getBean(beanId_2);
     bean3 = world->getBean(beanId_3);
 
-    value = bean1->getArrayProperty(testHelper.p_array_int, 0);
+    value = bean1->at(testHelper.p_array_int, 0);
     EXPECT_TRUE(value == 99);
     beanId_3 = bean3->getObjectId(testHelper.r_array_1, 0);
     EXPECT_TRUE(beanId_3 == bean3->getId());
@@ -760,9 +760,9 @@ TEST(SqliteBeanDB, delayLoad)
     initTestHelper(testHelper, *world, false);
 
     bean3= world->getBean(3);
-    size = bean3->getArraySize(testHelper.r_array_1);
+    size = bean3->size(testHelper.r_array_1);
     EXPECT_TRUE(size == 2);
-    size = bean3->getArraySize(testHelper.p_array_str);
+    size = bean3->size(testHelper.p_array_str);
     EXPECT_TRUE(size == 2);
 
     bean3->createArrayProperty(testHelper.p_array_str);
@@ -778,16 +778,16 @@ TEST(SqliteBeanDB, delayLoad)
 
     bean1 = world->getBean(1);
     beanId_1 = bean1->getId();
-    value = bean1->getProperty(testHelper.p_str);
+    value = bean1->get(testHelper.p_str);
     EXPECT_TRUE(value == "foo");
-    value = bean1->getArrayProperty(testHelper.p_array_int, 0);
+    value = bean1->at(testHelper.p_array_int, 0);
     EXPECT_TRUE(value == 101);
 
     bean3 = world->getBean(3);
     beanId_1 = bean3->getObjectId(testHelper.r_array_1, 0);
     EXPECT_TRUE(beanId_1 == 1);
 
-    size = bean3->getArraySize(testHelper.p_array_str);
+    size = bean3->size(testHelper.p_array_str);
     EXPECT_TRUE(size == 4);
 
     testdb.disconnect();
@@ -798,10 +798,10 @@ TEST(SqliteBeanDB, delayLoad)
 
     bean1 = world->getBean(1);
     bean2 = world->getBean(2);
-    err = bean1->setArrayProperty(testHelper.p_array_int, 0, 99);
+    err = bean1->setAt(testHelper.p_array_int, 0, 99);
     EXPECT_TRUE(err == 0);
     bean3 = world->getBean(3);
-    err = bean3->setArrayRelation(testHelper.r_array_1, 0, bean2->getId());
+    err = bean3->setRelationAt(testHelper.r_array_1, 0, bean2->getId());
     EXPECT_TRUE(err == 0);
 
     testdb.disconnect();
@@ -824,15 +824,15 @@ TEST(SqliteBeanDB, delayLoad)
 
     bean1 = world->getBean(1);
     beanId_1 = bean1->getId();
-    value = bean1->getArrayProperty(testHelper.p_array_int, 0);
+    value = bean1->at(testHelper.p_array_int, 0);
     EXPECT_TRUE(value == 99);
-    value = bean1->getArrayProperty(testHelper.p_array_int, bean1->getArraySize(testHelper.p_array_int) - 1);
+    value = bean1->at(testHelper.p_array_int, bean1->size(testHelper.p_array_int) - 1);
     EXPECT_TRUE(value == 100);
 
     bean3 = world->getBean(3);
     beanId_2 = bean3->getObjectId(testHelper.r_array_1, 0);
     EXPECT_TRUE(beanId_2 == 2);
-    beanId_3 = bean3->getObjectId(testHelper.r_array_1, bean3->getArraySize(testHelper.r_array_1) - 1);
+    beanId_3 = bean3->getObjectId(testHelper.r_array_1, bean3->size(testHelper.r_array_1) - 1);
     EXPECT_TRUE(beanId_3 == 3);
 
     testdb.disconnect();
@@ -1316,42 +1316,42 @@ TEST(SqliteBeanDB, findEqual)
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) == 1.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) == 1.0);
     }
 
     page = world->findEqual(testHelper.p_bool_0, false);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_bool_0) == false);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_bool_0) == false);
     }
 
     page = world->findEqual(testHelper.p_bool_1, true);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_bool_1) == true);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_bool_1) == true);
     }
 
     page = world->findEqual(testHelper.p_str, "hello");
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str) == "hello");
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str) == "hello");
     }
 
     page = world->findEqual(testHelper.p_int, (int_t)1);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) == 1);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) == 1);
     }
 
     page = world->findEqual(testHelper.p_uint, (uint_t)2U);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) == 2U);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) == 2U);
     }
 
     testdb.disconnect();
@@ -1385,44 +1385,44 @@ TEST(SqliteBeanDB, findLessThan)
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) < 2.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) < 2.0);
     }
     page = world->findLessThan(testHelper.p_real, 3.0);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) < 3.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) < 3.0);
     }
     page = world->findLessThan(testHelper.p_real, 4.0);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) < 4.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) < 4.0);
     }
 
     page = world->findLessThan(testHelper.p_str, "hello");
     EXPECT_TRUE(page->size() == 0);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("hello") < 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("hello") < 0);
     }
     page = world->findLessThan(testHelper.p_str, "my");
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("my") < 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("my") < 0);
     }
     page = world->findLessThan(testHelper.p_str, "world");
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("world") < 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("world") < 0);
     }
     page = world->findLessThan(testHelper.p_str, "z");
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("z") < 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("z") < 0);
     }
 
     page = world->findLessThan(testHelper.p_int, (int_t)1);
@@ -1431,19 +1431,19 @@ TEST(SqliteBeanDB, findLessThan)
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) < 2);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) < 2);
     }
     page = world->findLessThan(testHelper.p_int, (int_t)3);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) < 3);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) < 3);
     }
     page = world->findLessThan(testHelper.p_int, (int_t)4);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) < 4);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) < 4);
     }
 
     page = world->findLessThan(testHelper.p_uint, (uint_t)1);
@@ -1452,19 +1452,19 @@ TEST(SqliteBeanDB, findLessThan)
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) < (uint_t)2);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) < (uint_t)2);
     }
     page = world->findLessThan(testHelper.p_uint, (uint_t)3);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) < (uint_t)3);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) < (uint_t)3);
     }
     page = world->findLessThan(testHelper.p_uint, (uint_t)4);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) < (uint_t)4);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) < (uint_t)4);
     }
 
     testdb.disconnect();
@@ -1498,25 +1498,25 @@ TEST(SqliteBeanDB, findLessEqual)
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) <= 1.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) <= 1.0);
     }
     page = world->findLessEqual(testHelper.p_real, 2.0);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) <= 2.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) <= 2.0);
     }
     page = world->findLessEqual(testHelper.p_real, 3.0);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) <= 3.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) <= 3.0);
     }
     page = world->findLessEqual(testHelper.p_real, 4.0);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) <= 4.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) <= 4.0);
     }
 
     page = world->findLessEqual(testHelper.p_str, "a");
@@ -1525,25 +1525,25 @@ TEST(SqliteBeanDB, findLessEqual)
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("hello") <= 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("hello") <= 0);
     }
     page = world->findLessEqual(testHelper.p_str, "my");
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("my") <= 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("my") <= 0);
     }
     page = world->findLessEqual(testHelper.p_str, "world");
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("world") <= 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("world") <= 0);
     }
     page = world->findLessEqual(testHelper.p_str, "z");
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("z") <= 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("z") <= 0);
     }
 
     page = world->findLessEqual(testHelper.p_int, (int_t)0);
@@ -1552,25 +1552,25 @@ TEST(SqliteBeanDB, findLessEqual)
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) <= 1);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) <= 1);
     }
     page = world->findLessEqual(testHelper.p_int, (int_t)2);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) <= 2);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) <= 2);
     }
     page = world->findLessEqual(testHelper.p_int, (int_t)3);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) <= 3);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) <= 3);
     }
     page = world->findLessEqual(testHelper.p_int, (int_t)4);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) <= 4);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) <= 4);
     }
 
     page = world->findLessEqual(testHelper.p_uint, (uint_t)0);
@@ -1579,25 +1579,25 @@ TEST(SqliteBeanDB, findLessEqual)
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) <= (uint_t)1);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) <= (uint_t)1);
     }
     page = world->findLessEqual(testHelper.p_uint, (uint_t)2);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) <= (uint_t)2);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) <= (uint_t)2);
     }
     page = world->findLessEqual(testHelper.p_uint, (uint_t)3);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) <= (uint_t)3);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) <= (uint_t)3);
     }
     page = world->findLessEqual(testHelper.p_uint, (uint_t)4);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) <= (uint_t)4);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) <= (uint_t)4);
     }
 
     testdb.disconnect();
@@ -1633,19 +1633,19 @@ TEST(SqliteBeanDB, findGreaterThan)
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) > 0.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) > 0.0);
     }
     page = world->findGreaterThan(testHelper.p_real, 1.0);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) > 1.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) > 1.0);
     }
     page = world->findGreaterThan(testHelper.p_real, 2.0);
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) > 2.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) > 2.0);
     }
     page = world->findGreaterThan(testHelper.p_real, 3.0);
     EXPECT_TRUE(page->size() == 0);
@@ -1654,19 +1654,19 @@ TEST(SqliteBeanDB, findGreaterThan)
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("a") > 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("a") > 0);
     }
     page = world->findGreaterThan(testHelper.p_str, "hello");
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("hello") > 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("hello") > 0);
     }
     page = world->findGreaterThan(testHelper.p_str, "my");
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("my") > 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("my") > 0);
     }
     page = world->findGreaterThan(testHelper.p_str, "world");
     EXPECT_TRUE(page->size() == 0);
@@ -1675,19 +1675,19 @@ TEST(SqliteBeanDB, findGreaterThan)
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) > 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) > 0);
     }
     page = world->findGreaterThan(testHelper.p_int, 1);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) > 1);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) > 1);
     }
     page = world->findGreaterThan(testHelper.p_int, 2);
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) > 2);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) > 2);
     }
     page = world->findGreaterThan(testHelper.p_int, 3);
     EXPECT_TRUE(page->size() == 0);
@@ -1696,19 +1696,19 @@ TEST(SqliteBeanDB, findGreaterThan)
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) > (uint_t)0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) > (uint_t)0);
     }
     page = world->findGreaterThan(testHelper.p_uint, (uint_t)1);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) > (uint_t)1);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) > (uint_t)1);
     }
     page = world->findGreaterThan(testHelper.p_uint, (uint_t)2);
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) > (uint_t)2);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) > (uint_t)2);
     }
     page = world->findGreaterThan(testHelper.p_uint, (uint_t)3);
     EXPECT_TRUE(page->size() == 0);
@@ -1746,19 +1746,19 @@ TEST(SqliteBeanDB, findGreaterEqual)
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) >= 0.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) >= 0.0);
     }
     page = world->findGreaterEqual(testHelper.p_real, 1.0);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) >= 1.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) >= 1.0);
     }
     page = world->findGreaterEqual(testHelper.p_real, 2.0);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_real) >= 2.0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_real) >= 2.0);
     }
     page = world->findGreaterEqual(testHelper.p_real, 3.0);
     EXPECT_TRUE(page->size() == 1);
@@ -1767,25 +1767,25 @@ TEST(SqliteBeanDB, findGreaterEqual)
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("a") >= 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("a") >= 0);
     }
     page = world->findGreaterEqual(testHelper.p_str, "hello");
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("hello") >= 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("hello") >= 0);
     }
     page = world->findGreaterEqual(testHelper.p_str, "my");
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("my") >= 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("my") >= 0);
     }
     page = world->findGreaterEqual(testHelper.p_str, "world");
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).compare("world") >= 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).compare("world") >= 0);
     }
     page = world->findGreaterEqual(testHelper.p_str, "z");
     EXPECT_TRUE(page->size() == 0);
@@ -1794,25 +1794,25 @@ TEST(SqliteBeanDB, findGreaterEqual)
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) >= 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) >= 0);
     }
     page = world->findGreaterEqual(testHelper.p_int, 1);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) >= 1);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) >= 1);
     }
     page = world->findGreaterEqual(testHelper.p_int, 2);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) >= 2);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) >= 2);
     }
     page = world->findGreaterEqual(testHelper.p_int, 3);
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_int) >= 3);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_int) >= 3);
     }
     page = world->findGreaterEqual(testHelper.p_int, 4);
     EXPECT_TRUE(page->size() == 0);
@@ -1821,25 +1821,25 @@ TEST(SqliteBeanDB, findGreaterEqual)
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) >= (uint_t)0);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) >= (uint_t)0);
     }
     page = world->findGreaterEqual(testHelper.p_uint, (uint_t)1);
     EXPECT_TRUE(page->size() == 3);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) >= (uint_t)1);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) >= (uint_t)1);
     }
     page = world->findGreaterEqual(testHelper.p_uint, (uint_t)2);
     EXPECT_TRUE(page->size() == 2);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) >= (uint_t)2);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) >= (uint_t)2);
     }
     page = world->findGreaterEqual(testHelper.p_uint, (uint_t)3);
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_uint) >= (uint_t)3);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_uint) >= (uint_t)3);
     }
     page = world->findGreaterEqual(testHelper.p_uint, (uint_t)4);
     EXPECT_TRUE(page->size() == 0);
@@ -1911,7 +1911,7 @@ TEST(SqliteBeanDB, find_like)
     EXPECT_TRUE(page->at(1) == bean3->getId());
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).asString().find("a") != std::string::npos);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).asString().find("a") != std::string::npos);
     }
 
     page = testdb.findBeans(op_like, testHelper.p_str, "%i%");
@@ -1920,26 +1920,26 @@ TEST(SqliteBeanDB, find_like)
     EXPECT_TRUE(page->at(1) == bean3->getId());
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getProperty(testHelper.p_str).asString().find("i") != std::string::npos);
+        EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).asString().find("i") != std::string::npos);
     }
 
     page = testdb.findBeans(op_like, testHelper.p_array_str, "bean1%");
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getArrayProperty(testHelper.p_array_str, 0).asString().find("bean1") == 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->at(testHelper.p_array_str, 0).asString().find("bean1") == 0);
     }
     page = testdb.findBeans(op_like, testHelper.p_array_str, "bean2%");
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getArrayProperty(testHelper.p_array_str, 0).asString().find("bean2") == 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->at(testHelper.p_array_str, 0).asString().find("bean2") == 0);
     }
     page = testdb.findBeans(op_like, testHelper.p_array_str, "bean3%");
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {
-        EXPECT_TRUE(world->getBean(page->at(i))->getArrayProperty(testHelper.p_array_str, 0).asString().find("bean3") == 0);
+        EXPECT_TRUE(world->getBean(page->at(i))->at(testHelper.p_array_str, 0).asString().find("bean3") == 0);
     }
 }
 

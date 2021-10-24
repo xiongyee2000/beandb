@@ -274,8 +274,8 @@ TEST(BeanWorld, getProperties)
     EXPECT_TRUE(p2 == world->getProperty("p2"));
     EXPECT_TRUE(world->getProperties().size() == 2);
 
-    bean1->setProperty(p1, 1);
-    bean2->setProperty(p1, 2);
+    bean1->set(p1, 1);
+    bean2->set(p1, 2);
 
     world->undefineProperty(p1);
     EXPECT_TRUE(world->getProperties().size() == 1);

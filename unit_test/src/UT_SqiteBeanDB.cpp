@@ -127,26 +127,26 @@ static void validate_properties_testdb_1(std::unordered_map<std::string, Propert
 
 void find_beanInit(TestHelper& testHelper, Bean* bean1, Bean* bean2, Bean* bean3)
 {
-    bean1->setProperty(testHelper.p_real, 1.0);
-    bean1->setProperty(testHelper.p_str, "hello");
-    bean1->setProperty(testHelper.p_int, 1);
-    bean1->setProperty(testHelper.p_uint, 1U);
-    bean1->setProperty(testHelper.p_int64, 101);
-    bean1->setProperty(testHelper.p_uint64, 101U);
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 1U);
+    bean1->set(testHelper.p_int64, 101);
+    bean1->set(testHelper.p_uint64, 101U);
 
-    bean2->setProperty(testHelper.p_real, 2.0);
-    bean2->setProperty(testHelper.p_str, "my");
-    bean2->setProperty(testHelper.p_int, 2);
-    bean2->setProperty(testHelper.p_uint, 2U);
-    bean2->setProperty(testHelper.p_int64, 102);
-    bean2->setProperty(testHelper.p_uint64, 102U);
+    bean2->set(testHelper.p_real, 2.0);
+    bean2->set(testHelper.p_str, "my");
+    bean2->set(testHelper.p_int, 2);
+    bean2->set(testHelper.p_uint, 2U);
+    bean2->set(testHelper.p_int64, 102);
+    bean2->set(testHelper.p_uint64, 102U);
 
-    bean3->setProperty(testHelper.p_real, 3.0);
-    bean3->setProperty(testHelper.p_str, "world");
-    bean3->setProperty(testHelper.p_int, 3);
-    bean3->setProperty(testHelper.p_uint, 3U);
-    bean3->setProperty(testHelper.p_int64, 103);
-    bean3->setProperty(testHelper.p_uint64, 103U);
+    bean3->set(testHelper.p_real, 3.0);
+    bean3->set(testHelper.p_str, "world");
+    bean3->set(testHelper.p_int, 3);
+    bean3->set(testHelper.p_uint, 3U);
+    bean3->set(testHelper.p_int64, 103);
+    bean3->set(testHelper.p_uint64, 103U);
 }
 
 
@@ -337,12 +337,12 @@ TEST(SqliteBeanDB, defineProperty_undefineProperty)
     beanId_2 = bean1->getId();
     beanId_3 = bean1->getId();
 
-    bean1->setProperty(testHelper.p_int, 1);
+    bean1->set(testHelper.p_int, 1);
     bean1->createArrayProperty(testHelper.p_array_int);
     bean1->append(testHelper.p_array_int, 0);
     bean1->append(testHelper.p_array_int, 1);
 
-    bean2->setProperty(testHelper.p_int, 1);
+    bean2->set(testHelper.p_int, 1);
     bean2->createArrayProperty(testHelper.p_array_int);
     bean2->append(testHelper.p_array_int, 0);
     bean2->append(testHelper.p_array_int, 1);
@@ -545,7 +545,7 @@ TEST(SqliteBeanDB, loadBeanBase_)
     beanId_2 = bean2->getId();
     beanId_3 = bean3->getId();
 
-    bean1->setProperty(testHelper.p_int, 1);
+    bean1->set(testHelper.p_int, 1);
     bean1->createArrayProperty(testHelper.p_array_int);
     bean1->append(testHelper.p_array_int, 0);
     bean1->append(testHelper.p_array_int, 1);
@@ -553,7 +553,7 @@ TEST(SqliteBeanDB, loadBeanBase_)
     nativeData["test"] = 1;
     bean1->setNativeData(nativeData);
 
-    bean2->setProperty(testHelper.p_int, 1);
+    bean2->set(testHelper.p_int, 1);
     bean2->createArrayProperty(testHelper.p_array_int);
     bean2->append(testHelper.p_array_int, 0);
     bean2->append(testHelper.p_array_int, 1);
@@ -1002,7 +1002,7 @@ TEST(SqliteBeanDB, updateBeanProperty_)
     err = testdb.updateBeanProperty_(beanId_1, testHelper.p_array_int, 9999, 1);
     EXPECT_TRUE(err == -1001);
 
-    bean1->setProperty(testHelper.p_str, "xxx");
+    bean1->set(testHelper.p_str, "xxx");
     err = testdb.updateBeanProperty_(beanId_1, testHelper.p_str, "foo");
     EXPECT_TRUE(err == 0);
 
@@ -1280,23 +1280,23 @@ TEST(SqliteBeanDB, findEqual)
     Bean* bean1 = world->createBean();
     Bean* bean2 = world->createBean();
 
-    bean1->setProperty(testHelper.p_real, 1.0);
-    bean1->setProperty(testHelper.p_str, "hello");
-    bean1->setProperty(testHelper.p_bool_0, false);
-    bean1->setProperty(testHelper.p_bool_1, true);
-    bean1->setProperty(testHelper.p_int, 1);
-    bean1->setProperty(testHelper.p_uint, 2U);
-    bean1->setProperty(testHelper.p_int64, 3);
-    bean1->setProperty(testHelper.p_uint64, 4U);
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_bool_0, false);
+    bean1->set(testHelper.p_bool_1, true);
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 2U);
+    bean1->set(testHelper.p_int64, 3);
+    bean1->set(testHelper.p_uint64, 4U);
 
-    bean2->setProperty(testHelper.p_real, 1.0);
-    bean2->setProperty(testHelper.p_str, "hello");
-    bean2->setProperty(testHelper.p_bool_0, false);
-    bean2->setProperty(testHelper.p_bool_1, true);
-    bean2->setProperty(testHelper.p_int, 1);
-    bean2->setProperty(testHelper.p_uint, 2U);
-    bean2->setProperty(testHelper.p_int64, 3);
-    bean2->setProperty(testHelper.p_uint64, 4U);
+    bean2->set(testHelper.p_real, 1.0);
+    bean2->set(testHelper.p_str, "hello");
+    bean2->set(testHelper.p_bool_0, false);
+    bean2->set(testHelper.p_bool_1, true);
+    bean2->set(testHelper.p_int, 1);
+    bean2->set(testHelper.p_uint, 2U);
+    bean2->set(testHelper.p_int64, 3);
+    bean2->set(testHelper.p_uint64, 4U);
 
     bean1->save();
     bean2->save();
@@ -1870,9 +1870,9 @@ TEST(SqliteBeanDB, find_like)
     Bean* bean3 = world->createBean();
     oidType beanId_3 = bean3->getId();
 
-    bean1->setProperty(testHelper.p_str, "beandb");
-    bean2->setProperty(testHelper.p_str, "is");
-    bean3->setProperty(testHelper.p_str, "amazing!");
+    bean1->set(testHelper.p_str, "beandb");
+    bean2->set(testHelper.p_str, "is");
+    bean3->set(testHelper.p_str, "amazing!");
 
     bean1->createArrayProperty(testHelper.p_array_str);
     bean2->createArrayProperty(testHelper.p_array_str);

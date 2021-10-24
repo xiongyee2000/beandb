@@ -289,28 +289,28 @@ TEST(Property, findLessEqual_with_index)
     initTestHelper(testHelper, world, true);
 
     Bean* bean1 = world.createBean();
-    // bean1->setProperty(testHelper.p_real, 1.0);
-    // bean1->setProperty(testHelper.p_str, "hello");
-    // bean1->setProperty(testHelper.p_int, 1);
-    // bean1->setProperty(testHelper.p_uint, 1U);
-    // bean1->setProperty(testHelper.p_int64, 101);
-    // bean1->setProperty(testHelper.p_uint64, 101U);
+    // bean1->set(testHelper.p_real, 1.0);
+    // bean1->set(testHelper.p_str, "hello");
+    // bean1->set(testHelper.p_int, 1);
+    // bean1->set(testHelper.p_uint, 1U);
+    // bean1->set(testHelper.p_int64, 101);
+    // bean1->set(testHelper.p_uint64, 101U);
 
     Bean* bean2 = world.createBean();
-    // bean2->setProperty(testHelper.p_real, 2.0);
-    // bean2->setProperty(testHelper.p_str, "my");
-    // bean2->setProperty(testHelper.p_int, 2);
-    // bean2->setProperty(testHelper.p_uint, 2U);
-    // bean2->setProperty(testHelper.p_int64, 102);
-    // bean2->setProperty(testHelper.p_uint64, 102U);
+    // bean2->set(testHelper.p_real, 2.0);
+    // bean2->set(testHelper.p_str, "my");
+    // bean2->set(testHelper.p_int, 2);
+    // bean2->set(testHelper.p_uint, 2U);
+    // bean2->set(testHelper.p_int64, 102);
+    // bean2->set(testHelper.p_uint64, 102U);
 
     Bean* bean3 = world.createBean();
-    // bean3->setProperty(testHelper.p_real, 3.0);
-    // bean3->setProperty(testHelper.p_str, "world");
-    // bean3->setProperty(testHelper.p_int, 3);
-    // bean3->setProperty(testHelper.p_uint, 3U);
-    // bean3->setProperty(testHelper.p_int64, 103);
-    // bean3->setProperty(testHelper.p_uint64, 103U);
+    // bean3->set(testHelper.p_real, 3.0);
+    // bean3->set(testHelper.p_str, "world");
+    // bean3->set(testHelper.p_int, 3);
+    // bean3->set(testHelper.p_uint, 3U);
+    // bean3->set(testHelper.p_int64, 103);
+    // bean3->set(testHelper.p_uint64, 103U);
     
     testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
@@ -527,20 +527,20 @@ TEST(Property, index_more_complicated)
     //createIndex()
     ///////////////////////////////////////////////////////
     Bean* bean1 = world.createBean();
-    bean1->setProperty(testHelper.p_real, 1.0);
-    bean1->setProperty(testHelper.p_str, "hello");
-    bean1->setProperty(testHelper.p_bool_0, false);
-    bean1->setProperty(testHelper.p_bool_1, true);
-    bean1->setProperty(testHelper.p_int, 1);
-    bean1->setProperty(testHelper.p_uint, 2U);
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_bool_0, false);
+    bean1->set(testHelper.p_bool_1, true);
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 2U);
 
     Bean* bean2 = world.createBean();
-    bean2->setProperty(testHelper.p_real, 1.0);
-    bean2->setProperty(testHelper.p_str, "hello");
-    bean2->setProperty(testHelper.p_bool_0, false);
-    bean2->setProperty(testHelper.p_bool_1, true);
-    bean2->setProperty(testHelper.p_int, 1);
-    bean2->setProperty(testHelper.p_uint, 2U);
+    bean2->set(testHelper.p_real, 1.0);
+    bean2->set(testHelper.p_str, "hello");
+    bean2->set(testHelper.p_bool_0, false);
+    bean2->set(testHelper.p_bool_1, true);
+    bean2->set(testHelper.p_int, 1);
+    bean2->set(testHelper.p_uint, 2U);
 
     testHelper.p_real->createIndex();
     testHelper.p_str->createIndex();
@@ -652,12 +652,12 @@ TEST(Property, index_more_complicated)
     testHelper.p_int->createIndex();
     testHelper.p_uint->createIndex();
     
-    bean1->setProperty(testHelper.p_real, 1.0);
-    bean1->setProperty(testHelper.p_str, "hello");
-    bean1->setProperty(testHelper.p_bool_0, false);
-    bean1->setProperty(testHelper.p_bool_1, true);
-    bean1->setProperty(testHelper.p_int, 1);
-    bean1->setProperty(testHelper.p_uint, 2U);
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_bool_0, false);
+    bean1->set(testHelper.p_bool_1, true);
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 2U);
 
    testHelper.p_real->findEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 2);

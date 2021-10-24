@@ -90,7 +90,7 @@ public:
      * 
      * Notes:
      * - You may need to do explicit type conversion for the value. 
-     *    For example: setProperty(p1, (Json::Uint)99).
+     *    For example: set(p1, (Json::Uint)99).
      *    See more helpful hints in JsonCPP documentation.
      * 
      * @param property the property
@@ -104,19 +104,19 @@ public:
      *                   -2: if property is null
      *                   -3: if the property or value is of invalid type
      */
-    int setProperty(Property* property, const Json::Value& value, bool saveAtOnce = true);
+    int set(Property* property, const Json::Value& value, bool saveAtOnce = true);
 
     /**
-     * This is a special version of setProperty() purposed to 
+     * This is a special version of set() purposed to 
      * avoid string copying.
      */
-    int setProperty(Property* property, const char* value, bool saveAtOnce = true);
+    int set(Property* property, const char* value, bool saveAtOnce = true);
 
     /**
-     * This is a special version of setProperty() purposed to 
+     * This is a special version of set() purposed to 
      * avoid string copying.
      */
-    int setProperty(Property* property, const std::string& value, bool saveAtOnce = true);
+    int set(Property* property, const std::string& value, bool saveAtOnce = true);
 
     /**
      * Is the specified property an array property.
@@ -221,18 +221,6 @@ public:
      */
     int setAt(Property* property, Json::Value::ArrayIndex index,
         const std::string& value, bool saveAtOnce = true);
-
-    //  /**
-    //  * Remove an item from an array property at specified index.
-    //  * 
-    //  * @param property the property
-    //  * @param value value to be added
-    //  * @return 0 if success, or an error code
-    //  *                   error code:
-    //  *                   -1: if property is null
-    //  *                   -5: if the index is invalid
-    //  */
-    // int removeArrayProperty(Property* property, Json::Value::ArrayIndex index); 
 
     /**
      * Check the bean has the given relation.

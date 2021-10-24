@@ -89,13 +89,13 @@ Json::Value Bean::get(const Property* property) const
 }
 
 
-int Bean::setProperty(Property* property,  const Json::Value& value, bool saveAtOnce)
+int Bean::set(Property* property,  const Json::Value& value, bool saveAtOnce)
 {
     return doSetProperty(property, value, saveAtOnce);
 }
 
 
-int Bean::setProperty(Property* property,  const char* value, bool saveAtOnce)
+int Bean::set(Property* property,  const char* value, bool saveAtOnce)
 {
     Json::StaticString sv(value);
     Json::Value v(sv);
@@ -103,7 +103,7 @@ int Bean::setProperty(Property* property,  const char* value, bool saveAtOnce)
 }
 
 
-int Bean::setProperty(Property* property,  const std::string& value, bool saveAtOnce)
+int Bean::set(Property* property,  const std::string& value, bool saveAtOnce)
 {
     Json::StaticString sv(value.c_str());
     Json::Value v(sv);

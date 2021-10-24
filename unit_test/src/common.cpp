@@ -73,15 +73,15 @@ void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex)
 
 void setBeanProperties(TestHelper& testHelper, Bean* bean, bool saveAtOnce)
 {
-    // bean->setProperty(testHelper.p_int, Json::Value::minInt);
-    bean->setProperty(testHelper.p_int, -1, saveAtOnce);
-    bean->setProperty(testHelper.p_uint, (Json::UInt)1, saveAtOnce);
-    bean->setProperty(testHelper.p_int64, (Json::Int64)-1, saveAtOnce);
-    bean->setProperty(testHelper.p_uint64, (Json::UInt64)1, saveAtOnce);
-    bean->setProperty(testHelper.p_real, (double)1.0, saveAtOnce);
-    bean->setProperty(testHelper.p_bool_0, false, saveAtOnce);
-    bean->setProperty(testHelper.p_bool_1, true, saveAtOnce);
-    bean->setProperty(testHelper.p_str, "foo", saveAtOnce);
+    // bean->set(testHelper.p_int, Json::Value::minInt);
+    bean->set(testHelper.p_int, -1, saveAtOnce);
+    bean->set(testHelper.p_uint, (Json::UInt)1, saveAtOnce);
+    bean->set(testHelper.p_int64, (Json::Int64)-1, saveAtOnce);
+    bean->set(testHelper.p_uint64, (Json::UInt64)1, saveAtOnce);
+    bean->set(testHelper.p_real, (double)1.0, saveAtOnce);
+    bean->set(testHelper.p_bool_0, false, saveAtOnce);
+    bean->set(testHelper.p_bool_1, true, saveAtOnce);
+    bean->set(testHelper.p_str, "foo", saveAtOnce);
 
     bean->createArrayProperty(testHelper.p_array_int);
     bean->append(testHelper.p_array_int, 101);
@@ -157,23 +157,23 @@ void validateBean(TestHelper& testHelper, Bean* bean)
 
 void test_find_init(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3)
 {
-    bean1->setProperty(testHelper.p_real, 1.0);
-    bean1->setProperty(testHelper.p_str, "hello");
-    bean1->setProperty(testHelper.p_bool_0, false);
-    bean1->setProperty(testHelper.p_bool_1, true);
-    bean1->setProperty(testHelper.p_int, 1);
-    bean1->setProperty(testHelper.p_uint, 2U);
-    bean1->setProperty(testHelper.p_int64, 3);
-    bean1->setProperty(testHelper.p_uint64, 4U);
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_bool_0, false);
+    bean1->set(testHelper.p_bool_1, true);
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 2U);
+    bean1->set(testHelper.p_int64, 3);
+    bean1->set(testHelper.p_uint64, 4U);
 
-    bean2->setProperty(testHelper.p_real, 1.0);
-    bean2->setProperty(testHelper.p_str, "hello");
-    bean2->setProperty(testHelper.p_bool_0, false);
-    bean2->setProperty(testHelper.p_bool_1, true);
-    bean2->setProperty(testHelper.p_int, 1);
-    bean2->setProperty(testHelper.p_uint, 2U);
-    bean2->setProperty(testHelper.p_int64, 3);
-    bean2->setProperty(testHelper.p_uint64, 4U);
+    bean2->set(testHelper.p_real, 1.0);
+    bean2->set(testHelper.p_str, "hello");
+    bean2->set(testHelper.p_bool_0, false);
+    bean2->set(testHelper.p_bool_1, true);
+    bean2->set(testHelper.p_int, 1);
+    bean2->set(testHelper.p_uint, 2U);
+    bean2->set(testHelper.p_int64, 3);
+    bean2->set(testHelper.p_uint64, 4U);
 }
 
 
@@ -230,26 +230,26 @@ void test_findEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1
 void test_findLessEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3)
 {
     std::list<oidType> beans;
-    bean1->setProperty(testHelper.p_real, 1.0);
-    bean1->setProperty(testHelper.p_str, "hello");
-    bean1->setProperty(testHelper.p_int, 1);
-    bean1->setProperty(testHelper.p_uint, 1U);
-    bean1->setProperty(testHelper.p_int64, 101);
-    bean1->setProperty(testHelper.p_uint64, 101U);
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 1U);
+    bean1->set(testHelper.p_int64, 101);
+    bean1->set(testHelper.p_uint64, 101U);
 
-    bean2->setProperty(testHelper.p_real, 2.0);
-    bean2->setProperty(testHelper.p_str, "my");
-    bean2->setProperty(testHelper.p_int, 2);
-    bean2->setProperty(testHelper.p_uint, 2U);
-    bean2->setProperty(testHelper.p_int64, 102);
-    bean2->setProperty(testHelper.p_uint64, 102U);
+    bean2->set(testHelper.p_real, 2.0);
+    bean2->set(testHelper.p_str, "my");
+    bean2->set(testHelper.p_int, 2);
+    bean2->set(testHelper.p_uint, 2U);
+    bean2->set(testHelper.p_int64, 102);
+    bean2->set(testHelper.p_uint64, 102U);
 
-    bean3->setProperty(testHelper.p_real, 3.0);
-    bean3->setProperty(testHelper.p_str, "world");
-    bean3->setProperty(testHelper.p_int, 3);
-    bean3->setProperty(testHelper.p_uint, 3U);
-    bean3->setProperty(testHelper.p_int64, 103);
-    bean3->setProperty(testHelper.p_uint64, 103U);
+    bean3->set(testHelper.p_real, 3.0);
+    bean3->set(testHelper.p_str, "world");
+    bean3->set(testHelper.p_int, 3);
+    bean3->set(testHelper.p_uint, 3U);
+    bean3->set(testHelper.p_int64, 103);
+    bean3->set(testHelper.p_uint64, 103U);
 
 
     testHelper.p_real->findLessEqual(1.0, beans);
@@ -333,26 +333,26 @@ void test_findLessEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* b
 void test_FindGreaterEqual_common(TestHelper& testHelper, BeanWorld& world, Bean* bean1, Bean* bean2, Bean* bean3)
 {
     std::list<oidType> beans;
-    bean1->setProperty(testHelper.p_real, 1.0);
-    bean1->setProperty(testHelper.p_str, "hello");
-    bean1->setProperty(testHelper.p_int, 1);
-    bean1->setProperty(testHelper.p_uint, 1U);
-    bean1->setProperty(testHelper.p_int64, 101);
-    bean1->setProperty(testHelper.p_uint64, 101U);
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 1U);
+    bean1->set(testHelper.p_int64, 101);
+    bean1->set(testHelper.p_uint64, 101U);
 
-    bean2->setProperty(testHelper.p_real, 2.0);
-    bean2->setProperty(testHelper.p_str, "my");
-    bean2->setProperty(testHelper.p_int, 2);
-    bean2->setProperty(testHelper.p_uint, 2U);
-    bean2->setProperty(testHelper.p_int64, 102);
-    bean2->setProperty(testHelper.p_uint64, 102U);
+    bean2->set(testHelper.p_real, 2.0);
+    bean2->set(testHelper.p_str, "my");
+    bean2->set(testHelper.p_int, 2);
+    bean2->set(testHelper.p_uint, 2U);
+    bean2->set(testHelper.p_int64, 102);
+    bean2->set(testHelper.p_uint64, 102U);
 
-    bean3->setProperty(testHelper.p_real, 3.0);
-    bean3->setProperty(testHelper.p_str, "world");
-    bean3->setProperty(testHelper.p_int, 3);
-    bean3->setProperty(testHelper.p_uint, 3U);
-    bean3->setProperty(testHelper.p_int64, 103);
-    bean3->setProperty(testHelper.p_uint64, 103U);
+    bean3->set(testHelper.p_real, 3.0);
+    bean3->set(testHelper.p_str, "world");
+    bean3->set(testHelper.p_int, 3);
+    bean3->set(testHelper.p_uint, 3U);
+    bean3->set(testHelper.p_int64, 103);
+    bean3->set(testHelper.p_uint64, 103U);
 
     testHelper.p_real->findGreaterEqual(1.0, beans);
    EXPECT_TRUE(beans.size() == 3);
@@ -436,26 +436,26 @@ void test_findGreaterThan_common(TestHelper& testHelper, BeanWorld& world, Bean*
 {
     std::list<oidType> beans;
 
-    bean1->setProperty(testHelper.p_real, 1.0);
-    bean1->setProperty(testHelper.p_str, "hello");
-    bean1->setProperty(testHelper.p_int, 1);
-    bean1->setProperty(testHelper.p_uint, 1U);
-    bean1->setProperty(testHelper.p_int64, 101);
-    bean1->setProperty(testHelper.p_uint64, 101U);
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 1U);
+    bean1->set(testHelper.p_int64, 101);
+    bean1->set(testHelper.p_uint64, 101U);
 
-    bean2->setProperty(testHelper.p_real, 2.0);
-    bean2->setProperty(testHelper.p_str, "my");
-    bean2->setProperty(testHelper.p_int, 2);
-    bean2->setProperty(testHelper.p_uint, 2U);
-    bean2->setProperty(testHelper.p_int64, 102);
-    bean2->setProperty(testHelper.p_uint64, 102U);
+    bean2->set(testHelper.p_real, 2.0);
+    bean2->set(testHelper.p_str, "my");
+    bean2->set(testHelper.p_int, 2);
+    bean2->set(testHelper.p_uint, 2U);
+    bean2->set(testHelper.p_int64, 102);
+    bean2->set(testHelper.p_uint64, 102U);
 
-    bean3->setProperty(testHelper.p_real, 3.0);
-    bean3->setProperty(testHelper.p_str, "world");
-    bean3->setProperty(testHelper.p_int, 3);
-    bean3->setProperty(testHelper.p_uint, 3U);
-    bean3->setProperty(testHelper.p_int64, 103);
-    bean3->setProperty(testHelper.p_uint64, 103U);
+    bean3->set(testHelper.p_real, 3.0);
+    bean3->set(testHelper.p_str, "world");
+    bean3->set(testHelper.p_int, 3);
+    bean3->set(testHelper.p_uint, 3U);
+    bean3->set(testHelper.p_int64, 103);
+    bean3->set(testHelper.p_uint64, 103U);
 
 
     testHelper.p_real->findGreaterThan(0.0, beans);
@@ -553,26 +553,26 @@ void test_findLessThan_common(TestHelper& testHelper, BeanWorld& world, Bean* be
 {
     std::list<oidType> beans;
 
-    bean1->setProperty(testHelper.p_real, 1.0);
-    bean1->setProperty(testHelper.p_str, "hello");
-    bean1->setProperty(testHelper.p_int, 1);
-    bean1->setProperty(testHelper.p_uint, 1U);
-    bean1->setProperty(testHelper.p_int64, 101);
-    bean1->setProperty(testHelper.p_uint64, 101U);
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 1U);
+    bean1->set(testHelper.p_int64, 101);
+    bean1->set(testHelper.p_uint64, 101U);
 
-    bean2->setProperty(testHelper.p_real, 2.0);
-    bean2->setProperty(testHelper.p_str, "my");
-    bean2->setProperty(testHelper.p_int, 2);
-    bean2->setProperty(testHelper.p_uint, 2U);
-    bean2->setProperty(testHelper.p_int64, 102);
-    bean2->setProperty(testHelper.p_uint64, 102U);
+    bean2->set(testHelper.p_real, 2.0);
+    bean2->set(testHelper.p_str, "my");
+    bean2->set(testHelper.p_int, 2);
+    bean2->set(testHelper.p_uint, 2U);
+    bean2->set(testHelper.p_int64, 102);
+    bean2->set(testHelper.p_uint64, 102U);
 
-    bean3->setProperty(testHelper.p_real, 3.0);
-    bean3->setProperty(testHelper.p_str, "world");
-    bean3->setProperty(testHelper.p_int, 3);
-    bean3->setProperty(testHelper.p_uint, 3U);
-    bean3->setProperty(testHelper.p_int64, 103);
-    bean3->setProperty(testHelper.p_uint64, 103U);
+    bean3->set(testHelper.p_real, 3.0);
+    bean3->set(testHelper.p_str, "world");
+    bean3->set(testHelper.p_int, 3);
+    bean3->set(testHelper.p_uint, 3U);
+    bean3->set(testHelper.p_int64, 103);
+    bean3->set(testHelper.p_uint64, 103U);
 
 
     testHelper.p_real->findLessThan(1.0, beans);
@@ -873,14 +873,14 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     testHelper.r1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    bean1.setProperty(testHelper.p_real, 1.0);
-    bean1.setProperty(testHelper.p_str, "hello");
-    bean1.setProperty(testHelper.p_bool_0, false);
-    bean1.setProperty(testHelper.p_bool_1, true);
-    bean1.setProperty(testHelper.p_int, 1);
-    bean1.setProperty(testHelper.p_uint, 2U);
-    bean1.setProperty(testHelper.p_int64, 3);
-    bean1.setProperty(testHelper.p_uint64, 4U);
+    bean1.set(testHelper.p_real, 1.0);
+    bean1.set(testHelper.p_str, "hello");
+    bean1.set(testHelper.p_bool_0, false);
+    bean1.set(testHelper.p_bool_1, true);
+    bean1.set(testHelper.p_int, 1);
+    bean1.set(testHelper.p_uint, 2U);
+    bean1.set(testHelper.p_int64, 3);
+    bean1.set(testHelper.p_uint64, 4U);
     bean1.setRelation(testHelper.r1, &bean2);
 
     testHelper.p_int->getSubjects(beans);
@@ -902,14 +902,14 @@ void test_getSubjects_common(BeanWorld &world, Bean& bean1, Bean& bean2, std::li
     testHelper.r1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
 
-    bean2.setProperty(testHelper.p_real, 1.0);
-    bean2.setProperty(testHelper.p_str, "hello");
-    bean2.setProperty(testHelper.p_bool_0, false);
-    bean2.setProperty(testHelper.p_bool_1, true);
-    bean2.setProperty(testHelper.p_int, 1);
-    bean2.setProperty(testHelper.p_uint, 2U);
-    bean2.setProperty(testHelper.p_int64, 3);
-    bean2.setProperty(testHelper.p_uint64, 4U);
+    bean2.set(testHelper.p_real, 1.0);
+    bean2.set(testHelper.p_str, "hello");
+    bean2.set(testHelper.p_bool_0, false);
+    bean2.set(testHelper.p_bool_1, true);
+    bean2.set(testHelper.p_int, 1);
+    bean2.set(testHelper.p_uint, 2U);
+    bean2.set(testHelper.p_int64, 3);
+    bean2.set(testHelper.p_uint64, 4U);
     bean2.setRelation(testHelper.r1, &bean1);
 
     testHelper.p_int->getSubjects(beans);

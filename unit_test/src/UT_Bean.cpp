@@ -71,7 +71,7 @@ TEST(Bean, create_has_remove)
     EXPECT_TRUE(!bean1->hasArrayRelation(nullptr));
 
     EXPECT_TRUE(!bean1->hasPrimaryProperty(testHelper.p1));
-    bean1->setProperty(testHelper.p1, 1);
+    bean1->set(testHelper.p1, 1);
     EXPECT_TRUE(bean1->hasPrimaryProperty(testHelper.p1));
     EXPECT_TRUE(!bean1->hasArrayProperty(testHelper.p1));
     EXPECT_TRUE(!bean1->hasRelation(testHelper.p1));
@@ -107,7 +107,7 @@ TEST(Bean, create_has_remove)
     value = bean1->removeProperty(nullptr);
     EXPECT_TRUE(value != 0);
 
-    bean1->setProperty(testHelper.p1, 1);
+    bean1->set(testHelper.p1, 1);
     value = bean1->removeProperty(testHelper.p1);
     EXPECT_TRUE(value == 0);
     EXPECT_TRUE(bean1->hasPrimaryProperty(testHelper.p1) == false);
@@ -149,27 +149,27 @@ TEST(Bean, property)
 
     Bean &bean = *world->createBean();
 
-    err = bean.setProperty(testHelper.p1, Json::Value());
+    err = bean.set(testHelper.p1, Json::Value());
     EXPECT_TRUE(err == -1);
-    err = bean.setProperty(nullptr, 1);
+    err = bean.set(nullptr, 1);
     EXPECT_TRUE(err == -2);
-    err = bean.setProperty(testHelper.p1, 1.0);
+    err = bean.set(testHelper.p1, 1.0);
     EXPECT_TRUE(err == -3);
 
-    err = bean.setProperty(testHelper.p1, 1);
+    err = bean.set(testHelper.p1, 1);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == 1);
-    err = bean.setProperty(testHelper.p1, Json::Value::minInt);
+    err = bean.set(testHelper.p1, Json::Value::minInt);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == Json::Value::minInt);
     value = bean.removeProperty(testHelper.p1);
     EXPECT_TRUE(bean.hasPrimaryProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == 0);
 
-    err = bean.setProperty(testHelper.p1, (Json::Int64)1);
+    err = bean.set(testHelper.p1, (Json::Int64)1);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == (Json::Int64)1);
-    err = bean.setProperty(testHelper.p1, Json::Value::minInt64);
+    err = bean.set(testHelper.p1, Json::Value::minInt64);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == Json::Value::minInt64);
     value = bean.removeProperty(testHelper.p1);
@@ -179,20 +179,20 @@ TEST(Bean, property)
     world->undefineProperty(testHelper.p1);
     testHelper.p1 = world->defineProperty("p1", Property::UIntType);
 
-    err = bean.setProperty(testHelper.p1, (Json::UInt)1);
+    err = bean.set(testHelper.p1, (Json::UInt)1);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) ==  (Json::UInt)1);
-    err = bean.setProperty(testHelper.p1, Json::Value::maxUInt);
+    err = bean.set(testHelper.p1, Json::Value::maxUInt);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == Json::Value::maxUInt);
     value = bean.removeProperty(testHelper.p1);
     EXPECT_TRUE(bean.hasPrimaryProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == 0);
 
-    err = bean.setProperty(testHelper.p1, (Json::Value::UInt64)1);
+    err = bean.set(testHelper.p1, (Json::Value::UInt64)1);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == (Json::Value::UInt64)1);
-    err = bean.setProperty(testHelper.p1, Json::Value::maxUInt64);
+    err = bean.set(testHelper.p1, Json::Value::maxUInt64);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == Json::Value::maxUInt64);
     value = bean.removeProperty(testHelper.p1);
@@ -202,17 +202,17 @@ TEST(Bean, property)
     world->undefineProperty(testHelper.p1);
     testHelper.p1 = world->defineProperty("p1", Property::RealType);
 
-    err = bean.setProperty(testHelper.p1, 1.1f);
+    err = bean.set(testHelper.p1, 1.1f);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == 1.1f);
-    err = bean.setProperty(testHelper.p1, 8.8f);
+    err = bean.set(testHelper.p1, 8.8f);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == 8.8f);
     value = bean.removeProperty(testHelper.p1);
     EXPECT_TRUE(bean.hasPrimaryProperty(testHelper.p1) == false);
     EXPECT_TRUE(value ==0);
 
-    err = bean.setProperty(testHelper.p1, 8.8);
+    err = bean.set(testHelper.p1, 8.8);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == 8.8);
     value = bean.removeProperty(testHelper.p1);
@@ -223,23 +223,23 @@ TEST(Bean, property)
     testHelper.p1 = world->defineProperty("p1", Property::StringType);
 
 
-    err = bean.setProperty(testHelper.p1, "xxx");
+    err = bean.set(testHelper.p1, "xxx");
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == "xxx");
-    err = bean.setProperty(testHelper.p1, "str1");
+    err = bean.set(testHelper.p1, "str1");
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == "str1");
-    err = bean.setProperty(testHelper.p1, std::string("str2"));
+    err = bean.set(testHelper.p1, std::string("str2"));
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.get(testHelper.p1) == "str2");
     value = bean.removeProperty(testHelper.p1);
     EXPECT_TRUE(bean.hasPrimaryProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == 0);
 
-    bean.setProperty(testHelper.p1, "v1");
+    bean.set(testHelper.p1, "v1");
     world->undefineProperty(testHelper.p2);
     testHelper.p2 = world->defineProperty("p2", Property::StringType);
-    err = bean.setProperty(testHelper.p2, "v2");
+    err = bean.set(testHelper.p2, "v2");
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 2);
     EXPECT_TRUE(bean.get(testHelper.p2) == "v2");
@@ -256,7 +256,7 @@ TEST(Bean, property)
 
     world->undefineProperty(testHelper.p1);
     testHelper.p1 = world->defineProperty("p1", Property::BoolType);
-    err = bean.setProperty(testHelper.p1, true);
+    err = bean.set(testHelper.p1, true);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
     EXPECT_TRUE(bean.get(testHelper.p1) == true);
@@ -265,7 +265,7 @@ TEST(Bean, property)
     EXPECT_TRUE(bean.hasPrimaryProperty(testHelper.p1) == false);
     EXPECT_TRUE(value == 0);
 
-    err = bean.setProperty(testHelper.p1, false);
+    err = bean.set(testHelper.p1, false);
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(bean.getMemberNames().size() == 1);
     EXPECT_TRUE(bean.get(testHelper.p1) == false);
@@ -391,7 +391,7 @@ TEST(Bean, array_property)
     EXPECT_TRUE(value != 0);
     value = bean.removeProperty(testHelper.p1, 0);
     EXPECT_TRUE(value != 0);
-    bean.setProperty(testHelper.p1, 1);
+    bean.set(testHelper.p1, 1);
     value = bean.removeProperty(testHelper.p1, 0);
     EXPECT_TRUE(value != 0);
     value = bean.removeProperty(testHelper.p_array_int, 3);
@@ -427,7 +427,7 @@ TEST(Bean, relation)
     EXPECT_TRUE(!bean1->getObjectId(nullptr));
 
     EXPECT_TRUE(!bean1->getObjectId(testHelper.p1));
-    bean1->setProperty(testHelper.p1, 1);
+    bean1->set(testHelper.p1, 1);
     EXPECT_TRUE(!bean1->getObjectId(testHelper.p1));
 
     EXPECT_TRUE(!bean1->getObjectId(testHelper.p_array_int));
@@ -573,7 +573,7 @@ TEST(Bean, array_relation)
     // err = bean1->setRelation(testHelper.r_array_1, 0, bean3);
     // EXPECT_TRUE(err == 0);
     // EXPECT_TRUE(bean1->getObjectId(testHelper.r_array_1, 0) == bean3->getId());
-    // bean1->setProperty(testHelper.p1, 1);
+    // bean1->set(testHelper.p1, 1);
     // EXPECT_TRUE(!bean1->getObjectId(testHelper.p1, 0));
     // EXPECT_TRUE(!bean1->getObjectId(testHelper.r_array_1, 1));
 
@@ -586,7 +586,7 @@ TEST(Bean, array_relation)
     EXPECT_TRUE(value != 0);
     value = bean3->removeProperty(testHelper.p1, 0);
     EXPECT_TRUE(value != 0);
-    bean3->setProperty(testHelper.p1, 1);
+    bean3->set(testHelper.p1, 1);
     value = bean3->removeProperty(testHelper.p1, 0);
     EXPECT_TRUE(value != 0);
     value = bean3->removeProperty(testHelper.p_array_int, 3);
@@ -623,12 +623,12 @@ TEST(Bean, isMember)
 
     EXPECT_TRUE(bean1->getMemberNames().size() == 0);
     EXPECT_TRUE(!bean1->isMember(testHelper.p1));
-    bean1->setProperty(testHelper.p1, 1);
+    bean1->set(testHelper.p1, 1);
     EXPECT_TRUE(bean1->isMember(testHelper.p1));
     EXPECT_TRUE(bean1->getMemberNames().size() ==1);
 
     EXPECT_TRUE(!bean1->isMember(testHelper.p2));
-    bean1->setProperty(testHelper.p2, 2);
+    bean1->set(testHelper.p2, 2);
     EXPECT_TRUE(bean1->isMember(testHelper.p2));
     EXPECT_TRUE(bean1->getMemberNames().size() == 2);
 

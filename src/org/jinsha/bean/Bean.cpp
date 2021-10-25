@@ -50,6 +50,10 @@ bool Bean::isMember(const Property* property) const
     return m_json_.isMember(property->getName());
 }
 
+Json::Value::Members Bean::getMemberNames () const 
+{
+    return m_pst_json_.getMemberNames();
+};
 
 bool Bean::hasPrimaryProperty(const Property* property) const
 {

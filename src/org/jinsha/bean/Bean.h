@@ -2,7 +2,6 @@
 
 #include <string>
 #include <map>
-#include <vector>
 
 #include "./common.h"
 #include "./Property.h"
@@ -13,6 +12,20 @@ namespace bean {
 
 class BeanWorld;
 
+
+/**
+ * In real world, many things can be represented as an object with multiple
+ * properties. 
+ * 
+ * For example, "the 7 year old Peter is a boy" can be represented as:
+ * 
+ * <Peter, age, 7>
+ * <Peter, gender, male>
+ * 
+ * In this sense, the class Bean is something like the subject in the
+ * semantic ternary tuple.
+ * 
+ */
 class Bean
 {
 public:
@@ -25,7 +38,8 @@ public:
      * 
      * @return the bean id
      */
-    inline oidType getId() const {return m_id_;} ;
+    oidType getId() const {return m_id_;};
+
     // std::string &getName() {return m_name_;};
     // std::string &getUri() {return uri_;};
 
@@ -38,12 +52,12 @@ public:
     // void setUri(const std::string& uri) {uri_ = uri;};
 
     /**
-     * Is the bean is empty, i.e has none property/relation.
+     * Is the bean empty, i.e has no property/relation.
      */
     bool empty () const {return m_pst_json_.empty();};
 
     /**
-     * Does the bean have the named property/relation/
+     * Does the bean have the given property/relation/
      * array property/array relation.
      */
     bool isMember(const Property* property) const;
@@ -53,8 +67,7 @@ public:
      * 
      * @return a collection of names
      */
-    Json::Value::Members getMemberNames () const 
-        {return m_pst_json_.getMemberNames();};
+    Json::Value::Members getMemberNames () const;
 
     /**
      * Remove all properties/relations of this bean.
@@ -62,7 +75,7 @@ public:
     void removeAllProperties();
 
     /**
-     * Check the bean has the given property.
+     * Check if the bean has the given primary property.
      * 
      * @param property the property
      * @return true if it has such a property, false otherwise
@@ -79,14 +92,16 @@ public:
      * Notes:
      * - The property must be of primary type, or
      *    json null value will be returned;
-     * - If this bean does not have the named property,
+     * - If this bean does not have the given property,
      *    json null value will be returned;
+     * - The caller of this method shall determine the type
+     *    of the returned value itself;
      * 
      */
     Json::Value get(const Property* property) const;
 
     /**
-     * Set the value of a property of this bean. 
+     * Set property value.
      * 
      * Notes:
      * - You may need to do explicit type conversion for the value. 
@@ -97,12 +112,12 @@ public:
      * @param value value of the property
      * @param saveAtOnce whether save change to database immediately
      *                   If set to false, the change will not be saved to database
-     *                   until save().
+     *                   until save() is called.
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if value is null
      *                   -2: if property is null
-     *                   -3: if the property or value is of invalid type
+     *                   -3: if the property type is inconsistent to the value type
      */
     int set(Property* property, const Json::Value& value, bool saveAtOnce = true);
 
@@ -119,70 +134,73 @@ public:
     int set(Property* property, const std::string& value, bool saveAtOnce = true);
 
     /**
-     * Is the specified property an array property.
+     * Does this bean has the given array property.
      * 
-     * @param property the property
-     * @return true if it is an array property, false otherwise
+     * @param property the array property
+     * @return true if it has the given array property, false otherwise
      */
     bool hasArrayProperty(const Property* property) const;
 
     /**
-     * Get size of an array property.
+     * Get the size of the given array property.
      * 
      * Notes:
-     * - Use this method to get array size for both primary and relation. 
+     * - Use this method to get array size for both primary/relation property. 
      * 
      * @param property the property
-     * @return the size
+     * @return the array size
      * 
      * Notes:
      * - The property must be an array, or 0 will be returned;
-     * - If this bean does not have the named array property,
+     * - If this bean does not have the given array property,
      *   0 will be returned;
      */
     Json::Value::ArrayIndex size(const Property* property) const;
 
     /**
-     * Get value of an array property at specified index.
+     * Get the value of an array property at specified index.
      * 
      * @param property the property
      * @param index the index in the array
      * @return the property value
      * 
-     * Note:
-     * If this bean does not have the given property,
-     * a json value of null will be returned;
-     * The property must be an array property, or a json 
-     * value of null will be returned;
-     * If the index is invalid, a json value of null will be returned;
+     * Notes:
+     * - If this bean does not have the given property,
+     *   a json value of null will be returned;
+     * - The property must be an array property, or a null json 
+     *    value will be returned;
+     * - If the index is invalid, a null json value will be returned;
      */
     Json::Value getAt(const Property* property, 
         Json::Value::ArrayIndex index) const;
 
      /**
-     * Add an empty array property for this bean.
+     * Add an array property to this bean.
      * 
-     * This method must be called before items can be appended into 
+     * This method must be called before elements can be appended into 
      * the array property.
      * 
+     * Notes:
+     * - Once added, the property will be a member of this bean, 
+     *   but will contain no element;
+     * - Use append() to add elements to this property;
+     * 
      * @param property the array property
-     * @return 0 if success, or an error code
-     *                   error code:
+     * @return 0 if success, or an error code:
      *                   -2: if property is null or invalid
      */
     int addArrayProperty(Property* property);
 
      /**
-     * Append an item to the end of an array property. 
+     * Append an element to the end of array property. 
      * 
      * @param property the property
      * @param value value to be added
-     * @return 0 if success, or an error code
-     *                   error code:
+     * @return 0 if success, or an error code:
      *                   -1: if value is null
-     *                   -2: if property is null or invalid
+     *                   -2: if property is not an array
      *                   -3: if he value is of invalid type
-     *                   -4: if the array property is not a member of this bean
+     *                   -4: if the property is not a member of this bean
      */
     int append(Property* property, const Json::Value& value); 
 
@@ -196,7 +214,7 @@ public:
      * @param value value to be set
      * @param saveAtOnce whether save change to database immediately
      *                   If set to false, the change will not be saved to database
-     *                   until save().
+     *                   until save() is called.
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if value is null
@@ -223,7 +241,7 @@ public:
         const std::string& value, bool saveAtOnce = true);
 
     /**
-     * Check the bean has the given relation.
+     * Does this bean have the given relation.
      * 
      * @param relation the relation
      * @return true if it has such a relation, false otherwise
@@ -232,14 +250,13 @@ public:
     bool hasRelation(const Property* relation) const;
 
     /**
-     * Check the bean has the array relation.
+     * Dos this bean have the array relation.
      * 
      * @param relation the array relation
      * @return true if it has such an array relation, false otherwise
      * 
      */
     bool hasArrayRelation(const Property* relation) const;
-
 
     /**
      * Get the object bean id of the given relation.
@@ -268,35 +285,34 @@ public:
      * This method is used to set relation between two beans, e.g.
      * father/mather, etc. 
      * 
-     * Notes:
-     * - The caller of this method must ensure the objectId is a valid id
-     *   of an existing bean.
-     * 
      * @param relation the relation
-     * @param objectBeanId the id of the counter part bean of the relation
-     * @return 0 if success, or an error code:
-     *                   -1: if bean is null
-     *                   -2: if relation is null or invalid
-     */
-    int setRelation(Property* relation, oidType objectBeanId);
-
-    /**
-     * This method is used to set relation between two beans, e.g.
-     * father/mather, etc. 
-     * 
-     * @param relation the relation
-     * @param bean the counter part bean of the relation
+     * @param bean the object bean of the relation
      * @return 0 if success, or an error code:
      *                   -1: if bean is null
      *                   -2: if property is null or invalid
      */
     int setRelation(Property* relation, Bean* bean);
 
-     /**
-     * Add an empty array relation for this bean.
+    /**
+     * This is a special version of setRelation().
      * 
-     * This method must be called before items can be appended into 
+     * Notes:
+     * - The caller of this method must ensure the objectId is a valid id
+     *   of an existing bean.
+     * 
+     */
+    int setRelation(Property* relation, oidType objectBeanId);
+
+     /**
+     * Add an array relation to this bean.
+     * 
+     * This method must be called before elements can be appended into 
      * the array relation.
+     * 
+     * Notes:
+     * - Once added, the relation will be a member of this bean, 
+     *   but will contain no element;
+     * - Use append() to add elements to this relation;
      * 
      * @param relation the array relation
      * @return 0 if success, or an error code
@@ -304,26 +320,6 @@ public:
      *                   -2: if relation is null or invalid
      */
     int addArrayRelation(Property* relation);
-
-    /**
-     * This method is used to append an item to an array relation.
-     * 
-     * Notes:
-     * - This method will internally add the counter part bean's id to the 
-     *    json array property created by setRelation(Property* property).
-     * - The caller of this method must ensure the objectId is a valid id
-     *   of an existing bean.
-     * 
-     * @param relation the array relation
-     * @param objectId the id of the counter part bean of the relation 
-     *                    to be added
-     * @return 0 if success, or an error code
-     *                   error code:
-     *                   -1: if bean is null
-     *                   -2: if relation is null or invalid
-     *                   -4: if the array relation is not a member of this bean
-     */
-    int appendRelation(Property* relation, oidType objectId);
 
     /**
      * This method is used to append an item to an array relation.
@@ -342,12 +338,21 @@ public:
      */
     int appendRelation(Property* relation, Bean* bean);
 
+    /**
+     * This is a special version of appendRelation().
+     * 
+     * Notes:
+     * - The caller of this method must ensure the objectId is a valid id
+     *   of an existing bean.
+     */
+    int appendRelation(Property* relation, oidType objectId);
+
      /**
      * Set the relation of an array relation at specified index. 
      * 
      * @param relation the array relation
      * @param index the index in the array
-     * @param bean the counter part bean of the relation
+     * @param bean the object bean of the relation
      * @return 0 if success, or an error code
      *                   error code:
      *                   -1: if bean is null
@@ -359,7 +364,7 @@ public:
         Bean* bean);
 
      /**
-     * Set the relation of an array relation at specified index. 
+     * This is a special version of setRelationAt().
      * 
      * Notes:
      * - The caller of this method must ensure the objectId is a valid id
@@ -384,30 +389,24 @@ public:
      * Notes:
      * - Use this method to remove both property and relation.
      * 
-     * @param property the property
+     * @param property the property/relation
      * @return 0 for souccess, or an error code
      */
     int remove(Property* property);
 
     /**
-     * Remove the item at given index from this bean's array property/relation.
+     * Remove the element at given index from this bean's 
+     * array property/relation.
      * 
      * Notes:
-     * - Use this method to remove an array item for both property and relation.
+     * - Use this method to remove an array element for 
+     *   both property and relation.
      * 
      * @param property the array property
      * @param index the index
      * @return 0 for souccess, or an error code
      */
     int removeAt( Property* property, Json::Value::ArrayIndex index);
-
-    // /**
-    //  * Remove relation from this bean.
-    //  * 
-    //  * @param relation the relation
-    //  * @return
-    //  */
-    // void removeRelation( Property* relation);
 
     /**
      * Get native data of a bean.
@@ -437,7 +436,7 @@ public:
      * @param data the native data
      * @param saveAtOnce whether save change to database immediately
      *                   If set to false, the change will not be saved to database
-     *                   until save().
+     *                   until save() is called.
      */
     int setNativeData(Json::Value& data, bool saveAtOnce = true);
 
@@ -454,9 +453,9 @@ public:
     /**
      * Save data of this bean into database storage.
      * 
-     * Note this method will call AbstractDB::saveBeanBase() firstly,
-     * and then AbstractDB::saveBeanProperty() on each property
-     * that has changes.
+     * Notes:
+     * - Only changed data will be saved;
+     * - Native data, if changed, will also be saved;
      * 
      * @return 0 on success, or an error code
      */
@@ -465,21 +464,21 @@ public:
     /**
      * Clear all data of this bean, including all properties and native data.
      * 
+     * CAUTION: This operation in unrevertable.
+     * 
      * Notes:
-     * - CAUTIOUS: this operation in unrevertable
+     * - All properties/relations will be deleted from storage;
+     * - Native data will be deleted from storage;
      * 
      * @return 0 on success, or an error code
      */
     int clear();
 
 private:
-    // Bean(oidType id);
     Bean(oidType id, BeanWorld* world);
     Bean(const Bean& bean) = delete;
     Bean& operator =(const Bean& bean) = delete;    
     virtual ~Bean();
-
-    bool doHasProperty(const Property* property, Property::Type type) const;
 
     Json::Value* getMemberPtr(const Property* property);
     int setPropertyBase_(Property* property, 
@@ -487,28 +486,22 @@ private:
         const Json::Value&  newValue, 
         Json::Value::ArrayIndex index = (Json::Value::ArrayIndex)-1, bool saveAtOnce = true);
 
+    bool doHasProperty(const Property* property, Property::Type type) const;
     int doRemoveProperty( Property* property, bool saveAtOnce = true);
-    int doRemoveProperty( Property* property, Json::Value::ArrayIndex index, bool saveAtOnce = true);
-
-    void addSubject(Bean* subject, Property* relation);
-    void removeSubject(Bean* subject, Property* relation);
-    // int pstTransition(int currentPst, int desiredPst);
-
-    ////////////////////////////////////////////////////////////////
-    //DB related methods
-    ////////////////////////////////////////////////////////////////
-private:
-    int load(Json::Value& data);
-    int unload();
-    int loadProperty(const Property* property);
-    // bool propertyLoaded(const Property* property);
-
+    int doRemoveProperty( Property* property, Json::Value::ArrayIndex index, bool saveAtOnce = true);   
     int doSet(Property* property, const Json::Value& value, bool saveAtOnce);
     int doSetAt(Property* property, const Json::Value& value, bool saveAtOnce);
     int doSetRelation(Property* relation, oidType objectBeanId, bool saveAtOnce);
     int doAddArrayProperty(Property* property, bool saveAtOnce = true);
     int doAppend(Property* property, const Json::Value& value, bool saveAtOnce); 
     int doAppendRelation(Property* relation, oidType objectBeanId, bool saveAtOnce);
+    void addSubject(Bean* subject, Property* relation);
+    void removeSubject(Bean* subject, Property* relation);
+    int load(Json::Value& data);
+    int unload();
+    int loadProperty(const Property* property);
+    // int pstTransition(int currentPst, int desiredPst);
+
 
 private:
     typedef enum {
@@ -521,21 +514,19 @@ private:
     } pst_t;
 
 private:
+    oidType m_id_ = 0;
     Json::Value m_json_;
     Json::Value m_native_data_json_;
     Json::Value m_pst_json_;
     Json::Value m_native_data_pst_json_;
     BeanWorld* m_world_;
+    std::multimap<oidType, Property*> m_subjectMap_;
 
     // otype classId_ = 0;
     // std::string className_;
     // std::string classUri_;
-
-    oidType m_id_ = 0;
     // std::string m_name_;
     // std::string uri_;
-
-    std::multimap<oidType, Property*> m_subjectMap_;
 
 friend class BeanWorld;
 friend class Property;

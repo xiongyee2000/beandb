@@ -18,6 +18,18 @@ class Bean;
 class Property;
 class AbstractBeanDB;
 
+/**
+ * Bean world can be considered as a container of those beans
+ * loaded into the memory. i.e. the container of cached beans.
+ * 
+ * A bean world can be retrieved by AstractBeanDB::getWorld().
+ * which will work as a singleton. 
+ * 
+ * When AbstractDB::connect() is called, all properties will be loaded
+ * automatically into the singleton world, for later operations;
+ * and when AbstractDB::disconnect() is called, all previously
+ * loaded properties will be unloaded (removed) from the bean world.
+ */
 class BeanWorld
 {
 public:
@@ -121,10 +133,13 @@ public:
     /**
      * Undefine a property.
      * 
+     * CAUTION: 
+     * The property value will also be removed from all beans 
+     *  that have this property.
+     * 
      * Notes:
-     * - This method can be used to undefine either a property, an array property,
+     * - Use this method  to undefine either a property, an array property,
      *    a relation, or an array relation;
-     * - CAUTION: All beans that have this property will remove the property with this id.
      * 
      * @param property the property to be undefined
      * @return 0 on success, or an error code
@@ -146,10 +161,10 @@ public:
      * Get property/relation/array property/array relation by name.
      * 
      * @param name property name
-     * @return property
+     * @return the pointer to the property, or null if no such property exists.
      */
     // const Property* getProperty(const char* name) const;
-    Property* getProperty(const char* name);
+    Property* getProperty(const char* name) const;
 
     /**
      * Get property/relation/array property/array relation by id.
@@ -157,7 +172,7 @@ public:
      * @param id property id
      * @return property
      */
-    Property* getProperty(pidType id);
+    Property* getProperty(pidType id) const;
 
     /**
      * Get relation.
@@ -168,14 +183,14 @@ public:
      * @param name the name of relation
      * @return 0 on success, or an error code
      */
-    Property* getRelation(const char* name) {return getProperty(name);};
+    Property* getRelation(const char* name) const {return getProperty(name);};
 
     /**
      * Get all properties (including all properties/relations).
      * 
      * @return a map containing all properties.
      */
-    const std::unordered_map<std::string, Property*>& getProperties();
+    const std::unordered_map<std::string, Property*>& getProperties() const;
 
 
     /***********************************************************

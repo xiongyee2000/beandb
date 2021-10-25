@@ -270,7 +270,7 @@ int BeanWorld::undefineProperty(Property* property)
 // }
 
 
-Property* BeanWorld::getProperty(const char* name)
+Property* BeanWorld::getProperty(const char* name) const
 {
     if (name == nullptr || name[0] == 0) return nullptr;
     auto iter = m_propertyMap_.find(std::string(name));
@@ -282,7 +282,7 @@ Property* BeanWorld::getProperty(const char* name)
 }
 
 
-Property* BeanWorld::getProperty(pidType id)
+Property* BeanWorld::getProperty(pidType id) const
 {
     for (auto& item : m_propertyMap_) {
         if (item.second->getId() == id) {
@@ -293,7 +293,7 @@ Property* BeanWorld::getProperty(pidType id)
 }
 
 
-const std::unordered_map<std::string, Property*>& BeanWorld::getProperties() 
+const std::unordered_map<std::string, Property*>& BeanWorld::getProperties()  const 
 {
     return m_propertyMap_;
 };

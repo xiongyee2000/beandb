@@ -14,10 +14,14 @@ class Bean;
 class BeanWorld;
 
 /**
- * In computer science, many facts can be represented as following ternary 
- * tuples: <subject, predicate, object>. For example, Romeo loves  Juliet
- * can be represented as <Romeo, love, Juliet>.
- * In this sense, the class Property is something like the poredicate in a 
+ * In real world, many facts can be represented as following ternary 
+ * tuples: <subject, predicate, object>. 
+ * 
+ * For example, Romeo loves Juliet can be represented as: 
+ * 
+ * <Romeo, loves, Juliet>
+ * 
+ * In this sense, the class Property is something like the poredicate in the  
  * semantic ternary tuple. It basically represents the relationship between
  * the subject and the object.
  */
@@ -42,8 +46,8 @@ public:
         RelationType,
 
         /**
-         * the property is an array of relations, the element of which is of
-         * a bean
+         * the property is an array of relations, the element of which is
+         * a bean id
          */
         ArrayRelationType
     };
@@ -59,9 +63,11 @@ public:
 
 public:
     /**
-     * Get the name of the property
+     * Get the name of the property.
      * 
-     * @return property name (key)
+     * Notes:
+     * - the property is unique across the bean world.
+     * @return property name
      */
     const std::string& getName() const {return m_name_;};
 
@@ -113,13 +119,20 @@ public:
      * 
      * General speaking, a simple and fixed lengthed property 
      * (e.g. of int type) should be direct load, while a complex and 
-     * dynamic lengthed property (e.g. an array property) should be 
+     * dynamic lengthed property (e.g.string property) should be 
      * delay-load.
+     * 
+     * Note relation properties are designed to be direct-load.
      * 
      * @return true if this property is delay load property, or false.
      */
     bool isDelayLoad() const {return m_delayLoad_;};
 
+////////////////////////////////////////////////////////////////
+// All-load mode related features. 
+// Make them private for now.
+////////////////////////////////////////////////////////////////
+private:
     /**
      * Is property indexed.
      * 
@@ -127,11 +140,6 @@ public:
      */
     bool indexed() const {return m_indexed_;};
 
-////////////////////////////////////////////////////////////////
-// Load-all-into-memory related features. 
-// Make them private for now.
-////////////////////////////////////////////////////////////////
-private:
     /**
      * Create index for a property.
      * 

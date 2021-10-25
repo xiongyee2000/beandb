@@ -34,10 +34,6 @@ public:
     /**
      * Disonnect to the database. 
      * 
-     * CAUTION: 
-     * Once disconnected, all beans and properties
-     * previously loaded will be deleted!
-     * 
      * @return 0 for success, or an error code
      */
     virtual int disconnect() = 0;
@@ -53,12 +49,14 @@ public:
     /**
      * Re-initialize the database.
      * 
+     * CAUTION: 
+     * All data in the storage will be unrecoverably deleted!
+     * 
      * Notes:
      * - This method is used to re-initialize the database, 
      *    e.g. recreate data structure etc.
      * - This method must be called while the database
      *    is disconnected.
-     * - CAUTION: all data stored will be unrecoverably deleted
      * 
      * @return 0 for success, or an error code
      */
@@ -119,11 +117,11 @@ public:
      * @param valueType the value type of property
      * @param pid [out] the id of the property in the database
      * @param delayLoad [out] set to true if want this property delay-load,
-     *                                                     or false otherwise
-     * @return the id of the property if successful (non-negative), 
-     *                   or a  negative number as error code
+     *                                           or false otherwise
+     * @return 0 on success, or an error code
+     * 
      */
-    virtual pidType defineProperty_(const char* name, 
+    virtual int defineProperty_(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
         pidType& pid,
@@ -132,9 +130,9 @@ public:
     /**
      * Undefine a property.
      * 
-     * Notes:
-     * - CAUTION: the property value will also be removed from all beans 
-     *   that have this property.
+     * CAUTION:
+     * The property value will also be removed from all beans 
+     *  that have this property.
      * 
      * @param property the property to be undefined
      * @return 0 on success, or an error code
@@ -148,12 +146,6 @@ public:
      * -  In out design, all properties will be loaded into memory
      *    before  any other operation. This is purposed to achieve
      *    the best performance.
-     * - The implementation of this method must new Property 
-     *    instances. 
-     * -  The caller method shall make sure properties is empty
-     *    before this method is called.
-     * - When error occurs, the mthod won't do cleaning work
-     *    on properties. It is the caller's responsibility to do it.
      * 
      * @param properties the loaded properties
      * @return 0 for success, or an error code
@@ -168,51 +160,52 @@ public:
     /**
      * Create a new bean instance. 
      * 
-     * @param the id of the newly created bean
+     * @param id [out] the id of the newly created bean
      * @return 0 for success, or an error code
      */
     virtual int createBean_(oidType& id) = 0;
 
     /**
-     * Remove a single bean from the storage.
+     * Delete a bean from the storage.
      * 
-     * @param id the id of the bean to be removed
+     * @param id the id of the bean to be deleted
      * @return 0 for success, or an error code
      */
     virtual int deleteBean_(oidType id) = 0;
 
     /**
-     * Load bean property. This method is used in case "delay-load"
-     * is needed.
+     * Load bean property. This method is used for delay-load.
      * 
-     * @param beanId the bean id
+     * @param id the bean id
      * @param property the property to be loaded
      * @param value the value loaded to
      * @return 0 on success, or an error code
      */
-    virtual int loadBeanProperty_(oidType beanId,  const Property* property, Json::Value& value) = 0;
+    virtual int loadBeanProperty_(oidType id,  const Property* property, Json::Value& value) = 0;
 
     /**
      * Load bean's native data. 
      * 
-     * @param beanId the bean id
+     * @param id the bean id
      * @param data the data loaded to
      * @return 0 on success, or an error code
      */
-    virtual int loadBeanNativeData_(oidType beanId, Json::Value& data) = 0;
+    virtual int loadBeanNativeData_(oidType id, Json::Value& data) = 0;
 
     /**
-     * Load bean data from database into memory.
+     * Load basic bean data from database into memory.
      * 
-     * All bean's direct-load properies must be loaded in this method, 
-     * while delay-load properties shall be set to null in the value.
+     * Notes:
+     * - All bean's properties must present in the output value;
+     * - All bean's direct-load properies must be loaded into the 
+     *   output value, while all delay-load properties shall be 
+     *   set to null in the output value.
+     * - The bean's native data is regarded as delay-load, 
+     *   but can also be loaded into nativeData when nativeData is given.
      * 
-     * Note the bean's native data is regarded as delay-load, 
-     * but can also be loaded into nativeData.
-     * 
-     * @param id id of the bean to be leaded
-     * @param value the value that holds all bean's properties
-     * @param nativeData the value that holds the bean's nativeData
+     * @param id id of the bean to be loaded
+     * @param value [out] the value that holds all bean's properties
+     * @param nativeData [out] the value that holds the bean's nativeData
      *                    If set to null, ignore native data.
      * @return 0 on success, or an error code
      */
@@ -224,41 +217,104 @@ public:
      * All bean's direct-load properies must be saved in this method, 
      * while delay-load properties may or may not be saved in this method.
      * 
-     * Note the bean's native data is regarded as delay-load, 
-     * but can also be saved also.
+     * Notes:
+     * - The bean's native data is regarded as delay-load, 
+     *   but can also be saved in this method when nativeData is given.
      * 
-     * @param id id of the bean to be leaded
+     * @param id id of the bean to be saved
      * @param data the data that holds all bean's property values
      * @param nativeData the value that holds the bean's nativeData
      *                    If set to null, ignore native data.
      * @return 0 on success, or an error code
      */
-    virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value* nativeData = nullptr) = 0;
+    virtual int saveBeanBase_(oidType id, const Json::Value& data, const Json::Value* nativeData = nullptr) = 0;
 
-    virtual int insertBeanProperty_(oidType beanId, 
+    /**
+     * Insert bean's property value. 
+     * 
+     * Notes:
+     * - This method is used when the property is set for the first time.
+     * 
+     * @param id id of the bean to be inserted
+     * @param property the property
+     * @param value the value to set
+     * @return 0 on success, or an error code
+     */
+    virtual int insertBeanProperty_(oidType id, 
         const Property* property, 
         const Json::Value& value) = 0;
 
-    virtual int updateBeanProperty_(oidType beanId, 
+    /**
+     * Update bean's property value. 
+     * 
+     * Notes:
+     * - This method is used when the property has previously been set with value.
+     * 
+     * @param id id of the bean to be updated
+     * @param property the property
+     * @param value the value to set
+     * @return 0 on success, or an error code
+     */
+    virtual int updateBeanProperty_(oidType id, 
         const Property* property, 
         const Json::Value& value) = 0;
 
-    virtual int updateBeanProperty_(oidType beanId, 
+    /**
+     * Update bean's property value at given index.
+     * 
+     * Notes:
+     * - This method is used when the property has previously been set with value.
+     * 
+     * @param id id of the bean to be updated
+     * @param property the property
+     * @param index the index to be set at
+     * @param value the value to set
+     * @return 0 on success, or an error code
+     */
+    virtual int updateBeanProperty_(oidType id, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) = 0;
 
-    virtual int deleteBeanProperty_(oidType beanId, 
+    /**
+     * Delete bean's property value. 
+     * 
+     * @param id id of the bean to be deleted
+     * @param property the property to be deleted
+     * @return 0 on success, or an error code
+     */
+    virtual int deleteBeanProperty_(oidType id, 
         const Property* property) = 0;
 
-    virtual int deleteBeanProperty_(oidType beanId, 
+    /**
+     * Delete bean's property value at given index
+     * 
+     * @param id id of the bean to be loaded
+     * @param property the property to be deleted
+     * @param index the index to be deleted at
+     * @return 0 on success, or an error code
+     */
+    virtual int deleteBeanProperty_(oidType id, 
         const Property* property, 
         Json::Value::ArrayIndex index) = 0;
 
-    virtual int updateBeanNativeData_(oidType beanId, 
+    /**
+     * Update bean's native data.
+     * 
+     * @param id id of the bean to be deleted
+     * @param value the value to set
+     * @return 0 on success, or an error code
+     */
+    virtual int updateBeanNativeData_(oidType id, 
         const Json::Value& value) = 0;
 
-    virtual int deleteBeanNativeData_(oidType beanId) = 0;
+    /**
+     * Delete bean's native data.
+     * 
+     * @param id id of the bean to be deleted
+     * @return 0 on success, or an error code
+     */
+    virtual int deleteBeanNativeData_(oidType id) = 0;
 
 
     /***********************************************************
@@ -271,48 +327,50 @@ public:
      * The condition could be represented as:
      * bean->getProperty(<property>) <optype> <value>
      * 
-     * @param property the property
-     * @param value the value of the property
-     * @param pageSize the page size of the returned BeanIdPage
-     * @return the first page of the result
-     * 
      * Notes:
      * 1. when the given property is a relation, the value is interpreted as 
      *     the object bean id;
      * 2. argument value shall not be array or object;
      * 3. the search is type restricted, i.e. only those beans with the property value
-     *     having the same type will be considered;
+     *     having the same type will be accepted;
+     * 
+     * @param property the property
+     * @param value the value of the property
+     * @param pageSize the page size of the returned BeanIdPage
+     * @return the first page of the result, or null if error occurs
+     * 
      */
    virtual BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const = 0;
 
     /**
      * Find subject beans of a given relation property.
      * 
-     * @param property the property
-     * @param pageSize the page size of the returned BeanIdPage
-     * @return the first page of the result
-     * 
      * Notes:
      * 1. only applies to relation properties;
+     * 
+     * @param property the property
+     * @param pageSize the page size of the returned BeanIdPage
+     * @return the first page of the result, or null if error occurs
+     * 
      */
     virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const = 0;
 
     /**
      * Find object beans of a given relation property.
      * 
-     * @param property the property
-     * @param pageSize the page size of the returned BeanIdPage
-     * @return the first page of the result
-     * 
      * Notes:
      * 1. only applies to relation properties;
+     * 
+     * @param property the property
+     * @param pageSize the page size of the returned BeanIdPage
+     * @return the first page of the result, or null if error occurs
      */
     virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const = 0;
 
     /**
-     * Get alll beans in this database.
+     * Get all beans in this database.
      * @param pageSize the page size of the returned BeanIdPage
-     * @return the first page of the result
+     * @return the first page of the result, or null if error occurs
      */
     virtual BeanIdPage* getAllBeans(unsigned int pageSize = DEFAULT_PAGE_SIZE) const = 0;
 

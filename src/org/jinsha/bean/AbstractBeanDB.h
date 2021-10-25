@@ -42,7 +42,7 @@ public:
      * 
      * CAUTION: 
      * Once disconnected, all beans and properties
-     * previously loaded will be deleted!
+     * previously loaded will be unloaded from bean world.
      * 
      * @return 0 for success, or an error code
      */

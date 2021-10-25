@@ -332,13 +332,14 @@ TEST(BeanWorld, unloadBean)
     EXPECT_TRUE(world->getCachedNumOfBeans() == 4);
     oid = bean3->getId();
     world->unloadBean(bean3);
+    bean3 = nullptr;
     EXPECT_TRUE(world->getBean(oid, false) == nullptr);
     EXPECT_TRUE(world->getCachedNumOfBeans() == 3);
-    EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == bean3->getId());
-    EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == bean3->getId());
-    EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == bean3->getId());
-    EXPECT_TRUE(bean2->getObjectId(testHelper.r2) == bean3->getId());
-     bean3 = world->newBean();
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r1) == oid);
+    EXPECT_TRUE(bean1->getObjectId(testHelper.r2) == oid);
+    EXPECT_TRUE(bean2->getObjectId(testHelper.r1) == oid);
+    EXPECT_TRUE(bean2->getObjectId(testHelper.r2) == oid);
+    bean3 = world->newBean();
     oid = bean3->getId();
 
     //array

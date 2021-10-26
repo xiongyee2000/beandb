@@ -41,6 +41,12 @@ enum opType {
     op_like
 } ;
 
+/**
+ * The default page size.
+ * @ref Page
+ */
+static const unsigned int DEFAULT_PAGE_SIZE = 8u;
+
 }
 }
 }

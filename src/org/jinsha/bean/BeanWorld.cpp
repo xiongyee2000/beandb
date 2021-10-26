@@ -55,7 +55,7 @@ Bean* BeanWorld::newBean()
     int err = 0;
     oidType id = 0;
     Bean* bean = nullptr;
-    err  = m_db_->createBean_(id);
+    err  = m_db_->createBean(id);
     if (err) {
         elog("Failed to create bean in database. (err=%d) \n", err);
     } else {
@@ -113,7 +113,7 @@ Bean* BeanWorld::getBean(oidType id,  bool loadFromDB)
         if (m_db_ == nullptr) return nullptr;
         if (!m_db_->connected()) return nullptr;
         bean = new Bean(id, this);
-        err = m_db_->loadBeanBase_(id, data);
+        err = m_db_->loadBeanBase(id, data);
         if (err) {
             delete bean;
             bean = nullptr;
@@ -147,7 +147,7 @@ int BeanWorld::deleteBean(Bean* bean)
     Bean* subject = nullptr;
     Json::Value value;
     Property* property = nullptr;
-    err = m_db_->deleteBean_(bean->getId());
+    err = m_db_->deleteBean(bean->getId());
     if (!err) {
         auto iter = bean->m_subjectMap_.begin();
         while ( iter != bean->m_subjectMap_.end()) {
@@ -212,7 +212,7 @@ Property* BeanWorld::definePropertyCommon_(const char* name,
     if (iter == m_propertyMap_.end())
     {
         bool delayLoad = false;
-        err = m_db_ ->defineProperty_(name, type, valueType, pid, delayLoad);
+        err = m_db_ ->defineProperty(name, type, valueType, pid, delayLoad);
         if (err) {
             elog("Failed to define property %s in database.", name);
             return nullptr;
@@ -242,7 +242,7 @@ int BeanWorld::undefineProperty(Property* property)
     auto iter = m_propertyMap_.find(name);
     if (iter == m_propertyMap_.end()) return 0;
 
-    if (0 != m_db_->undefineProperty_(property)) {
+    if (0 != m_db_->undefineProperty(property)) {
         elog("Failed to undefine property %s in database.", name);
         return -1;
     }
@@ -302,7 +302,7 @@ const std::unordered_map<std::string, Property*>& BeanWorld::getProperties()  co
 int BeanWorld::loadProperties()
 {
     int err = 0;
-    err = m_db_->loadProperties_(m_propertyMap_);
+    err = m_db_->loadProperties(m_propertyMap_);
     if (err) {
         elog("%s", "Failed to load properties from database");
         unloadProperties();

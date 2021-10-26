@@ -669,7 +669,6 @@ TEST(Bean, save)
     oidType beanId_3 = 0;
     Json::Value value;
 
-    testdb.reInit();
     testdb.connect();
     world = testdb.getWorld();
 
@@ -734,7 +733,6 @@ TEST(Bean, removeAllProperties)
     oidType beanId_2 = 0;
     oidType beanId_3 = 0;
 
-    testdb.reInit();
     testdb.connect();
     world = testdb.getWorld();
 
@@ -766,9 +764,6 @@ TEST(Bean, removeAllProperties)
     EXPECT_TRUE(bean2->getMemberNames().size() > 0);
     EXPECT_TRUE(bean3->getMemberNames().size() > 0);
 
-    // err = bean1->removeAllProperties();
-    // err = bean2->removeAllProperties();
-    // err = bean3->removeAllProperties();
     bean1->removeAllProperties();
     bean2->removeAllProperties();
     bean3->removeAllProperties();
@@ -777,7 +772,6 @@ TEST(Bean, removeAllProperties)
     EXPECT_TRUE(bean2->getMemberNames().size() == 0);
     EXPECT_TRUE(bean3->getMemberNames().size() == 0);
 
-    testdb.reInit();
     testdb.disconnect();
 }
 
@@ -797,7 +791,6 @@ TEST(Bean, nativeData)
     oidType beanId_2 = 0;
     oidType beanId_3 = 0;
 
-    testdb.reInit();
     testdb.connect();
     world = testdb.getWorld();
 
@@ -812,7 +805,6 @@ TEST(Bean, nativeData)
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(((const Bean*)bean1)->getNativeData().getMemberNames().size() == 0);
 
-    testdb.reInit();
     testdb.disconnect();
 }
 
@@ -832,7 +824,6 @@ TEST(Bean, clear)
     oidType beanId_2 = 0;
     oidType beanId_3 = 0;
 
-    testdb.reInit();
     testdb.connect();
     world = testdb.getWorld();
 
@@ -877,7 +868,6 @@ TEST(Bean, clear)
     EXPECT_TRUE(bean3->getMemberNames().size() == 0);
     EXPECT_TRUE(bean1->getNativeData().getMemberNames().size() == 0);
 
-    testdb.reInit();
     testdb.disconnect();
 }
 

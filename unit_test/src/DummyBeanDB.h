@@ -12,52 +12,48 @@ public:
     DummyBeanDB();
     ~DummyBeanDB() override;
 
-    virtual int connect_() override;
-    virtual int disconnect_() override;
+    virtual int doConnect() override;
+    virtual int doDisconnect() override;
 
-    virtual int beginTransaction_() override;
-    virtual int commitTransaction_() override;
-    virtual int rollbackTransaction_() override;
-
-    virtual int defineProperty_(const char* name, 
+    virtual int defineProperty(const char* name, 
         Property::Type type,  
         Property::ValueType valueType, 
         pidType& pid,
         bool& delayLoad) override;
-    virtual int undefineProperty_(Property* property) override;
+    virtual int undefineProperty(Property* property) override;
 
-    virtual int loadProperties_(std::unordered_map<std::string, Property*>& properties) const override;
+    virtual int loadProperties(std::unordered_map<std::string, Property*>& properties) const override;
 
-    virtual int createBean_(oidType& id) override;
-    virtual int deleteBean_(oidType id) override;
+    virtual int createBean(oidType& id) override;
+    virtual int deleteBean(oidType id) override;
 
-    virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value* nativeData = nullptr) override;
-    virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value* nativeData = nullptr) override;
+    virtual int loadBeanBase(oidType beanId, Json::Value& value, Json::Value* nativeData = nullptr) override;
+    virtual int saveBeanBase(oidType beanId, const Json::Value& data, const Json::Value* nativeData = nullptr) override;
 
     // virtual std::list<std::string> getBeanProperties_(oidType id) const override;
-    virtual int loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value) override;
-    virtual int insertBeanProperty_(oidType beanId, 
+    virtual int loadBeanProperty(oidType beanId, const Property* property, Json::Value& value) override;
+    virtual int insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
-    virtual int updateBeanProperty_(oidType beanId, 
+    virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
-    virtual int updateBeanProperty_(oidType beanId, 
+    virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) override;
-    virtual int deleteBeanProperty_(oidType beanId, 
+    virtual int deleteBeanProperty(oidType beanId, 
         const Property* property) override;
-    virtual int deleteBeanProperty_(oidType beanId, 
+    virtual int deleteBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) override;
 
-    virtual int updateBeanNativeData_(oidType beanId, 
+    virtual int updateBeanNativeData(oidType beanId, 
         const Json::Value& value) override;
-    virtual int deleteBeanNativeData_(oidType beanId) override;
-    virtual int loadBeanNativeData_(oidType beanId, Json::Value& value) override;
+    virtual int deleteBeanNativeData(oidType beanId) override;
+    virtual int loadBeanNativeData(oidType beanId, Json::Value& value) override;
 
-    virtual int reInit() override;
+    virtual int clear() override;
 
     /**
      * @ref BeanDBPIntf

@@ -65,7 +65,7 @@ void initTestHelper(TestHelper& testHelper, BeanWorld& world, bool needIndex)
 // {
 //     testdb.connect();
 //     std::unordered_map<std::string, Property*> propertyMap;
-//     testdb.loadProperties_(propertyMap);
+//     testdb.loadProperties(propertyMap);
 //     EXPECT_TRUE(propertyMap.size() == 0);
 //     testdb.disconnect();
 // }

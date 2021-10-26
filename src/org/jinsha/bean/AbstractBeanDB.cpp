@@ -26,14 +26,14 @@ int AbstractBeanDB::connect()
 {
     int err = 0;
     if (!m_connected_) {
-        err = connect_();
+        err = doConnect();
         if (err) {
             elog("Failed to connect (err:%d). \n", err);
         } else {
             m_connected_ = true;
             err = m_world_->loadProperties();
             if (err) {
-                disconnect_();
+                doDisconnect();
                 m_connected_ = false;
                 elog("Failed to connect due to fail to load properties (err:%d). \n", err);
             } 
@@ -47,7 +47,7 @@ int AbstractBeanDB::disconnect()
 {
     int err = 0;
     if (m_connected_) {
-        err = disconnect_();
+        err = doDisconnect();
         if (err) {
             elog("Failed to disconnect (err:%d) \n", err);
         } else {
@@ -62,55 +62,6 @@ int AbstractBeanDB::disconnect()
 bool AbstractBeanDB::connected() const
 {
     return m_connected_;
-}
-
-
-int AbstractBeanDB::beginTransaction()
-{
-    int err = 0;
-    if (!m_inTransaction_) {
-        err = beginTransaction_();
-        if (err)  {
-            elog("Failed to begin transaction (err=%d) \n", err);
-        }  else {
-            m_inTransaction_ = true;
-        }
-    } 
-    return err;
-}
-
-
-int AbstractBeanDB::commitTransaction()
-{
-    int err = 0;
-    if (!m_inTransaction_) return -1;
-    err = commitTransaction_();
-    if (err)  {
-        elog("%s", "Failed to commit transaction\n");
-    }  else {
-        m_inTransaction_ = false;
-    }
-    return err;
-}
-
-
-int AbstractBeanDB::rollbackTransaction()
-{
-    int err = 0;
-    if (!m_inTransaction_) return -1;
-    err = rollbackTransaction_();
-    if (err)  {
-        elog("%s", "Failed to rollback transaction\n");
-    }  else {
-        m_inTransaction_ = false;
-    }
-    return err;
-}
-
-
-bool AbstractBeanDB::inTransaction()
-{
-    return m_inTransaction_;
 }
 
 

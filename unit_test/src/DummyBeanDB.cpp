@@ -25,24 +25,24 @@ DummyBeanDB::~DummyBeanDB()
 }
 
 
-int DummyBeanDB::connect_()
+int DummyBeanDB::doConnect()
 {
     return 0;
 }
 
 
-int DummyBeanDB::disconnect_()
+int DummyBeanDB::doDisconnect()
 {
     return 0;
 }
 
-int DummyBeanDB::reInit()
+int DummyBeanDB::clear()
 {
     return 0;
 }
 
 
-int DummyBeanDB::createBean_(oidType& id) 
+int DummyBeanDB::createBean(oidType& id) 
 {
     id = m_maxOid++;
     m_dataMap_[id] = Json::Value(Json::objectValue);
@@ -51,7 +51,7 @@ int DummyBeanDB::createBean_(oidType& id)
 }
 
 
-int DummyBeanDB::deleteBean_(oidType id) 
+int DummyBeanDB::deleteBean(oidType id) 
 {
     m_dataMap_.erase(id);
     m_nativeDataMap_.erase(id);
@@ -59,7 +59,7 @@ int DummyBeanDB::deleteBean_(oidType id)
 }
 
 
-int DummyBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value* nativeData)
+int DummyBeanDB::saveBeanBase(oidType beanId, const Json::Value& data, const Json::Value* nativeData)
 {
 
     m_dataMap_[beanId] = data;
@@ -69,7 +69,7 @@ int DummyBeanDB::saveBeanBase_(oidType beanId, const Json::Value& data, const Js
 }
 
 
-int DummyBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value* nativeData) 
+int DummyBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value* nativeData) 
 {
     int err = 0;
     auto iter = m_dataMap_.find(beanId);
@@ -80,21 +80,14 @@ int DummyBeanDB::loadBeanBase_(oidType beanId, Json::Value& value, Json::Value* 
 }
 
 
-//  std::list<std::string> DummyBeanDB::getBeanProperties_(oidType id) const
-// {
-//     std::list<std::string> properties;
-//     return properties;
-// }
-
-
-int  DummyBeanDB::loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value)
+int  DummyBeanDB::loadBeanProperty(oidType beanId, const Property* property, Json::Value& value)
 {
     return 0;
 
 }
 
 
-int DummyBeanDB::insertBeanProperty_(oidType beanId, 
+int DummyBeanDB::insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) 
 {
@@ -102,15 +95,15 @@ int DummyBeanDB::insertBeanProperty_(oidType beanId,
 }
 
 
-int DummyBeanDB::updateBeanProperty_(oidType beanId, 
+int DummyBeanDB::updateBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) 
 {
-    return updateBeanProperty_(beanId, property, (Json::ArrayIndex)-1, value);
+    return updateBeanProperty(beanId, property, (Json::ArrayIndex)-1, value);
 }
 
 
-int DummyBeanDB::updateBeanProperty_(oidType beanId, 
+int DummyBeanDB::updateBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) 
@@ -118,13 +111,13 @@ int DummyBeanDB::updateBeanProperty_(oidType beanId,
     return 0;
 }
 
-int DummyBeanDB::deleteBeanProperty_(oidType beanId, 
+int DummyBeanDB::deleteBeanProperty(oidType beanId, 
     const Property* property) 
 {
-    return deleteBeanProperty_(beanId, property, (Json::Value::ArrayIndex)-1);
+    return deleteBeanProperty(beanId, property, (Json::Value::ArrayIndex)-1);
 }
 
-int DummyBeanDB::deleteBeanProperty_(oidType beanId, 
+int DummyBeanDB::deleteBeanProperty(oidType beanId, 
     const Property* property, 
     Json::Value::ArrayIndex index) 
 {
@@ -132,14 +125,14 @@ int DummyBeanDB::deleteBeanProperty_(oidType beanId,
 }
 
 
-int DummyBeanDB::loadProperties_(std::unordered_map<std::string, Property*>& properties) const
+int DummyBeanDB::loadProperties(std::unordered_map<std::string, Property*>& properties) const
 {
     properties = m_properties_;
     return 0;
 }
 
 
-int DummyBeanDB::undefineProperty_(Property* property)
+int DummyBeanDB::undefineProperty(Property* property)
 {
     if (property == nullptr) return 0;
     const auto& name = property->getName();
@@ -152,7 +145,7 @@ int DummyBeanDB::undefineProperty_(Property* property)
 }
 
 
-pidType DummyBeanDB::defineProperty_(const char* name, Property::Type type, 
+pidType DummyBeanDB::defineProperty(const char* name, Property::Type type, 
     Property::ValueType valueType, pidType& pid, bool& delayLoad)
 {
     auto iter = m_properties_.find(name);
@@ -172,24 +165,7 @@ pidType DummyBeanDB::defineProperty_(const char* name, Property::Type type,
 }
 
 
-int DummyBeanDB::beginTransaction_() 
-{
-    return 0;
-}
-
-
-int DummyBeanDB::commitTransaction_() 
-{
-    return 0;
-}
-
-
-int DummyBeanDB::rollbackTransaction_() 
-{
-    return 0;
-}
-
-int DummyBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& value)
+int DummyBeanDB::loadBeanNativeData(oidType beanId, Json::Value& value)
 {
     if (m_nativeDataMap_.find(beanId) == m_nativeDataMap_.end()) {
         return 1;
@@ -199,7 +175,7 @@ int DummyBeanDB::loadBeanNativeData_(oidType beanId, Json::Value& value)
 }
 
 
-int DummyBeanDB::updateBeanNativeData_(oidType beanId, 
+int DummyBeanDB::updateBeanNativeData(oidType beanId, 
     const Json::Value& value)
 {
     int err = 0;
@@ -211,7 +187,7 @@ int DummyBeanDB::updateBeanNativeData_(oidType beanId,
     return err;
 }
 
-int DummyBeanDB::deleteBeanNativeData_(oidType beanId)
+int DummyBeanDB::deleteBeanNativeData(oidType beanId)
 {
     int err = 0;
     auto iter = m_nativeDataMap_.find(beanId) ;

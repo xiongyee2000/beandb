@@ -11,16 +11,6 @@ namespace org {
 namespace jinsha {
 namespace bean {
 
-// Bean::Bean(oidType id) : 
-// m_world_(nullptr)
-// , m_id_(id)
-// {
-//     m_json_= Json::Value(Json::ValueType::objectValue);
-//     m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
-//     m_pst_json_ = Json::Value(Json::ValueType::objectValue);
-//     m_native_data_pst_json_ = PST_NSY;
-// }
-
 
 Bean::Bean(oidType id, BeanWorld* world) : 
 m_id_(id)
@@ -36,12 +26,6 @@ m_id_(id)
 Bean::~Bean()
 {
 }
-
-
-// bool Bean::isMember(const string& key) const
-// {
-//     return isMember(key.c_str());
-// }
 
 
 bool Bean::isMember(const Property* property) const
@@ -157,7 +141,7 @@ int Bean::setPropertyBase_(Property* property,
             if (saveAtOnce) {
                 // insert property record first
                 if (m_world_->m_db_ != nullptr) {
-                    err = m_world_->m_db_->insertBeanProperty_(m_id_, property, newValue);
+                    err = m_world_->m_db_->insertBeanProperty(m_id_, property, newValue);
                     if (err)
                         return err;
                 }
@@ -175,11 +159,11 @@ int Bean::setPropertyBase_(Property* property,
             //update db first
             if (m_world_->m_db_ != nullptr) {
                 if (index == (Json::Value::ArrayIndex)-1) {
-                    err = m_world_->m_db_->updateBeanProperty_(m_id_, property, newValue);
+                    err = m_world_->m_db_->updateBeanProperty(m_id_, property, newValue);
                     if (err)
                         return err;
                 } else {
-                    err = m_world_->m_db_->updateBeanProperty_(m_id_, property, index, newValue);
+                    err = m_world_->m_db_->updateBeanProperty(m_id_, property, index, newValue);
                     if (err)
                         return err;
                 }
@@ -272,7 +256,7 @@ int Bean::doAddArrayProperty(Property* property, bool saveAtOnce)
     m_json_[pname] = Json::Value(Json::arrayValue);
     m_pst_json_[pname] = Json::Value(Json::arrayValue);
     if (saveAtOnce) {
-        err = m_world_->m_db_->saveBeanBase_(m_id_, m_json_);
+        err = m_world_->m_db_->saveBeanBase(m_id_, m_json_);
         if (err) {
             m_json_.removeMember(pname);
             m_pst_json_.removeMember(pname);
@@ -356,7 +340,7 @@ int Bean::doAppend(Property* property,  const Json::Value& value, bool saveAtOnc
 
     //insert property record first
     if (m_world_->m_db_ != nullptr && saveAtOnce) {
-        if (0 != m_world_->m_db_->insertBeanProperty_(m_id_, property, value)) {
+        if (0 != m_world_->m_db_->insertBeanProperty(m_id_, property, value)) {
             return -11;
         }
     }
@@ -516,7 +500,7 @@ int Bean::doAppendRelation(Property* relation,  oidType objectBeanId, bool saveA
 
     //insert property record first
     if (m_world_->m_db_ != nullptr && saveAtOnce) {
-        if (0 != m_world_->m_db_->insertBeanProperty_(m_id_, relation, Json::Value(objectBeanId))) {
+        if (0 != m_world_->m_db_->insertBeanProperty(m_id_, relation, Json::Value(objectBeanId))) {
             return -11;
         }
     }
@@ -619,7 +603,7 @@ int Bean::removeNativeData()
 {
     int err = 0;
     if (m_world_->m_db_ != nullptr) {
-        err = m_world_->m_db_->deleteBeanNativeData_(m_id_);
+        err = m_world_->m_db_->deleteBeanNativeData(m_id_);
         if (err) {
             elog("Failed to remove native data of bean (id=%ld) \n", m_id_);
             return err;
@@ -644,7 +628,7 @@ int Bean::doRemoveProperty(Property* property, bool saveAtOnce)
     if (saveAtOnce) {
         //delete from db first
         if (m_world_->m_db_ != nullptr) {
-            if (0 != m_world_->m_db_->deleteBeanProperty_(m_id_, property))
+            if (0 != m_world_->m_db_->deleteBeanProperty(m_id_, property))
                 return -1;
         }
     }
@@ -729,7 +713,7 @@ int Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex index, bo
     if (saveAtOnce) {
         //delete from db first
         if (m_world_->m_db_ != nullptr) {
-            if (0 != m_world_->m_db_->deleteBeanProperty_(m_id_, property, index))
+            if (0 != m_world_->m_db_->deleteBeanProperty(m_id_, property, index))
                 return -1;
         }
     }
@@ -768,11 +752,6 @@ int Bean::doRemoveProperty(Property* property, Json::Value::ArrayIndex index, bo
 }
 
 
-// void Bean::removeRelation( Property* relation)
-// {
-//     removeProperty(relation);
-// }
-
 void Bean::addSubject(Bean* subject, Property* relation)
 {
     m_subjectMap_.insert(std::pair<oidType, Property*>(subject->getId(), relation));
@@ -803,7 +782,7 @@ Json::Value& Bean::getNativeData()
     //delay load
         if (m_world_->m_db_ != nullptr) {
             int err = m_world_->m_db_->
-                loadBeanNativeData_(m_id_, m_native_data_json_);
+                loadBeanNativeData(m_id_, m_native_data_json_);
             if (!err) {
                 m_native_data_pst_json_ = PST_SYN;
             } else {
@@ -826,7 +805,7 @@ int Bean::setNativeData(Json::Value& data, bool saveAtOnce)
     if (saveAtOnce) {
         if (m_world_->m_db_ != nullptr) {
             //save to db
-            err = m_world_->m_db_->updateBeanNativeData_(m_id_, data);
+            err = m_world_->m_db_->updateBeanNativeData(m_id_, data);
             if (!err) {
                 m_native_data_json_ = data;
                 m_native_data_pst_json_ = PST_SYN;
@@ -1015,7 +994,7 @@ int Bean::loadProperty(const Property* property)
     const auto& pname = property->getName();
 
     if (property->isArray()) {
-        err = m_world_->m_db_->loadBeanProperty_(m_id_, property, (Json::Value&)m_json_[pname]);
+        err = m_world_->m_db_->loadBeanProperty(m_id_, property, (Json::Value&)m_json_[pname]);
         if (err) {
             m_json_[pname] = Json::Value::nullRef; //reset to null
             m_pst_json_[pname] = PST_NSY;
@@ -1030,7 +1009,7 @@ int Bean::loadProperty(const Property* property)
             }
         }
     } else {
-        err = m_world_->m_db_->loadBeanProperty_(m_id_, property, (Json::Value&)m_json_[pname]);
+        err = m_world_->m_db_->loadBeanProperty(m_id_, property, (Json::Value&)m_json_[pname]);
         if (err) {
             m_json_[pname] = Json::Value::nullRef; //reset to null
             m_pst_json_[pname] = PST_NSY;
@@ -1041,13 +1020,6 @@ int Bean::loadProperty(const Property* property)
 
     return err;
 }
-
-
-// bool Bean::propertyLoaded(const Property* property)
-// {
-//     auto& pname = property->getName();
-//     return m_pst_json_[pname] == PST_SYN;
-// }
 
 
 int Bean::save()
@@ -1061,7 +1033,7 @@ int Bean::save()
     Json::Value* pstValuePtr = nullptr;
     Property* property = nullptr;
 
-    err = m_world_->m_db_->saveBeanBase_(m_id_, m_json_, &m_native_data_json_);
+    err = m_world_->m_db_->saveBeanBase(m_id_, m_json_, &m_native_data_json_);
     if (err) goto out;
 
     for (auto& pname : m_pst_json_.getMemberNames()) {
@@ -1077,7 +1049,7 @@ int Bean::save()
                     case PST_SYN:
                         break;
                     case PST_MOD:
-                        err = m_world_->m_db_->updateBeanProperty_(m_id_, property, i, m_json_[pname][i]);
+                        err = m_world_->m_db_->updateBeanProperty(m_id_, property, i, m_json_[pname][i]);
                         if (err) goto out;
                         break;
                     // case PST_NEW:
@@ -1090,7 +1062,7 @@ int Bean::save()
             }
         } else { 
             if (pstValuePtr->asInt() == PST_MOD) {
-                err = m_world_->m_db_->updateBeanProperty_(m_id_, property, m_json_[pname]);
+                err = m_world_->m_db_->updateBeanProperty(m_id_, property, m_json_[pname]);
                 if (err) goto out;
             } else {
                 //do nothing
@@ -1099,7 +1071,7 @@ int Bean::save()
     }
 
     if (m_native_data_pst_json_.asInt() == PST_MOD) {
-            err = m_world_->m_db_->updateBeanNativeData_(m_id_, m_native_data_json_);
+            err = m_world_->m_db_->updateBeanNativeData(m_id_, m_native_data_json_);
             if (err) goto out;
             m_native_data_pst_json_ = PST_SYN;
     }

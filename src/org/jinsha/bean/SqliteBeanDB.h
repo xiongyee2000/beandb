@@ -34,140 +34,196 @@ public:
      */
     const std::string& getDir() const  {return m_dir_;};
 
-
-private:
+public:
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
+     * 
+     * Notes:
+     * - This method is an alias to reInit();
      */
-    virtual int reInit() override;
-
-    /**
-     * @ref BeanDBPIntf
-     */
-    virtual int connect_() override;
+    virtual int clear() override;
 
     /**
-     * @ref BeanDBPIntf
+     * Re-initialize the database.
+     * 
+     * CAUTION: 
+     * All data in the storage will be unrecoverably deleted!
+     * 
+     * Notes:
+     * - This method is used to re-initialize the database, 
+     *    e.g. recreate data structure etc.
+     * - This method must be called while the database
+     *    is disconnected.
+     * 
+     * @return 0 for success, or an error code
      */
-    virtual int disconnect_() override;
+    virtual int reInit();
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int beginTransaction_() override;
+    virtual int doConnect() override;
+
+
+    /***********************************************************
+     * transaction related
+     ***********************************************************/
+    /**
+     * Begin a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    virtual int beginTransaction();
 
     /**
-     * @ref BeanDBPIntf
+     * Commit a transaction.
+     * 
+     * @return 0 on success, or an error code
      */
-    virtual int commitTransaction_() override;
+    virtual int commitTransaction();
 
     /**
-     * @ref BeanDBPIntf
+     * Rollback a transaction.
+     * 
+     * @return 0 on success, or an error code
      */
-    virtual int rollbackTransaction_() override;
+    virtual int rollbackTransaction();
 
     /**
-     * @ref BeanDBPIntf
+     * Check if it is in a transaction
+     * 
+     * @return true if in a transaction, or false if not
      */
-    virtual int defineProperty_(const char* name, 
+    virtual bool inTransaction();
+
+    /**
+     * Begin a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    int doBeginTransaction();
+
+    /**
+     * Commit a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    int doCommitTransaction();
+
+    /**
+     * Rollback a transaction.
+     * 
+     * @return 0 on success, or an error code
+     */
+    int doRollbackTransaction();
+
+    /**
+     * @ref AbstractBeanDB
+     */
+    virtual int doDisconnect() override;
+
+    /**
+     * @ref AbstractBeanDB
+     */
+    virtual int defineProperty(const char* name, 
         Property::Type type,
         Property::ValueType valueType, 
         pidType& pid,
         bool& delayLoad) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int undefineProperty_(Property* property) override;
+    virtual int undefineProperty(Property* property) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int loadProperties_(std::unordered_map<std::string, Property*>& properties) const override;
+    virtual int loadProperties(std::unordered_map<std::string, Property*>& properties) const override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int createBean_(oidType &id);
+    virtual int createBean(oidType &id);
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int loadBeanBase_(oidType beanId, Json::Value& value, Json::Value* nativeData = nullptr) override;
+    virtual int loadBeanBase(oidType beanId, Json::Value& value, Json::Value* nativeData = nullptr) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int saveBeanBase_(oidType beanId, const Json::Value& data, const Json::Value* nativeData = nullptr) override;
+    virtual int saveBeanBase(oidType beanId, const Json::Value& data, const Json::Value* nativeData = nullptr) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int deleteBean_(oidType id) override;
+    virtual int deleteBean(oidType id) override;
 
     // /**
-    //  * @ref BeanDBPIntf
+    //  * @ref AbstractBeanDB
     //  */
     // virtual std::list<std::string> getBeanProperties_(oidType id) const override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int loadBeanProperty_(oidType beanId, const Property* property, Json::Value& value) override;
+    virtual int loadBeanProperty(oidType beanId, const Property* property, Json::Value& value) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int insertBeanProperty_(oidType beanId, 
+    virtual int insertBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int updateBeanProperty_(oidType beanId, 
+    virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         const Json::Value& value) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int updateBeanProperty_(oidType beanId, 
+    virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex  index,
         const Json::Value& value) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int deleteBeanProperty_(oidType beanId, 
+    virtual int deleteBeanProperty(oidType beanId, 
         const Property* property) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int deleteBeanProperty_(oidType beanId, 
+    virtual int deleteBeanProperty(oidType beanId, 
         const Property* property, 
         Json::Value::ArrayIndex index) override;
     
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int loadBeanNativeData_(oidType beanId, Json::Value& value) override;
+    virtual int loadBeanNativeData(oidType beanId, Json::Value& value) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int updateBeanNativeData_(oidType beanId, 
+    virtual int updateBeanNativeData(oidType beanId, 
         const Json::Value& value) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
-    virtual int deleteBeanNativeData_(oidType beanId) override;
+    virtual int deleteBeanNativeData(oidType beanId) override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      * 
      * Notes:
      * - When optype is op_like, the property and value shall be of StringType,
@@ -176,17 +232,17 @@ private:
    BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
     virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
     virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB
      */
     virtual BeanIdPage* getAllBeans(unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
@@ -223,6 +279,7 @@ private:
     std::string m_dbFullPath_;
     sqlite3* m_sqlite3Db_;
     bool m_initialized_;
+    bool m_inTransaction_;
     bool m_deletePropertyFromBeans_;
 
 };

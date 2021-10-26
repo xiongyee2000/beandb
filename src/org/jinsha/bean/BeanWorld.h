@@ -288,42 +288,42 @@ public:
     /**
      * @ref BeanDBPIntf::getAllBeans()
      */
-    BeanIdPage* getAllBeans(unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* getAllBeans(unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf::findBeans()
      */
-    BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf
      */
-    BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref BeanDBPIntf
      */
-    BeanIdPage* findObjects(const Property* property, unsigned int pageSize = BeanDBIntf::DEFAULT_PAGE_SIZE) const;
+    BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
 
 private:
@@ -336,7 +336,10 @@ private:
     Property* definePropertyCommon_(const char* name, 
         Property::Type type, 
         Property::ValueType valueType);
-   BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize) const;
+   BeanIdPage* findBeans(opType optype, 
+        const Property* property, 
+        const Json::Value& value, 
+        unsigned int pageSize) const;
 
 private:
     std::unordered_map<oidType, Bean*> m_beans_;

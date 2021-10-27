@@ -39,7 +39,7 @@ public:
      * @ref AbstractBeanDB
      * 
      * Notes:
-     * - This method is an alias to reInit();
+     * - This method will directly call reInit();
      */
     virtual int clear() override;
 
@@ -59,12 +59,7 @@ public:
      */
     virtual int reInit();
 
-    /**
-     * @ref AbstractBeanDB
-     */
-    virtual int doConnect() override;
-
-
+private:
     /***********************************************************
      * transaction related
      ***********************************************************/
@@ -120,7 +115,14 @@ public:
     /**
      * @ref AbstractBeanDB
      */
+    virtual int doConnect() override;
+    
+    /**
+     * @ref AbstractBeanDB
+     */
     virtual int doDisconnect() override;
+
+//  std::list<std::string> getBeanProperties_(oidType id) const;
 
     /**
      * @ref AbstractBeanDB
@@ -160,11 +162,6 @@ public:
      * @ref AbstractBeanDB
      */
     virtual int deleteBean(oidType id) override;
-
-    // /**
-    //  * @ref AbstractBeanDB
-    //  */
-    // virtual std::list<std::string> getBeanProperties_(oidType id) const override;
 
     /**
      * @ref AbstractBeanDB
@@ -273,13 +270,14 @@ private:
     int deleteRelationByObject(oidType id);    
     int deletePropertyFromAllBeans(Property* property);
     BeanIdPage* findSubjectsObjects(bool findSubjects, const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
+    int handleErrAtEnd(int err, bool finishTransaction);
 
 private:
     std::string m_dir_;
     std::string m_dbFullPath_;
     sqlite3* m_sqlite3Db_;
     bool m_initialized_;
-    bool m_inTransaction_;
+    int m_transactionCount_;
     bool m_deletePropertyFromBeans_;
 
 };

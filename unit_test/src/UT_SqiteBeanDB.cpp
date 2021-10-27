@@ -313,22 +313,44 @@ TEST(SqliteBeanDB, transaction)
     EXPECT_TRUE(!testdb.inTransaction());
 
     err = testdb.beginTransaction();
+    EXPECT_TRUE(err == 0);
     EXPECT_TRUE(testdb.inTransaction());
     err = testdb.beginTransaction();
     EXPECT_TRUE(err == 0);
     EXPECT_TRUE(testdb.inTransaction());
-
+    err = testdb.rollbackTransaction();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(testdb.inTransaction());
+    err = testdb.rollbackTransaction();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(!testdb.inTransaction());
+    err = testdb.beginTransaction();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(testdb.inTransaction());
     err = testdb.beginTransaction();
     EXPECT_TRUE(err == 0);
     err = testdb.commitTransaction();
     EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(testdb.inTransaction());
+    err = testdb.commitTransaction();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(!testdb.inTransaction());
+
+    err = testdb.beginTransaction();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(testdb.inTransaction());
+    err = testdb.commitTransaction();
+    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(!testdb.inTransaction());
     err = testdb.commitTransaction();
     EXPECT_TRUE(err != 0);
 
     err = testdb.beginTransaction();
     EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(testdb.inTransaction());
     err = testdb.rollbackTransaction();
     EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(!testdb.inTransaction());
     err = testdb.rollbackTransaction();
     EXPECT_TRUE(err != 0);
 

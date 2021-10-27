@@ -13,6 +13,11 @@
 #include "jsoncpp/json/reader.h"
 #include "jsoncpp/json/writer.h"
 
+#define DB_FNAME  "beandb.db"
+#define PTABLE "PROPERTIES"
+#define BTABLE "BEANS"
+#define TTABLE "TRIPLES"
+
 #define CHECK_CONNECTED()                     \
     do {                                                                        \
         if (!connected()) {                                        \
@@ -21,44 +26,27 @@
         }                                                                          \
     } while (0);
 
-#define SMART_ROLLBACK()                         \
-        do {                                                                    \
-        if (!alreadyInTransaction) {                     \
-                rollbackTransaction();                      \
-        }                                                                          \
-    } while (0);
-
-#define SMART_COMMIT()                              \
-    do {                                                                        \
-        if (!alreadyInTransaction) {                     \
-            err = commitTransaction();                \
-        }                                                                         \
-    } while (0);
-
-#define SMART_BEGIN_TRANSACTION()             \
-    do {                                                                                   \
-        alreadyInTransaction = inTransaction();       \
-        if (!alreadyInTransaction) {                                 \
-            err = beginTransaction();                                 \
-        };                                                                                    \
-    } while (0);
-
 static const char* STR_INT = "INT";
 static const char* STR_BIGINT = "BIGINT";
 static const char* STR_INT8 = "INT8";
 static const char* STR_REAL= "REAL";
 static const char* STR_TEXT= "TEXT";
 
+static void clean_stmt(sqlite3_stmt *pstmt)
+{
+    if (pstmt != nullptr) {
+        sqlite3_clear_bindings(pstmt);
+        sqlite3_reset(pstmt);
+        sqlite3_finalize(pstmt);
+    }
+}
+
+
 using namespace std;
 
 namespace org {
 namespace jinsha {
 namespace bean {
-
-#define DB_FNAME  "beandb.db"
-#define PTABLE "PROPERTIES"
-#define BTABLE "BEANS"
-#define TTABLE "TRIPLES"
 
 static const char* CREATE_PTABLE =  
  "CREATE TABLE " PTABLE " ( \
@@ -100,7 +88,7 @@ SqliteBeanDB::SqliteBeanDB( const char* dir)
     : AbstractBeanDB()
     ,m_sqlite3Db_(nullptr)
     ,m_initialized_(false)
-    ,m_inTransaction_(false)
+    ,m_transactionCount_(0)
     ,m_deletePropertyFromBeans_(false)
 {
     int err = 0;
@@ -474,15 +462,9 @@ int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value* 
 
 _out:
     if (err > 0) {
-        if (err != SQLITE_OK && err != SQLITE_DONE) {
-            elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-        } else {
-            err = 0;
-        }
+        err = handleErrAtEnd(err, false);
     }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -646,10 +628,7 @@ out:
             }
         }
     }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
-
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -674,9 +653,8 @@ int SqliteBeanDB::insertBeanProperty(oidType beanId,
     int nCol = 0;
     Json::Value data;
     oidType sid = beanId;
-    bool alreadyInTransaction = false;
 
-    SMART_BEGIN_TRANSACTION();
+    err = beginTransaction();
     if (err) {
         elog("Failed to insert bean property (beanId=%llu, property name=%s) \n", beanId, pname);
         return err;
@@ -749,17 +727,8 @@ int SqliteBeanDB::insertBeanProperty(oidType beanId,
     }
 
 out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-        SMART_ROLLBACK();
-    } else {
-        err = 0;
-        SMART_COMMIT();
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
-
+    err = handleErrAtEnd(err, true);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -814,12 +783,10 @@ int SqliteBeanDB::getIdByPropertyIndex(const Property* property, oidType sid, Js
 out:
     if (err == -1001) {
         //do nothing
-    } else if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+    } else {
+        err = ((SqliteBeanDB*)this)->handleErrAtEnd(err, false);
     }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
 
     return err;
 }
@@ -847,7 +814,6 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
    const char* pname = nullptr;
    bool isArray = false;
    bool isRelation = false;
-   bool alreadyInTransaction = false;
 
     if (property == nullptr) return -1;
 
@@ -869,7 +835,7 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
         }
     }
 
-    SMART_BEGIN_TRANSACTION();
+    err = beginTransaction();
     if (err) {
         elog("Failed to update bean property (beanId=%llu, property name=%s) \n", beanId, pname);
         return err;
@@ -936,16 +902,8 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
     err = sqlite3_step(pstmt);
 
 out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-        SMART_ROLLBACK();
-    } else {
-        err = 0;
-        SMART_COMMIT();
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    err = handleErrAtEnd(err, true);
+    clean_stmt(pstmt);
 
     return err;
 }
@@ -970,7 +928,6 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
     Json::Value data;
     oidType sid = beanId;
     const char* pname = property->getName().c_str();
-    bool alreadyInTransaction = false;
 
     if (!property->isRelation()) {
         err = loadBeanBase(beanId, data);
@@ -980,7 +937,7 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
         }
     }
 
-    SMART_BEGIN_TRANSACTION();
+    err = beginTransaction();
     if (err) {
         elog("Failed to delete bean property (beanId=%llu, property name=%s) \n", beanId, pname);
         return err;
@@ -1023,16 +980,8 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
     }
 
 out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-        SMART_ROLLBACK();
-    } else {
-        err = 0;
-        SMART_COMMIT();
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    err = handleErrAtEnd(err, true);
+    clean_stmt(pstmt);
 
     return err;
 }
@@ -1062,7 +1011,6 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
     oidType sid = beanId;
     sqlite3_int64 id = 0;
     const char* pname = property->getName().c_str();
-    bool alreadyInTransaction = false;
 
     err = getIdByPropertyIndex(property, beanId, index, id);
     if (err == 0) {
@@ -1075,7 +1023,7 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
         return err;
     }
 
-    SMART_BEGIN_TRANSACTION();
+    err = beginTransaction();
     if (err) {
         elog("Failed to delete bean property (beanId=%llu, property name=%s, index=%llu) \n", beanId, pname, index);
         return err;
@@ -1094,16 +1042,8 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
     err = sqlite3_step(pstmt);
 
 out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-        SMART_ROLLBACK();
-    } else {
-        err = 0;
-        SMART_COMMIT();
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    err = handleErrAtEnd(err, true);
+    clean_stmt(pstmt);
 
     return err;
 }
@@ -1116,10 +1056,9 @@ int SqliteBeanDB::deleteBean(oidType id)
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
-    bool alreadyInTransaction = false;
     static const char *sql = "DELETE FROM  " BTABLE " WHERE ID = ?;";
 
-    SMART_BEGIN_TRANSACTION();
+    err = beginTransaction();
     
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
     if (err != SQLITE_OK) goto out;
@@ -1133,33 +1072,11 @@ int SqliteBeanDB::deleteBean(oidType id)
     if (err != SQLITE_DONE) goto out;
 
 out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-        SMART_ROLLBACK();
-    } else {
-        err = 0;
-        SMART_COMMIT();
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    err = handleErrAtEnd(err, true);
+    clean_stmt(pstmt);
 
     return err;
 }
-
-
-//  static int loadPropertiesCallback(void *param, int columnCount, char **columnValue, char **columnName)
-//  {
-//      SqliteBeanDB *sqliteBeanDB = (SqliteBeanDB*)param;
-//      BeanWorld *world = sqliteBeanDB->getWorld();
-//      if (world == nullptr) return -1;
-//      Property *property;
-//     for (int i = 0; i < columnCount; i++) {
-//         printf("%s = %s\n", columnName[i], columnValue[i]);
-//     }
-
-//      return 0;
-//  }
 
 
 int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& properties) const
@@ -1200,14 +1117,8 @@ int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& pro
     if (err == SQLITE_DONE) err = SQLITE_OK; 
  
  out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-    } else {
-        err = 0;
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    err =  ((SqliteBeanDB*)this)->handleErrAtEnd(err, false);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -1223,7 +1134,6 @@ int SqliteBeanDB::undefineProperty(Property* property)
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
     char* errMsg = nullptr;
-    bool alreadyInTransaction = false;
     char buff[256]{0};
     int buffSize = sizeof(buff);
     static const char *sql_delete_property = "DELETE FROM  " PTABLE " WHERE NAME = ?;";
@@ -1231,7 +1141,7 @@ int SqliteBeanDB::undefineProperty(Property* property)
     static const char drop_ptable[] =   "DROP TABLE p_%s; ";
     // static const char drop_index[] =   "DROP INDEX p_%s_index; ";
 
-    SMART_BEGIN_TRANSACTION();
+    err = beginTransaction();
     if (err) {
         elog("Failed to undefine property (name =%s) \n",  name);
         return err;
@@ -1258,18 +1168,9 @@ int SqliteBeanDB::undefineProperty(Property* property)
     if (err != SQLITE_DONE) goto _out;
 
 _out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-        SMART_ROLLBACK();
-    } else {
-        err = 0;
-        SMART_COMMIT();
-    }
-
+    err = handleErrAtEnd(err, true);
     if (errMsg  != nullptr) sqlite3_free(errMsg);
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -1290,7 +1191,6 @@ int SqliteBeanDB::defineProperty(const char* name,
     const char* pzTail = nullptr;
     int err = 0;
     const char* vtype_str = nullptr;
-    bool alreadyInTransaction = false;
     char* errMsg = nullptr;
     char  buff[256] {0};
     int sizeOfBuff = sizeof(buff);
@@ -1310,7 +1210,7 @@ int SqliteBeanDB::defineProperty(const char* name,
     bool isArray = ((type == Property::ArrayPrimaryType || 
         type == Property::ArrayRelationType) ? true : false);
 
-    SMART_BEGIN_TRANSACTION();
+    err = beginTransaction();
     if (err) {
         elog("Failed to define property (name =%s) \n", name);
         return err;
@@ -1371,20 +1271,11 @@ int SqliteBeanDB::defineProperty(const char* name,
     delayLoad = determineDelayLoad(type, valueType);
 
 _out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        if (errMsg != nullptr) elog("sqlite3 errormsg: %s \n", errMsg);
-        SMART_ROLLBACK();
-    }  else {
-        err = 0;
-        SMART_COMMIT();
-        if (!err) {
-            pid = (pidType)sqlite3_last_insert_rowid(m_sqlite3Db_);
-        }
+    err = handleErrAtEnd(err, true);
+    if (!err) {
+        pid = (pidType)sqlite3_last_insert_rowid(m_sqlite3Db_);
     }
-
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
     if (errMsg  != nullptr) sqlite3_free(errMsg);
 
     return err;
@@ -1394,14 +1285,16 @@ _out:
 int SqliteBeanDB::beginTransaction()
 {
     int err = 0;
-    if (!m_inTransaction_) {
+    if (m_transactionCount_ == 0) {
         err = doBeginTransaction();
         if (err)  {
             elog("Failed to begin transaction (err=%d) \n", err);
         }  else {
-            m_inTransaction_ = true;
+            m_transactionCount_ = 1;
         }
-    } 
+    } else {
+        m_transactionCount_++;
+    }
     return err;
 }
 
@@ -1409,12 +1302,18 @@ int SqliteBeanDB::beginTransaction()
 int SqliteBeanDB::commitTransaction()
 {
     int err = 0;
-    if (!m_inTransaction_) return -1;
-    err = doCommitTransaction();
-    if (err)  {
-        elog("%s", "Failed to commit transaction\n");
-    }  else {
-        m_inTransaction_ = false;
+    if (m_transactionCount_ > 0) {
+        m_transactionCount_--;
+        if (m_transactionCount_ == 0) {
+            err = doCommitTransaction();
+            if (err)  {
+                elog("%s", "Failed to commit transaction\n");
+                m_transactionCount_ = 1;
+            }
+        }
+    } else {
+        elog("%s", "Not in transaction so cannot do commit.\n");
+        err = -1;
     }
     return err;
 }
@@ -1423,12 +1322,18 @@ int SqliteBeanDB::commitTransaction()
 int SqliteBeanDB::rollbackTransaction()
 {
     int err = 0;
-    if (!m_inTransaction_) return -1;
-    err = doRollbackTransaction();
-    if (err)  {
-        elog("%s", "Failed to rollback transaction\n");
-    }  else {
-        m_inTransaction_ = false;
+    if (m_transactionCount_ > 0) {
+        m_transactionCount_--;
+        if (m_transactionCount_ == 0) {
+            err = doRollbackTransaction();
+            if (err)  {
+                elog("%s", "Failed to rollback transaction\n");
+                m_transactionCount_ = 1;
+            }
+        }
+    } else {
+        elog("%s", "Not in transaction so cannot do rollback.\n");
+        err = -1;
     }
     return err;
 }
@@ -1436,7 +1341,7 @@ int SqliteBeanDB::rollbackTransaction()
 
 bool SqliteBeanDB::inTransaction()
 {
-    return m_inTransaction_;
+    return m_transactionCount_ > 0;
 }
 
 
@@ -1539,15 +1444,8 @@ int SqliteBeanDB::saveBeanBase(oidType beanId, const Json::Value& data, const Js
     if (err != SQLITE_OK) goto _out;
 
 _out:
-
-   if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-    } else {
-        err = 0;
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    err = handleErrAtEnd(err, false);
+    clean_stmt(pstmt);
     return err; 
 }
 
@@ -1607,9 +1505,7 @@ _out:
     } else { //err < 0
         elog("Failed in %s (err=%d) \n", __func__, err);
     }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -1651,15 +1547,8 @@ int SqliteBeanDB::updateBeanNativeData(oidType beanId,
     if (err != SQLITE_OK) goto _out;
 
 _out:
-
-   if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-    } else {
-        err = 0;
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    err = handleErrAtEnd(err, false);
+    clean_stmt(pstmt);
     return err; 
 }
 
@@ -1703,14 +1592,8 @@ int SqliteBeanDB::deleteRelationByObject(oidType id)
 	err = sqlite3_step( pstmt );
 
 out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-    } else {
-        err = 0;
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    err = handleErrAtEnd(err, false);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -1719,7 +1602,6 @@ int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
     const char* pzTail = nullptr;
-    bool alreadyInTransaction = false;
     const char* pname = property->getName().c_str();
     static const char SELECT_PTABLE[] = "SELECT SID from p_%s";
     static const char SELECT_TRIPLE[] = "SELECT SID from " TTABLE " WHERE PID = %d;";
@@ -1730,7 +1612,7 @@ int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
     std::set<oidType> sids;
     bool finished = false;
 
-    SMART_BEGIN_TRANSACTION();
+    err = beginTransaction();
     if (err) {
         elog("Failed in deletePropertyFromAllBeans() (property name=%s) \n", pname);
         return err;
@@ -1770,16 +1652,8 @@ int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
     }
 
 out:
-    if (err != SQLITE_OK && err != SQLITE_DONE) {
-        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
-        SMART_ROLLBACK();
-    } else {
-        err = 0;
-        SMART_COMMIT();
-    }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    err = handleErrAtEnd(err, true);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -1905,9 +1779,7 @@ _out:
                 err = -1001;
         }
     }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -1966,9 +1838,7 @@ _out:
                 err = -1001;
         }
     }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -2012,9 +1882,7 @@ _out:
                 err = -1001;
         }
     }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
     return err;
 }
 
@@ -2125,6 +1993,27 @@ BeanIdPage* SqliteBeanDB::getAllBeans(unsigned int pageSize) const
     BeanIdPage* page = new SqliteBeanIdPage(pageSize, func);
 
     return page;
+}
+
+
+int SqliteBeanDB::handleErrAtEnd(int err, bool finishTransaction)
+{
+    if (err != SQLITE_OK && err != SQLITE_DONE) {
+        elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
+        if (finishTransaction) {
+            rollbackTransaction();
+        }
+    } else {
+        if (finishTransaction) {
+            err = commitTransaction();
+            if (err) {
+                rollbackTransaction();
+            }
+        } else {
+            err = 0;
+        }
+    }
+    return err;
 }
 
 }

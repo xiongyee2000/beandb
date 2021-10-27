@@ -192,7 +192,6 @@ public:
      */
     const std::unordered_map<std::string, Property*>& getProperties() const;
 
-
     /***********************************************************
      * bean related
      ***********************************************************/

@@ -320,10 +320,7 @@ out:
         sqlite3_int64 id = sqlite3_last_insert_rowid(m_sqlite3Db_);
         beanId = (oidType)id;
     }
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
-
+    clean_stmt(pstmt);
     return err;
 
 }
@@ -427,9 +424,7 @@ int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value* 
         break;
 	}
 
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
     pstmt = nullptr;
 
 	err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_TRIPLE, strlen(SELECT_TRIPLE), &pstmt, nullptr);
@@ -731,9 +726,10 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
         const Property* property, 
         const Json::Value& value) 
 {
-    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
+    if (beanId == 0) return -1;
     if (property == nullptr) return -1;
     if (property->isArray()) return -1;
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
     return updateBeanProperty(beanId, property, (Json::ArrayIndex)-1, value);
 }
 
@@ -791,6 +787,9 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
         Json::Value::ArrayIndex  index,
         const Json::Value& value) 
 {
+    if (beanId == 0) return -1;
+    if (property == nullptr) return -1;
+    if (!property->isArray() && index != (Json::ArrayIndex)-1) return -1;
     if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     char buff[128]{0};
@@ -809,12 +808,8 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
    bool isArray = false;
    bool isRelation = false;
 
-    if (property == nullptr) return -1;
-
     world = getWorld();
     if (world == nullptr) return -1;
-
-    if (!property->isArray() && (index != (Json::Value::ArrayIndex)-1)) return -1;
 
    pname = property->getName().c_str();
    isArray = property->isArray();
@@ -905,9 +900,8 @@ out:
 int SqliteBeanDB::deleteBeanProperty(oidType beanId, 
     const Property* property) 
 {
-    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
-
     if (property == nullptr) return -1;
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     BeanWorld *world = getWorld();
     if (world == nullptr) return -1;
@@ -985,15 +979,14 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
     const Property* property, 
     Json::Value::ArrayIndex index) 
 {
-    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
-
     if (property == nullptr) return -1;
-
-    BeanWorld *world = getWorld();
-    if (world == nullptr) return -1;
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     bool isArray = property->isArray();
     if (!isArray) return -1;
+
+    BeanWorld *world = getWorld();
+    if (world == nullptr) return -1;
 
     char buff[128]{0};
     const char* sql = buff;
@@ -1119,9 +1112,8 @@ int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& pro
 
 int SqliteBeanDB::undefineProperty(Property* property)
 {
-    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
-
     if (property == nullptr) return 0;
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     int err = 0;
     const char* name = property->getName().c_str();
@@ -1176,9 +1168,7 @@ int SqliteBeanDB::defineProperty(const char* name,
     bool& delayLoad)
 {
     if (name == nullptr || name[0] == 0) return -1;
-
-     //now let's create it in db
-    if (m_sqlite3Db_ == nullptr) return -2;
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     const char* sql = nullptr;
     sqlite3_stmt *pstmt = nullptr;
@@ -1229,9 +1219,7 @@ int SqliteBeanDB::defineProperty(const char* name,
     err = sqlite3_step(pstmt);
     if (err != SQLITE_DONE) goto _out;
 
-    if (pstmt != nullptr) sqlite3_clear_bindings(pstmt);
-    sqlite3_reset(pstmt);
-    sqlite3_finalize(pstmt);
+    clean_stmt(pstmt);
     pstmt = nullptr;
 
     if (!isRelation) {
@@ -1507,6 +1495,7 @@ _out:
 int SqliteBeanDB::updateBeanNativeData(oidType beanId, 
     const Json::Value& nativeData)
 {
+    if (beanId == 0) return -1;
     if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     int err = 0;
@@ -1630,9 +1619,7 @@ int SqliteBeanDB::deletePropertyFromAllBeans(Property* property)
         }
         if (err != SQLITE_ROW) finished = true;
 
-        sqlite3_clear_bindings(pstmt);
-        sqlite3_reset(pstmt);
-        sqlite3_finalize(pstmt);
+        clean_stmt(pstmt);
         pstmt = nullptr;
         
         //delete bean property
@@ -1885,11 +1872,12 @@ BeanIdPage* SqliteBeanDB::findBeans(opType optype, const Property* property, con
 {  
     if (optype == op_has) return nullptr;
     if (property == nullptr) return nullptr; 
+    if (pageSize == 0) return nullptr;
     if (value.isNull()) return nullptr; 
     if (value.isArray()) return nullptr; 
     if (value.isObject()) return nullptr; 
-    if (pageSize == 0) return nullptr;
-    if (!connected()) return nullptr;
+
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return nullptr;
 
     int err = 0;
     SqliteBeanIdPage* page = nullptr;
@@ -1948,7 +1936,7 @@ BeanIdPage* SqliteBeanDB::findSubjectsObjects(bool findSubjects, const Property*
 {
     if (property == nullptr) return nullptr; 
     if (pageSize == 0) return nullptr;
-    if (!connected()) return nullptr;
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return nullptr;
 
     int err = 0;
     SqliteBeanIdPage* page = nullptr;
@@ -1976,7 +1964,8 @@ BeanIdPage* SqliteBeanDB::findSubjectsObjects(bool findSubjects, const Property*
 
 BeanIdPage* SqliteBeanDB::getAllBeans(unsigned int pageSize) const
 {
-    if (!connected()) return nullptr;
+    if (pageSize == 0) return nullptr;
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return nullptr;
     auto func = std::bind(&SqliteBeanDB::loadPage_getAllBeans, 
         (SqliteBeanDB*)this, 
         placeholders::_1, 
@@ -1992,7 +1981,7 @@ BeanIdPage* SqliteBeanDB::getAllBeans(unsigned int pageSize) const
 
 int SqliteBeanDB::checkConnected(const char* errMsg) const
 {
-        if (!connected()) {                  
+        if (m_sqlite3Db_ == nullptr) {                  
             if (errMsg != nullptr)                      
             elog("%s", errMsg); 
             return -1;                                                    

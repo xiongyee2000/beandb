@@ -18,19 +18,13 @@
 #define BTABLE "BEANS"
 #define TTABLE "TRIPLES"
 
-#define CHECK_CONNECTED()                     \
-    do {                                                                        \
-        if (!connected()) {                                        \
-            elog("%s", "db not connected\n"); \
-            return -1;                                                    \
-        }                                                                          \
-    } while (0);
-
 static const char* STR_INT = "INT";
 static const char* STR_BIGINT = "BIGINT";
 static const char* STR_INT8 = "INT8";
 static const char* STR_REAL= "REAL";
 static const char* STR_TEXT= "TEXT";
+
+static const char* ERR_MSG_NOT_CONNECTED = "db not connected\n";
 
 static void clean_stmt(sqlite3_stmt *pstmt)
 {
@@ -300,7 +294,7 @@ int SqliteBeanDB::closeDB()
 
 int SqliteBeanDB::createBean(oidType &beanId)
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     static const char sql[] = "INSERT INTO " BTABLE " VALUES(?, ?, ?) ;";
     sqlite3_stmt *pstmt = nullptr;
@@ -337,7 +331,7 @@ out:
 
 int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value* nativeData) 
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
     
     BeanWorld *world = getWorld();
     const char* pname = nullptr;
@@ -512,7 +506,7 @@ _out:
 
 int  SqliteBeanDB::loadBeanProperty(oidType beanId, const Property* property, Json::Value& value)
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     int err = 0;
     oidType id = 0; //id of the string in property table
@@ -637,7 +631,7 @@ int SqliteBeanDB::insertBeanProperty(oidType beanId,
         const Property* property, 
         const Json::Value& value) 
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     if (property == nullptr) return -1;
 
@@ -737,7 +731,7 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
         const Property* property, 
         const Json::Value& value) 
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
     if (property == nullptr) return -1;
     if (property->isArray()) return -1;
     return updateBeanProperty(beanId, property, (Json::ArrayIndex)-1, value);
@@ -746,7 +740,7 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
 
 int SqliteBeanDB::getIdByPropertyIndex(const Property* property, oidType sid, Json::ArrayIndex index, sqlite3_int64& id) const
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
@@ -797,7 +791,7 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
         Json::Value::ArrayIndex  index,
         const Json::Value& value) 
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     char buff[128]{0};
     const char* sql = buff;
@@ -911,7 +905,7 @@ out:
 int SqliteBeanDB::deleteBeanProperty(oidType beanId, 
     const Property* property) 
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     if (property == nullptr) return -1;
 
@@ -991,7 +985,7 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
     const Property* property, 
     Json::Value::ArrayIndex index) 
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     if (property == nullptr) return -1;
 
@@ -1051,7 +1045,7 @@ out:
 
 int SqliteBeanDB::deleteBean(oidType id)
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     int err = 0;
     sqlite3_stmt *pstmt = nullptr;
@@ -1081,7 +1075,7 @@ out:
 
 int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& properties) const
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     static const char sql[] = "SELECT ID, NAME, PTYPE, VTYPE, INDEXED FROM " PTABLE ";";
     sqlite3_stmt *pstmt = nullptr;
@@ -1125,7 +1119,7 @@ int SqliteBeanDB::loadProperties(std::unordered_map<std::string, Property*>& pro
 
 int SqliteBeanDB::undefineProperty(Property* property)
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     if (property == nullptr) return 0;
 
@@ -1347,7 +1341,7 @@ bool SqliteBeanDB::inTransaction()
 
 int SqliteBeanDB::doBeginTransaction() 
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
     int err = 0;
     char* errMsg = nullptr;
     err = sqlite3_exec(m_sqlite3Db_, "BEGIN TRANSACTION", nullptr, nullptr, nullptr);
@@ -1359,7 +1353,7 @@ int SqliteBeanDB::doBeginTransaction()
 
 int SqliteBeanDB::doCommitTransaction() 
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
     int err = 0;
     char* errMsg = nullptr;
     err = sqlite3_exec(m_sqlite3Db_, "COMMIT TRANSACTION", nullptr, nullptr, nullptr);
@@ -1371,7 +1365,7 @@ int SqliteBeanDB::doCommitTransaction()
 
 int SqliteBeanDB::doRollbackTransaction() 
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
     int err = 0;
     char* errMsg = nullptr;
     err = sqlite3_exec(m_sqlite3Db_, "ROLLBACK TRANSACTION", nullptr, nullptr, &errMsg);
@@ -1383,7 +1377,7 @@ int SqliteBeanDB::doRollbackTransaction()
 
 int SqliteBeanDB::saveBeanBase(oidType beanId, const Json::Value& data, const Json::Value* nativeData)
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
     if (data.isNull()) return -2;
 
     int err = 0;
@@ -1451,7 +1445,7 @@ _out:
 
 int SqliteBeanDB::loadBeanNativeData(oidType beanId, Json::Value& data)
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
     
     BeanWorld *world = nullptr;
     const char* pname = nullptr;
@@ -1513,7 +1507,7 @@ _out:
 int SqliteBeanDB::updateBeanNativeData(oidType beanId, 
     const Json::Value& nativeData)
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     int err = 0;
     char* errMsg = nullptr;
@@ -1554,7 +1548,7 @@ _out:
 
 int SqliteBeanDB::deleteBeanNativeData(oidType beanId)
 {
-    CHECK_CONNECTED();
+    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
     Json::Value value = Json::Value(Json::nullValue);
     return updateBeanNativeData(beanId, value);
 }
@@ -1660,7 +1654,7 @@ out:
 
 int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, const Json::Value& value, BeanIdPage* page, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
 {
-   CHECK_CONNECTED();
+   if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     static const char* OP_EQ_STR = "==";
     static const char* OP_LE_STR = "<=";
@@ -1786,7 +1780,7 @@ _out:
 
 int SqliteBeanDB::loadPage_findSubjects_Objects(bool findSubjects, const Property* property, BeanIdPage* page, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
 {
-   CHECK_CONNECTED();
+   if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     int err = 0;
     bool found = false;
@@ -1845,7 +1839,7 @@ _out:
 
 int SqliteBeanDB::loadPage_getAllBeans(BeanIdPage* page, unsigned int pageSize, unsigned long pageIndex, std::vector<oidType>& sids)
 {
-   CHECK_CONNECTED();
+   if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     int err = 0;
     bool found = false;
@@ -1993,6 +1987,17 @@ BeanIdPage* SqliteBeanDB::getAllBeans(unsigned int pageSize) const
     BeanIdPage* page = new SqliteBeanIdPage(pageSize, func);
 
     return page;
+}
+
+
+int SqliteBeanDB::checkConnected(const char* errMsg) const
+{
+        if (!connected()) {                  
+            if (errMsg != nullptr)                      
+            elog("%s", errMsg); 
+            return -1;                                                    
+        }                       
+        return 0;
 }
 
 

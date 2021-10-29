@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 PROJECT(bean CXX)
 
 add_definitions(-g -std=c++11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -Wall --coverage")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall  -O2")
 set(BEAN_DEP_INC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/include)
 set(3RDPARTY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/include/thirdParty/)
 set(BEAN_DEP_LIB_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../dependencies/libs)

@@ -105,11 +105,15 @@ rm -rf $build_dir \
 && mkdir $build_dir -p \
 && cd $build_dir \
 && cmake $CMAKE_OPTIONS $source_dir \
-&& make -j 4 | tee build.log
+&& make -j 4 | tee build.log 
 echo "================================================================"
 echo "Building done."
 echo "================================================================"
 echo " "
+
+if [[ $RELEASE_BUILD -eq 1 ]]; then
+strip $build_dir/lib*.so
+fi
 
 echo "================================================================"
 echo "Generating SDK package..."

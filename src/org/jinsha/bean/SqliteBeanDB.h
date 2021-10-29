@@ -271,6 +271,7 @@ private:
     int deletePropertyFromAllBeans(Property* property);
     BeanIdPage* findSubjectsObjects(bool findSubjects, const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
     int handleErrAtEnd(int err, bool finishTransaction);
+    int checkConnected(const char* errMsg) const;
 
 private:
     std::string m_dir_;

@@ -5,10 +5,10 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "bean_ut",
+            "name": "beandb_ut",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build_ut/bean_ut",
+            "program": "${workspaceFolder}/build_ut/beandb_ut",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -22,7 +22,7 @@
                     "ignoreFailures": true
                 }
             ],
-            "preLaunchTask": "make bean_ut"
+            "preLaunchTask": "make beandb_ut"
         }
     ]
 }

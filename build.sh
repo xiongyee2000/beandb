@@ -7,7 +7,7 @@ VERSION=`cat src/version.h | grep "BEAN_VERSION" |  awk '{print $3}'`
 VERSION=${VERSION//\"/}
 
 #TIME=`date "+%Y%m%d-%H%M%S"`
-X64_SDK_NAME="bean-$VERSION-x64"
+X64_SDK_NAME="beandb-$VERSION-x64"
 
 script_dir=$(cd `dirname $0`; pwd)
 source_dir="${script_dir}/src"

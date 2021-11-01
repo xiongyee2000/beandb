@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "make bean_ut",
+            "label": "make beandb_ut",
             "type": "shell",
             "command": "make -j -C ${workspaceFolder}/build_ut",
             "args": [],

@@ -107,20 +107,27 @@ int Bean::doSet(Property* property,  const Json::Value& value, bool saveAtOnce)
     if (property->getValueType() != (Property::ValueType)value.type()) return -3;
 
     int err = 0;
+    bool newSet = false;
     const auto& pname = property->getName();
     Json::Value *oldValue = nullptr;
     if (m_pst_json_.isMember(pname)) {
         oldValue = getMemberPtr(property);
     }
 
+    if (oldValue == nullptr ) 
+        newSet = true;
     err = setPropertyBase_(property,  oldValue, value, -1, saveAtOnce);
     if (err) {
         return err;
     } else {
         if ( saveAtOnce)
             m_pst_json_[pname] = PST_SYN;
-        else 
-            m_pst_json_[pname] = PST_MOD;
+        else {
+            if (newSet) 
+                m_pst_json_[pname] = PST_NEW;
+            else 
+                m_pst_json_[pname] = PST_MOD;
+        }
     }
     
     //handle subject tracking
@@ -135,17 +142,18 @@ int Bean::setPropertyBase_(Property* property,
     bool saveAtOnce)
 {
     int err = 0;
+    
     const auto& pname = property->getName();
     if (oldValue == nullptr)
     {   //property has not been set before
-            if (saveAtOnce) {
-                // insert property record first
-                if (m_world_->m_db_ != nullptr) {
-                    err = m_world_->m_db_->insertBeanProperty(m_id_, property, newValue);
-                    if (err)
-                        return err;
-                }
-        }
+        if (saveAtOnce) {
+            // insert property record first
+            if (m_world_->m_db_ != nullptr) {
+                err = m_world_->m_db_->insertBeanProperty(m_id_, property, newValue);
+                if (err)
+                    return err;
+            }
+        } 
         //set the property (regardless of value)
         oldValue = &m_json_[pname];
 
@@ -1033,9 +1041,6 @@ int Bean::save()
     Json::Value* pstValuePtr = nullptr;
     Property* property = nullptr;
 
-    err = m_world_->m_db_->saveBeanBase(m_id_, m_json_, &m_native_data_json_);
-    if (err) goto out;
-
     for (auto& pname : m_pst_json_.getMemberNames()) {
         property = m_world_->getProperty(pname.c_str());
         if (property == nullptr) continue; //shall not happen
@@ -1064,11 +1069,14 @@ int Bean::save()
             if (pstValuePtr->asInt() == PST_MOD) {
                 err = m_world_->m_db_->updateBeanProperty(m_id_, property, m_json_[pname]);
                 if (err) goto out;
-            } else {
-                //do nothing
+            } else if (pstValuePtr->asInt() == PST_NEW) {
+                err = m_world_->m_db_->insertBeanProperty(m_id_, property, m_json_[pname]);
             }
         }            
     }
+
+    err = m_world_->m_db_->saveBeanBase(m_id_, m_json_, &m_native_data_json_);
+    if (err) goto out;
 
     if (m_native_data_pst_json_.asInt() == PST_MOD) {
             err = m_world_->m_db_->updateBeanNativeData(m_id_, m_native_data_json_);

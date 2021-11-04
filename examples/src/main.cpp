@@ -108,7 +108,7 @@ void example_bean_append()
 
     Property* p_array_int = world->defineArrayProperty("p_array_int", Property::IntType);
     bean = world->newBean();
-    bean->addArrayProperty(p_array_int);
+    bean->addArray(p_array_int);
     printf("array property \"%s\" added for bean (id=%d, value=%d) \n", p_array_int->getName().c_str(), bean->getId());
 
     bean->append(p_array_int, 0);
@@ -131,7 +131,7 @@ void example_bean_setAt()
 
     Property* p_array_int = world->defineArrayProperty("p_array_int", Property::IntType);
     bean = world->newBean();
-    bean->addArrayProperty(p_array_int);
+    bean->addArray(p_array_int);
     printf("array property \"%s\" added for bean (id=%d, value=%d) \n", p_array_int->getName().c_str(), bean->getId());
 
     bean->append(p_array_int, 0);
@@ -178,7 +178,7 @@ void example_bean_appendRelation()
     bean1 = world->newBean();
     bean2 = world->newBean();
     bean3 = world->newBean();
-    bean1->addArrayRelation(r_array_1);
+    bean1->addArray(r_array_1);
     bean1->appendRelation(r_array_1, bean2);
     bean1->appendRelation(r_array_1, bean3);
     printf("Bean's (id=%d) relations (name=\"%s\"): \n", bean1->getId(), r_array_1->getName().c_str());
@@ -202,7 +202,7 @@ void example_bean_setRelationAt()
     bean1 = world->newBean();
     bean2 = world->newBean();
     bean3 = world->newBean();
-    bean1->addArrayRelation(r_array_1);
+    bean1->addArray(r_array_1);
     bean1->appendRelation(r_array_1, bean2);
     bean1->appendRelation(r_array_1, bean3);
 
@@ -341,7 +341,7 @@ void example_bean_remove()
     else 
         printf("error occured\n");
 
-    bean1->addArrayProperty(p_array_int);
+    bean1->addArray(p_array_int);
     bean1->append(p_array_int, 0);
     bean1->append(p_array_int, 1);
     printf("Bean array property (name=\"%s\") has %d elements. \n", p_array_int->getName().c_str(), bean1->size(p_array_int));
@@ -361,7 +361,7 @@ void example_bean_remove()
     else
         printf("error occured\n");
 
-    bean1->addArrayRelation(r_array);
+    bean1->addArray(r_array);
     bean1->appendRelation(r_array, bean2);
     bean1->appendRelation(r_array, bean3);
     printf("Bean array relation (name=\"%s\") has %d elements. \n", r_array->getName().c_str(), bean1->size(r_array));
@@ -392,7 +392,7 @@ void example_bean_removeAt()
     Property* r_array = world->defineArrayRelation("r_array");
 
     bean1 = world->newBean();
-    bean1->addArrayProperty(p_array_int);
+    bean1->addArray(p_array_int);
     bean1->append(p_array_int, 0);
     bean1->append(p_array_int, 1);
     printf("Bean array property (name=\"%s\") has %d elements. \n", p_array_int->getName().c_str(), bean1->size(p_array_int));
@@ -405,7 +405,7 @@ void example_bean_removeAt()
     bean2 = world->newBean();
     bean3 = world->newBean();
 
-    bean1->addArrayRelation(r_array);
+    bean1->addArray(r_array);
     bean1->appendRelation(r_array, bean2);
     bean1->appendRelation(r_array, bean3);
     printf("Bean array relation (name=\"%s\") has %d elements. \n", r_array->getName().c_str(), bean1->size(r_array));
@@ -455,7 +455,7 @@ void example_bean_removeNativeData()
 int main(int argc, char* argv[])
 {
     example_connect_disconnect();
-    
+
     example_defineProperty();
 
     example_newBean();

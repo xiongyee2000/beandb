@@ -83,23 +83,23 @@ void setBeanProperties(TestHelper& testHelper, Bean* bean, bool saveAtOnce)
     bean->set(testHelper.p_bool_1, true, saveAtOnce);
     bean->set(testHelper.p_str, "foo", saveAtOnce);
 
-    bean->addArrayProperty(testHelper.p_array_int);
+    bean->addArray(testHelper.p_array_int);
     bean->append(testHelper.p_array_int, 101);
     bean->append(testHelper.p_array_int, 102);
 
-    bean->addArrayProperty(testHelper.p_array_uint);
+    bean->addArray(testHelper.p_array_uint);
     bean->append(testHelper.p_array_uint, (Json::UInt)101);
     bean->append(testHelper.p_array_uint, (Json::UInt)102);
 
-    bean->addArrayProperty(testHelper.p_array_real);
+    bean->addArray(testHelper.p_array_real);
     bean->append(testHelper.p_array_real, (double)555.555);
     bean->append(testHelper.p_array_real, (double)888.888);
 
-    bean->addArrayProperty(testHelper.p_array_bool);
+    bean->addArray(testHelper.p_array_bool);
     bean->append(testHelper.p_array_bool, true);
     bean->append(testHelper.p_array_bool, false);
 
-    bean->addArrayProperty(testHelper.p_array_str);
+    bean->addArray(testHelper.p_array_str);
     bean->append(testHelper.p_array_str, "str0");
     bean->append(testHelper.p_array_str, "str1");
 }
@@ -702,8 +702,8 @@ void test_findObjects_common(TestHelper& testHelper, BeanWorld &world, Bean& bea
     testHelper.r1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    bean1.addArrayRelation(testHelper.r_array_1);
-    bean2.addArrayRelation(testHelper.r_array_1);
+    bean1.addArray(testHelper.r_array_1);
+    bean2.addArray(testHelper.r_array_1);
     testHelper.r_array_1->getObjects(beans);
     EXPECT_TRUE(beans.size() == 0);
 
@@ -778,8 +778,8 @@ void test_findSubjects_common(TestHelper& testHelper, BeanWorld &world, Bean& be
     testHelper.r1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 0);
 
-    bean1.addArrayRelation(testHelper.r_array_1);
-    bean2.addArrayRelation(testHelper.r_array_1);
+    bean1.addArray(testHelper.r_array_1);
+    bean2.addArray(testHelper.r_array_1);
     testHelper.r_array_1->findSubjects(bean3_id, beans);
     EXPECT_TRUE(beans.size() == 0);
 
@@ -812,7 +812,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
 
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
-    bean1.addArrayProperty(pArray_1);
+    bean1.addArray(pArray_1);
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
     world.undefineProperty(pArray_1);
@@ -822,7 +822,7 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
     pArray_1 = world.defineArrayProperty("p_array_int", Property::BoolType);
    if (needIndex) pArray_1->createIndex();
 
-    bean1.addArrayProperty(pArray_1);
+    bean1.addArray(pArray_1);
     pArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
     bean1.remove(pArray_1);
@@ -834,13 +834,13 @@ void test_getSubjects_common_array(BeanWorld &world, Bean& bean1, Bean& bean2, s
 
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
-    bean1.addArrayRelation(rArray_1);
+    bean1.addArray(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
     bean1.remove(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 0);
-    bean1.addArrayRelation(rArray_1);
+    bean1.addArray(rArray_1);
     rArray_1->getSubjects(beans);
     EXPECT_TRUE(beans.size() == 1);
     world.undefineRelation(rArray_1);

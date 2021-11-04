@@ -247,17 +247,17 @@ Json::Value Bean::getAt(const Property* property,
 }
 
 
-int Bean::addArrayProperty(Property* property)
+int Bean::addArray(Property* property)
 {
     if (property == nullptr) return -2;
-    if (property->getType() != Property::ArrayPrimaryType) return -2;
+    if (!property->isArray()) return -2;
     
-    if (hasArrayProperty(property)) return 0;
-    return doAddArrayProperty(property, true);
+    if (isMember(property)) return 0;
+    return doAddArray(property, true);
 }
 
 
-int Bean::doAddArrayProperty(Property* property, bool saveAtOnce)
+int Bean::doAddArray(Property* property, bool saveAtOnce)
 {
     int err = 0;
     const auto& pname = property->getName();
@@ -469,15 +469,6 @@ int Bean::doSetRelation(Property* relation, oidType objectId, bool saveAtOnce)
     }
     
     return 0;
-}
-
-
-int Bean::addArrayRelation(Property* relation)
-{
-    if (relation == nullptr) return -2;
-    if (relation->getType() != Property::ArrayRelationType) return -2;
-    if (hasArrayRelation(relation)) return 0;
-    return doAddArrayProperty(relation, true);
 }
 
 
@@ -895,7 +886,7 @@ int Bean::load(Json::Value& data)
                 case Property::ArrayPrimaryType:
                     //override pst value
                     m_pst_json_.removeMember(pname);                 
-                    doAddArrayProperty(property, false);
+                    doAddArray(property, false);
                     size = dataValuePtr->size();
                     for (int i = 0; i < size; i++) {
                         doAppend(property,  (*dataValuePtr)[i], false);
@@ -906,7 +897,7 @@ int Bean::load(Json::Value& data)
                 case Property::ArrayRelationType:
                     //override pst value
                     m_pst_json_.removeMember(pname);         
-                    doAddArrayProperty(property, false);
+                    doAddArray(property, false);
                     size = dataValuePtr->size();
                     for (int i = 0; i < size; i++) {
                         doAppendRelation(property,  (*dataValuePtr)[i].asUInt64(), false);

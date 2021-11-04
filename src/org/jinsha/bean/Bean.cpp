@@ -617,7 +617,7 @@ int Bean::removeNativeData()
             return err;
         }
     }
-    m_native_data_json_ = Json::Value(Json::ValueType::objectValue);
+    m_native_data_json_ = Json::Value(Json::ValueType::nullValue);
     m_native_data_pst_json_ = PST_SYN;
     return 0;
 }
@@ -638,14 +638,6 @@ int Bean::doRemoveProperty(Property* property, bool saveAtOnce)
         if (m_world_->m_db_ != nullptr) {
             if (0 != m_world_->m_db_->deleteBeanProperty(m_id_, property))
                 return -1;
-        }
-    }
-
-    if (pstValue.isArray()) {
-        Json::Value& array = m_json_[pname];
-        Json::Value::ArrayIndex size = array.size();
-        for (Json::Value::ArrayIndex i = 0; i < size; i++) {
-            doRemoveProperty(property, i, saveAtOnce);
         }
     }
 

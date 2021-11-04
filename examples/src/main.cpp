@@ -7,53 +7,36 @@ static const char* g_tmpDBDir = "./examples/data/sqlite_tmp_db";
 static const char* g_sqlite_db_1 = "./examples/data/sqlite_db_1";
 
 
-// typedef struct TestHelper
-// {
-//     Property* p_real;
-//     Property* p_str;
-//     Property* p_int;
-//     Property* p_uint;
-//     Property* p_int64;
-//     Property* p_uint64;
-//     Property* p_bool_0;
-//     Property* p_bool_1;
-//     Property* p1;
-//     Property* p2;
-//     Property* p_array_int;
-//     Property* p_array_uint;
-//     Property* p_array_real;
-//     Property* p_array_bool;
-//     Property* p_array_str;
-//     Property* r1;
-//     Property* r2;
-//     Property* r_array_1;
-//     Property* r_array_2;
-// } TestHelper;
+void example_connect_disconnect()
+{
+    SqliteBeanDB db(g_sqlite_db_1);
+    BeanWorld* world = nullptr;
+    int err = 0;
 
+    world = db.getWorld();
+    if (world->getProperties().size() == 0)
+        printf("No properties loaded for db is not connected. \n");
+    else 
+        printf("error occured \n");
 
-// void initTestHelper(TestHelper& testHelper, BeanWorld& world)
-// {
-//     testHelper.p_int = world.defineProperty("p_int", Property::IntType);
-//     testHelper.p_uint = world.defineProperty("p_uint", Property::UIntType);
-//     testHelper.p_int64 = world.defineProperty("p_int64", Property::IntType);
-//     testHelper.p_uint64 = world.defineProperty("p_uint64", Property::UIntType);
-//     testHelper.p_real = world.defineProperty("p_real", Property::RealType);
-//     testHelper.p_str = world.defineProperty("p_str", Property::StringType);
-//     testHelper.p_bool_0 = world.defineProperty("p_bool_0", Property::BoolType);
-//     testHelper.p_bool_1 = world.defineProperty("p_bool_1", Property::BoolType);
+    err = db.connect();
+    if (err) return;
 
-//     testHelper.p1 = world.defineProperty("p1", Property::IntType);
-//     testHelper.p2 = world.defineProperty("p2", Property::IntType);
-//     testHelper.p_array_int = world.defineArrayProperty("p_array_int", Property::IntType);
-//     testHelper.p_array_uint = world.defineArrayProperty("p_array_uint", Property::UIntType);
-//     testHelper.p_array_real = world.defineArrayProperty("p_array_real", Property::RealType);
-//     testHelper.p_array_bool = world.defineArrayProperty("p_array_bool", Property::BoolType);
-//     testHelper.p_array_str = world.defineArrayProperty("p_array_str", Property::StringType);
-//     testHelper.r1 = world.defineRelation("r1");
-//     testHelper.r2 = world.defineRelation("r2");
-//     testHelper.r_array_1 =  world.defineArrayRelation("r_array_1");
-//     testHelper.r_array_2 =  world.defineArrayRelation("r_array_2");
-// }
+    printf("db connected \n");
+    if (world->getProperties().size() > 0)
+        printf("%d properties loaded automatically \n", world->getProperties().size() );
+    else 
+        printf("error occured \n");
+
+    db.disconnect();
+    printf("db disconnected \n");
+    if (world->getProperties().size() == 0)
+        printf("properties unloaded automatically \n" );
+    else 
+        printf("error occured \n");
+
+}
+
 
 void example_defineProperty()
 {
@@ -331,8 +314,148 @@ void example_bean_save()
     db.disconnect();
 }
 
+
+void example_bean_remove()
+{
+    SqliteBeanDB db(g_tmpDBDir);
+    BeanWorld* world = nullptr;
+    Bean* bean1 = nullptr;
+    Bean* bean2 = nullptr;
+    Bean* bean3 = nullptr;
+
+    db.reInit();
+    db.connect();
+    world = db.getWorld();
+
+    Property* p_int = world->defineProperty("p_int", Property::IntType);
+    Property* r1 = world->defineRelation("r1");
+    Property* p_array_int = world->defineArrayProperty("p_array_int", Property::IntType);
+    Property* r_array = world->defineArrayRelation("r_array");
+
+    bean1 = world->newBean();
+    bean1->set(p_int, 1);
+    printf("Bean property set: property name=\"%s\", value=%d \n", p_int->getName().c_str(), bean1->get(p_int).asInt());
+    bean1->remove(p_int);
+    if (bean1->get(p_int).isNull())
+        printf("Bean property (name=\"%s\") removed. \n", p_int->getName().c_str());
+    else 
+        printf("error occured\n");
+
+    bean1->addArrayProperty(p_array_int);
+    bean1->append(p_array_int, 0);
+    bean1->append(p_array_int, 1);
+    printf("Bean array property (name=\"%s\") has %d elements. \n", p_array_int->getName().c_str(), bean1->size(p_array_int));
+    bean1->remove(p_array_int);
+    if (bean1->size(p_array_int) == 0) 
+        printf("Bean array property (name=\"%s\") removed. \n", p_array_int->getName().c_str());
+    else
+        printf("error occured\n");
+
+    bean2 = world->newBean();
+    bean3 = world->newBean();
+    bean1->setRelation(r1, bean2);
+    printf("Bean relation set: relation name=\"%s\", objectBeanId=%d \n", r1->getName().c_str(), bean1->getObjectId(r1));
+    bean1->remove(r1);
+    if (bean1->getObjectId(r1) == 0)
+        printf("Bean relation (name=\"%s\") removed. \n", r1->getName().c_str());
+    else
+        printf("error occured\n");
+
+    bean1->addArrayRelation(r_array);
+    bean1->appendRelation(r_array, bean2);
+    bean1->appendRelation(r_array, bean3);
+    printf("Bean array relation (name=\"%s\") has %d elements. \n", r_array->getName().c_str(), bean1->size(r_array));
+    bean1->remove(r_array);
+    if (bean1->size(r_array) == 0) 
+        printf("Bean array relation (name=\"%s\") removed. \n", r_array->getName().c_str());
+    else
+        printf("error occured\n");
+
+    db.disconnect();
+}
+
+
+
+void example_bean_removeAt()
+{
+    SqliteBeanDB db(g_tmpDBDir);
+    BeanWorld* world = nullptr;
+    Bean* bean1 = nullptr;
+    Bean* bean2 = nullptr;
+    Bean* bean3 = nullptr;
+
+    db.reInit();
+    db.connect();
+    world = db.getWorld();
+
+    Property* p_array_int = world->defineArrayProperty("p_array_int", Property::IntType);
+    Property* r_array = world->defineArrayRelation("r_array");
+
+    bean1 = world->newBean();
+    bean1->addArrayProperty(p_array_int);
+    bean1->append(p_array_int, 0);
+    bean1->append(p_array_int, 1);
+    printf("Bean array property (name=\"%s\") has %d elements. \n", p_array_int->getName().c_str(), bean1->size(p_array_int));
+    bean1->removeAt(p_array_int, 0);
+    if (bean1->getAt(p_array_int, 0).asInt() == 1) 
+        printf("Bean array property (name=\"%s\") removed at index 0. \n", p_array_int->getName().c_str());
+    else
+        printf("error occured\n");
+
+    bean2 = world->newBean();
+    bean3 = world->newBean();
+
+    bean1->addArrayRelation(r_array);
+    bean1->appendRelation(r_array, bean2);
+    bean1->appendRelation(r_array, bean3);
+    printf("Bean array relation (name=\"%s\") has %d elements. \n", r_array->getName().c_str(), bean1->size(r_array));
+    bean1->removeAt(r_array, 0);
+    if (bean1->getObjectId(r_array, 0) == bean3->getId()) 
+        printf("Bean array relation (name=\"%s\") removed at index 0. \n", r_array->getName().c_str());
+    else
+        printf("error occured\n");
+
+    db.disconnect();
+}
+
+
+void example_bean_removeNativeData()
+{
+    SqliteBeanDB db(g_tmpDBDir);
+    BeanWorld* world = nullptr;
+    Bean* bean = nullptr;
+    Json::Value nativeData;
+
+    nativeData["root"] = Json::Value(Json::objectValue);
+    nativeData["root"]["np1"] = 1;
+    nativeData["root"]["np2"] = "dummy";
+
+    db.reInit();
+    db.connect();
+    world = db.getWorld();
+
+    bean = world->newBean();
+    bean->setNativeData(nativeData);
+    nativeData = Json::Value::nullRef;
+    nativeData = bean->getNativeData();
+
+    printf("Bean's nativeData: \"%s\" \n", nativeData.toStyledString().c_str());
+
+    bean->removeNativeData();
+    nativeData = bean->getNativeData();
+    if (nativeData.isNull())
+        printf("native data removed \n"); 
+    else
+        printf("error occured\n");
+
+    db.disconnect();
+}
+
+
 int main(int argc, char* argv[])
 {
+    example_connect_disconnect();
+    
     example_defineProperty();
 
     example_newBean();
@@ -352,6 +475,12 @@ int main(int argc, char* argv[])
     example_bean_setNativeData();
 
     example_bean_save();
+
+    example_bean_remove();
+
+    example_bean_removeAt();
+
+    example_bean_removeNativeData();
 
     return 0;
 };

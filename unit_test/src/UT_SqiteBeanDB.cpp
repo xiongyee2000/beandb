@@ -709,6 +709,41 @@ TEST(SqliteBeanDB, saveBean)
     testdb.reInit();
     testdb.connect();
     world = testdb.getWorld();
+    initTestHelper(testHelper, *world, false);
+
+    bean1 = world->newBean();
+    beanId_1 = bean1->getId();
+    bean1->set(testHelper.p_int, 1, false);
+    bean1->set(testHelper.p_bool_1, true, false);
+    bean1->set(testHelper.p_str, "str", false);
+
+    testdb.disconnect();
+
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world, false);
+    bean1 = world->getBean(beanId_1);
+    EXPECT_TRUE(bean1->get(testHelper.p_int).isNull());
+    EXPECT_TRUE(bean1->get(testHelper.p_bool_1).isNull());
+    EXPECT_TRUE(bean1->get(testHelper.p_str).isNull());
+
+    bean1->set(testHelper.p_int, 1, false);
+    bean1->set(testHelper.p_bool_1, true, false);
+    bean1->set(testHelper.p_str, "str", false);
+    bean1->save();
+    testdb.disconnect();
+
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, *world, false);
+    bean1 = world->getBean(beanId_1);
+    EXPECT_TRUE(!bean1->get(testHelper.p_int).isNull());
+    EXPECT_TRUE(!bean1->get(testHelper.p_bool_1).isNull());
+    EXPECT_TRUE(!bean1->get(testHelper.p_str).isNull());
+    testdb.disconnect();
+
+    testdb.connect();
+    world = testdb.getWorld();
 
     initTestHelper(testHelper, *world, false);
 
@@ -789,6 +824,7 @@ TEST(SqliteBeanDB, saveBean)
     EXPECT_TRUE(beanId_3 == bean3->getId());
 
     testdb.disconnect();
+
 }
 
 

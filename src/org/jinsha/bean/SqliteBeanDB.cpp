@@ -349,14 +349,14 @@ int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value* 
 
     if (nativeData == nullptr) {
         err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_BEAN_1, strlen(SELECT_BEAN_1), &pstmt, nullptr);
-        if (err != SQLITE_OK) goto _out;
+        if (err != SQLITE_OK) goto out;
     } else {
         err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_BEAN_2, strlen(SELECT_BEAN_2), &pstmt, nullptr);
-        if (err != SQLITE_OK) goto _out;
+        if (err != SQLITE_OK) goto out;
     }
 
     err = sqlite3_bind_int64(pstmt, 1, beanId);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
         valueStr = (const char*)sqlite3_column_text(pstmt, 0);
@@ -412,7 +412,7 @@ int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value* 
                 {
                     err = -2;
                     elog("error parsing json string: %s", valueStr);
-                    goto _out;
+                    goto out;
                 }
             } else {
                 *nativeData = Json::Value::nullRef;
@@ -424,13 +424,19 @@ int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value* 
         break;
 	}
 
+     if (!found) {
+         err = -1001;
+         goto out;
+     } 
+
     clean_stmt(pstmt);
     pstmt = nullptr;
 
+
 	err = sqlite3_prepare_v2(m_sqlite3Db_, SELECT_TRIPLE, strlen(SELECT_TRIPLE), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int64(pstmt, 1, beanId);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
         pid = sqlite3_column_int(pstmt, 0);
@@ -449,7 +455,7 @@ int SqliteBeanDB::loadBeanBase(oidType beanId, Json::Value& value, Json::Value* 
         }
     }
 
-_out:
+out:
     if (err > 0) {
         err = handleErrAtEnd(err, false);
     }
@@ -471,9 +477,9 @@ _out:
 //     int err = 0;
 
 // 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-//     if (err != SQLITE_OK) goto _out;
+//     if (err != SQLITE_OK) goto out;
 //     err = sqlite3_bind_int64(pstmt, 1, id);
-//     if (err != SQLITE_OK) goto _out;
+//     if (err != SQLITE_OK) goto out;
 
 // 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
 //         if (sqlite3_column_type(pstmt, 0) != SQLITE_NULL) {
@@ -486,7 +492,7 @@ _out:
 //         }
 //     }
 
-// _out:
+// out:
 //     if (err != SQLITE_OK && err != SQLITE_DONE) {
 //         elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
 //     } else {
@@ -651,6 +657,11 @@ int SqliteBeanDB::insertBeanProperty(oidType beanId,
 
     if (!property->isArray() && !property->isRelation()) {
         err = loadBeanBase(beanId, data);
+        if (err == -1001) { //no such bean
+            clean_stmt(pstmt);
+            rollbackTransaction();
+            return err;
+        }
         if (err) {
             elog("Failed in %s (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
             goto out;
@@ -819,8 +830,8 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
     if (isArray) {
         err = getIdByPropertyIndex(property, sid, index, id);
         if (err) {
-            elog("Failed to upate property (name=%s) for bean (id=%llu), for index (%u) is invalid \n", pname, beanId, index);
-            return err;
+            elog("Failed to update property (name=%s) for bean (id=%llu), for index (%u) is invalid \n", pname, beanId, index);
+            return 0;
         }
     }
 
@@ -832,6 +843,11 @@ int SqliteBeanDB::updateBeanProperty(oidType beanId,
 
     if (!property->isDelayLoad() && !isRelation) {
         err = loadBeanBase(beanId, data);
+        if (err == -1001) { //no such bean
+            clean_stmt(pstmt);
+            rollbackTransaction();
+            return 0; //take it as success
+        }
         if (err) {
             elog("Failed in %s (beanId=%llu, property name=%s) \n ", __func__, beanId, pname);
             goto out;
@@ -919,6 +935,7 @@ int SqliteBeanDB::deleteBeanProperty(oidType beanId,
 
     if (!property->isRelation()) {
         err = loadBeanBase(beanId, data);
+        if (err == -1001) return 0; //take it as success
         if (err) {
             elog("Failed to delete bean property (beanId=%llu, property name=%s) \n ", beanId, pname);
             goto out;
@@ -1134,26 +1151,26 @@ int SqliteBeanDB::undefineProperty(Property* property)
     }
 
     err = deletePropertyFromAllBeans(property);
-    if (err != 0) goto _out;
+    if (err != 0) goto out;
 
     if (property->isRelation()) {
         snprintf(buff, buffSize, sql_delete_rtable, property->getId());
         err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
-        if (err != SQLITE_OK) goto _out;
+        if (err != SQLITE_OK) goto out;
     } else {
         snprintf(buff, buffSize, drop_ptable, name);
         err = sqlite3_exec(m_sqlite3Db_, buff, nullptr , nullptr , &errMsg );
-        if (err != SQLITE_OK) goto _out;
+        if (err != SQLITE_OK) goto out;
     }
     
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql_delete_property, strlen(sql_delete_property), &pstmt,nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_text(pstmt, 1, name, -1, nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 	err = sqlite3_step( pstmt );
-    if (err != SQLITE_DONE) goto _out;
+    if (err != SQLITE_DONE) goto out;
 
-_out:
+out:
     err = handleErrAtEnd(err, true);
     if (errMsg  != nullptr) sqlite3_free(errMsg);
     clean_stmt(pstmt);
@@ -1205,19 +1222,19 @@ int SqliteBeanDB::defineProperty(const char* name,
     if (err != SQLITE_OK) return -3;
 
     err = sqlite3_bind_null(pstmt, 1);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_text(pstmt, 2, name, -1, nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int(pstmt, 3, (int)type);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int(pstmt, 4, (int)valueType);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     // err = sqlite3_bind_int(pstmt, 5, needIndex ? 1 : 0);
     err = sqlite3_bind_int(pstmt, 5, 1);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     
     err = sqlite3_step(pstmt);
-    if (err != SQLITE_DONE) goto _out;
+    if (err != SQLITE_DONE) goto out;
 
     clean_stmt(pstmt);
     pstmt = nullptr;
@@ -1244,15 +1261,15 @@ int SqliteBeanDB::defineProperty(const char* name,
         vtype_str);
         sql = buff;
         err = sqlite3_exec ( m_sqlite3Db_ , sql , nullptr , nullptr , &errMsg );
-        if (err != SQLITE_OK)  goto _out;
+        if (err != SQLITE_OK)  goto out;
         snprintf(buff, sizeOfBuff, create_property_index, name, name);
         err = sqlite3_exec ( m_sqlite3Db_ , sql , nullptr , nullptr , &errMsg );
-        if (err != SQLITE_OK)  goto _out;
+        if (err != SQLITE_OK)  goto out;
     }
 
     delayLoad = determineDelayLoad(type, valueType);
 
-_out:
+out:
     err = handleErrAtEnd(err, true);
     if (!err) {
         pid = (pidType)sqlite3_last_insert_rowid(m_sqlite3Db_);
@@ -1385,10 +1402,10 @@ int SqliteBeanDB::saveBeanBase(oidType beanId, const Json::Value& data, const Js
 
     if (nativeData == nullptr) {
         err = sqlite3_prepare_v2(m_sqlite3Db_, sql_1, strlen(sql_1), &pstmt,nullptr);
-        if (err != SQLITE_OK) goto _out;
+        if (err != SQLITE_OK) goto out;
     } else {
         err = sqlite3_prepare_v2(m_sqlite3Db_, sql_2, strlen(sql_2), &pstmt,nullptr);
-        if (err != SQLITE_OK) goto _out;
+        if (err != SQLITE_OK) goto out;
     }
 
     for (auto& pname : data.getMemberNames()) {
@@ -1406,7 +1423,7 @@ int SqliteBeanDB::saveBeanBase(oidType beanId, const Json::Value& data, const Js
     tmpStr = sqlite3_mprintf("%q", valueStr.c_str());
     nCol = 1;
     err = sqlite3_bind_text(pstmt, nCol++, tmpStr , -1, nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     if (nativeData != nullptr) {
         if (nativeData->isNull()) {
@@ -1416,16 +1433,16 @@ int SqliteBeanDB::saveBeanBase(oidType beanId, const Json::Value& data, const Js
             tmpStr = sqlite3_mprintf("%q", nativeDataStr.c_str());
             err = sqlite3_bind_text(pstmt, nCol++, tmpStr , -1, nullptr);
         }
-        if (err != SQLITE_OK) goto _out;
+        if (err != SQLITE_OK) goto out;
     }
 
     err = sqlite3_bind_int64(pstmt, nCol++, beanId_);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     err = sqlite3_step(pstmt);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
-_out:
+out:
     err = handleErrAtEnd(err, false);
     clean_stmt(pstmt);
     return err; 
@@ -1448,9 +1465,9 @@ int SqliteBeanDB::loadBeanNativeData(oidType beanId, Json::Value& data)
     bool found = false;
 
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int64(pstmt, 1, beanId);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
         //retrieve native data
@@ -1475,7 +1492,7 @@ int SqliteBeanDB::loadBeanNativeData(oidType beanId, Json::Value& data)
         break;
 	}
 
-_out:
+out:
     if (err >= 0) {
         if (err != SQLITE_OK && err != SQLITE_DONE) {
             elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
@@ -1510,7 +1527,7 @@ int SqliteBeanDB::updateBeanNativeData(oidType beanId,
     static const char *sql = "UPDATE " BTABLE " SET  NATIVE_DATA = ? WHERE ID = ?;";
 
 	err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt,nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     if (!nativeData.isNull()) {
         valueStr = jsonWriter.write(nativeData);
@@ -1521,15 +1538,15 @@ int SqliteBeanDB::updateBeanNativeData(oidType beanId,
     } else {
         err = sqlite3_bind_text(pstmt, 1, tmpStr , -1, nullptr);
     }
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     err = sqlite3_bind_int64(pstmt, 2, (sqlite3_int64)beanId);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     err = sqlite3_step(pstmt);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
-_out:
+out:
     err = handleErrAtEnd(err, false);
     clean_stmt(pstmt);
     return err; 
@@ -1691,7 +1708,7 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
             break;
         default:
             err = -1;
-            goto _out;
+            goto out;
             break;
     }
 
@@ -1702,17 +1719,17 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
     }
     
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     if (isRelation) {
         err = sqlite3_bind_int64(pstmt, nCol++, pid);
-        if (err != SQLITE_OK) goto _out;
+        if (err != SQLITE_OK) goto out;
 #if defined(JSON_NO_INT64)
             oid = (oidType)value.asInt(), 
 #else
             oid = (oidType)value.asInt64(), 
 #endif
         err = sqlite3_bind_int64(pstmt, nCol++, oid);
-        if (err != SQLITE_OK) goto _out;
+        if (err != SQLITE_OK) goto out;
     } else {
         switch (value.type()) {
             case Json::intValue:
@@ -1734,13 +1751,13 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
                 elog("[%s:%d] value type %d not supported" ,  __FILE__, __LINE__, value.type());
                 break;
         }
-        if (err != SQLITE_OK) goto _out;      
+        if (err != SQLITE_OK) goto out;      
     }
 
     err = sqlite3_bind_int64(pstmt, nCol++, limitFrom);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int(pstmt, nCol++, pageSize);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     sids.clear();
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
@@ -1749,7 +1766,7 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
         found = true;
     }
 
-_out:
+out:
     if (err > 0) {
         if (err != SQLITE_OK && err != SQLITE_DONE) {
             elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
@@ -1792,14 +1809,14 @@ int SqliteBeanDB::loadPage_findSubjects_Objects(bool findSubjects, const Propert
         snprintf(buff, sizeof(buff), "SELECT DISTINCT OID from " TTABLE " WHERE PID = ? limit ?,? ;");
     
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int64(pstmt, nCol++, pid);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     err = sqlite3_bind_int64(pstmt, nCol++, limitFrom);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int(pstmt, nCol++, pageSize);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     sids.clear();
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
@@ -1808,7 +1825,7 @@ int SqliteBeanDB::loadPage_findSubjects_Objects(bool findSubjects, const Propert
         found = true;
     }
 
-_out:
+out:
     if (err > 0) {
         if (err != SQLITE_OK && err != SQLITE_DONE) {
             elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));
@@ -1838,12 +1855,12 @@ int SqliteBeanDB::loadPage_getAllBeans(BeanIdPage* page, unsigned int pageSize, 
     sqlite3_int64 limitFrom = pageSize * pageIndex;
 
     err = sqlite3_prepare_v2(m_sqlite3Db_, sql, strlen(sql), &pstmt, nullptr);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     err = sqlite3_bind_int64(pstmt, nCol++, limitFrom);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
     err = sqlite3_bind_int(pstmt, nCol++, pageSize);
-    if (err != SQLITE_OK) goto _out;
+    if (err != SQLITE_OK) goto out;
 
     sids.clear();
 	while((err = sqlite3_step( pstmt )) == SQLITE_ROW) {
@@ -1852,7 +1869,7 @@ int SqliteBeanDB::loadPage_getAllBeans(BeanIdPage* page, unsigned int pageSize, 
         found = true;
     }
 
-_out:
+out:
     if (err > 0) {
         if (err != SQLITE_OK && err != SQLITE_DONE) {
             elog("sqlite3 errormsg: %s \n", sqlite3_errmsg(m_sqlite3Db_));

@@ -177,6 +177,9 @@ private:
 
     /**
      * @ref AbstractBeanDB
+     * 
+     * Notes:
+     * - 0 will be returned if no such bean exist (take it as success)
      */
     virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
@@ -184,6 +187,9 @@ private:
 
     /**
      * @ref AbstractBeanDB
+     * 
+     * Notes:
+     * - 0 will be returned if no such bean exist (take it as success)
      */
     virtual int updateBeanProperty(oidType beanId, 
         const Property* property, 
@@ -192,12 +198,20 @@ private:
 
     /**
      * @ref AbstractBeanDB
+     * 
+     * Notes:
+     * - 0 will be returned if no such bean exist (take it as success)
+     * 
      */
     virtual int deleteBeanProperty(oidType beanId, 
         const Property* property) override;
 
     /**
      * @ref AbstractBeanDB
+     * 
+     * Notes:
+     * - 0 will be returned if no such bean exist (take it as success)
+     * 
      */
     virtual int deleteBeanProperty(oidType beanId, 
         const Property* property, 

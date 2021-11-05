@@ -678,6 +678,9 @@ TEST(SqliteBeanDB, getBean)
     TestHelper testHelper;
     initTestHelper(testHelper, *world, false);
 
+    bean1 = world->getBean(555);
+    EXPECT_TRUE(bean1 == nullptr);
+
     bean1 = world->getBean(1);
     bean2 = world->getBean(1);
     bean3 = world->getBean(1);
@@ -1041,7 +1044,7 @@ TEST(SqliteBeanDB, insertBeanProperty)
     oidType beanId_1 = bean1->getId();
 
     err = testdb.insertBeanProperty(9999, testHelper.p_int, 1);
-    EXPECT_TRUE(err == 0);
+    EXPECT_TRUE(err == -1001);
 
     bean1->addArray(testHelper.p_array_int);
     err = testdb.insertBeanProperty(beanId_1, testHelper.p_int, 1);
@@ -1094,7 +1097,7 @@ TEST(SqliteBeanDB, updateBeanProperty)
     err = testdb.updateBeanProperty(9999, testHelper.p_str, "foo");
     EXPECT_TRUE(err == 0);
     err = testdb.updateBeanProperty(beanId_1, testHelper.p_array_int, 9999, 1);
-    EXPECT_TRUE(err == -1001);
+    EXPECT_TRUE(err == 0);
 
     bean1->set(testHelper.p_str, "xxx");
     err = testdb.updateBeanProperty(beanId_1, testHelper.p_str, "foo");

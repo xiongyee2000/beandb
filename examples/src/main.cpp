@@ -7,7 +7,7 @@ static const char* g_tmpDBDir = "./examples/data/sqlite_tmp_db";
 static const char* g_sqlite_db_1 = "./examples/data/sqlite_db_1";
 
 
-void example_connect_disconnect()
+void example_beandb_connect_disconnect()
 {
     SqliteBeanDB db(g_sqlite_db_1);
     BeanWorld* world = nullptr;
@@ -17,7 +17,7 @@ void example_connect_disconnect()
     if (world->getProperties().size() == 0)
         printf("No properties loaded for db is not connected. \n");
     else 
-        printf("error occured \n");
+        printf("error occurred \n");
 
     err = db.connect();
     if (err) return;
@@ -26,19 +26,19 @@ void example_connect_disconnect()
     if (world->getProperties().size() > 0)
         printf("%d properties loaded automatically \n", world->getProperties().size() );
     else 
-        printf("error occured \n");
+        printf("error occurred \n");
 
     db.disconnect();
     printf("db disconnected \n");
     if (world->getProperties().size() == 0)
         printf("properties unloaded automatically \n" );
     else 
-        printf("error occured \n");
+        printf("error occurred \n");
 
 }
 
 
-void example_defineProperty()
+void example_world_defineProperty()
 {
     SqliteBeanDB db(g_tmpDBDir);
     BeanWorld* world = nullptr;
@@ -62,7 +62,7 @@ void example_defineProperty()
 
 }
 
-void example_newBean()
+void example_world_newBean()
 {
     SqliteBeanDB db(g_tmpDBDir);
     BeanWorld* world = nullptr;
@@ -270,17 +270,17 @@ void example_bean_save()
     if (bean->get(p_int).isNull()) {
         printf("Bean's property (name=\"%s\") has not been saved before. \n", p_int->getName().c_str());
     } else {
-        printf("error occured \n");
+        printf("error occurred \n");
     }
     if (bean->get(p_bool).isNull()) {
         printf("Bean's property (name=\"%s\") has not been saved before. \n", p_bool->getName().c_str());
     } else {
-        printf("error occured \n");
+        printf("error occurred \n");
     }
     if (bean->get(p_str).isNull()) {
         printf("Bean's property (name=\"%s\") has not been saved before. \n", p_str->getName().c_str());
     } else {
-        printf("error occured \n");
+        printf("error occurred \n");
     }
 
     bean->set(p_int, 1, false);
@@ -298,17 +298,17 @@ void example_bean_save()
     if (!bean->get(p_int).isNull()) {
         printf("Bean's property: name=\"%s\" value=%d . \n", p_int->getName().c_str(), bean->get(p_int).asInt());
     } else {
-        printf("error occured \n");
+        printf("error occurred \n");
     }
     if (!bean->get(p_bool).isNull()) {
         printf("Bean's property: name=\"%s\" value=%d . \n", p_bool->getName().c_str(), bean->get(p_bool).asBool()  ? 1 : 0);
     } else {
-        printf("error occured \n");
+        printf("error occurred \n");
     }
     if (!bean->get(p_str).isNull()) {
         printf("Bean's property: name=\"%s\" value=\"%s\" . \n", p_str->getName().c_str(), bean->get(p_str).asCString());
     } else {
-        printf("error occured \n");
+        printf("error occurred \n");
     }
 
     db.disconnect();
@@ -339,7 +339,7 @@ void example_bean_remove()
     if (bean1->get(p_int).isNull())
         printf("Bean property (name=\"%s\") removed. \n", p_int->getName().c_str());
     else 
-        printf("error occured\n");
+        printf("error occurred\n");
 
     bean1->addArray(p_array_int);
     bean1->append(p_array_int, 0);
@@ -349,7 +349,7 @@ void example_bean_remove()
     if (bean1->size(p_array_int) == 0) 
         printf("Bean array property (name=\"%s\") removed. \n", p_array_int->getName().c_str());
     else
-        printf("error occured\n");
+        printf("error occurred\n");
 
     bean2 = world->newBean();
     bean3 = world->newBean();
@@ -359,7 +359,7 @@ void example_bean_remove()
     if (bean1->getObjectId(r1) == 0)
         printf("Bean relation (name=\"%s\") removed. \n", r1->getName().c_str());
     else
-        printf("error occured\n");
+        printf("error occurred\n");
 
     bean1->addArray(r_array);
     bean1->appendRelation(r_array, bean2);
@@ -369,7 +369,7 @@ void example_bean_remove()
     if (bean1->size(r_array) == 0) 
         printf("Bean array relation (name=\"%s\") removed. \n", r_array->getName().c_str());
     else
-        printf("error occured\n");
+        printf("error occurred\n");
 
     db.disconnect();
 }
@@ -400,7 +400,7 @@ void example_bean_removeAt()
     if (bean1->getAt(p_array_int, 0).asInt() == 1) 
         printf("Bean array property (name=\"%s\") removed at index 0. \n", p_array_int->getName().c_str());
     else
-        printf("error occured\n");
+        printf("error occurred\n");
 
     bean2 = world->newBean();
     bean3 = world->newBean();
@@ -413,7 +413,7 @@ void example_bean_removeAt()
     if (bean1->getObjectId(r_array, 0) == bean3->getId()) 
         printf("Bean array relation (name=\"%s\") removed at index 0. \n", r_array->getName().c_str());
     else
-        printf("error occured\n");
+        printf("error occurred\n");
 
     db.disconnect();
 }
@@ -446,7 +446,279 @@ void example_bean_removeNativeData()
     if (nativeData.isNull())
         printf("native data removed \n"); 
     else
-        printf("error occured\n");
+        printf("error occurred\n");
+
+    db.disconnect();
+}
+
+
+void example_world_getBean()
+{
+    SqliteBeanDB db(g_sqlite_db_1);
+    BeanWorld* world = nullptr;
+    int err = 0;
+    Bean* bean = nullptr;
+    oidType beanId = 0;
+
+    db.connect();
+    world = db.getWorld();
+    bean = world->getBean(999);
+    if (bean == nullptr)
+        printf("No such bean in db (beanId=%d) \n", 999);
+    else 
+        printf("error occurred \n"); 
+    
+    bean = world->getBean(1);
+    if (bean != nullptr)
+        printf("bean loaded from db (beanId=%d) \n", bean->getId());
+    else 
+        printf("error occurred \n"); 
+
+    bean = world->getBean(1);
+    if (bean != nullptr)
+        printf("bean already loaded from db (beanId=%d) \n", bean->getId());
+    else 
+        printf("error occurred \n"); 
+
+    db.disconnect();
+
+}
+
+
+void example_world_unloadBean()
+{
+    SqliteBeanDB db(g_sqlite_db_1);
+    BeanWorld* world = nullptr;
+    int err = 0;
+    Bean* bean = nullptr;
+    oidType beanId = 0;
+
+    db.connect();
+    world = db.getWorld();
+     
+    bean = world->getBean(1);
+    if (bean != nullptr)
+        printf("%d beans loaded \n", world->getCachedNumOfBeans());
+    else 
+        printf("error occurred \n"); 
+
+    world->unloadBean(bean);
+    if (world->getCachedNumOfBeans() == 0)
+        printf("1 bean unloaded \n");
+    else 
+        printf("error occurred \n"); 
+
+    bean = world->getBean(1);
+    if (bean != nullptr)
+        printf("bean loaded again from db \n");
+    else 
+        printf("error occurred \n"); 
+
+    db.disconnect();
+
+}
+
+
+void example_world_deleteBean()
+{
+    char buff[128] = {0};
+    char* cmd = &buff[0];
+    sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
+    system(cmd);
+    SqliteBeanDB db(g_tmpDBDir);
+    BeanWorld* world = nullptr;
+    int err = 0;
+    Bean* bean = nullptr;
+    oidType beanId = 0;
+
+    db.connect();
+    world = db.getWorld();
+     
+    bean = world->getBean(1);
+    if (bean != nullptr)
+        printf("%d beans loaded \n", world->getCachedNumOfBeans());
+    else 
+        printf("error occurred \n"); 
+
+    world->deleteBean(bean);
+    printf("deleteBean() called \n");
+    if (world->getCachedNumOfBeans() == 0)
+        printf("bean (id=1) removed from world \n");
+    else 
+        printf("error occurred \n"); 
+
+    world->getBean(1);
+    if (world->getCachedNumOfBeans() == 0)
+        printf("bean (id=1) deleted from db \n");
+    else 
+        printf("error occurred \n"); 
+
+    db.disconnect();
+
+}
+
+
+void example_world_unloadAllBeans()
+{
+    SqliteBeanDB db(g_sqlite_db_1);
+    BeanWorld* world = nullptr;
+    int err = 0;
+    Bean* bean = nullptr;
+    oidType beanId = 0;
+
+    db.connect();
+    world = db.getWorld();
+     
+    world->getBean(1);
+    world->getBean(2);
+    if (world->getCachedNumOfBeans() == 2)
+        printf("2 beans loaded \n");
+    else 
+        printf("error occurred \n"); 
+
+    world->unloadAllBeans();
+    if (world->getCachedNumOfBeans() == 0)
+        printf("2 beans unloaded \n");
+    else 
+        printf("error occurred \n"); 
+
+    if (world->getProperties().size() > 0)
+        printf("properties are still loaded \n");
+    else 
+        printf("error occurred \n"); 
+
+    db.disconnect();
+
+}
+
+
+void example_world_unloadAll()
+{
+    SqliteBeanDB db(g_sqlite_db_1);
+    BeanWorld* world = nullptr;
+    int err = 0;
+    Bean* bean = nullptr;
+    oidType beanId = 0;
+
+    db.connect();
+    world = db.getWorld();
+     
+    world->getBean(1);
+    world->getBean(2);
+ 
+    world->unloadAll();
+    if (world->getCachedNumOfBeans() == 0)
+        printf("2 beans unloaded \n");
+    else 
+        printf("error occurred \n"); 
+
+    if (world->getProperties().size() > 0)
+        printf("properties unloaded \n");
+    else 
+        printf("error occurred \n"); 
+
+    db.disconnect();
+
+}
+
+
+void example_world_loadAll()
+{
+    SqliteBeanDB db(g_sqlite_db_1);
+    BeanWorld* world = nullptr;
+    int err = 0;
+    Bean* bean = nullptr;
+    oidType beanId = 0;
+
+    db.connect();
+    world = db.getWorld();
+
+    world->getBean(1);
+    world->getBean(2);
+
+    world->unloadAll();
+    printf("2 beans unloaded \n");
+ 
+    world->loadAll();
+    printf("loadAll() called \n");
+    if (world->getCachedNumOfBeans() > 0) {
+        printf("Totally %d beans loaded \n", world->getCachedNumOfBeans());
+        auto& beans = world->getCachedBeans();
+        for (auto& item : beans) {
+            printf("  bean: id=%d \n", item.first);
+        }
+    } else {
+        printf("error occurred \n"); 
+    }
+
+    db.disconnect();
+
+}
+
+
+void example_world_getAllBeans()
+{
+    SqliteBeanDB db(g_sqlite_db_1);
+    BeanWorld* world = nullptr;
+    int err = 0;
+    Bean* bean = nullptr;
+    oidType beanId = 0;
+
+    db.connect();
+    world = db.getWorld();
+
+    BeanIdPage* page = world->getAllBeans(2);
+    printf("world::getAllBeans() called with page size set to %d \n", page->getPageSize());
+    if (page != nullptr) {
+        printf("do forward traverse: \n");
+        do {
+            for (int i = 0; i < page->size(); i++) {
+                printf("bean: id=%d \n", page->at(i));
+            }
+        } while (page->next() == 0);
+
+        printf("do backward traverse: \n");
+        do {
+            for (int i = 0; i < page->size(); i++) {
+                printf("bean: id=%d \n", page->at(i));
+            }
+        } while (page->prev() == 0);
+
+        printf("goto first page...");
+        err = page->gotoPage(0);
+        if (err == 0) {
+            printf("%d elements in the first page: \n", page->size());
+            for (int i = 0; i < page->getPageSize(); i++) {
+                printf("  bean: id=%d \n", page->at(i));
+            }
+        } else {
+            printf("error occurred\n");
+        }
+
+        printf("goto 2nd page...");
+        err = page->gotoPage(1);
+        if (err == 0) {
+            printf("%d elements in the 2nd page: \n", page->size());
+            for (int i = 0; i < page->size(); i++) {
+                printf("  bean: id=%d \n", page->at(i));
+            }
+        } else {
+            printf("2nd page does not exist \n");
+        }
+
+        printf("goto 3rd page...");
+        err = page->gotoPage(2);
+        if (err == 0) {
+            printf("%d elements in the 2n3rd page: \n", page->size());
+            for (int i = 0; i < page->size(); i++) {
+                printf("  bean: id=%d \n", page->at(i));
+            }
+        } else {
+            printf("3rd page does not exist \n");
+        }
+    } else {
+        printf("error occurred\n");
+    }
 
     db.disconnect();
 }
@@ -454,11 +726,11 @@ void example_bean_removeNativeData()
 
 int main(int argc, char* argv[])
 {
-    example_connect_disconnect();
+    example_beandb_connect_disconnect();
 
-    example_defineProperty();
+    example_world_defineProperty();
 
-    example_newBean();
+    example_world_newBean();
 
     example_bean_set();
 
@@ -481,6 +753,20 @@ int main(int argc, char* argv[])
     example_bean_removeAt();
 
     example_bean_removeNativeData();
+
+    example_world_getBean();
+
+    example_world_unloadBean();
+
+    example_world_deleteBean();
+
+    example_world_unloadAllBeans();
+
+    example_world_unloadAll();
+
+    example_world_loadAll();
+
+    example_world_getAllBeans();
 
     return 0;
 };

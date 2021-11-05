@@ -202,7 +202,9 @@ private:
      * @param value [out] the value that holds all bean's properties
      * @param nativeData [out] the value that holds the bean's nativeData
      *                    If set to null, ignore native data.
-     * @return 0 on success, or an error code
+     * @return 0 on success, or an error code:
+     *                   -1001: no such bean in database
+     *                   others: other errors
      */
     virtual int loadBeanBase(oidType id, 
         Json::Value& value, 

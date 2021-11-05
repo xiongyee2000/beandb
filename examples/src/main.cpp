@@ -62,6 +62,35 @@ void example_world_defineProperty()
 
 }
 
+
+void example_world_undefineProperty()
+{
+    SqliteBeanDB db(g_tmpDBDir);
+    BeanWorld* world = nullptr;
+    Bean* bean = nullptr;
+    oidType beanId = 0;
+
+    db.reInit();
+    db.connect();
+    world = db.getWorld();
+
+    Property* p_int = world->defineProperty("p_int", Property::IntType);
+    bean = world->newBean();
+    beanId = bean->getId();
+    bean->set(p_int, 1);
+    printf("Bean property set: property name=\"%s\", value=%d \n", p_int->getName().c_str(), bean->get(p_int).asInt());
+
+    world->undefineProperty(p_int);
+    printf("property p_int undefined \n");
+    if (!bean->isMember("p_int")) {
+        printf("bean does not have property p_int now. \n");
+    } else {
+        printf("error occurred \n");
+    }
+
+    db.disconnect();
+}
+
 void example_world_newBean()
 {
     SqliteBeanDB db(g_tmpDBDir);
@@ -751,6 +780,8 @@ int main(int argc, char* argv[])
     example_bean_remove();
 
     example_bean_removeAt();
+
+    example_world_undefineProperty();
 
     example_bean_removeNativeData();
 

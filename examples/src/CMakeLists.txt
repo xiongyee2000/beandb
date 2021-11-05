@@ -6,12 +6,13 @@ add_definitions(-g -std=c++11)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 
-set(BEANDB_INC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../dist/x64/include)
+set(BEANDB_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../src)
+set(BEANDB_INC_PATH ${BEANDB_SRC_PATH})
 set(BEANDB_DEP_INC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../dependencies/include)
 set(3RDPARTY_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../dependencies/include/thirdParty/)
 set(BEANDB_DEP_LIB_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../dependencies/libs)
 set(EXAMPLE_SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR})
-set(BEANDB_SRC_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../src)
+
 
 file(GLOB_RECURSE EXAMPLE_SRC_FILES "*.cpp")
 file(GLOB_RECURSE BEANDB_SRC "${BEANDB_SRC_PATH}/org/jinsha/*.cpp" "${BEANDB_SRC_PATH}/org/jinsha/*.cc")

@@ -619,15 +619,17 @@ TEST(Bean, isMember)
     
     Bean* bean1 = world->newBean();
 
-    EXPECT_TRUE(!bean1->isMember(nullptr));
+    EXPECT_TRUE(!bean1->isMember((const char*)nullptr));
+    EXPECT_TRUE(!bean1->isMember((const Property*)nullptr));
+    EXPECT_TRUE(!bean1->isMember(""));
 
     EXPECT_TRUE(bean1->getMemberNames().size() == 0);
     EXPECT_TRUE(!bean1->isMember(testHelper.p1));
     bean1->set(testHelper.p1, 1);
-    EXPECT_TRUE(bean1->isMember(testHelper.p1));
+    EXPECT_TRUE(bean1->isMember(testHelper.p1->getName()));
     EXPECT_TRUE(bean1->getMemberNames().size() ==1);
 
-    EXPECT_TRUE(!bean1->isMember(testHelper.p2));
+    EXPECT_TRUE(!bean1->isMember(testHelper.p2->getName().c_str()));
     bean1->set(testHelper.p2, 2);
     EXPECT_TRUE(bean1->isMember(testHelper.p2));
     EXPECT_TRUE(bean1->getMemberNames().size() == 2);

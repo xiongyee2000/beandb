@@ -63,6 +63,18 @@ public:
     bool isMember(const Property* property) const;
 
     /**
+     * Does the bean have the given property/relation/
+     * array property/array relation.
+     */
+    bool isMember(const std::string& name) const;
+
+    /**
+     * Does the bean have the given property/relation/
+     * array property/array relation.
+     */
+    bool isMember(const char* name) const;
+
+    /**
      * Get all property/relation names of this bean.
      * 
      * @return a collection of names

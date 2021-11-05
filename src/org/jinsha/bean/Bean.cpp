@@ -34,6 +34,21 @@ bool Bean::isMember(const Property* property) const
     return m_json_.isMember(property->getName());
 }
 
+
+bool Bean::isMember(const char* name) const
+{
+    if (name == nullptr || name[0] == 0) return false;
+    return m_json_.isMember(name);
+}
+
+
+bool Bean::isMember(const string& name) const
+{
+    if (name.empty()) return false;
+    return m_json_.isMember(name);
+}
+
+
 Json::Value::Members Bean::getMemberNames () const 
 {
     return m_pst_json_.getMemberNames();

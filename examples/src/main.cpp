@@ -656,7 +656,7 @@ void example_world_loadAll()
 }
 
 
-void example_world_getAllBeans()
+void example_page()
 {
     SqliteBeanDB db(g_sqlite_db_1);
     BeanWorld* world = nullptr;
@@ -766,7 +766,7 @@ int main(int argc, char* argv[])
 
     example_world_loadAll();
 
-    example_world_getAllBeans();
+    example_page();
 
     return 0;
 };

@@ -157,59 +157,53 @@ int SqliteBeanDB::initDB()
     sql = CREATE_PTABLE;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
-        elog("SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-        return err;
+        goto out;
     } 
     ilog("%s", "Table " PTABLE " created successfully. \n");
 
     sql = CREATE_BTABLE;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
-        elog("SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-        return err;
+        goto out;
     }
     ilog("%s", "Table " BTABLE " created successfully. \n");
     
     sql = CREATE_TTABLE;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
-        elog("SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-        return err;
+        goto out;
     } 
     ilog("%s", "Table " TTABLE " created successfully. \n");
 
     sql = CREATE_INDEX_TRIPLES_SP;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
-        elog("SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-        return err;
+        goto out;
     } 
     ilog("%s", "Index TRIPLE_SP created successfully. \n");
 
     sql = CREATE_INDEX_TRIPLES_PO;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
-        elog("SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-        return err;
+        goto out;
     } 
     ilog("%s", "Index TRIPLE_PO created successfully. \n");
 
     sql = CREATE_INDEX_TRIPLES_OS;
     err = sqlite3_exec(m_sqlite3Db_, sql, nullptr, 0, &zErrMsg);
     if( err != SQLITE_OK ){
-        elog("SQL error: %s\n", zErrMsg);
-        sqlite3_free(zErrMsg);
-        return err;
+        goto out;
     } 
     ilog("%s", "Index TRIPLE_OS created successfully. \n");
     
+
+out:
+    if (zErrMsg != nullptr) {
+        elog("SQL error: %s\n", zErrMsg);
+        sqlite3_free(zErrMsg);
+    }
     closeDB();
-    return 0;
+    return err;
 }
 
 

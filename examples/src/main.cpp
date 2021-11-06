@@ -834,7 +834,7 @@ void example_page()
         printf("error occurred\n");
     }
 
-    delete page;
+    if (page != nullptr) delete page;
 
     db.disconnect();
 }
@@ -875,7 +875,7 @@ void example_world_findEqual()
             testHelper.p_str->getName().c_str(),
             world->getBean(page->at(i))->get(testHelper.p_str).asCString());
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     page = world->findEqual(testHelper.p_bool_0, false);
     for (size_t i = 0; i < page->size(); i++)
@@ -885,7 +885,7 @@ void example_world_findEqual()
             testHelper.p_bool_0->getName().c_str(),
             world->getBean(page->at(i))->get(testHelper.p_bool_0).asBool() ? "true" : "false");
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     page = world->findEqual(testHelper.p_int, (int_t)1);
     for (size_t i = 0; i < page->size(); i++)
@@ -895,7 +895,7 @@ void example_world_findEqual()
             testHelper.p_int->getName().c_str(),
             world->getBean(page->at(i))->get(testHelper.p_int).asInt());
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     page = world->findEqual(testHelper.p_uint, (uint_t)2U);
     for (size_t i = 0; i < page->size(); i++)
@@ -905,7 +905,7 @@ void example_world_findEqual()
             testHelper.p_uint->getName().c_str(),
             world->getBean(page->at(i))->get(testHelper.p_uint).asUInt());
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     testdb.disconnect();
 }
@@ -938,7 +938,7 @@ void example_world_findGreaterEqual()
     } else {
         printf("error occurred \n");
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     page = world->findGreaterEqual(testHelper.p_real, 1.0);
     if (page != nullptr && page->size() == 3) {
@@ -947,7 +947,7 @@ void example_world_findGreaterEqual()
     } else {
         printf("error occurred \n");
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     page = world->findGreaterEqual(testHelper.p_real, 2.0);
     if (page != nullptr && page->size() == 2) {
@@ -956,7 +956,7 @@ void example_world_findGreaterEqual()
     } else {
         printf("error occurred \n");
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     page = world->findGreaterEqual(testHelper.p_real, 3.0);
     if (page != nullptr && page->size() == 1) {
@@ -965,7 +965,7 @@ void example_world_findGreaterEqual()
     } else {
         printf("error occurred \n");
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     testdb.disconnect();
 }
@@ -1018,7 +1018,7 @@ void example_world_findLike()
     } else {
         printf("error occurred \n");
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     page = world->findLike(testHelper.p_array_str, "bean1%");
     if (page != nullptr && page->size() > 0) {
@@ -1030,7 +1030,7 @@ void example_world_findLike()
     } else {
         printf("error occurred \n");
     }
-    delete page;
+    if (page != nullptr) delete page;
 
     db.disconnect();
 }
@@ -1038,11 +1038,6 @@ void example_world_findLike()
 
 void example_findEqual_relation()
 {
-    // char buff[128] = {0};
-    // char* cmd = &buff[0];
-    // sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
-    // system(cmd);
-
     SqliteBeanDB testdb(g_tmpDBDir);
     BeanWorld *world = nullptr;
     TestHelper testHelper;
@@ -1110,6 +1105,107 @@ void example_findEqual_relation()
 }
 
 
+void example_findSubjects()
+{
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, world);
+
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
+
+    bean1->setRelation(testHelper.r1, bean3);
+    bean2->setRelation(testHelper.r1, bean3);
+    page = world->findSubjects(testHelper.r1);
+    if (page != nullptr && page->size() == 2) {
+        printf("property r1 has %d subjects: \n", page->size());
+        printf("  bean: id=%d \n", page->at(0));
+        printf("  bean: id=%d \n", page->at(1));
+    } else {
+        printf("error ocurred \n");
+    }
+    if (page != nullptr) delete page;
+
+    bean1->addArray(testHelper.r_array_1);
+    bean2->addArray(testHelper.r_array_1);
+    bean1->appendRelation(testHelper.r_array_1, bean1);
+    bean1->appendRelation(testHelper.r_array_1, bean2);
+    bean2->appendRelation(testHelper.r_array_1, bean1);
+    bean2->appendRelation(testHelper.r_array_1, bean2);
+    page = world->findSubjects(testHelper.r_array_1);
+    if (page != nullptr && page->size() == 2) {
+        printf("property r_array_1 has %d subjects: \n", page->size());
+        printf("  bean: id=%d \n", page->at(0));
+        printf("  bean: id=%d \n", page->at(1));
+    } else {
+        printf("error ocurred \n");
+    }
+    if (page != nullptr) delete page;
+
+    testdb.disconnect();
+}
+
+
+void example_world_findObjects()
+{
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, world);
+
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
+
+    bean1->setRelation(testHelper.r1, bean1);
+    bean2->setRelation(testHelper.r1, bean2);
+    page = world->findObjects(testHelper.r1);
+    if (page != nullptr && page->size() == 2) {
+        printf("property r1 has %d objects: \n", page->size());
+        printf("  bean: id=%d \n", page->at(0));
+        printf("  bean: id=%d \n", page->at(1));
+    } else {
+        printf("error ocurred \n");
+    }
+    if (page != nullptr) delete page;
+
+    bean1->addArray(testHelper.r_array_1);
+    bean2->addArray(testHelper.r_array_1);
+    bean1->appendRelation(testHelper.r_array_1, bean1);
+    bean1->appendRelation(testHelper.r_array_1, bean2);
+    bean2->appendRelation(testHelper.r_array_1, bean2);
+    bean2->appendRelation(testHelper.r_array_1, bean3);
+    page = world->findObjects(testHelper.r_array_1);
+    if (page != nullptr && page->size() == 3) {
+        printf("property r_array_1 has %d objects: \n", page->size());
+        printf("  bean: id=%d \n", page->at(0));
+        printf("  bean: id=%d \n", page->at(1));
+        printf("  bean: id=%d \n", page->at(2));
+    } else {
+        printf("error ocurred \n");
+    }
+    if (page != nullptr) delete page;
+    
+    testdb.disconnect();
+}
+
+
 int main(int argc, char* argv[])
 {
     example_beandb_connect_disconnect();
@@ -1163,6 +1259,10 @@ int main(int argc, char* argv[])
     example_world_findLike();
 
     example_findEqual_relation();
+
+    example_findSubjects();
+
+    example_world_findObjects();
 
     return 0;
 };

@@ -1945,7 +1945,6 @@ TEST(SqliteBeanDB, findGreaterEqual)
 }
 
 
-
 TEST(SqliteBeanDB, find_like)
 {
     SqliteBeanDB testdb(g_tmpDBDir);
@@ -2020,7 +2019,7 @@ TEST(SqliteBeanDB, find_like)
         EXPECT_TRUE(world->getBean(page->at(i))->get(testHelper.p_str).asString().find("i") != std::string::npos);
     }
 
-    page = testdb.findBeans(op_like, testHelper.p_array_str, "bean1%");
+    page = world->findLike(testHelper.p_array_str, "bean1%");
     EXPECT_TRUE(page->size() == 1);
     for (size_t i = 0; i < page->size(); i++)
     {

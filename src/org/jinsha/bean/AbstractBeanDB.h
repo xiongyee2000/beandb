@@ -336,6 +336,7 @@ private:
      * - argument value shall not be array or object;
      * - the search is type restricted, i.e. only those beans with the 
      *      property value having the same type will be accepted;
+     * - user should delete the returned page after using it;
      * 
      * @param property the property
      * @param value the value of the property
@@ -352,7 +353,8 @@ private:
      * Find subject beans of a given relation property.
      * 
      * Notes:
-     * 1. only applies to relation properties;
+     * - only applies to relation properties;
+     * - user should delete the returned page after using it;
      * 
      * @param property the property
      * @param pageSize the page size of the returned BeanIdPage
@@ -366,7 +368,8 @@ private:
      * Find object beans of a given relation property.
      * 
      * Notes:
-     * 1. only applies to relation properties;
+     * - only applies to relation properties;
+     * - user should delete the returned page after using it;
      * 
      * @param property the property
      * @param pageSize the page size of the returned BeanIdPage
@@ -377,6 +380,10 @@ private:
 
     /**
      * Get all beans in this database.
+     * 
+     * Notes:
+     * - user should delete the returned page after using it;
+     * 
      * @param pageSize the page size of the returned BeanIdPage
      * @return the first page of the result, or null if error occurs
      */

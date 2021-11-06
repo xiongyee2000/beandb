@@ -6,6 +6,79 @@ using namespace org::jinsha::bean;
 static const char* g_tmpDBDir = "./examples/data/sqlite_tmp_db";
 static const char* g_sqlite_db_1 = "./examples/data/sqlite_db_1";
 
+typedef struct TestHelper
+{
+    Property* p_real;
+    Property* p_str;
+    Property* p_int;
+    Property* p_uint;
+    Property* p_int64;
+    Property* p_uint64;
+    Property* p_bool_0;
+    Property* p_bool_1;
+    Property* p1;
+    Property* p2;
+    Property* p_array_int;
+    Property* p_array_uint;
+    Property* p_array_real;
+    Property* p_array_bool;
+    Property* p_array_str;
+    Property* r1;
+    Property* r2;
+    Property* r_array_1;
+    Property* r_array_2;
+} TestHelper;
+
+
+void initTestHelper(TestHelper& testHelper, BeanWorld* world)
+{
+    testHelper.p_int = world->defineProperty("p_int", Property::IntType);
+    testHelper.p_uint = world->defineProperty("p_uint", Property::UIntType);
+    testHelper.p_int64 = world->defineProperty("p_int64", Property::IntType);
+    testHelper.p_uint64 = world->defineProperty("p_uint64", Property::UIntType);
+    testHelper.p_real = world->defineProperty("p_real", Property::RealType);
+    testHelper.p_str = world->defineProperty("p_str", Property::StringType);
+    testHelper.p_bool_0 = world->defineProperty("p_bool_0", Property::BoolType);
+    testHelper.p_bool_1 = world->defineProperty("p_bool_1", Property::BoolType);
+
+    testHelper.p1 = world->defineProperty("p1", Property::IntType);
+    testHelper.p2 = world->defineProperty("p2", Property::IntType);
+    testHelper.p_array_int = world->defineArrayProperty("p_array_int", Property::IntType);
+    testHelper.p_array_uint = world->defineArrayProperty("p_array_uint", Property::UIntType);
+    testHelper.p_array_real = world->defineArrayProperty("p_array_real", Property::RealType);
+    testHelper.p_array_bool = world->defineArrayProperty("p_array_bool", Property::BoolType);
+    testHelper.p_array_str = world->defineArrayProperty("p_array_str", Property::StringType);
+    testHelper.r1 = world->defineRelation("r1");
+    testHelper.r2 = world->defineRelation("r2");
+    testHelper.r_array_1 =  world->defineArrayRelation("r_array_1");
+    testHelper.r_array_2 =  world->defineArrayRelation("r_array_2");
+}
+
+
+void find_beanInit(TestHelper& testHelper, Bean* bean1, Bean* bean2, Bean* bean3)
+{
+    bean1->set(testHelper.p_real, 1.0);
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 1U);
+    bean1->set(testHelper.p_int64, 101);
+    bean1->set(testHelper.p_uint64, 101U);
+
+    bean2->set(testHelper.p_real, 2.0);
+    bean2->set(testHelper.p_str, "my");
+    bean2->set(testHelper.p_int, 2);
+    bean2->set(testHelper.p_uint, 2U);
+    bean2->set(testHelper.p_int64, 102);
+    bean2->set(testHelper.p_uint64, 102U);
+
+    bean3->set(testHelper.p_real, 3.0);
+    bean3->set(testHelper.p_str, "world");
+    bean3->set(testHelper.p_int, 3);
+    bean3->set(testHelper.p_uint, 3U);
+    bean3->set(testHelper.p_int64, 103);
+    bean3->set(testHelper.p_uint64, 103U);
+}
+
 
 void example_beandb_connect_disconnect()
 {
@@ -67,23 +140,35 @@ void example_world_undefineProperty()
 {
     SqliteBeanDB db(g_tmpDBDir);
     BeanWorld* world = nullptr;
-    Bean* bean = nullptr;
-    oidType beanId = 0;
+    Bean* bean1 = nullptr;
+    Bean* bean2 = nullptr;
+    oidType beanId_1 = 0;
+    oidType beanId_2 = 0;
 
     db.reInit();
     db.connect();
     world = db.getWorld();
 
     Property* p_int = world->defineProperty("p_int", Property::IntType);
-    bean = world->newBean();
-    beanId = bean->getId();
-    bean->set(p_int, 1);
-    printf("Bean property set: property name=\"%s\", value=%d \n", p_int->getName().c_str(), bean->get(p_int).asInt());
+    bean1 = world->newBean();
+    bean2 = world->newBean();
+    beanId_1 = bean1->getId();
+    beanId_2 = bean2->getId();
+    bean1->set(p_int, 1);
+    printf("Bean1 property set: property name=\"%s\", value=%d \n", p_int->getName().c_str(), bean1->get(p_int).asInt());
+    bean2->set(p_int, 2);
+    printf("Bean2 property set: property name=\"%s\", value=%d \n", p_int->getName().c_str(), bean2->get(p_int).asInt());
 
     world->undefineProperty(p_int);
     printf("property p_int undefined \n");
-    if (!bean->isMember("p_int")) {
-        printf("bean does not have property p_int now. \n");
+    if (!bean1->isMember("p_int")) {
+        printf("bean1 does not have property p_int now. \n");
+    } else {
+        printf("error occurred \n");
+    }
+
+    if (!bean2->isMember("p_int")) {
+        printf("bean2 does not have property p_int now. \n");
     } else {
         printf("error occurred \n");
     }
@@ -749,7 +834,279 @@ void example_page()
         printf("error occurred\n");
     }
 
+    delete page;
+
     db.disconnect();
+}
+
+
+void example_world_findEqual()
+{
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, world);
+
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+
+    bean1->set(testHelper.p_str, "hello");
+    bean1->set(testHelper.p_bool_0, false);
+    bean1->set(testHelper.p_int, 1);
+    bean1->set(testHelper.p_uint, 2U);
+
+    bean2->set(testHelper.p_str, "hello");
+    bean2->set(testHelper.p_bool_0, false);
+    bean2->set(testHelper.p_int, 1);
+    bean2->set(testHelper.p_uint, 2U);
+
+    page = world->findEqual(testHelper.p_str, "hello");
+    for (size_t i = 0; i < page->size(); i++)
+    {
+        printf("bean: id=%d, property=%s, value=%s \n", 
+            page->at(i),
+            testHelper.p_str->getName().c_str(),
+            world->getBean(page->at(i))->get(testHelper.p_str).asCString());
+    }
+    delete page;
+
+    page = world->findEqual(testHelper.p_bool_0, false);
+    for (size_t i = 0; i < page->size(); i++)
+    {
+        printf("bean: id=%d, property=%s, value=%s \n", 
+            page->at(i),
+            testHelper.p_bool_0->getName().c_str(),
+            world->getBean(page->at(i))->get(testHelper.p_bool_0).asBool() ? "true" : "false");
+    }
+    delete page;
+
+    page = world->findEqual(testHelper.p_int, (int_t)1);
+    for (size_t i = 0; i < page->size(); i++)
+    {
+        printf("bean: id=%d, property=%s, value=%d \n", 
+            page->at(i),
+            testHelper.p_int->getName().c_str(),
+            world->getBean(page->at(i))->get(testHelper.p_int).asInt());
+    }
+    delete page;
+
+    page = world->findEqual(testHelper.p_uint, (uint_t)2U);
+    for (size_t i = 0; i < page->size(); i++)
+    {
+        printf("bean: id=%d, property=%s, value=%u \n", 
+            page->at(i),
+            testHelper.p_uint->getName().c_str(),
+            world->getBean(page->at(i))->get(testHelper.p_uint).asUInt());
+    }
+    delete page;
+
+    testdb.disconnect();
+}
+
+
+void example_world_findGreaterEqual()
+{
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, world);
+
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
+
+    find_beanInit(testHelper, bean1, bean2, bean3);
+
+    page = world->findGreaterEqual(testHelper.p_real, 0.0);
+    if (page != nullptr && page->size() == 3) {
+        printf("There are %d bean(s) whose property (name=%s) value is greater equal to 0.0. \n", 
+            page->size(), testHelper.p_real->getName().c_str());
+    } else {
+        printf("error occurred \n");
+    }
+    delete page;
+
+    page = world->findGreaterEqual(testHelper.p_real, 1.0);
+    if (page != nullptr && page->size() == 3) {
+        printf("There are %d bean(s) whose property (name=%s) value is greater equal to 1.0. \n", 
+            page->size(), testHelper.p_real->getName().c_str());
+    } else {
+        printf("error occurred \n");
+    }
+    delete page;
+
+    page = world->findGreaterEqual(testHelper.p_real, 2.0);
+    if (page != nullptr && page->size() == 2) {
+        printf("There are %d bean(s) whose property (name=%s) value is greater equal to 2.0. \n", 
+            page->size(), testHelper.p_real->getName().c_str());
+    } else {
+        printf("error occurred \n");
+    }
+    delete page;
+
+    page = world->findGreaterEqual(testHelper.p_real, 3.0);
+    if (page != nullptr && page->size() == 1) {
+        printf("There are %d bean(s) whose property (name=%s) value is greater equal to 3.0. \n", 
+            page->size(), testHelper.p_real->getName().c_str());
+    } else {
+        printf("error occurred \n");
+    }
+    delete page;
+
+    testdb.disconnect();
+}
+
+
+void example_world_findLike()
+{
+    SqliteBeanDB db(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    db.reInit();
+    db.connect();
+    world = db.getWorld();
+    initTestHelper(testHelper, world);
+
+    Bean* bean1 = world->newBean();
+    oidType beanId_1 = bean1->getId();
+    Bean* bean2 = world->newBean();
+    oidType beanId_2= bean2->getId();
+    Bean* bean3 = world->newBean();
+    oidType beanId_3 = bean3->getId();
+
+    bean1->set(testHelper.p_str, "beandb");
+    bean2->set(testHelper.p_str, "is");
+    bean3->set(testHelper.p_str, "amazing!");
+
+    bean1->addArray(testHelper.p_array_str);
+    bean2->addArray(testHelper.p_array_str);
+    bean3->addArray(testHelper.p_array_str);
+
+    bean1->append(testHelper.p_array_str, "bean1 #1");
+    bean1->append(testHelper.p_array_str, "bean1 #2");
+    bean2->append(testHelper.p_array_str, "bean2 #1");
+    bean2->append(testHelper.p_array_str, "bean2 #2");
+    bean3->append(testHelper.p_array_str, "bean3 #1");
+    bean3->append(testHelper.p_array_str, "bean3 #2");
+
+    page = world->findLike(testHelper.p_str, "%a%");
+    if (page != nullptr && page->size() > 0) {
+        for (size_t i = 0; i < page->size(); i++)
+        {
+            printf("bean: id=%d, property=%s, value=%s \n", page->at(i), 
+                testHelper.p_str->getName().c_str(),  
+                world->getBean(page->at(i))->get(testHelper.p_str).asCString());
+        }
+    } else {
+        printf("error occurred \n");
+    }
+    delete page;
+
+    page = world->findLike(testHelper.p_array_str, "bean1%");
+    if (page != nullptr && page->size() > 0) {
+        for (size_t i = 0; i < page->size(); i++)
+        {
+            printf("bean: id=%d, property=%s \n", page->at(i), 
+                testHelper.p_str->getName().c_str());
+        }
+    } else {
+        printf("error occurred \n");
+    }
+    delete page;
+
+    db.disconnect();
+}
+
+
+void example_findEqual_relation()
+{
+    // char buff[128] = {0};
+    // char* cmd = &buff[0];
+    // sprintf(buff, "cp -rf %s/* %s/", g_sqlite_db_1, g_tmpDBDir);
+    // system(cmd);
+
+    SqliteBeanDB testdb(g_tmpDBDir);
+    BeanWorld *world = nullptr;
+    TestHelper testHelper;
+    int err = 0;
+    Json::Value value;
+    BeanIdPage* page = nullptr;
+
+    testdb.reInit();
+    testdb.connect();
+    world = testdb.getWorld();
+    initTestHelper(testHelper, world);
+
+    Bean* bean1 = world->newBean();
+    Bean* bean2 = world->newBean();
+    Bean* bean3 = world->newBean();
+    oidType beanId_1 = bean1->getId();
+    oidType beanId_2 = bean2->getId();
+    oidType beanId_3 = bean3->getId();
+
+    bean1->setRelation(testHelper.r1, bean3);
+    bean2->setRelation(testHelper.r1, bean3);
+    bean3->setRelation(testHelper.r1, bean3);
+    bean1->addArray(testHelper.r_array_1);
+    bean2->addArray(testHelper.r_array_1);
+    bean3->addArray(testHelper.r_array_1);
+    bean1->appendRelation(testHelper.r_array_1, bean1);
+    bean1->appendRelation(testHelper.r_array_1, bean2);
+    bean1->appendRelation(testHelper.r_array_1, bean3);
+    bean2->appendRelation(testHelper.r_array_1, bean1);
+    bean2->appendRelation(testHelper.r_array_1, bean2);
+    bean2->appendRelation(testHelper.r_array_1, bean3);
+    bean3->appendRelation(testHelper.r_array_1, bean1);
+    bean3->appendRelation(testHelper.r_array_1, bean2);
+    bean3->appendRelation(testHelper.r_array_1, bean3);
+
+    page = world->findEqual(testHelper.r1, bean3->getId());
+    if (page != nullptr) {
+        printf("All beans that are subjects of bean3 on relation (name=%s): \n", 
+            testHelper.r1->getName().c_str());
+        do {
+            for (size_t i = 0; i < page->size(); i++) {
+                printf("  bean: id=%d \n", page->at(i));
+            } 
+        } while (page->next() == 0);
+        delete page;
+    } else {
+        printf("error occurred \n");
+    }
+ 
+    page = world->findEqual(testHelper.r_array_1, bean1->getId());
+    if (page != nullptr) {
+        printf("All beans that are subjects of bean1 on relation (name=%s): \n", 
+            testHelper.r_array_1->getName().c_str());
+        do {
+            for (size_t i = 0; i < page->size(); i++) {
+                printf("  bean: id=%d \n", page->at(i));
+            } 
+        } while (page->next() == 0);
+         delete page;
+    } else {
+        printf("error occurred \n");
+    }
+   
+    testdb.disconnect();
 }
 
 
@@ -798,6 +1155,14 @@ int main(int argc, char* argv[])
     example_world_loadAll();
 
     example_page();
+
+    example_world_findEqual();
+
+    example_world_findGreaterEqual();
+
+    example_world_findLike();
+
+    example_findEqual_relation();
 
     return 0;
 };

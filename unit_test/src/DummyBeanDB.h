@@ -55,24 +55,9 @@ public:
 
     virtual int clear() override;
 
-    /**
-     * @ref BeanDBPIntf
-     */
     virtual BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
-
-    /**
-     * @ref BeanDBPIntf
-     */
     virtual BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
-
-    /**
-     * @ref BeanDBPIntf
-     */
-   BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
-
-    /**
-     * @ref BeanDBPIntf
-     */
+    virtual BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
     virtual BeanIdPage* getAllBeans(unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 
     

@@ -238,7 +238,7 @@ private:
      * 
      * Notes:
      * - When optype is op_like, the property and value shall be of StringType,
-     *    and the value shall contain a string with compliance to sqlite3 like clause.
+     *    and the value shall contain a string with compliance to sqlite3 like clause;
      */
    BeanIdPage* findBeans(opType optype, const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const override;
 

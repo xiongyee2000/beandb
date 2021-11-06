@@ -285,42 +285,70 @@ public:
      * search related
      ***********************************************************/
     /**
-     * @ref BeanDBPIntf::getAllBeans()
+     * @ref AbstractBeanDB::getAllBeans()
      */
     BeanIdPage* getAllBeans(unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPIntf::findBeans()
+     * @ref AbstractBeanDB::findBeans()
+     * 
+     * Notes:
+     * - when the argument property is a relation, the value must represent 
+     *   an object bean id;
      */
     BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPIntf::findBeans()
+     * @ref AbstractBeanDB::findBeans()
+     * 
+     * Notes:
+     * - not applicable to relations
      */
     BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPIntf::findBeans()
+     * @ref AbstractBeanDB::findBeans()
+     * 
+     * Notes:
+     * - not applicable to relations
      */
     BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPIntf::findBeans()
+     * @ref AbstractBeanDB::findBeans()
+     * 
+     * Notes:
+     * - not applicable to relations
      */
     BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPIntf::findBeans()
+     * @ref AbstractBeanDB::findBeans()
+     * 
+     * Notes:
+     * - not applicable to relations
      */
     BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB::findBeans()
+     * 
+     * Notes:
+     * - not applicable to relations
+     * - only applicable to string value type
+     */
+    BeanIdPage* findLike(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
+
+    /**
+     * @ref AbstractBeanDB::findSubjects()
      */
     BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref BeanDBPIntf
+     * @ref AbstractBeanDB::findObjects()
+     * 
+     * Notes:
+     * - only applicable to relations
      */
     BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 

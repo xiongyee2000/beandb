@@ -1,19 +1,21 @@
-check world is the same (for bean/world methods)
+TODO LIST:
+===============================================================================
+- check world is the same (for bean/world methods)
 
-well define error codes
+- well define error codes
 
-32 bits system
+- 32 bits system
 
-multi-threading support
+- multi-threading support
 
-windows line ending \r\n
+- windows line ending \r\n
 
-UndefineProperty() need to consider whether all related beans should be deleted.
+- UndefineProperty() need to consider whether all related beans should be deleted.
 
-BeanWorld: can we have a better name?
-smart bean capacity management
+- BeanWorld: can we have a better name?
 
+- smart bean capacity management?
 
-getArrayProperty()/getArrayRelation() //Too big to load all array data into memory?
+- getArrayProperty()/getArrayRelation(): too big to load all array data into memory? Use page?
 
-enhance json
+- enhance json to achive better performance

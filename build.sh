@@ -128,7 +128,6 @@ rm -rf $dist_dir \
 && cp -rf ${source_dir}/* "$dist_dir/include" \
 && find "$dist_dir/include" -type f ! -name "*.h*" -exec rm -rf {} \; \
 && cp -rf $build_dir/lib*.so $dist_dir/lib \
-&& cp -rf $script_dir/dependencies/libs/x64 $dist_dir/dependencies/libs \
 && cd $dist_dir/.. \
 && tar zcvf ${X64_SDK_NAME}.gz  ./x64 \
 && mv ${X64_SDK_NAME}.gz $dist_dir

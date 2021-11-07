@@ -45,11 +45,19 @@ TBD
 
 #### 编译构建
 - 构建beandb库：
+
+```
 ./build.sh
+```
+
 （构建结果将位于dist目录下）
 
 - 构建examples（示例程序）：
+
+```
 ./build_examples.sh
+```
+
 （构建结果将位于build_examples目录下）
 
 

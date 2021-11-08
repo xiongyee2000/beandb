@@ -96,6 +96,6 @@ Tony: xiongyee@hotmail.com
 
 
 #### 许可证
-TBD
+LGPL 2.0
 
  **欢迎有志之士的加入！**  :smile: 

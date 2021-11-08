@@ -96,6 +96,6 @@ Tony: xiongyee@hotmail.com
 
 
 #### 许可证
-LGPL 2.0
+GPL 3.0
 
  **欢迎有志之士的加入！**  :smile: 

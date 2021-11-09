@@ -8,6 +8,17 @@ namespace bean {
 
 class BeanWorld;
 
+/**
+ * \mainpage Introduction to BeanDB
+ * 
+ * BeanDB is a simple object database engine written in c++. 
+ * 
+ */
+
+
+/**
+ * This is the abstract class for the backend database implementation.
+ */
 class AbstractBeanDB
 {
 public:

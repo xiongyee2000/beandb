@@ -285,12 +285,29 @@ public:
      * search related
      ***********************************************************/
     /**
-     * @ref AbstractBeanDB::getAllBeans()
+     * Load and return all beans from the database.
      */
     BeanIdPage* getAllBeans(unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref AbstractBeanDB::findBeans()
+     * General Information of find method series:
+     * 
+     * These methods are used to find beans the property values of which 
+     * meet the specified condition.
+     * 
+     * The condition could be represented as:
+     * bean->getProperty(property) <optype> value
+     * 
+     * Where optype could be:
+     * equal/lessThan/lessEqual/greater/greaterEqual/like
+     * 
+     * Notes:
+     * - when the given property is a relation, the value is interpreted as 
+     *     the object bean id;
+     * - argument value shall not be array or object;
+     * - the search is type restricted, i.e. only those beans with the 
+     *      property value having the same type will be accepted;
+     * - user should delete the returned page after using it;
      * 
      * Notes:
      * - when the argument property is a relation, the value must represent 
@@ -299,7 +316,7 @@ public:
     BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref AbstractBeanDB::findBeans()
+     * @ref refer to findEqual()
      * 
      * Notes:
      * - not applicable to relations
@@ -307,7 +324,7 @@ public:
     BeanIdPage* findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref AbstractBeanDB::findBeans()
+     * @ref refer to findEqual()
      * 
      * Notes:
      * - not applicable to relations
@@ -315,7 +332,7 @@ public:
     BeanIdPage* findLessThan(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref AbstractBeanDB::findBeans()
+     * @ref refer to findEqual()
      * 
      * Notes:
      * - not applicable to relations
@@ -323,7 +340,7 @@ public:
     BeanIdPage* findGreaterEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref AbstractBeanDB::findBeans()
+     * @ref refer to findEqual()
      * 
      * Notes:
      * - not applicable to relations
@@ -331,7 +348,7 @@ public:
     BeanIdPage* findGreaterThan(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref AbstractBeanDB::findBeans()
+     * @ref refer to findEqual()
      * 
      * Notes:
      * - not applicable to relations
@@ -340,15 +357,29 @@ public:
     BeanIdPage* findLike(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref AbstractBeanDB::findSubjects()
+     * Find subject beans of a given relation property.
+     * 
+     * Notes:
+     * - only applies to relation properties;
+     * - user should delete the returned page after using it;
+     * 
+     * @param property the property
+     * @param pageSize the page size of the returned BeanIdPage
+     * @return the first page of the result, or null if error occurs
+     * 
      */
     BeanIdPage* findSubjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
-     * @ref AbstractBeanDB::findObjects()
+     * Find object beans of a given relation property.
      * 
      * Notes:
-     * - only applicable to relations
+     * - only applies to relation properties;
+     * - user should delete the returned page after using it;
+     * 
+     * @param property the property
+     * @param pageSize the page size of the returned BeanIdPage
+     * @return the first page of the result, or null if error occurs
      */
     BeanIdPage* findObjects(const Property* property, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 

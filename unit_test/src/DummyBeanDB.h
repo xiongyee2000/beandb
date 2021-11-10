@@ -1,10 +1,10 @@
 #pragma once
 
-#include "org/jinsha/bean/AbstractBeanDB.h"
+#include "org/jinsha/beandb/AbstractBeanDB.h"
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 class DummyBeanDB : public AbstractBeanDB
 {

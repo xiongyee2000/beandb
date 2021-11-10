@@ -6,12 +6,12 @@
 //This is used to test protected methods
 #define protected public
 
-#include "org/jinsha/bean/Property.h"
+#include "org/jinsha/beandb/Property.h"
 #include "./common.h"
 
 using namespace std;
 using namespace Json;
-using namespace org::jinsha::bean;
+using namespace org::jinsha::beandb;
 
 ////////////////////////////////////////////////////////
 //global variables

@@ -40,7 +40,7 @@ using namespace std;
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 static const char* CREATE_PTABLE =  
  "CREATE TABLE " PTABLE " ( \
@@ -1841,7 +1841,7 @@ int SqliteBeanDB::loadPage_getAllBeans(BeanIdPage* page, unsigned int pageSize, 
 
     int err = 0;
     bool found = false;
-    static char * sql = "SELECT ID from " BTABLE " limit ?,? ;";
+    static const char * sql = "SELECT ID from " BTABLE " limit ?,? ;";
     sqlite3_stmt *pstmt = nullptr;
     int size = 0;
     int nCol = 1;

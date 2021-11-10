@@ -9,7 +9,7 @@
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 typedef int pidType;
 #if SYSTEM_BITS == 64

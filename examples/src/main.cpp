@@ -1,7 +1,7 @@
 #include <stdio.h>
-#include "org/jinsha/bean/SqliteBeanDB.h"
+#include "org/jinsha/beandb/SqliteBeanDB.h"
 
-using namespace org::jinsha::bean;
+using namespace org::jinsha::beandb;
 
 static const char* g_tmpDBDir = "./examples/data/sqlite_tmp_db";
 static const char* g_sqlite_db_1 = "./examples/data/sqlite_db_1";

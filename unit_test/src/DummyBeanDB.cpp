@@ -1,7 +1,7 @@
 
 #include "./DummyBeanDB.h"
-#include "org/jinsha/bean/internal_common.hxx"
-#include "org/jinsha/bean/Bean.h"
+#include "org/jinsha/beandb/internal_common.hxx"
+#include "org/jinsha/beandb/Bean.h"
 
 #include <unistd.h>
 #include <string.h>
@@ -11,7 +11,7 @@
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 DummyBeanDB::DummyBeanDB() 
     : AbstractBeanDB()

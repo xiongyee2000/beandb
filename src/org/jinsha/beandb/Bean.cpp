@@ -9,7 +9,7 @@ using namespace std;
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 
 Bean::Bean(oidType id, BeanWorld* world) : 

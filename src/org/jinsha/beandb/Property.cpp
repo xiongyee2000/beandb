@@ -9,7 +9,7 @@ using namespace Json;
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 template<typename ValueT, typename MapT>
 static void doFindCommon_(int opType, const ValueT& value, const MapT& map, std::list<oidType>& beans);

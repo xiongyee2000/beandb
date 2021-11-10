@@ -12,14 +12,14 @@
 //This is used to test protected methods
 #define protected public
 
-#include "org/jinsha/bean/SqliteBeanDB.h"
-#include "org/jinsha/bean/Bean.h"
+#include "org/jinsha/beandb/SqliteBeanDB.h"
+#include "org/jinsha/beandb/Bean.h"
 
 #include "./common.h"
 
 using namespace std;
 using namespace Json;
-using namespace org::jinsha::bean;
+using namespace org::jinsha::beandb;
 
 static const char* g_tmpDBDir = "./unit_test/data/sqlite_tmp_db";
 static const char* g_sqlite_db_1 = "./unit_test/data/sqlite_db_1";

@@ -10,7 +10,7 @@ using namespace std;
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 
 BeanWorld::BeanWorld(AbstractBeanDB& db) 

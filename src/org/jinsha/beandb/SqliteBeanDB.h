@@ -10,7 +10,7 @@
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 class SqliteBeanDB : public AbstractBeanDB
 {

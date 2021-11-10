@@ -1,9 +1,9 @@
 #pragma once
 
-#include "org/jinsha/bean/BeanWorld.h"
+#include "org/jinsha/beandb/BeanWorld.h"
 #include "./DummyBeanDB.h"
 
-using namespace org::jinsha::bean;
+using namespace org::jinsha::beandb;
 
 ////////////////////////////////////////////////////////
 //global variables

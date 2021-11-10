@@ -9,14 +9,14 @@
 #define private public
 //This is used to test protected methods
 #define protected public
-#include "org/jinsha/bean/BeanWorld.h"
+#include "org/jinsha/beandb/BeanWorld.h"
 
 #include "./common.h"
 #include "./DummyBeanDB.h"
 
 using namespace std;
 using namespace Json;
-using namespace org::jinsha::bean;
+using namespace org::jinsha::beandb;
 
 void basic()
 {

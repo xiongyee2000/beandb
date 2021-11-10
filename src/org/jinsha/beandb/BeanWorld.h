@@ -12,7 +12,7 @@
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 class Bean;
 class Property;

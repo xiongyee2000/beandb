@@ -10,13 +10,13 @@
 //This is used to test protected methods
 #define protected public
 
-#include "org/jinsha/bean/Page.hpp"
+#include "org/jinsha/beandb/Page.hpp"
 
 #include "./common.h"
 
 using namespace std;
 using namespace Json;
-using namespace org::jinsha::bean;
+using namespace org::jinsha::beandb;
 
 TEST(BeanIdPage, getPageSize)
 {

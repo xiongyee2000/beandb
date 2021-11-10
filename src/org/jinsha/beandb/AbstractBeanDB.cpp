@@ -6,7 +6,7 @@
 
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 
 AbstractBeanDB::AbstractBeanDB()

@@ -4,7 +4,7 @@
 #include "./Page.hpp"
 namespace org {
 namespace jinsha {
-namespace bean {
+namespace beandb {
 
 class BeanWorld;
 

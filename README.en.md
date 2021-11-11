@@ -20,7 +20,7 @@ BeanDB has following characteristics:
 #### - Object Oriented
 In BeanDB, data are represented as object (called bean) and stored as object. This is by definition the main characteristic of object database.
 
-#### - Dynamic Property
+#### - Dynamic property
 In BeanDB, properties are dynamic, meaning they can be dynamically added/removed/modified per user's need at runtime. This is also one of main characteristics of the object database.
 
 #### - JSON like bean

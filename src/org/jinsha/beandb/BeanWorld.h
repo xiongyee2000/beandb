@@ -299,7 +299,7 @@ public:
      * bean->getProperty(property) <optype> value
      * 
      * Where optype could be:
-     * equal/lessThan/lessEqual/greater/greaterEqual/like
+     * equal/not equal/lessThan/lessEqual/greater/greaterEqual/like/not like
      * 
      * Notes:
      * - when the given property is a relation, the value is interpreted as 
@@ -314,6 +314,11 @@ public:
      *   an object bean id;
      */
     BeanIdPage* findEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
+
+    /**
+     * @ref refer to findEqual()
+     */
+    BeanIdPage* findNotEqual(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
      * @ref refer to findEqual()
@@ -355,6 +360,15 @@ public:
      * - only applicable to string value type
      */
     BeanIdPage* findLike(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
+
+    /**
+     * @ref refer to findEqual()
+     * 
+     * Notes:
+     * - not applicable to relations
+     * - only applicable to string value type
+     */
+    BeanIdPage* findNotLike(const Property* property, const Json::Value& value, unsigned int pageSize = DEFAULT_PAGE_SIZE) const;
 
     /**
      * Find subject beans of a given relation property.

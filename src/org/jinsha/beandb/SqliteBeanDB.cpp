@@ -1655,11 +1655,13 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
    if (0 != checkConnected(ERR_MSG_NOT_CONNECTED)) return -1;
 
     static const char* OP_EQ_STR = "==";
+    static const char* OP_NE_STR = "!=";
     static const char* OP_LE_STR = "<=";
     static const char* OP_LT_STR = "<";
     static const char* OP_GE_STR = ">=";
     static const char* OP_GT_STR = ">";
     static const char* OP_LIKE_STR = "like";
+    static const char* OP_NOT_LIKE_STR = "not like";
     int err = 0;
     bool found = false;
     char buff[128]{0};
@@ -1684,6 +1686,9 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
         case op_eq:
             op_str = OP_EQ_STR;
             break;
+        case op_ne:
+            op_str = OP_NE_STR;
+            break;
         case op_le:
             op_str = OP_LE_STR;
             break;
@@ -1699,6 +1704,10 @@ int SqliteBeanDB::loadPage_findBeans(opType optype, const Property* property, co
         case op_like:
             if (value.asString().empty()) return -1;
             op_str = OP_LIKE_STR;
+            break;
+        case op_not_like:
+            if (value.asString().empty()) return -1;
+            op_str = OP_NOT_LIKE_STR;
             break;
         default:
             err = -1;
@@ -1906,13 +1915,13 @@ BeanIdPage* SqliteBeanDB::findBeans(opType optype, const Property* property, con
         return nullptr;
     }
 
-    if (vtype == Property::BoolType && optype != op_eq) {
-        elog("%s", "bool value only supports op_eq. \n");
+    if (vtype == Property::BoolType && optype != op_eq && optype != op_ne) {
+        elog("%s", "bool value only supports op_eq/op_ne. \n");
         return nullptr;
     }
 
-    if (vtype != Property::StringType && optype == op_like) {
-        elog("%s", "op_like only applies to string type. \n");
+    if (vtype != Property::StringType && (optype == op_like ||  optype == op_not_like)) {
+        elog("%s", "op_like/op_not_like only applies to string type. \n");
         return nullptr;
     }
 

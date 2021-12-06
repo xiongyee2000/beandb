@@ -33,12 +33,14 @@ typedef Json::UInt uint_t;
  */
 enum opType {
     op_eq = 0,
+    op_ne,
     op_le,
     op_lt,
     op_ge,
     op_gt,
+    op_like,
+    op_not_like,
     op_has,
-    op_like
 } ;
 
 /**

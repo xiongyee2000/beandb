@@ -383,6 +383,12 @@ BeanIdPage* BeanWorld::findEqual(const Property* property, const Json::Value& va
 }
 
 
+BeanIdPage* BeanWorld::findNotEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
+{
+    return findBeans(op_ne, property, value, pageSize);
+}
+
+
 BeanIdPage* BeanWorld::findLessEqual(const Property* property, const Json::Value& value, unsigned int pageSize) const
 {
     return findBeans(op_le, property, value, pageSize);
@@ -410,6 +416,12 @@ BeanIdPage* BeanWorld::findGreaterThan(const Property* property, const Json::Val
 BeanIdPage* BeanWorld::findLike(const Property* property, const Json::Value& value, unsigned int pageSize) const
 {
     return findBeans(op_like, property, value, pageSize);
+}
+
+
+BeanIdPage* BeanWorld::findNotLike(const Property* property, const Json::Value& value, unsigned int pageSize) const
+{
+    return findBeans(op_not_like, property, value, pageSize);
 }
 
 

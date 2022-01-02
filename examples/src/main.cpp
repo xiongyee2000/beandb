@@ -192,7 +192,7 @@ void example_world_newBean()
     db.disconnect();
 }
 
-void example_bean_set()
+void example_bean_primary_property()
 {
     SqliteBeanDB db(g_tmpDBDir);
     BeanWorld* world = nullptr;
@@ -205,16 +205,22 @@ void example_bean_set()
     Property* p_int = world->defineProperty("p_int", Property::IntType);
     bean = world->newBean();
     bean->set(p_int, 1);
-    printf("Bean property set: property name=\"%s\", value=%d \n", p_int->getName().c_str(), bean->get(p_int).asInt());
+
+    int p_int_value = 0;
+    p_int_value = bean->get(p_int).asInt();
+    printf("Bean property set: name=\"%s\", value=%d \n", p_int->getName().c_str(), p_int_value);
+
 
     db.disconnect();
 }
 
-void example_bean_append()
+
+void example_array_property()
 {
     SqliteBeanDB db(g_tmpDBDir);
     BeanWorld* world = nullptr;
     Bean* bean = nullptr;
+    int value1, value2;
 
     db.reInit();
     db.connect();
@@ -226,44 +232,29 @@ void example_bean_append()
     printf("array property \"%s\" added for bean (id=%d, value=%d) \n", p_array_int->getName().c_str(), bean->getId());
 
     bean->append(p_array_int, 0);
-    printf("value %d appended to bean's array property (name=\"%s\") \n", bean->getAt(p_array_int, 0).asInt(), p_array_int->getName().c_str());
+    value1 = bean->getAt(p_array_int, 0).asInt();
+    printf("value of p_array_int[0]: %d\n", value1);
+
     bean->append(p_array_int, 1);
-    printf("value %d appended to bean's array property (name=\"%s\") \n", bean->getAt(p_array_int, 1).asInt(), p_array_int->getName().c_str());    
-
-    db.disconnect();
-}
-
-void example_bean_setAt()
-{
-    SqliteBeanDB db(g_tmpDBDir);
-    BeanWorld* world = nullptr;
-    Bean* bean = nullptr;
-
-    db.reInit();
-    db.connect();
-    world = db.getWorld();
-
-    Property* p_array_int = world->defineArrayProperty("p_array_int", Property::IntType);
-    bean = world->newBean();
-    bean->addArray(p_array_int);
-    printf("array property \"%s\" added for bean (id=%d, value=%d) \n", p_array_int->getName().c_str(), bean->getId());
-
-    bean->append(p_array_int, 0);
-    bean->append(p_array_int, 1);
-
+    value2 = bean->getAt(p_array_int, 1).asInt();
+    printf("value of p_array_int[1]: %d\n", value2);
+   
     bean->setAt(p_array_int, 0, 100);
-    printf("value %d set to bean's array property (name=\"%s\") at %d \n", bean->getAt(p_array_int, 0).asInt(), p_array_int->getName().c_str(), 0);
+    value1 = bean->getAt(p_array_int, 0).asInt();
+    printf("value %d set to bean's array property (name=\"%s\") at %d \n", value1,  p_array_int->getName().c_str(), 0);
     bean->setAt(p_array_int, 1, 101);
-    printf("value %d set to bean's array property (name=\"%s\") at %d \n", bean->getAt(p_array_int, 1).asInt(), p_array_int->getName().c_str(), 1);
+    value2 = bean->getAt(p_array_int, 1).asInt();
+    printf("value %d set to bean's array property (name=\"%s\") at %d \n", value2, p_array_int->getName().c_str(), 1);
 
     db.disconnect();
 }
 
-void example_bean_setRelation()
+void example_bean_relation()
 {
     SqliteBeanDB db(g_tmpDBDir);
     BeanWorld* world = nullptr;
     Bean *bean1, *bean2;
+    pid_t objectId;
 
     db.reInit();
     db.connect();
@@ -273,12 +264,14 @@ void example_bean_setRelation()
     bean1 = world->newBean();
     bean2 = world->newBean();
     bean1->setRelation(p_r1, bean2);
-    printf("Relation created: subjectId=%d, relation=\"%s\", objectId=%d \n", bean1->getId(), p_r1->getName().c_str(), bean1->getObjectId(p_r1));
+    objectId = bean1->getObjectId(p_r1);
+    printf("Relation created: subjectId=%d, relation=\"%s\", objectId=%d \n", bean1->getId(), p_r1->getName().c_str(), objectId);
 
     db.disconnect();
 }
 
-void example_bean_appendRelation()
+
+void example_bean_array_relation()
 {
     SqliteBeanDB db(g_tmpDBDir);
     BeanWorld* world = nullptr;
@@ -298,27 +291,6 @@ void example_bean_appendRelation()
     printf("Bean's (id=%d) relations (name=\"%s\"): \n", bean1->getId(), r_array_1->getName().c_str());
     printf("objectId=%d \n", bean1->getObjectId(r_array_1, 0));
     printf("objectId=%d \n", bean1->getObjectId(r_array_1, 1));
-
-    db.disconnect();
-}
-
-void example_bean_setRelationAt()
-{
-    SqliteBeanDB db(g_tmpDBDir);
-    BeanWorld* world = nullptr;
-    Bean *bean1, *bean2, *bean3;
-
-    db.reInit();
-    db.connect();
-    world = db.getWorld();
-
-    Property* r_array_1 = world->defineArrayRelation("r_array_1");
-    bean1 = world->newBean();
-    bean2 = world->newBean();
-    bean3 = world->newBean();
-    bean1->addArray(r_array_1);
-    bean1->appendRelation(r_array_1, bean2);
-    bean1->appendRelation(r_array_1, bean3);
 
     bean1->setRelationAt(r_array_1, 0, bean1);
     bean1->setRelationAt(r_array_1, 1, bean1);
@@ -329,7 +301,7 @@ void example_bean_setRelationAt()
     db.disconnect();
 }
 
-void example_bean_setNativeData()
+void example_bean_add_nativeData()
 {
     SqliteBeanDB db(g_tmpDBDir);
     BeanWorld* world = nullptr;
@@ -1214,19 +1186,15 @@ int main(int argc, char* argv[])
 
     example_world_newBean();
 
-    example_bean_set();
+    example_bean_primary_property();
 
-    example_bean_append();
+    example_array_property();
 
-    example_bean_setAt();
+    example_bean_relation();
 
-    example_bean_setRelation();
+    example_bean_array_relation();
 
-    example_bean_appendRelation();
-
-    example_bean_setRelationAt();
-
-    example_bean_setNativeData();
+    example_bean_add_nativeData();
 
     example_bean_save();
 

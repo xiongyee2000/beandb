@@ -28,7 +28,7 @@
             "name": "beandb_examples",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/examples/build/beandb_examples",
+            "program": "${workspaceFolder}/build_examples/beandb_examples",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

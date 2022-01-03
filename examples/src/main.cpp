@@ -264,7 +264,7 @@ void example_bean_relation()
     bean1 = world->newBean();
     bean2 = world->newBean();
     bean1->setRelation(p_r1, bean2);
-    objectId = bean1->getObjectId(p_r1);
+    objectId = bean1->getRelation(p_r1);
     printf("Relation created: subjectId=%d, relation=\"%s\", objectId=%d \n", bean1->getId(), p_r1->getName().c_str(), objectId);
 
     db.disconnect();
@@ -289,14 +289,14 @@ void example_bean_array_relation()
     bean1->appendRelation(r_array_1, bean2);
     bean1->appendRelation(r_array_1, bean3);
     printf("Bean's (id=%d) relations (name=\"%s\"): \n", bean1->getId(), r_array_1->getName().c_str());
-    printf("objectId=%d \n", bean1->getObjectId(r_array_1, 0));
-    printf("objectId=%d \n", bean1->getObjectId(r_array_1, 1));
+    printf("objectId=%d \n", bean1->getReationAt(r_array_1, 0));
+    printf("objectId=%d \n", bean1->getReationAt(r_array_1, 1));
 
     bean1->setRelationAt(r_array_1, 0, bean1);
     bean1->setRelationAt(r_array_1, 1, bean1);
     printf("Bean's (id=%d) relations (name=\"%s\"): \n", bean1->getId(), r_array_1->getName().c_str());
-    printf("objectId=%d \n", bean1->getObjectId(r_array_1, 0));
-    printf("objectId=%d \n", bean1->getObjectId(r_array_1, 1));
+    printf("objectId=%d \n", bean1->getReationAt(r_array_1, 0));
+    printf("objectId=%d \n", bean1->getReationAt(r_array_1, 1));
 
     db.disconnect();
 }
@@ -440,9 +440,9 @@ void example_bean_remove()
     bean2 = world->newBean();
     bean3 = world->newBean();
     bean1->setRelation(r1, bean2);
-    printf("Bean relation set: relation name=\"%s\", objectBeanId=%d \n", r1->getName().c_str(), bean1->getObjectId(r1));
+    printf("Bean relation set: relation name=\"%s\", objectBeanId=%d \n", r1->getName().c_str(), bean1->getRelation(r1));
     bean1->remove(r1);
-    if (bean1->getObjectId(r1) == 0)
+    if (bean1->getRelation(r1) == 0)
         printf("Bean relation (name=\"%s\") removed. \n", r1->getName().c_str());
     else
         printf("error occurred\n");
@@ -496,7 +496,7 @@ void example_bean_removeAt()
     bean1->appendRelation(r_array, bean3);
     printf("Bean array relation (name=\"%s\") has %d elements. \n", r_array->getName().c_str(), bean1->size(r_array));
     bean1->removeAt(r_array, 0);
-    if (bean1->getObjectId(r_array, 0) == bean3->getId()) 
+    if (bean1->getReationAt(r_array, 0) == bean3->getId()) 
         printf("Bean array relation (name=\"%s\") removed at index 0. \n", r_array->getName().c_str());
     else
         printf("error occurred\n");

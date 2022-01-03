@@ -790,10 +790,10 @@ TEST(SqliteBeanDB, saveBean)
     validateBean(testHelper, bean1);
     validateBean(testHelper, bean2);
 
-    EXPECT_TRUE(bean3->getObjectId(testHelper.r1) ==beanId_1);
-    EXPECT_TRUE(bean3->getObjectId(testHelper.r2) ==beanId_2);
-    EXPECT_TRUE(bean3->getObjectId(testHelper.r_array_1, 0) ==beanId_1);
-    EXPECT_TRUE(bean3->getObjectId(testHelper.r_array_1, 1) ==beanId_2);
+    EXPECT_TRUE(bean3->getRelation(testHelper.r1) ==beanId_1);
+    EXPECT_TRUE(bean3->getRelation(testHelper.r2) ==beanId_2);
+    EXPECT_TRUE(bean3->getReationAt(testHelper.r_array_1, 0) ==beanId_1);
+    EXPECT_TRUE(bean3->getReationAt(testHelper.r_array_1, 1) ==beanId_2);
 
     testdb.disconnect();
     testdb.connect();
@@ -823,7 +823,7 @@ TEST(SqliteBeanDB, saveBean)
 
     value = bean1->getAt(testHelper.p_array_int, 0);
     EXPECT_TRUE(value == 99);
-    beanId_3 = bean3->getObjectId(testHelper.r_array_1, 0);
+    beanId_3 = bean3->getReationAt(testHelper.r_array_1, 0);
     EXPECT_TRUE(beanId_3 == bean3->getId());
 
     testdb.disconnect();
@@ -881,7 +881,7 @@ TEST(SqliteBeanDB, delayLoad)
     EXPECT_TRUE(value == 101);
 
     bean3 = world->getBean(3);
-    beanId_1 = bean3->getObjectId(testHelper.r_array_1, 0);
+    beanId_1 = bean3->getReationAt(testHelper.r_array_1, 0);
     EXPECT_TRUE(beanId_1 == 1);
 
     size = bean3->size(testHelper.p_array_str);
@@ -927,9 +927,9 @@ TEST(SqliteBeanDB, delayLoad)
     EXPECT_TRUE(value == 100);
 
     bean3 = world->getBean(3);
-    beanId_2 = bean3->getObjectId(testHelper.r_array_1, 0);
+    beanId_2 = bean3->getReationAt(testHelper.r_array_1, 0);
     EXPECT_TRUE(beanId_2 == 2);
-    beanId_3 = bean3->getObjectId(testHelper.r_array_1, bean3->size(testHelper.r_array_1) - 1);
+    beanId_3 = bean3->getReationAt(testHelper.r_array_1, bean3->size(testHelper.r_array_1) - 1);
     EXPECT_TRUE(beanId_3 == 3);
 
     testdb.disconnect();

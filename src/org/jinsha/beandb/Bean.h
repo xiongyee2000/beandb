@@ -272,16 +272,16 @@ public:
     bool hasArrayRelation(const Property* relation) const;
 
     /**
-     * Get the object bean id of the given relation.
+     * Get the value (object bean id) of the given relation.
      * 
      * @param relation the relation
      * @return the bean id, or 0 if it does not exist.
      * 
      */
-    oidType getObjectId(const Property* relation) const;
+    oidType getRelation(const Property* relation) const;
 
     /**
-     * Get the object bean id of the given array relation at specified index.
+     * Get the value (object bean id) of the given array relation at specified index.
      * 
      * Notes:
      * - bean id shall not be 0, which reprents an error.
@@ -291,7 +291,7 @@ public:
      * @return the bean id, or 0 if it does not exist.
      * 
      */
-    oidType getObjectId(const Property* relation, 
+    oidType getReationAt(const Property* relation, 
         Json::Value::ArrayIndex index) const;
 
     /**
